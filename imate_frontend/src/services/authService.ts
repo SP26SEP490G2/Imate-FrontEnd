@@ -1,22 +1,22 @@
-import { isAxiosError } from "axios";
 import apiClient from "./apiClient";
-import type { AuthResponse, ChangePasswordData, LoginEmailData, RegisterEmailData, RegisterGoogleData } from "@/types/common/auth";
+import APIConfig from "@/config/apiConfig";
+import type { AuthResponse, ChangePasswordData, RegisterEmailData, RegisterGoogleData } from "@/types/common/auth";
 
 export const verifyTokenAndLogin = (data: { firebaseIdToken: string }): Promise<AuthResponse> => {
-  return apiClient.post("/login-email", data).then((res) => res.data);
+  return apiClient.post(APIConfig.Auth.LoginEmail, data).then((res) => res.data);
 };
 
 export const registerWithEmail = (data: RegisterEmailData): Promise<AuthResponse> => {
-  return apiClient.post<AuthResponse>("/register-email", data).then((res) => res.data);
+  return apiClient.post<AuthResponse>(APIConfig.Auth.RegisterEmail, data).then((res) => res.data);
 };
 
 export const registerWithGoogle = (data: RegisterGoogleData): Promise<AuthResponse> => {
-  return apiClient.post<AuthResponse>("/google", data).then((res) => res.data);
+  return apiClient.post<AuthResponse>(APIConfig.Auth.RegisterGoogle, data).then((res) => res.data);
 };
 
 export const changePassword = async (data: ChangePasswordData) => {
   try {
-    const response = await apiClient.put("/change-password", data);
+    const response = await apiClient.put(APIConfig.Auth.ChangePassword, data);
     return response.data;
   } catch (error) {
     throw error;  
@@ -24,12 +24,12 @@ export const changePassword = async (data: ChangePasswordData) => {
 }
 
 export const updateUserRole = async (role: "Candidate" | "Mentor") => {
-  return apiClient.put("/profile/role", { role });
+  return apiClient.put(APIConfig.Auth.UpdateRole, { role });
 }
 
 export const generateActionCode = async (email: string, actionType: "VERIFY_EMAIL" | "PASSWORD_RESET") => {
   try {
-    const response = await apiClient.post<{ oobCode: string }>("/generate-action-code", {
+    const response = await apiClient.post<{ oobCode: string }>(APIConfig.Auth.GenerateActionCode, {
       email,
       actionType,
     });
@@ -41,7 +41,7 @@ export const generateActionCode = async (email: string, actionType: "VERIFY_EMAI
 
 export const sendActionEmail = async (oobCode: string, email: string, actionType: "VERIFY_EMAIL" | "PASSWORD_RESET") => {
   try {
-    const response = await apiClient.post("/send-action-email", {
+    const response = await apiClient.post(APIConfig.Auth.SendActionEmail, {
       oobCode,
       email,
       actionType,
