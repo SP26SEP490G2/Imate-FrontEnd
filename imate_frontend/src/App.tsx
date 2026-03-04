@@ -6,7 +6,7 @@ import { AppProvider } from "./store/Context";
 import { AuthProvider } from "./store/AuthContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { SignalRProvider } from "./store/SignalRContext.tsx"; // Import provider
+// import { SignalRProvider } from "./store/SignalRContext.tsx"; // Import provider
 function App() {
   const queryClient = new QueryClient();
   const location = useLocation();
@@ -17,7 +17,7 @@ function App() {
       <GoogleOAuthProvider clientId={import.meta.env.REACT_APP_GOOGLE_CLIENT_ID}>
         <AppProvider>
           <AuthProvider>
-            <SignalRProvider>
+            {/* <SignalRProvider> */}
               <Routes>
                 {routeConfig.map((route, index) => (
                   <Route key={index} path={route.path} element={route.element}>
@@ -43,7 +43,7 @@ function App() {
                 <div className="fixed right-6 bottom-6 z-50">
                 </div>
               )}
-            </SignalRProvider>
+            {/* </SignalRProvider> */}
           </AuthProvider>
         </AppProvider>
       </GoogleOAuthProvider>

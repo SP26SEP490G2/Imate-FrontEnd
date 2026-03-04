@@ -66,8 +66,19 @@ function SignUp() {
   };
 
   // Hàm ánh xạ role frontend sang role backend/hiển thị
-  const getRoleLabel = (r: UserRole) => (r === "Candidate" ? "Ứng viên" : "Mentor");
-
+  // const getRoleLabel = (r: UserRole) => (r === "Candidate" ? "Ứng viên" : "Mentor");
+const getRoleLabel = (r: UserRole) => {
+  switch (r) {
+    case "Candidate":
+      return "Ứng viên";
+    case "Mentor":
+      return "Mentor";
+    case "Recruiter":
+      return "Recruiter";
+    default:
+      return r;
+  }
+};
   // --- LOGIC GỌI API ĐĂNG KÝ EMAIL/PASSWORD ---
   const handleEmailPasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,7 +101,8 @@ function SignUp() {
         // Use custom action handler instead of Firebase default
         try {
           const oobCode = await generateActionCode(formData.email, "VERIFY_EMAIL");
-          await sendActionEmail(oobCode, formData.email, "VERIFY_EMAIL");
+          //await sendActionEmail(oobCode, formData.email, "VERIFY_EMAIL");
+          await sendActionEmail(oobCode, "startingimate@gmail.com", "VERIFY_EMAIL");
         } catch (emailError: any) {
           console.error("Failed to send verification email:", emailError);
           // Don't fail registration if email sending fails
@@ -250,6 +262,44 @@ function SignUp() {
       <div className="w-full max-w-[480px] relative z-10">
 
         <div className="mb-10">
+          <div className="mb-8 flex bg-slate-900/50 p-1 rounded-xl border border-white/10">
+  
+            <button
+              type="button"
+              onClick={() => setRole("Candidate")}
+              className={`flex-1 h-11 rounded-lg text-sm font-semibold transition cursor-pointer ${
+                role === "Candidate"
+                  ? "bg-white text-slate-900"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              Ứng viên
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setRole("Mentor")}
+              className={`flex-1 h-11 rounded-lg text-sm font-semibold transition cursor-pointer ${
+                role === "Mentor"
+                  ? "bg-white text-slate-900"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              Mentor
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setRole("Recruiter")}
+              className={`flex-1 h-11 rounded-lg text-sm font-semibold transition cursor-pointer ${
+                role === "Recruiter"
+                  ? "bg-white text-slate-900"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              Recruiter
+            </button>
+          </div>
           <h2 className="text-3xl font-bold mb-3">Đăng ký tài khoản</h2>
           <p className="text-slate-400">
             Trở thành thành viên và bắt đầu luyện tập ngay hôm nay
