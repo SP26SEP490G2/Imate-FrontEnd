@@ -2,12 +2,17 @@ import React, { useEffect, useState } from 'react';
 import Header from '../../components/Header';
 import Footer from '@/components/Footer';
 import { getListPreviewMentors } from '../../services/mentorService';
+import { getListHotQuestions } from '../../services/questionService';
 import type { ListPreviewMentorResponse } from '../../types/common/mentor';
+import type { ListHotQuestionResponse } from '../../types/common/question';
 
 const HomePage: React.FC = () => {
   const [mentors, setMentors] = useState<ListPreviewMentorResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [questions, setQuestions] = useState<ListHotQuestionResponse[]>([]);
+  const [questionsLoading, setQuestionsLoading] = useState(true);
+  const [questionsError, setQuestionsError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchMentors = async () => {
@@ -24,7 +29,22 @@ const HomePage: React.FC = () => {
       }
     };
 
+    const fetchQuestions = async () => {
+      try {
+        setQuestionsLoading(true);
+        const data = await getListHotQuestions();
+        setQuestions(data);
+        setQuestionsError(null);
+      } catch (err) {
+        console.error('Failed to fetch questions:', err);
+        setQuestionsError('Không thể tải danh sách câu hỏi. Vui lòng thử lại sau.');
+      } finally {
+        setQuestionsLoading(false);
+      }
+    };
+
     fetchMentors();
+    fetchQuestions();
   }, []);
 
   // Placeholder images cho mentors
@@ -270,80 +290,76 @@ const HomePage: React.FC = () => {
               <p className="text-slate-400">Tham gia thảo luận và giải đáp thắc mắc cùng hàng ngàn Developers khác.</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* Question Card 1 */}
-              <div className="bg-white rounded-3xl p-6 shadow-xl hover:-translate-y-2 transition-transform duration-300 border border-slate-100">
-                <div className="flex gap-2 mb-4">
-                  <span className="px-3 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-bold rounded-full uppercase">
-                    Node.js
-                  </span>
-                  <span className="px-3 py-1 bg-cyan-50 text-cyan-600 text-[10px] font-bold rounded-full uppercase">
-                    Architecture
-                  </span>
+              {questionsLoading ? (
+                // Loading skeleton
+                <>              {[1, 2, 3].map((i) => (
+                    <div key={i} className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100 animate-pulse">
+                      <div className="flex gap-2 mb-4">
+                        <div className="h-6 w-16 bg-slate-200 rounded-full"></div>
+                        <div className="h-6 w-20 bg-slate-200 rounded-full"></div>
+                      </div>
+                      <div className="space-y-2 mb-6">
+                        <div className="h-4 bg-slate-200 rounded w-full"></div>
+                        <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+                      </div>
+                      <div className="flex items-center justify-between border-t border-slate-100 pt-6">
+                        <div className="h-4 w-20 bg-slate-200 rounded"></div>
+                        <div className="h-4 w-24 bg-slate-200 rounded"></div>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              ) : questionsError ? (
+                // Error state
+                <div className="col-span-full text-center py-12">
+                  <p className="text-red-400 mb-4">{questionsError}</p>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="px-6 py-2 bg-indigo-500 text-white rounded-xl hover:bg-indigo-600 transition-all"
+                  >
+                    Thử lại
+                  </button>
                 </div>
-                <h3 className="text-[#0f172a] text-lg font-bold mb-6 leading-snug hover:text-indigo-500 cursor-pointer transition-colors">
-                  Làm thế nào để triển khai kiến trúc Microservices tối ưu với Node.js?
-                </h3>
-                <div className="flex items-center justify-between border-t border-slate-100 pt-6">
-                  <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-slate-400 text-sm">visibility</span>
-                    <span className="text-xs text-slate-500 font-medium">1.2k lượt xem</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-slate-400 text-sm">chat_bubble</span>
-                    <span className="text-xs text-slate-500 font-medium">24 thảo luận</span>
-                  </div>
+              ) : questions.length > 0 ? (
+                // Question cards from API
+                questions.map((question) => {
+                  // Generate random colors for categories
+                  const colorVariants = [
+                    'bg-indigo-50 text-indigo-600',
+                    'bg-purple-50 text-purple-600',
+                    'bg-cyan-50 text-cyan-600',
+                    'bg-emerald-50 text-emerald-600',
+                    'bg-amber-50 text-amber-600',
+                    'bg-rose-50 text-rose-600',
+                  ];
+                  
+                  return (
+                    <div key={question.id} className="bg-white rounded-3xl p-6 shadow-xl hover:-translate-y-2 transition-transform duration-300 border border-slate-100">
+                      <div className="flex gap-2 mb-4 flex-wrap">
+                        {question.categories.slice(0, 3).map((category, idx) => (
+                          <span key={idx} className={`px-3 py-1 text-[10px] font-bold rounded-full uppercase ${colorVariants[idx % colorVariants.length]}`}>
+                            {category}
+                          </span>
+                        ))}
+                      </div>
+                      <h3 className="text-[#0f172a] text-lg font-bold mb-6 leading-snug hover:text-indigo-500 cursor-pointer transition-colors">
+                        {question.content}
+                      </h3>
+                      <div className="flex items-center justify-between border-t border-slate-100 pt-6">
+                        <div className="flex items-center gap-2">
+                          <span className="material-symbols-outlined text-slate-400 text-sm">chat_bubble</span>
+                          <span className="text-xs text-slate-500 font-medium">{question.commentCount} thảo luận</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                // No questions available
+                <div className="col-span-full text-center py-12">
+                  <p className="text-slate-400">Chưa có câu hỏi nào.</p>
                 </div>
-              </div>
-
-              {/* Question Card 2 */}
-              <div className="bg-white rounded-3xl p-6 shadow-xl hover:-translate-y-2 transition-transform duration-300 border border-slate-100">
-                <div className="flex gap-2 mb-4">
-                  <span className="px-3 py-1 bg-purple-50 text-purple-600 text-[10px] font-bold rounded-full uppercase">
-                    System Design
-                  </span>
-                  <span className="px-3 py-1 bg-amber-50 text-amber-600 text-[10px] font-bold rounded-full uppercase">
-                    High Traffic
-                  </span>
-                </div>
-                <h3 className="text-[#0f172a] text-lg font-bold mb-6 leading-snug hover:text-indigo-500 cursor-pointer transition-colors">
-                  Các câu hỏi System Design phổ biến nhất khi phỏng vấn Senior tại FAANG?
-                </h3>
-                <div className="flex items-center justify-between border-t border-slate-100 pt-6">
-                  <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-slate-400 text-sm">visibility</span>
-                    <span className="text-xs text-slate-500 font-medium">3.5k lượt xem</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-slate-400 text-sm">chat_bubble</span>
-                    <span className="text-xs text-slate-500 font-medium">56 thảo luận</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Question Card 3 */}
-              <div className="bg-white rounded-3xl p-6 shadow-xl hover:-translate-y-2 transition-transform duration-300 border border-slate-100">
-                <div className="flex gap-2 mb-4">
-                  <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-full uppercase">
-                    React
-                  </span>
-                  <span className="px-3 py-1 bg-rose-50 text-rose-600 text-[10px] font-bold rounded-full uppercase">
-                    Performance
-                  </span>
-                </div>
-                <h3 className="text-[#0f172a] text-lg font-bold mb-6 leading-snug hover:text-indigo-500 cursor-pointer transition-colors">
-                  Kỹ thuật Memoization trong React: Khi nào nên và không nên dùng?
-                </h3>
-                <div className="flex items-center justify-between border-t border-slate-100 pt-6">
-                  <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-slate-400 text-sm">visibility</span>
-                    <span className="text-xs text-slate-500 font-medium">890 lượt xem</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-slate-400 text-sm">chat_bubble</span>
-                    <span className="text-xs text-slate-500 font-medium">12 thảo luận</span>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
             <div className="mt-12 text-center">
               <button className="px-8 py-3 rounded-2xl bg-slate-800 text-white font-bold hover:bg-slate-700 transition-all">
