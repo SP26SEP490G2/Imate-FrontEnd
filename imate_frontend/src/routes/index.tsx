@@ -1,4 +1,5 @@
 // routes/index.js
 import AuthRouters from "./AuthRouter";
 import CommonRouter from "./CommonRouter";
-export const routeConfig = [...AuthRouters, ...CommonRouter];
+import AuthenticatedRouter from "./AuthenticatedRouter";
+export const routeConfig = [...AuthRouters, ...CommonRouter, ...AuthenticatedRouter];
