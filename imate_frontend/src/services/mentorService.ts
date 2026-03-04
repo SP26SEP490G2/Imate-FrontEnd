@@ -1,13 +1,15 @@
 import apiClient from "./apiClient";
 import APIConfig from "@/config/apiConfig";
-import type { ListPreviewMentor } from "@/types/common/mentor";
+import type { ListPreviewMentorResponse, GetListPreviewMentorsResponse } from "@/types/common/mentor";
 
 /**
  * Get list of preview mentors for home page
- * @returns Promise<ListPreviewMentor[]>
+ * @returns Promise<ListPreviewMentorResponse[]>
  */
 
-export const getListPreviewMentors = async (): Promise<ListPreviewMentor[]> => {
-  return apiClient.get<ListPreviewMentor[]>(APIConfig.Mentor.GetListPreviewMentors).then((res) => res.data);
+export const getListPreviewMentors = async (): Promise<ListPreviewMentorResponse[]> => {
+  const response = await apiClient.get<GetListPreviewMentorsResponse>(APIConfig.Mentor.GetListPreviewMentors);
+  // API trả về { data: [...] }, extract array từ property data
+  return response.data.data || [];
 };
 

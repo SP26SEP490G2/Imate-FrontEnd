@@ -2,7 +2,7 @@
  * Mentor related types and interfaces
  */
 
-export interface ListPreviewMentor {
+export interface ListPreviewMentorResponse {
   fullName: string;
   position: string;
   yoe: number;
@@ -11,6 +11,7 @@ export interface ListPreviewMentor {
   totalRatingCount: number | null;
 }
 
-export interface MentorResponse {
-  listPreviewMentors: ListPreviewMentor[];
+// API Response wrapper
+export interface GetListPreviewMentorsResponse {
+  data: ListPreviewMentorResponse[];
 }
