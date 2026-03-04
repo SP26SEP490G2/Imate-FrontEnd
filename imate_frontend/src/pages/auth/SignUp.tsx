@@ -1,4 +1,4 @@
-import { Mail, Lock, User as UserIcon, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, CheckCircle2, Quote, Banknote } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { registerWithEmail, registerWithGoogle, generateActionCode, sendActionEmail } from "@/services/authService";
@@ -15,6 +15,13 @@ function SignUp() {
   const [viewPassword, setViewPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<Omit<RegisterEmailData, "role">>({ fullName: "", email: "", password: "" });
+  const [mentorFormData, setMentorFormData] = useState({
+    phone: "",
+    birthDate: "",
+    bankAccountHolderName: "",
+    bankName: "",
+    bankAccountNumber: "",
+  });
   const [isLoading, setIsLoading] = useState(false);
 
   // Hàm navigate theo role
@@ -65,6 +72,11 @@ function SignUp() {
     if (error) setError(null); // Xóa lỗi khi người dùng bắt đầu nhập lại
   };
 
+  const handleMentorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMentorFormData({ ...mentorFormData, [e.target.name]: e.target.value });
+    if (error) setError(null);
+  };
+
   // Hàm ánh xạ role frontend sang role backend/hiển thị
   // const getRoleLabel = (r: UserRole) => (r === "Candidate" ? "Ứng viên" : "Mentor");
 const getRoleLabel = (r: UserRole) => {
@@ -86,6 +98,13 @@ const getRoleLabel = (r: UserRole) => {
     if (!formData.email || !formData.password || !formData.fullName) {
       setError("Vui lòng điền đầy đủ thông tin.");
       return;
+    }
+
+    if (role === "Mentor") {
+      if (!mentorFormData.phone || !mentorFormData.birthDate || !mentorFormData.bankAccountHolderName || !mentorFormData.bankName || !mentorFormData.bankAccountNumber) {
+        setError("Vui lòng điền đầy đủ thông tin đăng ký dành cho Mentor.");
+        return;
+      }
     }
 
     setError(null);
@@ -235,21 +254,79 @@ const getRoleLabel = (r: UserRole) => {
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-600/20 rounded-full blur-[120px]"></div>
       <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[100px]"></div>
 
-      <div className="relative z-10 text-center max-w-xl">
-        <div className="flex items-center justify-center gap-3 mb-16">
+      <div className="relative z-10 max-w-xl">
+        <div className="flex items-center justify-start gap-3 mb-10">
           <div className="size-12 logo-gradient rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
             <span className="font-black text-2xl">I</span>
           </div>
           <span className="text-3xl font-black tracking-tighter">IMATE</span>
         </div>
 
-        <h1 className="text-[44px] font-bold leading-[1.1] mb-10">
-          Bắt đầu hành trình chinh phục sự nghiệp IT
-        </h1>
+        {role === "Mentor" ? (
+          <div className="space-y-8">
+            <div>
+              <p className="inline-flex items-center gap-2 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-4 py-1 text-sm font-medium text-emerald-300 mb-4">
+                <CheckCircle2 className="h-4 w-4" />
+                Mentor Onboarding
+              </p>
+              <h1 className="text-[40px] font-bold leading-[1.1] mb-4">
+                Trở thành Mentor<br />đồng hành cùng thế hệ IT mới
+              </h1>
+              <p className="text-slate-300 text-base">
+                Chia sẻ kinh nghiệm thực chiến, xây dựng thương hiệu cá nhân và tạo thêm nguồn thu nhập bền vững.
+              </p>
+            </div>
 
-        <p className="text-slate-400 text-lg">
-          Nâng tầm kỹ năng phỏng vấn cùng AI Mentor hàng đầu.
-        </p>
+            <div className="grid grid-cols-1 gap-4 mt-6">
+              <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-4 flex items-start gap-3">
+                <div className="mt-1">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                </div>
+                <div>
+                  <p className="font-semibold text-white mb-1">Xây dựng thương hiệu cá nhân</p>
+                  <p className="text-sm text-slate-400">
+                    Xuất hiện như chuyên gia trong lĩnh vực, kết nối với hàng trăm mentee tiềm năng.
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-4 flex items-start gap-3">
+                <div className="mt-1">
+                  <Banknote className="h-5 w-5 text-amber-400" />
+                </div>
+                <div>
+                  <p className="font-semibold text-white mb-1">Thu nhập hấp dẫn & linh hoạt</p>
+                  <p className="text-sm text-slate-400">
+                    Chủ động chọn lịch dạy, tối ưu thời gian rảnh với các buổi mentoring chất lượng cao.
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 to-sky-500/5 p-4 flex gap-3">
+                <div className="mt-1">
+                  <Quote className="h-5 w-5 text-emerald-400" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-slate-200 italic">
+                    &quot;IMATE giúp mình vừa chia sẻ kinh nghiệm, vừa xây dựng được network chất lượng trong cộng đồng developer.&quot;
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    — Minh Anh, Tech Lead @ Google
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center">
+            <h1 className="text-[44px] font-bold leading-[1.1] mb-6">
+              Bắt đầu hành trình chinh phục sự nghiệp IT
+            </h1>
+            <p className="text-slate-400 text-lg">
+              Nâng tầm kỹ năng phỏng vấn cùng AI Mentor hàng đầu.
+            </p>
+          </div>
+        )}
       </div>
     </div>
 
@@ -374,6 +451,91 @@ const getRoleLabel = (r: UserRole) => {
               </button>
             </div>
           </div>
+
+          {/* MENTOR EXTRA INFORMATION */}
+          {role === "Mentor" && (
+            <div className="space-y-4 rounded-2xl border border-indigo-500/40 bg-slate-900/40 p-4">
+              <div className="flex items-center justify-between gap-3 mb-1">
+                <h3 className="text-sm font-semibold text-white uppercase tracking-wide">
+                  Thông tin dành cho Mentor
+                </h3>
+                <span className="text-[10px] font-medium text-indigo-300 bg-indigo-500/10 px-2 py-1 rounded-full">
+                  Hồ sơ thanh toán & liên hệ
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs text-slate-300 uppercase tracking-wide">
+                    Số điện thoại liên hệ
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={mentorFormData.phone}
+                    onChange={handleMentorChange}
+                    placeholder="VD: 0987 654 321"
+                    className="w-full bg-slate-950/60 border border-white/10 rounded-xl h-12 px-4 text-sm focus:ring-2 focus:ring-indigo-500/50"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs text-slate-300 uppercase tracking-wide">
+                    Ngày sinh
+                  </label>
+                  <input
+                    type="date"
+                    name="birthDate"
+                    value={mentorFormData.birthDate}
+                    onChange={handleMentorChange}
+                    className="w-full bg-slate-950/60 border border-white/10 rounded-xl h-12 px-4 text-sm text-slate-200 focus:ring-2 focus:ring-indigo-500/50"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs text-slate-300 uppercase tracking-wide">
+                    Chủ tài khoản ngân hàng
+                  </label>
+                  <input
+                    type="text"
+                    name="bankAccountHolderName"
+                    value={mentorFormData.bankAccountHolderName}
+                    onChange={handleMentorChange}
+                    placeholder="Họ và tên chủ tài khoản"
+                    className="w-full bg-slate-950/60 border border-white/10 rounded-xl h-12 px-4 text-sm focus:ring-2 focus:ring-indigo-500/50"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs text-slate-300 uppercase tracking-wide">
+                    Ngân hàng
+                  </label>
+                  <input
+                    type="text"
+                    name="bankName"
+                    value={mentorFormData.bankName}
+                    onChange={handleMentorChange}
+                    placeholder="VD: Vietcombank, Techcombank, HSBC..."
+                    className="w-full bg-slate-950/60 border border-white/10 rounded-xl h-12 px-4 text-sm focus:ring-2 focus:ring-indigo-500/50"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs text-slate-300 uppercase tracking-wide">
+                  Số tài khoản
+                </label>
+                <input
+                  type="text"
+                  name="bankAccountNumber"
+                  value={mentorFormData.bankAccountNumber}
+                  onChange={handleMentorChange}
+                  placeholder="Nhập số tài khoản ngân hàng của bạn"
+                  className="w-full bg-slate-950/60 border border-white/10 rounded-xl h-12 px-4 text-sm focus:ring-2 focus:ring-indigo-500/50"
+                />
+              </div>
+            </div>
+          )}
 
           {error && <p className="text-red-400 text-sm">{error}</p>}
 
