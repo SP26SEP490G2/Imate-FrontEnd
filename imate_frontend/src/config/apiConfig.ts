@@ -18,6 +18,13 @@ const APIConfig = {
   Mentor: {
     GetListPreviewMentors: "/get-list-preview-mentors",
   },
+
+  // Question endpoints
+  Question: {
+    GetListHotQuestions: "/get-list-hot-questions",
+    GetQuestionBankList: "/get-question-bank-list",
+    GetListQuestionCategories: "/get-list-question-categories",
+  },
 } as const;
 
 export default APIConfig;
