@@ -1,4 +1,4 @@
-export type UserRole = "Candidate" | "Mentor";
+export type UserRole = "Candidate" | "Mentor" | "Recruiter";
 
 export interface User {
   id: number;
@@ -11,12 +11,10 @@ export interface User {
   role: "Mentor" | "Candidate" | "Recruiter" | string;
   isNewAccount?: boolean; // Flag để biết đây có phải là account mới không
   accountStatus?: "Active" | "PendingVerification" | "Suspended"; // Trạng thái tài khoản
-
   // Thông tin cơ bản
   bio?: string;
   phone?: string;
   birthDate?: string;
-
   // Thông tin Mentor
   yoe?: number;
   cvUrl?: string;
@@ -24,12 +22,10 @@ export interface User {
   pricePerSession?: number;
   avgRatings?: number | null;
   totalRatingCount?: number | null;
-
   // Thông tin ngân hàng
   bankAccountHolderName?: string;
   bankAccountNumber?: string;
   bankCode?: string;
-
   // Danh sách kỹ năng và vị trí
   skills?: string[];
   positions?: string[];
