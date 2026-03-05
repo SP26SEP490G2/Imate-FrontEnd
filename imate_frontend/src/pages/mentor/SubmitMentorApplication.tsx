@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth } from "@/store/AuthContext";
-import { submitMentorProfile, type SubmitMentorProfilePayload } from "@/services/mentorService";
+import { submitMentorProfile } from "@/services/mentorService";
+import type { SubmitMentorProfileRequest } from "@/types/request/mentor.request";
 import { FileText } from "lucide-react";
 
 export default function SubmitMentorApplication() {
@@ -10,7 +11,7 @@ export default function SubmitMentorApplication() {
   const { user, refetchUser } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState<SubmitMentorProfilePayload & { bankName: string }>({
+  const [formData, setFormData] = useState<SubmitMentorProfileRequest & { bankName: string }>({
     bio: "",
     phone: "",
     birthDate: "",
@@ -37,7 +38,7 @@ export default function SubmitMentorApplication() {
     setError(null);
     setIsLoading(true);
     try {
-      const payload: SubmitMentorProfilePayload = {
+      const payload: SubmitMentorProfileRequest = {
         bio: formData.bio.trim(),
         phone: formData.phone.trim(),
         bankAccountHolderName: formData.bankAccountHolderName.trim(),
