@@ -2,6 +2,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import type { RouteObject } from "react-router-dom";
 import MainLayout from "@/layout/MainLayout";
 import ViewProfile from "@/pages/candidate/ViewProfile"; // Bạn có thể chuyển file này ra thư mục chung
+import StaffQuestionManagement from "@/pages/staff/StaffQuestionManagement";
 // import ViewSaveQuestion from "@/pages/candidate/ViewSaveQuestion";
 // import TransactionHistoryPage from "@/pages/TransactionHistoryPage";
 // import WalletSummary from "@/pages/mentor/WalletSummary";

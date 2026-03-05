@@ -58,3 +58,84 @@ export interface CategoryItem {
 export interface GetListQuestionCategoriesResponse {
   data: CategoryItem[];
 }
+
+// Types for Difficulty and Level
+export type DifficultyLevel = "Easy" | "Medium" | "Hard";
+
+export type Level = "Intern" | "Fresher" | "Junior" | "Middle" | "Senior";
+
+// Staff Question Management Types
+export interface StaffSystemQuestionItem {
+  id: number;
+  content: string;
+  positionName?: string;
+  skillName?: string;
+  categoryName?: string;
+  difficulty: DifficultyLevel;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StaffContributedQuestionItem {
+  id: number;
+  content: string;
+  positionName?: string;
+  skillName?: string;
+  categoryName?: string;
+  companyName?: string;
+  level: Level;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StaffQuestionListResponse<T> {
+  data: T[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+// Request Parameters
+export interface GetSystemQuestionParams {
+  skillId?: number;
+  positionId?: number;
+  categoryId?: number;
+  difficulty?: DifficultyLevel;
+  isActive?: boolean;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+  pageNumber?: number;
+  pageSize?: number;
+}
+
+export interface GetContributedQuestionParams {
+  skillId?: number;
+  positionId?: number;
+  categoryId?: number;
+  companyId?: number;
+  level?: Level;
+  isActive?: boolean;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+  pageNumber?: number;
+  pageSize?: number;
+}
+
+// Position and Skill Types
+export interface PositionItem {
+  id: number;
+  name: string;
+}
+
+export interface SkillItem {
+  id: number;
+  name: string;
+}
+
+export interface CompanyItem {
+  id: number;
+  name: string;
+}

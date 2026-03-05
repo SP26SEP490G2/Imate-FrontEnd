@@ -24,6 +24,8 @@ const APIConfig = {
     GetListHotQuestions: "/get-list-hot-questions",
     GetQuestionBankList: "/get-question-bank-list",
     GetListQuestionCategories: "/get-list-question-categories",
+    GetAllSystemQuestionsForStaff: "/get-all-system-question-banks-for-staff",
+    GetAllContributedQuestionsForStaff: "/get-all-contributed-question-banks-for-staff",
   },
 } as const;
 
