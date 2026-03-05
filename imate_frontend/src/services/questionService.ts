@@ -7,7 +7,12 @@ import type {
   GetQuestionBankListResponse,
   GetQuestionBankListRequest,
   CategoryItem,
-  GetListQuestionCategoriesResponse
+  GetListQuestionCategoriesResponse,
+  StaffSystemQuestionItem,
+  StaffContributedQuestionItem,
+  StaffQuestionListResponse,
+  GetSystemQuestionParams,
+  GetContributedQuestionParams
 } from "@/types/common/question";
 
 /**
@@ -40,4 +45,66 @@ export const getQuestionBankList = async (request: GetQuestionBankListRequest): 
 export const getListQuestionCategories = async (): Promise<CategoryItem[]> => {
   const response = await apiClient.get<GetListQuestionCategoriesResponse>(APIConfig.Question.GetListQuestionCategories);
   return response.data.data || [];
+};
+
+/**
+ * Get all system questions for staff with filters and pagination
+ * @param params - Filter and pagination parameters
+ * @returns Promise with question list and pagination info
+ */
+export const getAllSystemQuestionsForStaff = async (
+  params: GetSystemQuestionParams
+): Promise<StaffQuestionListResponse<StaffSystemQuestionItem>> => {
+  const response = await apiClient.get<{ data: StaffSystemQuestionItem[] }>(
+    APIConfig.Question.GetAllSystemQuestionsForStaff,
+    { params }
+  );
+  
+  // Extract pagination from headers
+  const paginationHeader = response.headers['x-pagination'];
+  const pagination = paginationHeader ? JSON.parse(paginationHeader) : {
+    totalCount: 0,
+    pageSize: params.pageSize || 10,
+    pageNumber: params.pageNumber || 1,
+    totalPages: 0
+  };
+  
+  return {
+    data: response.data.data || [],
+    totalCount: pagination.totalCount || pagination.TotalCount,
+    pageNumber: pagination.pageNumber || pagination.PageNumber,
+    pageSize: pagination.pageSize || pagination.PageSize,
+    totalPages: pagination.totalPages || pagination.TotalPages
+  };
+};
+
+/**
+ * Get all contributed questions for staff with filters and pagination
+ * @param params - Filter and pagination parameters
+ * @returns Promise with question list and pagination info
+ */
+export const getAllContributedQuestionsForStaff = async (
+  params: GetContributedQuestionParams
+): Promise<StaffQuestionListResponse<StaffContributedQuestionItem>> => {
+  const response = await apiClient.get<{ data: StaffContributedQuestionItem[] }>(
+    APIConfig.Question.GetAllContributedQuestionsForStaff,
+    { params }
+  );
+  
+  // Extract pagination from headers
+  const paginationHeader = response.headers['x-pagination'];
+  const pagination = paginationHeader ? JSON.parse(paginationHeader) : {
+    totalCount: 0,
+    pageSize: params.pageSize || 10,
+    pageNumber: params.pageNumber || 1,
+    totalPages: 0
+  };
+  
+  return {
+    data: response.data.data || [],
+    totalCount: pagination.totalCount || pagination.TotalCount,
+    pageNumber: pagination.pageNumber || pagination.PageNumber,
+    pageSize: pagination.pageSize || pagination.PageSize,
+    totalPages: pagination.totalPages || pagination.TotalPages
+  };
 };
