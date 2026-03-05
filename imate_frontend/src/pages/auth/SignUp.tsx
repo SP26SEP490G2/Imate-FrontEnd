@@ -22,6 +22,20 @@ function SignUp() {
     bankName: "",
     bankAccountNumber: "",
   });
+  const [recruiterStep, setRecruiterStep] = useState<1 | 2>(1);
+  const [recruiterFormData, setRecruiterFormData] = useState<{
+    companyName: string;
+    workforceSize: string;
+    fieldOfActivity: string;
+    position: string;
+    authenticDocuments: File | null;
+  }>({
+    companyName: "",
+    workforceSize: "",
+    fieldOfActivity: "",
+    position: "",
+    authenticDocuments: null,
+  });
   const [isLoading, setIsLoading] = useState(false);
 
   // Hàm navigate theo role
@@ -77,6 +91,47 @@ function SignUp() {
     if (error) setError(null);
   };
 
+  const handleRecruiterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setRecruiterFormData({ ...recruiterFormData, [e.target.name]: e.target.value });
+    if (error) setError(null);
+  };
+
+  const handleRecruiterFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    setRecruiterFormData({ ...recruiterFormData, authenticDocuments: file });
+    if (error) setError(null);
+  };
+
+  const handleRecruiterNextStep = () => {
+    const workforceSize = Number.parseInt(recruiterFormData.workforceSize, 10);
+
+    if (!recruiterFormData.companyName || !recruiterFormData.workforceSize || !recruiterFormData.fieldOfActivity) {
+      setError("Vui lòng điền đầy đủ thông tin công ty để chuyển sang bước tiếp theo.");
+      return;
+    }
+
+    if (Number.isNaN(workforceSize) || workforceSize <= 0) {
+      setError("Workforce Size phải là một số lớn hơn 0.");
+      return;
+    }
+
+    setError(null);
+    setRecruiterStep(2);
+  };
+
+  const selectRole = (nextRole: UserRole) => {
+    setRole(nextRole);
+    setError(null);
+    setRecruiterStep(1);
+    setRecruiterFormData({
+      companyName: "",
+      workforceSize: "",
+      fieldOfActivity: "",
+      position: "",
+      authenticDocuments: null,
+    });
+  };
+
   // Hàm ánh xạ role frontend sang role backend/hiển thị
   // const getRoleLabel = (r: UserRole) => (r === "Candidate" ? "Ứng viên" : "Mentor");
 const getRoleLabel = (r: UserRole) => {
@@ -103,6 +158,18 @@ const getRoleLabel = (r: UserRole) => {
     if (role === "Mentor") {
       if (!mentorFormData.phone || !mentorFormData.birthDate || !mentorFormData.bankAccountHolderName || !mentorFormData.bankName || !mentorFormData.bankAccountNumber) {
         setError("Vui lòng điền đầy đủ thông tin đăng ký dành cho Mentor.");
+        return;
+      }
+    }
+
+    if (role === "Recruiter") {
+      const workforceSize = Number.parseInt(recruiterFormData.workforceSize, 10);
+      if (!recruiterFormData.companyName || !recruiterFormData.workforceSize || !recruiterFormData.fieldOfActivity || !recruiterFormData.position || !recruiterFormData.authenticDocuments) {
+        setError("Vui lòng điền đầy đủ thông tin đăng ký dành cho Recruiter.");
+        return;
+      }
+      if (Number.isNaN(workforceSize) || workforceSize <= 0) {
+        setError("Workforce Size phải là một số lớn hơn 0.");
         return;
       }
     }
@@ -343,7 +410,7 @@ const getRoleLabel = (r: UserRole) => {
   
             <button
               type="button"
-              onClick={() => setRole("Candidate")}
+              onClick={() => selectRole("Candidate")}
               className={`flex-1 h-11 rounded-lg text-sm font-semibold transition cursor-pointer ${
                 role === "Candidate"
                   ? "bg-white text-slate-900"
@@ -355,7 +422,7 @@ const getRoleLabel = (r: UserRole) => {
 
             <button
               type="button"
-              onClick={() => setRole("Mentor")}
+              onClick={() => selectRole("Mentor")}
               className={`flex-1 h-11 rounded-lg text-sm font-semibold transition cursor-pointer ${
                 role === "Mentor"
                   ? "bg-white text-slate-900"
@@ -367,7 +434,7 @@ const getRoleLabel = (r: UserRole) => {
 
             <button
               type="button"
-              onClick={() => setRole("Recruiter")}
+              onClick={() => selectRole("Recruiter")}
               className={`flex-1 h-11 rounded-lg text-sm font-semibold transition cursor-pointer ${
                 role === "Recruiter"
                   ? "bg-white text-slate-900"
@@ -404,53 +471,223 @@ const getRoleLabel = (r: UserRole) => {
             <div className="h-px flex-1 bg-white/10"></div>
           </div>
 
-          {/* FULL NAME */}
-          <div className="space-y-2">
-            <label className="text-sm text-slate-300">Họ và tên</label>
-            <input
-              type="text"
-              name="fullName"
-              value={formData.fullName}
-              onChange={handleChange}
-              placeholder="Nhập họ và tên"
-              className="w-full bg-slate-900/50 border border-white/10 rounded-xl h-14 px-5 focus:ring-2 focus:ring-indigo-500/50"
-            />
-          </div>
+          {role !== "Recruiter" ? (
+            <>
+              {/* FULL NAME */}
+              <div className="space-y-2">
+                <label className="text-sm text-slate-300">Họ và tên</label>
+                <input
+                  type="text"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  placeholder="Nhập họ và tên"
+                  className="w-full bg-slate-900/50 border border-white/10 rounded-xl h-14 px-5 focus:ring-2 focus:ring-indigo-500/50"
+                />
+              </div>
 
-          {/* EMAIL */}
-          <div className="space-y-2">
-            <label className="text-sm text-slate-300">Email</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="example@gmail.com"
-              className="w-full bg-slate-900/50 border border-white/10 rounded-xl h-14 px-5 focus:ring-2 focus:ring-indigo-500/50"
-            />
-          </div>
+              {/* EMAIL */}
+              <div className="space-y-2">
+                <label className="text-sm text-slate-300">Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="example@gmail.com"
+                  className="w-full bg-slate-900/50 border border-white/10 rounded-xl h-14 px-5 focus:ring-2 focus:ring-indigo-500/50"
+                />
+              </div>
 
-          {/* PASSWORD */}
-          <div className="space-y-2">
-            <label className="text-sm text-slate-300">Mật khẩu</label>
-            <div className="relative">
-              <input
-                type={viewPassword ? "text" : "password"}
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="••••••••"
-                className="w-full bg-slate-900/50 border border-white/10 rounded-xl h-14 px-5 pr-12 focus:ring-2 focus:ring-indigo-500/50"
-              />
-              <button
-                type="button"
-                onClick={toogleViewPassword}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
-              >
-                {viewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
+              {/* PASSWORD */}
+              <div className="space-y-2">
+                <label className="text-sm text-slate-300">Mật khẩu</label>
+                <div className="relative">
+                  <input
+                    type={viewPassword ? "text" : "password"}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    placeholder="••••••••"
+                    className="w-full bg-slate-900/50 border border-white/10 rounded-xl h-14 px-5 pr-12 focus:ring-2 focus:ring-indigo-500/50"
+                  />
+                  <button
+                    type="button"
+                    onClick={toogleViewPassword}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                  >
+                    {viewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="space-y-4 rounded-2xl border border-indigo-500/40 bg-slate-900/40 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-sm font-semibold text-white uppercase tracking-wide">
+                  Recruiter Registration
+                </h3>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`text-[10px] font-medium px-2 py-1 rounded-full border ${
+                      recruiterStep === 1 ? "text-indigo-200 border-indigo-400/40 bg-indigo-500/10" : "text-slate-400 border-white/10 bg-slate-950/30"
+                    }`}
+                  >
+                    Step 1
+                  </span>
+                  <span
+                    className={`text-[10px] font-medium px-2 py-1 rounded-full border ${
+                      recruiterStep === 2 ? "text-indigo-200 border-indigo-400/40 bg-indigo-500/10" : "text-slate-400 border-white/10 bg-slate-950/30"
+                    }`}
+                  >
+                    Step 2
+                  </span>
+                </div>
+              </div>
+
+              {recruiterStep === 1 ? (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-xs text-slate-300 uppercase tracking-wide">
+                      Company Name
+                    </label>
+                    <input
+                      type="text"
+                      name="companyName"
+                      value={recruiterFormData.companyName}
+                      onChange={handleRecruiterChange}
+                      placeholder="VD: IMATE Vietnam"
+                      className="w-full bg-slate-950/60 border border-white/10 rounded-xl h-12 px-4 text-sm focus:ring-2 focus:ring-indigo-500/50"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-xs text-slate-300 uppercase tracking-wide">
+                        Workforce Size
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        name="workforceSize"
+                        value={recruiterFormData.workforceSize}
+                        onChange={handleRecruiterChange}
+                        placeholder="VD: 120"
+                        className="w-full bg-slate-950/60 border border-white/10 rounded-xl h-12 px-4 text-sm focus:ring-2 focus:ring-indigo-500/50"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs text-slate-300 uppercase tracking-wide">
+                        Field of Activity
+                      </label>
+                      <input
+                        type="text"
+                        name="fieldOfActivity"
+                        value={recruiterFormData.fieldOfActivity}
+                        onChange={handleRecruiterChange}
+                        placeholder="VD: Software / FinTech / E-commerce..."
+                        className="w-full bg-slate-950/60 border border-white/10 rounded-xl h-12 px-4 text-sm focus:ring-2 focus:ring-indigo-500/50"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-xs text-slate-300 uppercase tracking-wide">
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      name="fullName"
+                      value={formData.fullName}
+                      onChange={handleChange}
+                      placeholder="Nhập họ và tên"
+                      className="w-full bg-slate-950/60 border border-white/10 rounded-xl h-12 px-4 text-sm focus:ring-2 focus:ring-indigo-500/50"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs text-slate-300 uppercase tracking-wide">
+                      Position
+                    </label>
+                    <input
+                      type="text"
+                      name="position"
+                      value={recruiterFormData.position}
+                      onChange={handleRecruiterChange}
+                      placeholder="VD: Talent Acquisition / HR Manager..."
+                      className="w-full bg-slate-950/60 border border-white/10 rounded-xl h-12 px-4 text-sm focus:ring-2 focus:ring-indigo-500/50"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs text-slate-300 uppercase tracking-wide">
+                      Work Email
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="example@company.com"
+                      className="w-full bg-slate-950/60 border border-white/10 rounded-xl h-12 px-4 text-sm focus:ring-2 focus:ring-indigo-500/50"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs text-slate-300 uppercase tracking-wide">
+                      Mật khẩu
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={viewPassword ? "text" : "password"}
+                        name="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        placeholder="••••••••"
+                        className="w-full bg-slate-950/60 border border-white/10 rounded-xl h-12 px-4 pr-12 text-sm focus:ring-2 focus:ring-indigo-500/50"
+                      />
+                      <button
+                        type="button"
+                        onClick={toogleViewPassword}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                      >
+                        {viewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs text-slate-300 uppercase tracking-wide">
+                      Authentic Documents
+                    </label>
+                    <div className="rounded-xl border border-white/10 bg-slate-950/40 px-4 py-3">
+                      <input
+                        type="file"
+                        onChange={handleRecruiterFileChange}
+                        className="block w-full text-sm text-slate-300 file:mr-4 file:rounded-lg file:border-0 file:bg-white file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-900 hover:file:bg-slate-100"
+                      />
+                      {recruiterFormData.authenticDocuments && (
+                        <p className="mt-2 text-xs text-slate-400">
+                          Đã chọn: <span className="text-slate-200">{recruiterFormData.authenticDocuments.name}</span>
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setRecruiterStep(1)}
+                    className="w-full h-11 rounded-xl border border-white/10 bg-slate-950/30 text-sm font-semibold text-slate-200 hover:bg-slate-950/50 transition cursor-pointer"
+                  >
+                    Quay lại Step 1
+                  </button>
+                </div>
+              )}
             </div>
-          </div>
+          )}
 
           {/* MENTOR EXTRA INFORMATION */}
           {role === "Mentor" && (
@@ -539,14 +776,25 @@ const getRoleLabel = (r: UserRole) => {
 
           {error && <p className="text-red-400 text-sm">{error}</p>}
 
-          {/* SUBMIT */}
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full h-14 bg-brand-gradient rounded-full font-bold shadow-lg shadow-indigo-500/25 hover:opacity-90 active:scale-[0.98] transition cursor-pointer"
-          >
-            {isLoading ? "Đang xử lý..." : "Tạo tài khoản"}
-          </button>
+          {/* ACTION BUTTON */}
+          {role === "Recruiter" && recruiterStep === 1 ? (
+            <button
+              type="button"
+              onClick={handleRecruiterNextStep}
+              disabled={isLoading}
+              className="w-full h-14 bg-brand-gradient rounded-full font-bold shadow-lg shadow-indigo-500/25 hover:opacity-90 active:scale-[0.98] transition cursor-pointer"
+            >
+              Next Step
+            </button>
+          ) : (
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full h-14 bg-brand-gradient rounded-full font-bold shadow-lg shadow-indigo-500/25 hover:opacity-90 active:scale-[0.98] transition cursor-pointer"
+            >
+              {isLoading ? "Đang xử lý..." : "Tạo tài khoản"}
+            </button>
+          )}
 
         </form>
 
