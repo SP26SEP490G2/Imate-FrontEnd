@@ -8,7 +8,7 @@ export interface User {
   avatarUrl?: string; // Thêm field này vì API trả về avatarUrl
   subscription: string;
   balance?: number;
-  role: "Mentor" | "Candidate" | string;
+  role: "Mentor" | "Candidate" | "Recruiter" | string;
   isNewAccount?: boolean; // Flag để biết đây có phải là account mới không
   accountStatus?: "Active" | "PendingVerification" | "Suspended"; // Trạng thái tài khoản
 
