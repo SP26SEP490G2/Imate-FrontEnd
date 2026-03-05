@@ -15,13 +15,6 @@ function SignUp() {
   const [viewPassword, setViewPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<Omit<RegisterEmailData, "role">>({ fullName: "", email: "", password: "" });
-  const [mentorFormData, setMentorFormData] = useState({
-    phone: "",
-    birthDate: "",
-    bankAccountHolderName: "",
-    bankName: "",
-    bankAccountNumber: "",
-  });
   const [recruiterStep, setRecruiterStep] = useState<1 | 2>(1);
   const [recruiterFormData, setRecruiterFormData] = useState<{
     companyName: string;
@@ -84,11 +77,6 @@ function SignUp() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     if (error) setError(null); // Xóa lỗi khi người dùng bắt đầu nhập lại
-  };
-
-  const handleMentorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setMentorFormData({ ...mentorFormData, [e.target.name]: e.target.value });
-    if (error) setError(null);
   };
 
   const handleRecruiterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -155,13 +143,6 @@ const getRoleLabel = (r: UserRole) => {
       return;
     }
 
-    if (role === "Mentor") {
-      if (!mentorFormData.phone || !mentorFormData.birthDate || !mentorFormData.bankAccountHolderName || !mentorFormData.bankName || !mentorFormData.bankAccountNumber) {
-        setError("Vui lòng điền đầy đủ thông tin đăng ký dành cho Mentor.");
-        return;
-      }
-    }
-
     if (role === "Recruiter") {
       const workforceSize = Number.parseInt(recruiterFormData.workforceSize, 10);
       if (!recruiterFormData.companyName || !recruiterFormData.workforceSize || !recruiterFormData.fieldOfActivity || !recruiterFormData.position || !recruiterFormData.authenticDocuments) {
@@ -184,21 +165,17 @@ const getRoleLabel = (r: UserRole) => {
       const auth = getAuth();
       const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
       if (userCredential.user) {
-        // Use custom action handler instead of Firebase default
         try {
           const oobCode = await generateActionCode(formData.email, "VERIFY_EMAIL");
-          //await sendActionEmail(oobCode, formData.email, "VERIFY_EMAIL");
           await sendActionEmail(oobCode, "startingimate@gmail.com", "VERIFY_EMAIL");
         } catch (emailError: any) {
           console.error("Failed to send verification email:", emailError);
-          // Don't fail registration if email sending fails
         }
       }
       await signOut(auth);
 
       // Sử dụng role đã chọn trong thông báo
       const roleLabel = getRoleLabel(role);
-      // Thay thế alert bằng một modal hoặc message box chuẩn hơn trong môi trường thực tế
       toast.success(`Đăng ký thành công vai trò ${roleLabel}! Vui lòng kiểm tra email của bạn để xác minh tài khoản trước khi đăng nhập.`);
       navigate("/sign-in");
     } catch (err: any) {
@@ -448,6 +425,11 @@ const getRoleLabel = (r: UserRole) => {
           <p className="text-slate-400">
             Trở thành thành viên và bắt đầu luyện tập ngay hôm nay
           </p>
+          {role === "Mentor" && (
+            <p className="mt-2 text-xs text-indigo-300/90">
+              Sau khi đăng ký, bạn cần đăng nhập và nộp hồ sơ Mentor tại bước tiếp theo.
+            </p>
+          )}
         </div>
 
         <form className="space-y-6" onSubmit={handleEmailPasswordSubmit}>
@@ -686,91 +668,6 @@ const getRoleLabel = (r: UserRole) => {
                   </button>
                 </div>
               )}
-            </div>
-          )}
-
-          {/* MENTOR EXTRA INFORMATION */}
-          {role === "Mentor" && (
-            <div className="space-y-4 rounded-2xl border border-indigo-500/40 bg-slate-900/40 p-4">
-              <div className="flex items-center justify-between gap-3 mb-1">
-                <h3 className="text-sm font-semibold text-white uppercase tracking-wide">
-                  Thông tin dành cho Mentor
-                </h3>
-                <span className="text-[10px] font-medium text-indigo-300 bg-indigo-500/10 px-2 py-1 rounded-full">
-                  Hồ sơ thanh toán & liên hệ
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-xs text-slate-300 uppercase tracking-wide">
-                    Số điện thoại liên hệ
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={mentorFormData.phone}
-                    onChange={handleMentorChange}
-                    placeholder="VD: 0987 654 321"
-                    className="w-full bg-slate-950/60 border border-white/10 rounded-xl h-12 px-4 text-sm focus:ring-2 focus:ring-indigo-500/50"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs text-slate-300 uppercase tracking-wide">
-                    Ngày sinh
-                  </label>
-                  <input
-                    type="date"
-                    name="birthDate"
-                    value={mentorFormData.birthDate}
-                    onChange={handleMentorChange}
-                    className="w-full bg-slate-950/60 border border-white/10 rounded-xl h-12 px-4 text-sm text-slate-200 focus:ring-2 focus:ring-indigo-500/50"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs text-slate-300 uppercase tracking-wide">
-                    Chủ tài khoản ngân hàng
-                  </label>
-                  <input
-                    type="text"
-                    name="bankAccountHolderName"
-                    value={mentorFormData.bankAccountHolderName}
-                    onChange={handleMentorChange}
-                    placeholder="Họ và tên chủ tài khoản"
-                    className="w-full bg-slate-950/60 border border-white/10 rounded-xl h-12 px-4 text-sm focus:ring-2 focus:ring-indigo-500/50"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs text-slate-300 uppercase tracking-wide">
-                    Ngân hàng
-                  </label>
-                  <input
-                    type="text"
-                    name="bankName"
-                    value={mentorFormData.bankName}
-                    onChange={handleMentorChange}
-                    placeholder="VD: Vietcombank, Techcombank, HSBC..."
-                    className="w-full bg-slate-950/60 border border-white/10 rounded-xl h-12 px-4 text-sm focus:ring-2 focus:ring-indigo-500/50"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs text-slate-300 uppercase tracking-wide">
-                  Số tài khoản
-                </label>
-                <input
-                  type="text"
-                  name="bankAccountNumber"
-                  value={mentorFormData.bankAccountNumber}
-                  onChange={handleMentorChange}
-                  placeholder="Nhập số tài khoản ngân hàng của bạn"
-                  className="w-full bg-slate-950/60 border border-white/10 rounded-xl h-12 px-4 text-sm focus:ring-2 focus:ring-indigo-500/50"
-                />
-              </div>
             </div>
           )}
 
