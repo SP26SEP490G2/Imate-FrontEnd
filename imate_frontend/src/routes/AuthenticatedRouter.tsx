@@ -15,12 +15,14 @@ const AuthenticatedRouter: RouteObject[] = [
     ),
     children: [
       { path: "profile", element: <ViewProfile /> },
+
       // { path: "/save-question", element: <ViewSaveQuestion /> },
       // { path: "/transactions", element: <TransactionHistoryPage /> },
       // { path: "/wallet", element: <WalletSummary /> },
       // { path: "/payment-success", element: <PaymentSuccessPage /> },
       // { path: "/payment-cancel", element: <PaymentCancelPage /> },
       // { path: "/cv-management", element: <CvManagementPage /> },
+
       { path: "submit-mentor-application", element: <SubmitMentorApplication /> },
       { path: "pending-application", element: <PendingApplication /> },
     ],
