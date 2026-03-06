@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  getAllSystemQuestionsForStaff, 
+import { useNavigate } from 'react-router-dom';
+import {
+  getAllSystemQuestionsForStaff,
   getAllContributedQuestionsForStaff,
   getListQuestionCategories
 } from '@/services/questionService';
+import UpdateSystemQuestionModal from '@/components/staff/UpdateSystemQuestionModal';
 import type {
   StaffSystemQuestionItem,
   StaffContributedQuestionItem,
@@ -15,12 +17,12 @@ import type {
   PositionItem,
   SkillItem
 } from '@/types/common/question';
-import { 
-  Eye, 
-  Pencil, 
-  Trash2, 
-  Plus, 
-  Download, 
+import {
+  Eye,
+  Pencil,
+  Trash2,
+  Plus,
+  Download,
   Upload,
   ChevronLeft,
   ChevronRight
@@ -29,10 +31,15 @@ import {
 type TabType = 'system' | 'contributed';
 
 const StaffQuestionManagement: React.FC = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>('system');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
+  // Update modal state
+  const [updateModalOpen, setUpdateModalOpen] = useState(false);
+  const [selectedQuestionId, setSelectedQuestionId] = useState<number | null>(null);
+
   // System Questions State
   const [systemQuestions, setSystemQuestions] = useState<StaffSystemQuestionItem[]>([]);
   const [systemPagination, setSystemPagination] = useState({
@@ -170,12 +177,26 @@ const StaffQuestionManagement: React.FC = () => {
     }
   };
 
+  const handleEditQuestion = (questionId: number) => {
+    setSelectedQuestionId(questionId);
+    setUpdateModalOpen(true);
+  };
+
+  const handleUpdateSuccess = () => {
+    // Refresh the question list after successful update
+    if (activeTab === 'system') {
+      fetchSystemQuestions();
+    } else {
+      fetchContributedQuestions();
+    }
+  };
+
   const renderPagination = () => {
     const pagination = activeTab === 'system' ? systemPagination : contributedPagination;
     const { pageNumber, totalPages, totalCount, pageSize } = pagination;
 
     const pages = [];
-    
+
     if (totalPages <= 7) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
@@ -207,7 +228,7 @@ const StaffQuestionManagement: React.FC = () => {
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
-          
+
           {pages.map((page, index) => {
             if (page === '...') {
               return (
@@ -216,22 +237,21 @@ const StaffQuestionManagement: React.FC = () => {
                 </span>
               );
             }
-            
+
             return (
               <button
                 key={page}
                 onClick={() => handlePageChange(page as number)}
-                className={`w-10 h-10 rounded-xl font-bold transition-all ${
-                  pageNumber === page
-                    ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30'
-                    : 'bg-[#1e293b]/40 text-slate-400 hover:bg-white/10 hover:text-white border border-white/5'
-                }`}
+                className={`w-10 h-10 rounded-xl font-bold transition-all ${pageNumber === page
+                  ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30'
+                  : 'bg-[#1e293b]/40 text-slate-400 hover:bg-white/10 hover:text-white border border-white/5'
+                  }`}
               >
                 {page}
               </button>
             );
           })}
-          
+
           <button
             onClick={() => handlePageChange(pageNumber + 1)}
             disabled={pageNumber === totalPages}
@@ -288,7 +308,7 @@ const StaffQuestionManagement: React.FC = () => {
               </span>
               STAFF PANEL
             </div>
-            
+
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
               <div>
                 <h1 className="text-4xl md:text-5xl font-extrabold mb-4 bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
@@ -307,7 +327,10 @@ const StaffQuestionManagement: React.FC = () => {
                   <Upload className="w-4 h-4" />
                   Import câu hỏi
                 </button>
-                <button className="bg-gradient-to-r from-indigo-500 to-purple-500 px-4 py-3 rounded-xl flex items-center gap-2 text-sm font-bold shadow-lg shadow-indigo-500/20 hover:opacity-90 transition-all text-white">
+                <button
+                  onClick={() => navigate('/staff/add-system-question')}
+                  className="bg-gradient-to-r from-indigo-500 to-purple-500 px-4 py-3 rounded-xl flex items-center gap-2 text-sm font-bold shadow-lg shadow-indigo-500/20 hover:opacity-90 transition-all text-white"
+                >
                   <Plus className="w-4 h-4" />
                   Thêm câu hỏi
                 </button>
@@ -321,21 +344,19 @@ const StaffQuestionManagement: React.FC = () => {
             <div className="flex border-b border-white/10 gap-8">
               <button
                 onClick={() => setActiveTab('system')}
-                className={`pb-4 font-bold text-xs uppercase tracking-widest border-b-2 transition-colors ${
-                  activeTab === 'system'
-                    ? 'text-indigo-400 border-indigo-500'
-                    : 'text-slate-400 border-transparent hover:text-white'
-                }`}
+                className={`pb-4 font-bold text-xs uppercase tracking-widest border-b-2 transition-colors ${activeTab === 'system'
+                  ? 'text-indigo-400 border-indigo-500'
+                  : 'text-slate-400 border-transparent hover:text-white'
+                  }`}
               >
                 Câu hỏi hệ thống
               </button>
               <button
                 onClick={() => setActiveTab('contributed')}
-                className={`pb-4 font-bold text-xs uppercase tracking-widest border-b-2 transition-colors ${
-                  activeTab === 'contributed'
-                    ? 'text-indigo-400 border-indigo-500'
-                    : 'text-slate-400 border-transparent hover:text-white'
-                }`}
+                className={`pb-4 font-bold text-xs uppercase tracking-widest border-b-2 transition-colors ${activeTab === 'contributed'
+                  ? 'text-indigo-400 border-indigo-500'
+                  : 'text-slate-400 border-transparent hover:text-white'
+                  }`}
               >
                 Câu hỏi đóng góp
               </button>
@@ -549,6 +570,7 @@ const StaffQuestionManagement: React.FC = () => {
                               <Eye className="w-4 h-4" />
                             </button>
                             <button
+                              onClick={() => handleEditQuestion(question.id)}
                               className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-white hover:bg-indigo-500 transition-all"
                               title="Sửa"
                             >
@@ -638,6 +660,19 @@ const StaffQuestionManagement: React.FC = () => {
             renderPagination()}
         </div>
       </main>
+
+      {/* Update Question Modal */}
+      {selectedQuestionId && (
+        <UpdateSystemQuestionModal
+          questionId={selectedQuestionId}
+          isOpen={updateModalOpen}
+          onClose={() => {
+            setUpdateModalOpen(false);
+            setSelectedQuestionId(null);
+          }}
+          onSuccess={handleUpdateSuccess}
+        />
+      )}
     </div>
   );
 };

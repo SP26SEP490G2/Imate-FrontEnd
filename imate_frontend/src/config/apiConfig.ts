@@ -29,9 +29,24 @@ const APIConfig = {
     GetListQuestionCategories: "/get-list-question-categories",
     GetAllSystemQuestionsForStaff: "/get-all-system-question-banks-for-staff",
     GetAllContributedQuestionsForStaff: "/get-all-contributed-question-banks-for-staff",
+    CreateSystemQuestionForStaff: "/create-system-question-for-staff",
+    UpdateSystemQuestionForStaff: "/update-system-question-for-staff/{questionId}",
+    GetSystemQuestionDetail: "/get-system-question-detail/{questionId}",
+  },
 
+  // Position endpoints
+  Position: {
+    GetAllPositions: "/get-positions",
+  },
 
+  // Skills endpoints
+  Skills: {
+    GetAllSkills: "/get-skills",
+  },
 
+  // Companies endpoints
+  Companies: {
+    GetAllCompanies: "/get-companies",
   },
 } as const;
 
