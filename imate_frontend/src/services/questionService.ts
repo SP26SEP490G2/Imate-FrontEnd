@@ -1,7 +1,7 @@
 import apiClient from "./apiClient";
 import APIConfig from "@/config/apiConfig";
-import type { 
-  ListHotQuestionResponse, 
+import type {
+  ListHotQuestionResponse,
   GetListHotQuestionsResponse,
   QuestionBankListResponse,
   GetQuestionBankListResponse,
@@ -12,7 +12,12 @@ import type {
   StaffContributedQuestionItem,
   StaffQuestionListResponse,
   GetSystemQuestionParams,
-  GetContributedQuestionParams
+  GetContributedQuestionParams,
+  CreateSystemQuestionRequest,
+  UpdateSystemQuestionRequest,
+  CreateQuestionResponse,
+  UpdateQuestionResponse,
+  SystemQuestionDetail
 } from "@/types/common/question";
 
 /**
@@ -59,7 +64,7 @@ export const getAllSystemQuestionsForStaff = async (
     APIConfig.Question.GetAllSystemQuestionsForStaff,
     { params }
   );
-  
+
   // Extract pagination from headers
   const paginationHeader = response.headers['x-pagination'];
   const pagination = paginationHeader ? JSON.parse(paginationHeader) : {
@@ -68,7 +73,7 @@ export const getAllSystemQuestionsForStaff = async (
     pageNumber: params.pageNumber || 1,
     totalPages: 0
   };
-  
+
   return {
     data: response.data.data || [],
     totalCount: pagination.totalCount || pagination.TotalCount,
@@ -90,7 +95,7 @@ export const getAllContributedQuestionsForStaff = async (
     APIConfig.Question.GetAllContributedQuestionsForStaff,
     { params }
   );
-  
+
   // Extract pagination from headers
   const paginationHeader = response.headers['x-pagination'];
   const pagination = paginationHeader ? JSON.parse(paginationHeader) : {
@@ -99,7 +104,7 @@ export const getAllContributedQuestionsForStaff = async (
     pageNumber: params.pageNumber || 1,
     totalPages: 0
   };
-  
+
   return {
     data: response.data.data || [],
     totalCount: pagination.totalCount || pagination.TotalCount,
@@ -107,4 +112,50 @@ export const getAllContributedQuestionsForStaff = async (
     pageSize: pagination.pageSize || pagination.PageSize,
     totalPages: pagination.totalPages || pagination.TotalPages
   };
+};
+
+/**
+ * Create a new system question for staff
+ * @param request - Question data
+ * @returns Promise with created question info
+ */
+export const createSystemQuestionForStaff = async (
+  request: CreateSystemQuestionRequest
+): Promise<CreateQuestionResponse> => {
+  const response = await apiClient.post<CreateQuestionResponse>(
+    APIConfig.Question.CreateSystemQuestionForStaff,
+    request
+  );
+  return response.data;
+};
+
+/**
+ * Update an existing system question for staff
+ * @param questionId - ID of the question to update
+ * @param request - Updated question data
+ * @returns Promise with updated question info
+ */
+export const updateSystemQuestionForStaff = async (
+  questionId: number,
+  request: UpdateSystemQuestionRequest
+): Promise<UpdateQuestionResponse> => {
+  const response = await apiClient.put<UpdateQuestionResponse>(
+    APIConfig.Question.UpdateSystemQuestionForStaff.replace('{questionId}', String(questionId)),
+    request
+  );
+  return response.data;
+};
+
+/**
+ * Get detailed information for a specific system question (for editing)
+ * @param questionId - ID of the question
+ * @returns Promise with question details
+ */
+export const getSystemQuestionDetail = async (
+  questionId: number
+): Promise<SystemQuestionDetail> => {
+  const response = await apiClient.get<{ data: SystemQuestionDetail }>(
+    APIConfig.Question.GetSystemQuestionDetail.replace('{questionId}', String(questionId))
+  );
+  return response.data.data;
 };
