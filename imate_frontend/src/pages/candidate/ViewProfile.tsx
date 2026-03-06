@@ -1,5 +1,5 @@
 import type React from "react";
-
+import { Globe, Users, MapPin } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/store/AuthContext";
@@ -22,6 +22,7 @@ import usePriceUpdateControl from "@/helpers/usePriceUpdateControl";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CommonBreadcrumb } from "@/components/ui/breadcrumb";
 import { cn } from "@/lib/utils";
+import UpdateRecruiterDialog from "../dialog/UpdateRecruiterDialog";
 
 const nameSchema = z.object({
   fullName: z.string().min(2, "Tên phải có ít nhất 2 ký tự"),
@@ -123,6 +124,7 @@ const ViewProfile = () => {
   }, [user, refetchUser]);
 
   const currentPlan = user?.subscription || "Gói Thường";
+  const isRecruiter = user?.role === "Recruiter";
   const isMentor = user?.role === "Mentor";
   const isAdmin = user?.role === "Admin";
   const isStaff = user?.role === "Staff";
@@ -470,6 +472,98 @@ const ViewProfile = () => {
             )}
           </div>
         )}
+
+        {/* === RECRUITER DETAILS SECTION === */}
+{isRecruiter && (
+  <div className="mx-auto mt-10 space-y-8">
+
+    {/* Company Info */}
+    <Card className="rounded-[16px] border border-white/10 bg-[#11142D] shadow-[0_20px_40px_rgba(0,0,0,0.35)]">
+<CardHeader className="flex items-center justify-between">
+  <CardTitle className="flex items-center gap-2 text-white">
+    <Building size={18} />
+    Thông tin công ty
+  </CardTitle>
+
+  <UpdateRecruiterDialog
+    data={user}
+    onSubmit={() => refetchUser()}
+  />
+</CardHeader>
+
+      <CardContent className="space-y-5">
+
+        {/* Company Logo + Name */}
+        {(user.companyLogo || user.companyName) && (
+          <div className="flex items-center gap-4">
+            {user.companyLogo && (
+              <img
+                src={user.companyLogo}
+                className="h-16 w-16 rounded-lg object-contain bg-white p-2"
+              />
+            )}
+
+            <div>
+              <p className="text-sm text-gray-400">Tên công ty</p>
+              <p className="text-white font-semibold">
+                {user.companyName || "Chưa cập nhật"}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Website */}
+        {user.website && (
+          <div className="flex items-center gap-3">
+            <Globe size={18} className="text-gray-400" />
+            <a
+              href={user.website}
+              target="_blank"
+              className="text-[#A78BFA] text-sm hover:underline"
+            >
+              {user.website}
+            </a>
+          </div>
+        )}
+
+        {/* Industry */}
+        {user.industry && (
+          <div className="flex items-center gap-3">
+            <Briefcase size={18} className="text-gray-400" />
+            <div>
+              <p className="text-sm text-gray-400">Lĩnh vực</p>
+              <p className="text-sm text-[#A0A3BD]">{user.industry}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Company Size */}
+        {user.companySize && (
+          <div className="flex items-center gap-3">
+            <Users size={18} className="text-gray-400" />
+            <div>
+              <p className="text-sm text-gray-400">Quy mô công ty</p>
+              <p className="text-sm text-[#A0A3BD]">{user.companySize}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Address */}
+        {user.address && (
+          <div className="flex items-center gap-3">
+            <MapPin size={18} className="text-gray-400" />
+            <div>
+              <p className="text-sm text-gray-400">Địa chỉ</p>
+              <p className="text-sm text-[#A0A3BD]">{user.address}</p>
+            </div>
+          </div>
+        )}
+
+      </CardContent>
+    </Card>
+
+  </div>
+)}
 
         {/* === 3. CONTENT AREA (Settings Tab) === */}
         <div className={`mx-auto grid grid-cols-1 gap-8 ${!(isMentor || isAdmin || isStaff) ? "mt-10 lg:grid-cols-3" : "mt-8 lg:grid-cols-1"}`}>
