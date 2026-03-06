@@ -139,3 +139,48 @@ export interface CompanyItem {
   id: number;
   name: string;
 }
+
+// Create and Update System Question Types
+export interface CreateSystemQuestionRequest {
+  content: string;
+  difficulty: DifficultyLevel;
+  sampleAnswer: string;
+  categoryIds: number[];
+  skillIds: number[];
+  positionIds: number[];
+  creatorId: number;
+}
+
+export interface UpdateSystemQuestionRequest {
+  content: string;
+  difficulty: DifficultyLevel;
+  sampleAnswer: string;
+  isActive: boolean;
+  categoryIds: number[];
+  skillIds: number[];
+  positionIds: number[];
+}
+
+export interface CreateQuestionResponse {
+  message: string;
+  questionId: number;
+}
+
+export interface UpdateQuestionResponse {
+  message: string;
+  questionId: number;
+}
+
+// Detailed Question for Edit
+export interface SystemQuestionDetail {
+  id: number;
+  content: string;
+  difficulty: DifficultyLevel;
+  sampleAnswer: string;
+  isActive: boolean;
+  categories: CategoryItem[];
+  skills: SkillItem[];
+  positions: PositionItem[];
+  createdAt: string;
+  updatedAt: string;
+}
