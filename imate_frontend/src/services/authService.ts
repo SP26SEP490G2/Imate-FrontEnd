@@ -23,7 +23,7 @@ export const changePassword = async (data: ChangePasswordData) => {
   }
 }
 
-export const updateUserRole = async (role: "Candidate" | "Mentor") => {
+export const updateUserRole = async (role: "Candidate" | "Mentor" | "Recruiter") => {
   return apiClient.put(APIConfig.Auth.UpdateRole, { role });
 }
 

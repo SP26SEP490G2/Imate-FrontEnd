@@ -17,6 +17,9 @@ const APIConfig = {
   // Mentor endpoints
   Mentor: {
     GetListPreviewMentors: "/get-list-preview-mentors",
+    SubmitMentorProfile: "/profile/mentor",
+
+
   },
 
   // Question endpoints

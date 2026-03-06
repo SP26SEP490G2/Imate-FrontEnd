@@ -98,7 +98,7 @@ const MainLayout: React.FC = () => {
       {isRoot ? null : user?.role === "Candidate" ? (
         <Footer />
       ) : user?.role === "Mentor" ? (
-        <div className="mt-6 flex min-h-full flex-col bg-gray-50">
+        <div className=" flex min-h-full flex-col bg-gray-50">
           <footer className="text-white" style={{ background: "linear-gradient(135deg, #5D5FEF 0%, #4a4cc9 100%)" }}>
             <div className="container mx-auto px-4 py-6 sm:px-6 lg:px-8 lg:py-7">
               <div className="flex items-center justify-center">
