@@ -60,15 +60,14 @@ export default function SubmitRecruiterApplication() {
     return null;
   }
   if (user.accountStatus === "Active") {
-    navigate("/recruiter/dashboard", { replace: true }); // Giả định route cho dashboard recruiter
+    navigate("/recruiter/dashboard", { replace: true });
     return null;
   }
-  // Giả định: nếu user đã có phone hoặc công ty thì tống sang pending
-  // Có thể phải thay đổi logic này dựa trên API GetProfile trả về
-  if (user.phone) {
+  if (user.accountStatus === "PendingVerification") {
     navigate("/recruiter-pending-application", { replace: true });
     return null;
   }
+
 
   const inputClass = "w-full bg-slate-900/50 border border-white/10 rounded-xl h-12 px-4 text-sm focus:ring-2 focus:ring-indigo-500/50 text-white placeholder-slate-500";
   const labelClass = "text-sm text-slate-300 font-medium mb-1 block";

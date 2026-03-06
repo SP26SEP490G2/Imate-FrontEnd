@@ -4,6 +4,8 @@ import MainLayout from "@/layout/MainLayout";
 import ViewProfile from "@/pages/candidate/ViewProfile";
 import SubmitMentorApplication from "@/pages/mentor/SubmitMentorApplication";
 import PendingApplication from "@/pages/mentor/PendingApplication";
+import SubmitRecruiterApplication from "@/pages/recruiter/SubmitRecruiterApplication";
+import RecruiterPendingApplication from "@/pages/recruiter/PendingApplication";
 
 const AuthenticatedRouter: RouteObject[] = [
   {
@@ -25,6 +27,9 @@ const AuthenticatedRouter: RouteObject[] = [
 
       { path: "submit-mentor-application", element: <SubmitMentorApplication /> },
       { path: "pending-application", element: <PendingApplication /> },
+
+      { path: "submit-recruiter-application", element: <SubmitRecruiterApplication /> },
+      { path: "recruiter-pending-application", element: <RecruiterPendingApplication /> },
     ],
   },
 ];
