@@ -48,6 +48,11 @@ const APIConfig = {
   Companies: {
     GetAllCompanies: "/get-companies",
   },
+
+  // Recruiter endpoints
+  Recruiter: {
+    SubmitRecruiterProfile: "/recruiters/submit-profile",
+  },
 } as const;
 
 export default APIConfig;

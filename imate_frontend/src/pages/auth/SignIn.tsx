@@ -38,22 +38,24 @@ function SignIn() {
       case "Mentor":
         // Kiểm tra AccountStatus:
         // - Active: đã được duyệt → navigate đến trang mentor chính
-        // - PendingVerification + có mentor profile (bio, phone, etc.): đã submit form, đang chờ duyệt → navigate đến pending-application
-        // - PendingVerification + chưa có mentor profile: account mới chưa submit form → navigate đến submit-mentor-application
+        // - PendingVerification: đã submit form HOẶC đang chờ duyệt → navigate đến pending-application
+        // - Nếu không có status hoặc status khác: account mới chưa nộp hồ sơ
         if (user.accountStatus === "Active") {
-          navigate("/mentor");
+          navigate("/mentor/interview-schedule");
         } else if (user.accountStatus === "PendingVerification") {
-          // Kiểm tra xem đã có mentor profile chưa (có bio hoặc phone là đã submit form)
-          if (user.bio || user.phone) {
-            // Đã submit form, đang chờ duyệt
-            navigate("/pending-application");
-          } else {
-            // Chưa submit form
-            navigate("/submit-mentor-application");
-          }
+          navigate("/pending-application");
         } else {
-          // AccountStatus không hợp lệ hoặc chưa set, điều hướng đến submit form
           navigate("/submit-mentor-application");
+        }
+        break;
+      case "Recruiter":
+        // Tương tự Mentor:
+        if (user.accountStatus === "Active") {
+          navigate("/recruiter/dashboard");
+        } else if (user.accountStatus === "PendingVerification") {
+          navigate("/recruiter-pending-application");
+        } else {
+          navigate("/submit-recruiter-application");
         }
         break;
       case "Candidate":
@@ -131,12 +133,6 @@ function SignIn() {
       if (!updatedUser.role || updatedUser.role !== role) {
         console.warn(`[SignIn] Role từ API (${updatedUser.role}) không khớp với role request (${role}), sử dụng role từ request`);
         updatedUser = { ...updatedUser, role };
-      }
-
-      // Đảm bảo accountStatus được set đúng cho Mentor
-      if (role === "Mentor" && !updatedUser.accountStatus) {
-        console.warn(`[SignIn] AccountStatus chưa có, set mặc định là PendingVerification cho Mentor`);
-        updatedUser = { ...updatedUser, accountStatus: "PendingVerification" };
       }
 
       // Xóa isNewAccount sau khi user đã chọn role (account không còn là "new" nữa)
