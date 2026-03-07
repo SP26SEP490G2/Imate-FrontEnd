@@ -96,7 +96,7 @@ function Header() {
               {/* Wallet */}
               <Button
                 variant="outline"
-                className="border-white/20 text-white"
+                className="border-white/20 text-white cursor-pointer"
                 onClick={() => navigate("/wallet")}
               >
                 <Wallet className="w-4 h-4 mr-2" />
