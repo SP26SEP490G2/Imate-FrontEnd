@@ -48,6 +48,18 @@ const APIConfig = {
   Companies: {
     GetAllCompanies: "/get-companies",
   },
+
+  // Recruiter endpoints
+  Recruiter: {
+    SubmitRecruiterProfile: "/recruiters/submit-profile",
+  },
+
+  // Staff review endpoints (baseURL thường đã có /api)
+  StaffReview: {
+    GetPendingMentors: "/staff-review/mentors/pending",
+    GetMentorById: "/staff-review/mentors",
+    ReviewMentor: "/staff-review/mentors",
+  },
 } as const;
 
 export default APIConfig;

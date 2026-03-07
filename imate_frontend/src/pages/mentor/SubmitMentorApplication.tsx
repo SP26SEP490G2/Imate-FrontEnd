@@ -71,7 +71,7 @@ export default function SubmitMentorApplication() {
     navigate("/mentor/interview-schedule", { replace: true });
     return null;
   }
-  if (user.bio || user.phone) {
+  if (user.accountStatus === "PendingVerification") {
     navigate("/pending-application", { replace: true });
     return null;
   }
