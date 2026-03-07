@@ -8,6 +8,7 @@ import HomePage from "../pages/guest/HomePage";
 import SystemQuestionBank from "../pages/guest/SystemQuestionBank";
 import { managementRoutes } from "@/config/managementRoutes";
 import ManagementLayout from "@/layout/ManagementLayout";
+import ViewSubscriptionPage from "../pages/guest/ViewSubscriptionPage";
 
 import type { RouteObject } from "react-router-dom";
 
@@ -31,7 +32,10 @@ const CommonRouter: RouteObject[] = [
       element: route.element,
     })),
   ],
-}
+},
+  { path: "/view-subscription", element: <ViewSubscriptionPage /> },
+  { path: "/bang-gia", element: <ViewSubscriptionPage /> },
+  { path: "/pricing", element: <ViewSubscriptionPage /> },
 ];
 
 export default CommonRouter;

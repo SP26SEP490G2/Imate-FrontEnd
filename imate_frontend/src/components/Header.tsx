@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from "react-router-dom";
 
 const Header: React.FC = () => {
   return (
@@ -21,9 +22,9 @@ const Header: React.FC = () => {
             <a className="text-sm font-semibold text-slate-300 hover:text-white transition-colors" href="#">
               Kết nối Mentor
             </a>
-            <a className="text-sm font-semibold text-slate-300 hover:text-white transition-colors" href="#">
+            <Link className="text-sm font-semibold text-slate-300 hover:text-white transition-colors" to="/view-subscription">
               Bảng giá
-            </a>
+            </Link>
           </nav>
         </div>
         <div className="flex items-center gap-3">
