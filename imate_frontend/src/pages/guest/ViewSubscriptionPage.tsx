@@ -1,0 +1,136 @@
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import Header from "../../components/Header";
+import Footer from "@/components/Footer";
+import { useSubscriptionPackages } from "@/hooks/useSubscriptionPackages";
+import { useAuth } from "@/store/AuthContext";
+
+const formatPrice = (price: number) => {
+  if (price === 0) {
+    return "Miễn phí";
+  }
+
+  return `${price.toLocaleString("vi-VN")}đ`;
+};
+
+const ViewSubscriptionPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { data: packages = [], isLoading, error, refetch } = useSubscriptionPackages();
+
+  const handleCtaClick = () => {
+    if (!user) {
+      navigate("/sign-in");
+      return;
+    }
+
+    toast.info("Tính năng thanh toán sẽ sớm ra mắt.");
+  };
+
+  return (
+    <div className="font-sans bg-[#020617] min-h-screen">
+      <Header />
+
+      <main className="px-6 pb-20 pt-16">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-14">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-bold mb-5">
+              BẢNG GIÁ IMATE
+            </div>
+            <h1 className="text-4xl md:text-5xl font-extrabold mb-4 bg-gradient-to-r from-white via-indigo-200 to-purple-300 bg-clip-text text-transparent">
+              Chọn gói dịch vụ phù hợp với bạn
+            </h1>
+            <p className="text-slate-400 max-w-2xl mx-auto">
+              Mở khóa nhiều quyền lợi hơn để tăng tốc hành trình luyện phỏng vấn IT cùng Imate.
+            </p>
+          </div>
+
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[1, 2, 3].map((item) => (
+                <div key={item} className="animate-pulse rounded-3xl border border-white/10 bg-[#1e293b]/50 p-8">
+                  <div className="h-5 w-24 bg-slate-700 rounded mb-4" />
+                  <div className="h-10 w-36 bg-slate-700 rounded mb-6" />
+                  <div className="space-y-3 mb-8">
+                    <div className="h-4 w-full bg-slate-800 rounded" />
+                    <div className="h-4 w-4/5 bg-slate-800 rounded" />
+                    <div className="h-4 w-3/5 bg-slate-800 rounded" />
+                  </div>
+                  <div className="h-11 w-full bg-slate-700 rounded-xl" />
+                </div>
+              ))}
+            </div>
+          ) : error ? (
+            <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-6 py-10 text-center">
+              <p className="text-red-300 mb-4">
+                {error instanceof Error ? error.message : "Không thể tải danh sách gói dịch vụ."}
+              </p>
+              <button
+                onClick={() => refetch()}
+                className="px-6 py-2 rounded-xl bg-indigo-500 text-white font-semibold hover:bg-indigo-600 transition-all"
+              >
+                Thử lại
+              </button>
+            </div>
+          ) : packages.length === 0 ? (
+            <div className="rounded-2xl border border-white/10 bg-[#1e293b]/40 px-6 py-10 text-center text-slate-300">
+              Hiện chưa có gói dịch vụ khả dụng.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {packages.slice(0, 3).map((subscriptionPackage) => {
+                const isFree = subscriptionPackage.price === 0;
+
+                return (
+                  <article
+                    key={subscriptionPackage.id}
+                    className={`relative rounded-3xl border p-8 backdrop-blur-sm transition-all ${
+                      subscriptionPackage.isRecommended
+                        ? "bg-gradient-to-b from-indigo-500/20 to-purple-500/10 border-indigo-400/50 shadow-xl shadow-indigo-900/30"
+                        : "bg-[#1e293b]/45 border-white/10"
+                    }`}
+                  >
+                    {subscriptionPackage.isRecommended && (
+                      <span className="absolute top-5 right-5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 px-3 py-1 text-[11px] font-bold text-white">
+                        KHUYÊN DÙNG
+                      </span>
+                    )}
+
+                    <h2 className="text-white text-2xl font-bold mb-2">{subscriptionPackage.name}</h2>
+                    <p className="text-3xl font-extrabold text-white mb-1">{formatPrice(subscriptionPackage.price)}</p>
+                    <p className="text-sm text-slate-400 mb-6">{subscriptionPackage.duration}</p>
+
+                    <ul className="space-y-3 mb-8 min-h-[120px]">
+                      {subscriptionPackage.benefits.map((benefit, index) => (
+                        <li key={`${subscriptionPackage.id}-${index}`} className="flex items-start gap-2 text-slate-200 text-sm">
+                          <span className="text-indigo-400 mt-0.5">✓</span>
+                          <span>{benefit}</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <button
+                      onClick={handleCtaClick}
+                      className={`w-full py-3 rounded-xl font-bold transition-all ${
+                        subscriptionPackage.isRecommended
+                          ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:opacity-90"
+                          : "bg-white text-[#0f172a] hover:bg-slate-100"
+                      }`}
+                    >
+                      {isFree ? "Bắt đầu ngay" : "Mua ngay"}
+                    </button>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </main>
+
+      <Footer />
+    </div>
+  );
+};
+
+export default ViewSubscriptionPage;

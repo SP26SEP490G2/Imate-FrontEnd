@@ -48,6 +48,11 @@ const APIConfig = {
   Companies: {
     GetAllCompanies: "/get-companies",
   },
+
+  // Subscription endpoints
+  Subscription: {
+    GetSubscriptionPackages: "/subscription-packages",
+  },
 } as const;
 
 export default APIConfig;

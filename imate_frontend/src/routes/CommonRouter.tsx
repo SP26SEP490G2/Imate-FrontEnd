@@ -2,6 +2,7 @@ import StaffQuestionManagement from "@/pages/staff/StaffQuestionManagement";
 import AddSystemQuestion from "@/pages/staff/AddSystemQuestion";
 import HomePage from "../pages/guest/HomePage";
 import SystemQuestionBank from "../pages/guest/SystemQuestionBank";
+import ViewSubscriptionPage from "../pages/guest/ViewSubscriptionPage";
 
 import type { RouteObject } from "react-router-dom";
 
@@ -10,6 +11,9 @@ const CommonRouter: RouteObject[] = [
   { path: "/Ngan-hang-cau-hoi-he-thong", element: <SystemQuestionBank /> },
   { path: "/Staff/Quan-ly-cau-hoi", element: <StaffQuestionManagement /> },
   { path: "/Staff/Them-cau-hoi", element: <AddSystemQuestion /> },
+  { path: "/view-subscription", element: <ViewSubscriptionPage /> },
+  { path: "/bang-gia", element: <ViewSubscriptionPage /> },
+  { path: "/pricing", element: <ViewSubscriptionPage /> },
 ];
 
 export default CommonRouter;
