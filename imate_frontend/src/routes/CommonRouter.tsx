@@ -1,5 +1,7 @@
 import StaffQuestionManagement from "@/pages/staff/StaffQuestionManagement";
 import AddSystemQuestion from "@/pages/staff/AddSystemQuestion";
+import ReviewMentorApplication from "@/pages/staff/ReviewMentorApplication";
+import MentorDetailForStaff from "@/pages/staff/MentorDetailForStaff";
 import HomePage from "../pages/guest/HomePage";
 import SystemQuestionBank from "../pages/guest/SystemQuestionBank";
 
@@ -10,6 +12,8 @@ const CommonRouter: RouteObject[] = [
   { path: "/Ngan-hang-cau-hoi-he-thong", element: <SystemQuestionBank /> },
   { path: "/Staff/Quan-ly-cau-hoi", element: <StaffQuestionManagement /> },
   { path: "/Staff/Them-cau-hoi", element: <AddSystemQuestion /> },
+  { path: "/staff/manage-application", element: <ReviewMentorApplication /> },
+  { path: "/staff/manage-application/mentor/:id", element: <MentorDetailForStaff /> },
 ];
 
 export default CommonRouter;

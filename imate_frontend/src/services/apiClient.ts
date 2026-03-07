@@ -1,5 +1,7 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 
+const SKIP_AUTH_REDIRECT_FOR_TEST = true;
+
 // 1. Định nghĩa API_BASE_URL ở đây
  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 //const API_BASE_URL = "http://localhost:5067"; // Thay thế bằng URL thực tế của backend
@@ -50,9 +52,7 @@ apiClient.interceptors.response.use(
   async (error: AxiosError<any>) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean; _skipAuthRedirect?: boolean };
 
-    // Nếu lỗi 401 (Unauthorized) và chưa retry
     if (error.response?.status === 401 && !originalRequest._retry) {
-      // Allow skipping redirect for specific requests (e.g. public pages fetching protected config)
       if (originalRequest._skipAuthRedirect) {
         return Promise.reject(error);
       }
@@ -79,28 +79,24 @@ apiClient.interceptors.response.use(
       const refreshToken = localStorage.getItem("refreshToken");
 
       if (!refreshToken) {
-        // Không có refresh token, logout
-        // Kiểm tra xem có phải là lỗi do email chưa verify không
         const errorMessage = error.response?.data?.message || error.response?.data?.Message || "";
         const isEmailVerificationError = errorMessage.includes("xác minh") || errorMessage.includes("xác nhận") || errorMessage.includes("verify");
-
-        // Kiểm tra xem có phải là request login không (tránh redirect khi đang login)
         const isLoginRequest = originalRequest?.url?.includes("/auth/login") || originalRequest?.url?.includes("/auth/verify-token");
 
-        // Nếu là lỗi email verification hoặc request login, không redirect để user có thể đọc thông báo
         if (isEmailVerificationError || isLoginRequest) {
           processQueue(error, null);
           isRefreshing = false;
           return Promise.reject(error);
         }
 
-        // Các trường hợp khác mới redirect
         processQueue(new Error("Không có refresh token"), null);
         isRefreshing = false;
         localStorage.removeItem("authToken");
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("user");
-        window.location.href = "/sign-in";
+        if (!SKIP_AUTH_REDIRECT_FOR_TEST) {
+          window.location.href = "/sign-in";
+        }
         return Promise.reject(error);
       }
 
@@ -135,7 +131,9 @@ apiClient.interceptors.response.use(
         localStorage.removeItem("authToken");
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("user");
-        window.location.href = "/sign-in";
+        if (!SKIP_AUTH_REDIRECT_FOR_TEST) {
+          window.location.href = "/sign-in";
+        }
         return Promise.reject(refreshError);
       }
     }
