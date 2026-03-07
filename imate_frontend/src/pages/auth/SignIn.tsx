@@ -9,6 +9,7 @@ import { updateUserRole } from "@/services/authService";
 // import RoleSelectionDialog from "@/components/custom/RoleSelectionDialog";
 import { toast } from "react-toastify";
 import apiClient from "@/services/apiClient";
+import { managementRoutes } from "@/config/managementRoutes";
 // import logo from "@/assets//images/logo.png";
 
 function SignIn() {
@@ -30,10 +31,10 @@ function SignIn() {
   const handleNavigation = (user: User) => {
     switch (user?.role) {
       case "Admin":
-        navigate("/admin/dashboard");
+        navigate(`/management-dashboard/${managementRoutes[0].path}`);
         break;
       case "Staff":
-        navigate("/staff/dashboard");
+        navigate(`/management-dashboard/${managementRoutes[0].path}`);
         break;
       case "Mentor":
         // Kiểm tra AccountStatus:

@@ -60,6 +60,10 @@ const APIConfig = {
     GetMentorById: "/staff-review/mentors",
     ReviewMentor: "/staff-review/mentors",
   },
+  // Subscription endpoints
+  Subscription: {
+    GetSubscriptionPackages: "/subscription-packages",
+  },
 } as const;
 
 export default APIConfig;
