@@ -15,6 +15,7 @@ const recruiterSchema = z.object({
     industry: z.string().min(2),
     companySize: z.string().min(1),
     address: z.string().min(2),
+    phone: z.string().min(10).max(15),
 });
 
 interface Props {
@@ -31,6 +32,7 @@ const UpdateRecruiterDialog: React.FC<Props> = ({ data, onSubmit }) => {
         industry: "",
         companySize: "",
         address: "",
+        phone: "",
     });
 
     useEffect(() => {
@@ -41,6 +43,7 @@ const UpdateRecruiterDialog: React.FC<Props> = ({ data, onSubmit }) => {
                 industry: data.industry || "",
                 companySize: data.companySize || "",
                 address: data.address || "",
+                phone: data.phone || "",
             });
         }
     }, [open, data]);
@@ -100,6 +103,14 @@ const UpdateRecruiterDialog: React.FC<Props> = ({ data, onSubmit }) => {
                         />
                     </div>
 
+                    <div>
+                        <Label>Phone</Label>
+                        <Input
+                            name="phone"
+                            value={formData.phone}
+                            onChange={handleChange}
+                        />
+                    </div>
                     <div>
                         <Label>Website</Label>
                         <Input

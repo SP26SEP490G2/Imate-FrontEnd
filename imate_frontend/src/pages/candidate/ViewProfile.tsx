@@ -36,6 +36,7 @@ const ViewProfile = () => {
   const { user, refetchUser, isLoading } = useAuth(); // Lấy cả isLoading để điều khiển render
   const { canUpdate, remainingTimeDisplay, recordUpdate } = usePriceUpdateControl();
   const [loaded, setLoaded] = useState(false);
+
   // --- Lấy bank detail ---
   useEffect(() => {
     if (!user?.bankCode) return;
@@ -511,6 +512,16 @@ const ViewProfile = () => {
             </div>
           </div>
         )}
+        {/* RecruiterPhone */}
+        {user.phone && (
+          <div className="flex items-center gap-3">
+            <Phone size={18} className="text-gray-400" />
+            <div>
+              <p className="text-sm text-gray-400">Số điện thoại</p>
+              <p className="text-sm text-[#A0A3BD]">{user.phone}</p>
+            </div>
+          </div>
+        )}
 
         {/* Website */}
         {user.website && (
@@ -566,12 +577,12 @@ const ViewProfile = () => {
 )}
 
         {/* === 3. CONTENT AREA (Settings Tab) === */}
-        <div className={`mx-auto grid grid-cols-1 gap-8 ${!(isMentor || isAdmin || isStaff) ? "mt-10 lg:grid-cols-3" : "mt-8 lg:grid-cols-1"}`}>
+        <div className={`mx-auto grid grid-cols-1 gap-8 ${!(isMentor || isAdmin || isStaff || isRecruiter) ? "mt-10 lg:grid-cols-3" : "mt-8 lg:grid-cols-1"}`}>
           <div className="flex flex-col gap-8 lg:col-span-2">
             <SettingTab />
           </div>
 
-          {!(isMentor || isAdmin || isStaff) && (
+          {!(isMentor || isAdmin || isStaff || isRecruiter) && (
             <div className="lg:col-span-1">
               <Card className="sticky top-24 bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/30 dark:to-blue-900/30">
                 <CardHeader>
