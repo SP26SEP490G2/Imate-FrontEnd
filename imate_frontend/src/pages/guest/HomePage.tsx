@@ -57,8 +57,6 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="font-sans">
-      <Header />
-
       {/* Main Content */}
       <main>
         {/* Hero Section */}
