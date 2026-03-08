@@ -9,6 +9,15 @@ export interface JobItem {
   status: string;
 }
 
+ export interface GetJobApplicationsRequest {
+  searchTerm?: string;
+  location?: string;
+  employmentType?: string;
+  status?: string;
+  pageNumber?: number;
+  pageSize?: number;
+}
+
 export interface JobResponse {
   jobs: JobItem[];
   totalCount: number;
