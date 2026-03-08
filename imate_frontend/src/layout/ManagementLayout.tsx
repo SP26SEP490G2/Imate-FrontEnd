@@ -1,7 +1,7 @@
 
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { LogOut } from "lucide-react";
-import { managementRoutes } from "@/config/managementRoutes";
+import { managementRoutes, recruiterManagementRoutes } from "@/config/managementRoutes";
 import { useAuth } from "@/store/AuthContext";
 
 export default function ManagementLayout() {
@@ -18,6 +18,13 @@ export default function ManagementLayout() {
       "https://i.pinimg.com/736x/3c/67/75/3c67757cef723535a7484a6c7bfbfc43.jpg",
     role: user.role,
   };
+
+  const basePath = user?.role === "Recruiter"
+    ? "/recruiter-dashboard"
+    : "/management-dashboard";
+
+  const routes =
+    user?.role === "Recruiter" ? recruiterManagementRoutes : managementRoutes;
 
   const handleLogout = () => {
     logout();
@@ -51,19 +58,18 @@ export default function ManagementLayout() {
           {/* Menu */}
           <nav className="mt-6 flex flex-col">
 
-            {managementRoutes.map((item) => {
+            {routes.map((item) => {
               const Icon = item.icon;
 
               return (
                 <NavLink
                   key={item.path}
-                  to={`/management-dashboard/${item.path}`}
+                  to={`${basePath}/${item.path}`}
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-8 py-4 text-sm font-medium transition-all
-                    ${
-                      isActive
-                        ? "text-white bg-gradient-to-r from-purple-500/20 to-transparent border-l-4 border-purple-500"
-                        : "text-slate-400 hover:text-white hover:bg-slate-800/40"
+                    ${isActive
+                      ? "text-white bg-gradient-to-r from-purple-500/20 to-transparent border-l-4 border-purple-500"
+                      : "text-slate-400 hover:text-white hover:bg-slate-800/40"
                     }`
                   }
                 >

@@ -52,6 +52,7 @@ const APIConfig = {
   // Recruiter endpoints
   Recruiter: {
     SubmitRecruiterProfile: "/recruiters/submit-profile",
+    GetJobApplicationList: "job-applications",
   },
 
   // Staff review endpoints (baseURL thường đã có /api)
