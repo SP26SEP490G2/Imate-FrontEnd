@@ -14,19 +14,19 @@ const APIConfig = {
     SendActionEmail: "/send-action-email",
   },
 
-  // Mentor endpoints
+  // Mentor endpoints (không leading slash để URL = baseURL + path)
   Mentor: {
-    GetListPreviewMentors: "/get-list-preview-mentors",
-    SubmitMentorProfile: "/profile/mentor",
+    GetListPreviewMentors: "get-list-preview-mentors",
+    SubmitMentorProfile: "profile/mentor",
 
 
   },
 
-  // Question endpoints
+  // Question endpoints (không dùng leading slash để axios nối đúng baseURL .../api)
   Question: {
-    GetListHotQuestions: "/get-list-hot-questions",
-    GetQuestionBankList: "/get-question-bank-list",
-    GetListQuestionCategories: "/get-list-question-categories",
+    GetListHotQuestions: "get-list-hot-questions",
+    GetQuestionBankList: "get-question-bank-list",
+    GetListQuestionCategories: "get-list-question-categories",
     GetAllSystemQuestionsForStaff: "/get-all-system-question-banks-for-staff",
     GetAllContributedQuestionsForStaff: "/get-all-contributed-question-banks-for-staff",
     CreateSystemQuestionForStaff: "/create-system-question-for-staff",
@@ -34,19 +34,19 @@ const APIConfig = {
     GetSystemQuestionDetail: "/get-system-question-detail/{questionId}",
   },
 
-  // Position endpoints
+  // Position endpoints (không dùng leading slash để axios nối đúng với baseURL .../api)
   Position: {
-    GetAllPositions: "/get-positions",
+    GetAllPositions: "get-positions",
   },
 
   // Skills endpoints
   Skills: {
-    GetAllSkills: "/get-skills",
+    GetAllSkills: "get-skills",
   },
 
   // Companies endpoints
   Companies: {
-    GetAllCompanies: "/get-companies",
+    GetAllCompanies: "get-companies",
   },
 
   // Recruiter endpoints

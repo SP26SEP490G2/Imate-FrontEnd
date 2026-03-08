@@ -1,16 +1,17 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Header: React.FC = () => {
   return (
     <header className="glass-header sticky top-0 z-50 w-full">
       <div className="max-w-[1440px] mx-auto px-6 h-20 flex items-center justify-between whitespace-nowrap">
         <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2">
+          <Link to="/Trang-chu" className="flex items-center gap-2">
             <div className="w-9 h-9 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-500/20">
               I
             </div>
             <span className="text-2xl font-black tracking-tighter text-white">IMATE</span>
-          </div>
+          </Link>
           <nav className="hidden xl:flex items-center gap-6">
             <a className="text-sm font-semibold text-slate-300 hover:text-white transition-colors" href="#">
               Ngân hàng câu hỏi
@@ -18,9 +19,12 @@ const Header: React.FC = () => {
             <a className="text-sm font-semibold text-slate-300 hover:text-white transition-colors" href="#">
               Luyện tập AI
             </a>
-            <a className="text-sm font-semibold text-slate-300 hover:text-white transition-colors" href="#">
+            <Link
+              to="/view-mentor"
+              className="text-sm font-semibold text-slate-300 hover:text-white transition-colors"
+            >
               Kết nối Mentor
-            </a>
+            </Link>
             <a className="text-sm font-semibold text-slate-300 hover:text-white transition-colors" href="#">
               Bảng giá
             </a>

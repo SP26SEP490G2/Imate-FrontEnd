@@ -18,6 +18,8 @@ export interface StaffMentorApplication {
   positions: string[];
   companies: string[];
   createdAt: string;
+  avgRatings?: number | null;
+  totalRatingCount?: number | null;
 }
 
 /** Response từ API GET .../mentors/pending (sau khi map từ PascalCase) */
@@ -57,4 +59,8 @@ export interface StaffMentorApplicationRaw {
   positions: string[];
   companies: string[];
   createdAt: string;
+  avgRatings?: number | null;
+  totalRatingCount?: number | null;
+  AvgRatings?: number | null;
+  TotalRatingCount?: number | null;
 }

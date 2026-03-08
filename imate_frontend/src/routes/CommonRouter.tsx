@@ -4,11 +4,15 @@ import ReviewMentorApplication from "@/pages/staff/ReviewMentorApplication";
 import MentorDetailForStaff from "@/pages/staff/MentorDetailForStaff";
 import HomePage from "../pages/guest/HomePage";
 import SystemQuestionBank from "../pages/guest/SystemQuestionBank";
+import MentorList from "../pages/guest/MentorList";
+import MentorDetail from "../pages/guest/MentorDetail";
 
 import type { RouteObject } from "react-router-dom";
 
 const CommonRouter: RouteObject[] = [
   { path: "/Trang-chu", element: <HomePage /> },
+  { path: "/view-mentor", element: <MentorList /> },
+  { path: "/view-mentor/:id", element: <MentorDetail /> },
   { path: "/Ngan-hang-cau-hoi-he-thong", element: <SystemQuestionBank /> },
   { path: "/Staff/Quan-ly-cau-hoi", element: <StaffQuestionManagement /> },
   { path: "/Staff/Them-cau-hoi", element: <AddSystemQuestion /> },
