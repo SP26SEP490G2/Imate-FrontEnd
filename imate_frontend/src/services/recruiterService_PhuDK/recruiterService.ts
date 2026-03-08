@@ -23,7 +23,7 @@ export const getRecruiterJobApplications = async (
 ): Promise<PaginatedApiResponse<JobItem>> => {
 
   const response = await apiClient.get<{ data: JobItem[] }>(
-    APIConfig.Recruiter.GetJobApplicationList,
+    APIConfig.Recruiter.GetRecruiterJobApplication,
     { params }
   );
 

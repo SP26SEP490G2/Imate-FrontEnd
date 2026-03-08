@@ -1,7 +1,7 @@
 import { useAuth } from "@/store/AuthContext";
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import PeppoLoading from "@/components/custom/imateLoading";
+import ImateLoading from "@/components/custom/imateLoading";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -15,7 +15,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole 
   const location = useLocation();
 
   if (isLoading) {
-    return <PeppoLoading type="screen" />;
+    return <ImateLoading type="screen" />;
   }
   if (!SKIP_AUTH_FOR_TEST && !isAuthenticated) {
     return <Navigate to="/sign-in" replace />;
