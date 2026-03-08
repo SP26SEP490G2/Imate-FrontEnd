@@ -30,12 +30,21 @@ export interface User {
   skills?: string[];
   positions?: string[];
   companies?: string[];
+
+//Thông tin Recruiter
+  companyName?: string;
+  companyLogo?: string;
+  website?: string;
+  industry?: string;
+  companySize?: string;
+  address?: string;
 }
 
 export interface RegisterEmailData {
   fullName: string;
   email: string;
   password: string;
+  confirmPassword: string;
   role: UserRole;
 }
 

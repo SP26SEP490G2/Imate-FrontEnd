@@ -52,6 +52,7 @@ const APIConfig = {
   // Recruiter endpoints
   Recruiter: {
     SubmitRecruiterProfile: "/recruiters/submit-profile",
+    GetJobApplicationList: "job-applications",
   },
 
   // Staff review endpoints (baseURL thường đã có /api)
@@ -59,6 +60,10 @@ const APIConfig = {
     GetPendingMentors: "/staff-review/mentors/pending",
     GetMentorById: "/staff-review/mentors",
     ReviewMentor: "/staff-review/mentors",
+  },
+  // Subscription endpoints
+  Subscription: {
+    GetSubscriptionPackages: "/subscription-packages",
   },
 } as const;
 
