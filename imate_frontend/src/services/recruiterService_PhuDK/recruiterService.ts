@@ -48,13 +48,11 @@ export const getRecruiterJobApplications = async (
   };
 }
 
-export const CreateJobApplication = async (data: JobItem) => {
+export const CreateJobPost = async (data: any) => {
   try {
-    const res = await apiClient.post("/create-job-applications", data);
-
-    return res.data;
+    return await apiClient.post("/create-job-posts", data);
   } catch (error) {
-    console.log("Error creating job application: ", error);
+    console.log("Error creating job post: ", error);
     throw error;
   }
 };
