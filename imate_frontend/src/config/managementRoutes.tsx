@@ -1,22 +1,14 @@
 import {
-  FileText,
-  BarChart3,
+  Layers,
 } from "lucide-react";
 
-import AddSystemQuestion from "@/pages/staff/AddSystemQuestion";
-import ReviewMentorApplication from "@/pages/staff/ReviewMentorApplication";
+import Classification from "@/pages/management/Classification";
 
 export const managementRoutes = [
   {
-    label: "Thêm câu hỏi",
-    icon: FileText,
-    path: "add-question",
-    element: <AddSystemQuestion />,
-  },
-  {
-    label: "Đơn ứng tuyển",
-    icon: BarChart3,
-    path: "applications",
-    element: <ReviewMentorApplication />,
+    label: "Quản lý hạng mục",
+    icon: Layers,
+    path: "classification",
+    element: <Classification />,
   }
 ];

@@ -167,7 +167,7 @@ const ViewProfile = () => {
                   {loaded ? <img src={avatarPreview} className="h-full w-full object-cover" /> : <span className="font-semibold text-white">{getInitials(user?.fullName || "User")}</span>}
                 </div>
                 {isEditMode && (
-                  <Button variant="default" size="icon" className="absolute bottom-0 right-0 h-9 w-9 rounded-full bg-gradient-to-r from-[#6C63FF] to-[#8B5CF6] text-white shadow-lg transition hover:brightness-110" onClick={handleCameraClick}>
+                  <Button className="absolute bottom-0 right-0 h-9 w-9 rounded-full bg-gradient-to-r from-[#6C63FF] to-[#8B5CF6] text-white shadow-lg transition hover:brightness-110" onClick={handleCameraClick}>
                     <Camera className="h-4 w-4" />
                   </Button>
                 )}

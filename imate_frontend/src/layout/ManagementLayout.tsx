@@ -1,4 +1,3 @@
-
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { LogOut } from "lucide-react";
 import { managementRoutes } from "@/config/managementRoutes";
@@ -8,7 +7,7 @@ export default function ManagementLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  if (!user) return null;
+  if (!user || user.role !== "Admin" && user.role !== "Staff") return navigate("/Trang-chu");;
 
   const sidebarUser = {
     name: user.fullName,
@@ -25,7 +24,7 @@ export default function ManagementLayout() {
   };
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen bg-slate-950">
 
       {/* Sidebar */}
       <aside className="w-72 flex flex-col justify-between bg-gradient-to-b from-[#0f172a] to-[#020617] border-r border-slate-800">
@@ -62,7 +61,7 @@ export default function ManagementLayout() {
                     `flex items-center gap-3 px-8 py-4 text-sm font-medium transition-all
                     ${
                       isActive
-                        ? "text-white bg-gradient-to-r from-purple-500/20 to-transparent border-l-4 border-purple-500"
+                        ? "text-white bg-gradient-to-l from-purple-500/20 to-transparent border-r-4 border-purple-500"
                         : "text-slate-400 hover:text-white hover:bg-slate-800/40"
                     }`
                   }
@@ -109,7 +108,7 @@ export default function ManagementLayout() {
       </aside>
 
       {/* Content */}
-      <main className="flex-1 overflow-y-auto bg-slate-50">
+      <main className="flex-1 overflow-y-auto px-4 py-2 bg-[radial-gradient(circle_at_top_right,#151336,#020617)]">
         <Outlet />
       </main>
 

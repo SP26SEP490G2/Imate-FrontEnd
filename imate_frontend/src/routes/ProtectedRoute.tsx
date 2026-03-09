@@ -9,6 +9,7 @@ interface ProtectedRouteProps {
 }
 
 const SKIP_AUTH_FOR_TEST = true;
+const MANAGEMENT_ROUTES = ["/management-dashboard"];
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole }) => {
   const { isAuthenticated, user, isLoading } = useAuth();
@@ -48,6 +49,16 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole 
         if (redirect) return redirect;
       }
       // Tất cả các trường hợp khác: chặn truy cập
+      return <Navigate to="/unauthorized" replace />;
+    }
+  }
+
+  const isManagementRoute = MANAGEMENT_ROUTES.some(route => 
+    location.pathname === route || location.pathname.startsWith(route + "/")
+  );
+
+  if (!SKIP_AUTH_FOR_TEST && isManagementRoute) {
+    if (user?.role !== "Admin" && user?.role !== "Staff") {
       return <Navigate to="/unauthorized" replace />;
     }
   }
