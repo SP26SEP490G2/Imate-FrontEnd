@@ -75,6 +75,7 @@ function Header() {
     },
     { label: "Luyện tập AI", href: "/practice-with-AI" },
     { label: "Mentor", href: "/view-mentor" },
+    { label: "Bảng giá", href: "/view-subscription" },
     {
       label: "Lịch phỏng vấn",
       subItems: [

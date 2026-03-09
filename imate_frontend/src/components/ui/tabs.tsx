@@ -24,7 +24,7 @@ function TabsList({
     <TabsPrimitive.List
       data-slot="tabs-list"
       className={cn(
-        "bg-muted text-muted-foreground inline-flex h-9 w-fit items-center justify-center rounded-lg p-[3px]",
+        "flex items-center gap-8 border-b border-slate-800",
         className
       )}
       {...props}
@@ -40,7 +40,10 @@ function TabsTrigger({
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        "data-[state=active]:bg-background dark:data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 text-foreground dark:text-muted-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "relative pb-3 text-sm font-medium text-slate-400 transition-colors hover:text-white",
+        "data-[state=active]:text-purple-400",
+        "after:absolute after:left-0 after:-bottom-[1px] after:h-[2px] after:w-full after:scale-x-0 after:bg-gradient-to-r after:from-purple-500 after:to-purple-400 after:transition-transform",
+        "data-[state=active]:after:scale-x-100",
         className
       )}
       {...props}
@@ -61,4 +64,33 @@ function TabsContent({
   )
 }
 
-export { Tabs, TabsList, TabsTrigger, TabsContent }
+/* -------- GENERIC APP TABS -------- */
+
+type TabItem = {
+  label: string
+  value: string
+  icon?: React.ReactNode
+}
+
+type AppTabsProps = {
+  tabs: TabItem[]
+  value: string
+  onChange: (value: string) => void
+}
+
+function AppTabs({ tabs, value, onChange }: AppTabsProps) {
+  return (
+    <Tabs value={value} onValueChange={onChange}>
+      <TabsList>
+        {tabs.map((tab) => (
+          <TabsTrigger key={tab.value} value={tab.value}>
+            {tab.icon}
+            {tab.label}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+    </Tabs>
+  )
+}
+
+export { Tabs, TabsList, TabsTrigger, TabsContent, AppTabs }
