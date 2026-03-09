@@ -7,6 +7,8 @@ import type { CommonParams, PaginatedApiResponse } from "@/types/common/paginati
 type PagedBody<T> = {
   items?: T[];
   Items?: T[];
+  data?: T[];
+  Data?: T[];
   totalCount?: number;
   TotalCount?: number;
   pageNumber?: number;

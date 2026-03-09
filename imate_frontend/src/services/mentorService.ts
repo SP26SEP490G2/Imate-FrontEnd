@@ -1,6 +1,7 @@
 import apiClient from "./apiClient";
 import APIConfig from "@/config/apiConfig";
-import type { ListPreviewMentorResponse, GetListPreviewMentorsResponse } from "@/types/common/mentor";
+import type { ListPreviewMentorResponse } from "@/types/common/mentor";
+import type { CommonParams, PaginatedApiResponse } from "@/types/common/pagination";
 import type { SubmitMentorProfileRequest } from "@/types/request/mentor.request";
 
 /** @deprecated Dùng SubmitMentorProfileRequest từ @/types/request/mentor.request */
@@ -22,14 +23,45 @@ function normalizeMentorItem(raw: Record<string, unknown>): ListPreviewMentorRes
 }
 
 /**
- * Get list of preview mentors for home page
- * @returns Promise<ListPreviewMentorResponse[]>
+ * Get list of preview mentors with pagination (PagedList)
  */
-export const getListPreviewMentors = async (): Promise<ListPreviewMentorResponse[]> => {
-  const response = await apiClient.get(APIConfig.Mentor.GetListPreviewMentors);
-  const data = response.data?.data ?? response.data?.Data;
-  if (!Array.isArray(data)) return [];
-  return data.map((item: Record<string, unknown>) => normalizeMentorItem(item));
+export const getListPreviewMentors = async (
+  params: CommonParams
+): Promise<PaginatedApiResponse<ListPreviewMentorResponse>> => {
+  const response = await apiClient.get<{
+    items?: Record<string, unknown>[];
+    Items?: Record<string, unknown>[];
+    totalCount?: number;
+    TotalCount?: number;
+    pageNumber?: number;
+    PageNumber?: number;
+    pageSize?: number;
+    PageSize?: number;
+    totalPages?: number;
+    TotalPages?: number;
+  }>(APIConfig.Mentor.GetListPreviewMentors, {
+    params,
+  });
+
+  const body = response.data ?? {};
+  const raw = Array.isArray(body.items ?? body.Items) ? (body.items ?? body.Items)! : [];
+  const data = raw.map((item) => normalizeMentorItem(item));
+
+  const header = response.headers["x-pagination"];
+  let meta: any = {};
+  try {
+    meta = header ? JSON.parse(header) : {};
+  } catch {
+    meta = {};
+  }
+
+  return {
+    data,
+    totalCount: meta.TotalCount ?? meta.totalCount ?? body.TotalCount ?? body.totalCount ?? 0,
+    pageNumber: meta.PageNumber ?? meta.pageNumber ?? body.PageNumber ?? body.pageNumber ?? params.pageNumber ?? 1,
+    pageSize: meta.PageSize ?? meta.pageSize ?? body.PageSize ?? body.pageSize ?? params.pageSize ?? 10,
+    totalPages: meta.TotalPages ?? meta.totalPages ?? body.TotalPages ?? body.totalPages ?? 0,
+  };
 };
 
 /**

@@ -6,16 +6,16 @@ import { getListPreviewMentors } from '@/services/mentorService';
 import { getAllPositions, getAllSkills, getAllCompanies } from '@/services/commonService';
 import type { ListPreviewMentorResponse } from '@/types/common/mentor';
 import type { PositionItem, SkillItem, CompanyItem } from '@/types/common/question';
-import { Search, ChevronDown, Star } from 'lucide-react';
+import { Search, Star } from 'lucide-react';
 
-const INITIAL_PAGE_SIZE = 8;
-const LOAD_MORE_SIZE = 8;
+const PAGE_SIZE = 8;
 
 const MentorList: React.FC = () => {
   const [mentors, setMentors] = useState<ListPreviewMentorResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [displayCount, setDisplayCount] = useState(INITIAL_PAGE_SIZE);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const [positions, setPositions] = useState<PositionItem[]>([]);
   const [skills, setSkills] = useState<SkillItem[]>([]);
@@ -27,16 +27,13 @@ const MentorList: React.FC = () => {
   const [filterCompany, setFilterCompany] = useState<string>('');
   const [activeTag, setActiveTag] = useState<string | null>(null);
 
-  useEffect(() => {
-    setDisplayCount(INITIAL_PAGE_SIZE);
-  }, [filterPosition, filterSkill, filterCompany, activeTag]);
-
   const fetchMentors = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getListPreviewMentors();
-      setMentors(data);
+      const res = await getListPreviewMentors({ pageNumber, pageSize: PAGE_SIZE });
+      setMentors(res.data);
+      setTotalPages(res.totalPages);
     } catch (err) {
       console.error('Failed to fetch mentors:', err);
       setError('Không thể tải danh sách mentor. Vui lòng thử lại sau.');
@@ -44,7 +41,7 @@ const MentorList: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [pageNumber]);
 
   const fetchFilters = useCallback(async () => {
     setFiltersLoading(true);
@@ -89,16 +86,11 @@ const MentorList: React.FC = () => {
     return list;
   }, [mentors, filterPosition, filterSkill, filterCompany, activeTag]);
 
-  const visibleMentors = useMemo(() => filteredMentors.slice(0, displayCount), [filteredMentors, displayCount]);
-  const hasMore = displayCount < filteredMentors.length;
-
-  const handleLoadMore = () => {
-    setDisplayCount((c) => Math.min(c + LOAD_MORE_SIZE, filteredMentors.length));
-  };
+  const visibleMentors = filteredMentors;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setDisplayCount(INITIAL_PAGE_SIZE);
+    setPageNumber(1);
   };
 
   const getAvatarUrl = (mentor: ListPreviewMentorResponse) => {
@@ -272,15 +264,22 @@ const MentorList: React.FC = () => {
                     Không tìm thấy mentor nào phù hợp với bộ lọc.
                   </div>
                 )}
-                {hasMore && filteredMentors.length > 0 && (
-                  <div className="flex justify-center mt-10">
-                    <button
-                      type="button"
-                      onClick={handleLoadMore}
-                      className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-white/10 bg-white/5 text-white font-semibold hover:bg-white/10 transition-all"
-                    >
-                      Xem thêm Mentor <ChevronDown className="w-4 h-4" />
-                    </button>
+                {totalPages > 1 && (
+                  <div className="flex justify-center mt-10 gap-2">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <button
+                        key={page}
+                        type="button"
+                        onClick={() => setPageNumber(page)}
+                        className={`px-3 py-2 rounded-lg text-sm font-medium ${
+                          pageNumber === page
+                            ? 'bg-indigo-500 text-white'
+                            : 'bg-white/5 text-slate-300 hover:bg-white/10'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
                   </div>
                 )}
               </>
