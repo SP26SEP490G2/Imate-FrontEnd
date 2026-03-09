@@ -38,6 +38,7 @@ export const getRecruiterJobApplications = async (
         pageNumber: params?.pageNumber || 1,
         totalPages: 0,
       };
+    console.log("JOBDATA: ", response.data);
 
   return {
     data: response.data.data || [],
@@ -57,7 +58,7 @@ export const CreateJobPost = async (data: any) => {
   }
 };
 
-export const UpdateJobApplication = async (data: JobItem) => {
+export const UpdateJobApplication = async (data: any) => {
   try {
     const res = await apiClient.put("/update-job-applications", data);
 
@@ -68,7 +69,7 @@ export const UpdateJobApplication = async (data: JobItem) => {
   }
 };
 
-export const CloseJobApplication = async (data: JobItem) => {
+export const CloseJobApplication = async (data: any) => {
   try {
     const res = await apiClient.put("/Close-job-applications", data);
 

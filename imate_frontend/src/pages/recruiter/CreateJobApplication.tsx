@@ -16,7 +16,7 @@ const CreateJobApplication: React.FC = () => {
     description: "",
     applicationDeadline: "",
   });
-const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedPositions, setSelectedPositions] = useState<PositionItem[]>([]);
   const [selectedSkills, setSelectedSkills] = useState<SkillItem[]>([]);
 
@@ -76,47 +76,47 @@ const [isSubmitting, setIsSubmitting] = useState(false);
     setSkillSearch("");
   };
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  try {
-    const payload = {
-      ...form,
-      JobPositions: selectedPositions.map(p => p.id),
-      JobSkills: selectedSkills.map(s => s.id),
-    };
-setIsSubmitting(true);
+    try {
+      const payload = {
+        ...form,
+        JobPositions: selectedPositions.map(p => p.id),
+        JobSkills: selectedSkills.map(s => s.id),
+      };
+      setIsSubmitting(true);
 
-    await CreateJobPost(payload);
-setIsSubmitting(false);
+      await CreateJobPost(payload);
+      setIsSubmitting(false);
 
-    toast.success("Tạo Job thành công!");
+      toast.success("Tạo Job thành công!");
 
-    // reset form
-    setForm({
-      title: "",
-      employmentType: "Full-time",
-      location: "",
-      minSalary: "",
-      maxSalary: "",
-      description: "",
-      applicationDeadline: "",
-    });
+      // reset form
+      setForm({
+        title: "",
+        employmentType: "Full-time",
+        location: "",
+        minSalary: "",
+        maxSalary: "",
+        description: "",
+        applicationDeadline: "",
+      });
 
-    // clear positions + skills
-    setSelectedPositions([]);
-    setSelectedSkills([]);
+      // clear positions + skills
+      setSelectedPositions([]);
+      setSelectedSkills([]);
 
-    setPositionSearch("");
-    setSkillSearch("");
+      setPositionSearch("");
+      setSkillSearch("");
 
-  } catch (error) {
-    console.error(error);
-    toast.error("Tạo Job thất bại. Vui lòng thử lại.");
-    setIsSubmitting(false);
+    } catch (error) {
+      console.error(error);
+      toast.error("Tạo Job thất bại. Vui lòng thử lại.");
+      setIsSubmitting(false);
 
-  }
-};
+    }
+  };
 
   const filteredPositions = availablePositions.filter(p =>
     p.name.toLowerCase().includes(positionSearch.toLowerCase()) &&
@@ -185,14 +185,15 @@ setIsSubmitting(false);
                     className="flex items-center gap-1 bg-[#161A3F] text-[#A0A3BD] border-none px-3 py-1 rounded-full"
                   >
                     {pos.name}
-                    <X
-                      size={14}
-                      className="cursor-pointer hover:text-red-400"
+                    <span
+                      className="ml-1 p-0.5 rounded-full hover:bg-red-500/20 cursor-pointer transition-colors"
                       onClick={(e) => {
                         e.stopPropagation();
                         togglePosition(pos);
                       }}
-                    />
+                    >
+                      <X size={14} className="hover:text-red-400" />
+                    </span>
                   </Badge>
                 ))}
                 <input
@@ -284,14 +285,15 @@ setIsSubmitting(false);
                     className="flex items-center gap-1 bg-[#161A3F] text-[#A0A3BD] border-none px-3 py-1 rounded-full"
                   >
                     {skill.name}
-                    <X
-                      size={14}
-                      className="cursor-pointer hover:text-red-400"
+                    <span
+                      className="ml-1 p-0.5 rounded-full hover:bg-red-500/20 cursor-pointer transition-colors"
                       onClick={(e) => {
                         e.stopPropagation();
                         toggleSkill(skill);
                       }}
-                    />
+                    >
+                      <X size={14} className="hover:text-red-400" />
+                    </span>
                   </Badge>
                 ))}
                 <input
@@ -406,12 +408,12 @@ setIsSubmitting(false);
               </button>
 
               <button
-  type="submit"
-  disabled={isSubmitting}
-  className="h-[48px] px-8 rounded-[12px] font-semibold bg-gradient-to-r from-[#6C63FF] to-[#8B5CF6]"
->
-  {isSubmitting ? "Creating..." : "Create Job"}
-</button>
+                type="submit"
+                disabled={isSubmitting}
+                className="h-[48px] px-8 rounded-[12px] font-semibold bg-gradient-to-r from-[#6C63FF] to-[#8B5CF6]"
+              >
+                {isSubmitting ? "Creating..." : "Create Job"}
+              </button>
 
             </div>
 

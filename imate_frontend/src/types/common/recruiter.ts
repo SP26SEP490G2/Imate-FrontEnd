@@ -1,3 +1,4 @@
+
 export interface JobItem {
   id: number;
   title: string;
@@ -7,9 +8,12 @@ export interface JobItem {
   maxSalary: number;
   applicationDeadline: string;
   status: string;
+  jobDescription: string;
+  jobSkills: { id: number; skillName: string }[];
+  jobPositions: { id: number; positionName: string }[];
 }
 
- export interface GetJobApplicationsRequest {
+export interface GetJobApplicationsRequest {
   searchTerm?: string;
   location?: string;
   employmentType?: string;
