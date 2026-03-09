@@ -1,17 +1,167 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight
+} from "lucide-react"
 
-function Table({ className, ...props }: React.ComponentProps<"table">) {
+interface TableProps extends React.ComponentProps<"table"> {
+  page?: number
+  totalPages?: number
+  pageSize?: number
+  totalItems?: number
+  onPageChange?: (page: number) => void
+  onPageSizeChange?: (size: number) => void
+  maxHeight?: number | string
+}
+
+function Table({
+  className,
+  page = 1,
+  totalPages = 1,
+  pageSize = 10,
+  totalItems,
+  onPageChange,
+  onPageSizeChange,
+  maxHeight = 500,
+  children,
+  ...props
+}: TableProps) {
+
+  const hasPagination = onPageChange !== undefined
+
+  const start = (page - 1) * pageSize + 1
+  const end = Math.min(page * pageSize, totalItems ?? page * pageSize)
+
+  // pagination window
+  const visiblePages = React.useMemo(() => {
+    const pages = []
+    let startPage = Math.max(1, page - 2)
+    let endPage = Math.min(totalPages, page + 2)
+
+    if (page <= 3) endPage = Math.min(5, totalPages)
+    if (page >= totalPages - 2) startPage = Math.max(1, totalPages - 4)
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i)
+    }
+
+    return pages
+  }, [page, totalPages])
+
   return (
-    <div
-      data-slot="table-container"
-      className="relative w-full overflow-hidden rounded-lg border border-slate-700"
-    >
-      <table
-        data-slot="table"
-        className={cn("w-full text-sm", className)}
-        {...props}
-      />
+    <div className="w-full rounded-lg border border-slate-700 overflow-hidden">
+
+      {/* table scroll area */}
+      <div
+        className="w-full overflow-auto"
+        style={{ maxHeight }}
+      >
+        <table
+          className={cn("w-full text-sm border-collapse", className)}
+          {...props}
+        >
+          {children}
+        </table>
+      </div>
+
+      {/* pagination */}
+      {hasPagination && (
+        <div className="flex items-center justify-between border-t border-slate-700 bg-slate-800/40 px-4 py-3">
+
+          {/* info */}
+          <div className="text-sm text-slate-400">
+            {totalItems && <>Showing {start}-{end} of {totalItems}</>}
+          </div>
+
+          <div className="flex items-center gap-3 ml-auto">
+
+            {/* page size */}
+            {onPageSizeChange && (
+              <select
+                value={pageSize}
+                onChange={(e) =>
+                  onPageSizeChange(Number(e.target.value))
+                }
+                className="bg-slate-800 border border-slate-700 text-sm rounded-lg px-2 py-1 text-slate-300"
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
+            )}
+
+            <div className="flex items-center gap-2 ml-auto">
+
+              {/* first */}
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={page === 1}
+                onClick={() => onPageChange?.(1)}
+                className="h-8 w-8"
+              >
+                <ChevronsLeft className="w-4 h-4" />
+              </Button>
+
+              {/* prev */}
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={page === 1}
+                onClick={() => onPageChange?.(page - 1)}
+                className="h-8 w-8"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+
+              {/* page numbers box */}
+              <div className="flex items-center gap-1 bg-slate-800 border border-slate-700 rounded-md px-1 py-1">
+
+                {visiblePages.map((p) => (
+                  <Button
+                    key={p}
+                    size="sm"
+                    variant={p === page ? "primary" : "ghost"}
+                    className="h-6 min-w-6 px-2 rounded-sm"
+                    onClick={() => onPageChange?.(p)}
+                  >
+                    {p}
+                  </Button>
+                ))}
+
+              </div>
+
+              {/* next */}
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={page === totalPages}
+                onClick={() => onPageChange?.(page + 1)}
+                className="h-8 w-8"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+
+              {/* last */}
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={page === totalPages}
+                onClick={() => onPageChange?.(totalPages)}
+                className="h-8 w-8"
+              >
+                <ChevronsRight className="w-4 h-4" />
+              </Button>
+
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -19,8 +169,10 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
 function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
   return (
     <thead
-      data-slot="table-header"
-      className={cn("bg-slate-800/50 [&_tr]:border-b border-slate-700", className)}
+      className={cn(
+        "sticky top-0 z-20 bg-slate-900 [&_tr]:border-b border-slate-700",
+        className
+      )}
       {...props}
     />
   )
@@ -29,34 +181,40 @@ function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
 function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
   return (
     <tbody
-      data-slot="table-body"
       className={cn("divide-y divide-slate-700", className)}
       {...props}
     />
   )
 }
 
-function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
+function TableToolbar({
+  title,
+  right,
+}: {
+  title?: React.ReactNode
+  right?: React.ReactNode
+}) {
   return (
-    <tfoot
-      data-slot="table-footer"
-      className={cn(
-        "bg-slate-800/40 border-t border-slate-700 font-medium",
-        className
-      )}
-      {...props}
-    />
+    <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700 bg-slate-900/40">
+      
+      {/* title */}
+      <div className="text-lg font-semibold text-white">
+        {title}
+      </div>
+
+      {/* actions */}
+      <div className="flex items-center gap-3">
+        {right}
+      </div>
+
+    </div>
   )
 }
 
 function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
   return (
     <tr
-      data-slot="table-row"
-      className={cn(
-        "transition-colors hover:bg-slate-800/40",
-        className
-      )}
+      className={cn("hover:bg-slate-800/40 transition-colors", className)}
       {...props}
     />
   )
@@ -65,7 +223,6 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
 function TableHead({ className, ...props }: React.ComponentProps<"th">) {
   return (
     <th
-      data-slot="table-head"
       className={cn(
         "px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wide",
         className
@@ -78,24 +235,7 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
 function TableCell({ className, ...props }: React.ComponentProps<"td">) {
   return (
     <td
-      data-slot="table-cell"
-      className={cn(
-        "px-4 py-3 text-slate-200",
-        className
-      )}
-      {...props}
-    />
-  )
-}
-
-function TableCaption({
-  className,
-  ...props
-}: React.ComponentProps<"caption">) {
-  return (
-    <caption
-      data-slot="table-caption"
-      className={cn("mt-4 text-sm text-slate-400", className)}
+      className={cn("px-4 py-3 text-slate-200", className)}
       {...props}
     />
   )
@@ -105,9 +245,8 @@ export {
   Table,
   TableHeader,
   TableBody,
-  TableFooter,
   TableHead,
   TableRow,
   TableCell,
-  TableCaption,
+  TableToolbar
 }
