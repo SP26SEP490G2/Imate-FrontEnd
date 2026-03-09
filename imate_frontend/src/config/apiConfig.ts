@@ -34,6 +34,14 @@ const APIConfig = {
     GetSystemQuestionDetail: "/get-system-question-detail/{questionId}",
   },
 
+  // Category endpoints
+  Category: {
+    GetAllCategories: "/get-categories",
+    AddCategory:"/categories",
+    UpdateCategory: "/categories/{categoryId}",
+    GetAffectedQuestions: "/categories/{categoryId}/affected-questions",
+  },
+
   // Position endpoints
   Position: {
     GetAllPositions: "/get-positions",

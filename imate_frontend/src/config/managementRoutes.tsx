@@ -3,6 +3,7 @@ import {
   BarChart3,
   Briefcase,
   PlusCircle,
+  Layers,
 } from "lucide-react";
 
 import AddSystemQuestion from "@/pages/staff/AddSystemQuestion";
@@ -10,9 +11,10 @@ import ReviewMentorApplication from "@/pages/staff/ReviewMentorApplication";
 import JobPostingList from "@/pages/recruiter/JobPostingList";
 import CreateJobApplication from "@/pages/recruiter/CreateJobApplication";
 
+import Classification from "@/pages/management/Classification";
+
 export const managementRoutes = [
-  {
-    label: "Thêm câu hỏi",
+  {label: "Thêm câu hỏi",
     icon: FileText,
     path: "add-question",
     element: <AddSystemQuestion />,
@@ -22,6 +24,12 @@ export const managementRoutes = [
     icon: BarChart3,
     path: "applications",
     element: <ReviewMentorApplication />,
+  },
+  {
+    label: "Quản lý hạng mục",
+    icon: Layers,
+    path: "classification",
+    element: <Classification />,
   }
 
 ];
