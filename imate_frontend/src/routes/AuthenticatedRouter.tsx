@@ -6,6 +6,7 @@ import SubmitMentorApplication from "@/pages/mentor/SubmitMentorApplication";
 import PendingApplication from "@/pages/mentor/PendingApplication";
 import SubmitRecruiterApplication from "@/pages/recruiter/SubmitRecruiterApplication";
 import RecruiterPendingApplication from "@/pages/recruiter/PendingApplication";
+import UserManagement from "@/pages/admin/UserManagement";
 
 const AuthenticatedRouter: RouteObject[] = [
   {
@@ -17,6 +18,7 @@ const AuthenticatedRouter: RouteObject[] = [
     ),
     children: [
       { path: "profile", element: <ViewProfile /> },
+      { path: "admin/manage-user", element: <UserManagement /> },
 
       // { path: "/save-question", element: <ViewSaveQuestion /> },
       // { path: "/transactions", element: <TransactionHistoryPage /> },
