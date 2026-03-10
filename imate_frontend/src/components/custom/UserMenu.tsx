@@ -11,9 +11,10 @@ interface UserMenuProps {
   isOpenUserMenu: boolean;
   onClose: () => void;
   userRole?: "Candidate" | "Mentor";
+  anchorRef?: React.RefObject<HTMLDivElement | null>;
 }
 
-const UserMenu: React.FC<UserMenuProps> = ({ isOpenUserMenu, onClose }) => {
+const UserMenu: React.FC<UserMenuProps> = ({ isOpenUserMenu, onClose, anchorRef }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const menuRef = useRef<HTMLDivElement>(null);
@@ -27,6 +28,12 @@ const UserMenu: React.FC<UserMenuProps> = ({ isOpenUserMenu, onClose }) => {
   // Xử lý click bên ngoài menu để đóng menu
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      // Nếu click vào anchorRef (nút Avatar ở Header) thì không xử lý ở đây
+      // vì nút đó đã có logic toggle riêng
+      if (anchorRef?.current?.contains(event.target as Node)) {
+        return;
+      }
+
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         onClose();
       }
@@ -52,70 +59,66 @@ const UserMenu: React.FC<UserMenuProps> = ({ isOpenUserMenu, onClose }) => {
 
   if (!isOpenUserMenu) return null;
   return (
-    <div className="absolute top-12 -right-1 z-10 bg-transparent" ref={menuRef}>
-      <Card className="w-72 gap-0 rounded-md border bg-white py-0 shadow">
-        {/* Header thông tin user */}
-        <div className="flex items-center gap-3 border-b p-4">
-          <div className={cn("flex h-10 w-10 items-center justify-center overflow-hidden rounded-full font-semibold", getAvatarColor(user?.fullName || "User"))}>
-            {loaded ? <img src={user?.avatarUrl} className="h-full w-full object-cover" /> : <span className="font-semibold text-white">{getInitials(user?.fullName || "User")}</span>}
+    <div className="absolute top-14 right-0 z-50" ref={menuRef}>
+      <Card className="w-72 overflow-hidden rounded-xl border border-white/10 bg-slate-900/90 backdrop-blur-xl shadow-xl">
+
+        {/* User info */}
+        <div className="flex items-center gap-3 border-b border-white/10 p-4">
+          <div
+            className={cn(
+              "flex h-10 w-10 items-center justify-center overflow-hidden rounded-full font-semibold",
+              getAvatarColor(user?.fullName || "User")
+            )}
+          >
+            {loaded ? (
+              <img src={user?.avatarUrl} className="h-full w-full object-cover" />
+            ) : (
+              <span className="font-semibold text-white">
+                {getInitials(user?.fullName || "User")}
+              </span>
+            )}
           </div>
-          <div>
-            <h3 className="font-semibold text-gray-900">{user?.fullName}</h3>
-            <p className="text-sm text-gray-500">{user?.email}</p>
+
+          <div className="flex flex-col">
+            <h3 className="text-sm font-semibold text-white">
+              {user?.fullName}
+            </h3>
+            <p className="text-xs text-slate-400">{user?.email}</p>
           </div>
         </div>
 
-        {/* Danh sách menu */}
-        <div className="flex flex-col">
-          {user?.role === "Mentor"
-            ? MENTOR_PROFILE_MENU.filter((item) => {
-                // Nếu accountStatus là PendingVerification, chỉ hiển thị "Hồ sơ cá nhân", "Câu hỏi đã đăng" và "Đăng xuất"
-                if (user?.accountStatus === "PendingVerification") {
-                  return item.label === "Hồ sơ cá nhân" || item.label === "Câu hỏi đã đăng" || item.label === "Đăng xuất";
-                }
-                return true;
-              }).map((item, index) => {
-                const Icon = item.icon;
-                const isLogout = item.label === "Đăng xuất";
-                return (
-                  <React.Fragment key={item.href}>
-                    {index === 5 && <Separator />}
-                    {isLogout ? (
-                      <button onClick={handleLogout} className="flex w-full cursor-pointer items-center gap-3 bg-transparent px-4 py-3 text-left transition hover:bg-gray-50">
-                        {Icon && <Icon className="h-5 w-5 text-red-600" />}
-                        <span className="text-sm text-red-600">{item.label}</span>
-                      </button>
-                    ) : (
-                      <Link to={item.href || "#"} className={`flex items-center gap-3 px-4 py-3 transition hover:bg-gray-50 ${index >= 5 ? "border-t last:border-none" : ""}`}>
-                        {Icon && <Icon className="h-5 w-5 text-gray-600" />}
-                        <span className="text-sm text-gray-700">{item.label}</span>
-                      </Link>
-                    )}
-                  </React.Fragment>
-                );
-              })
-            : USER_PROFILE_MENU.map((item, index) => {
-                const Icon = item.icon;
+        {/* Menu */}
+        <div className="flex flex-col py-2">
 
-                const isLogout = item.label === "Đăng xuất";
+          {(user?.role === "Mentor"
+            ? MENTOR_PROFILE_MENU
+            : USER_PROFILE_MENU
+          ).map((item, index) => {
+            const Icon = item.icon;
+            const isLogout = item.label === "Đăng xuất";
 
-                return (
-                  <React.Fragment key={item.href}>
-                    {index === 7 && <Separator />}
-                    {isLogout ? (
-                      <button onClick={handleLogout} className="flex w-full cursor-pointer items-center gap-3 bg-transparent px-4 py-3 text-left transition hover:bg-gray-50">
-                        {Icon && <Icon className="h-5 w-5 text-red-600" />}
-                        <span className="text-sm text-red-600">{item.label}</span>
-                      </button>
-                    ) : (
-                      <Link to={item.href || "#"} className="flex items-center gap-3 px-4 py-3 transition hover:bg-gray-50">
-                        {Icon && <Icon className="h-5 w-5 text-gray-600" />}
-                        <span className="text-sm text-gray-700">{item.label}</span>
-                      </Link>
-                    )}
-                  </React.Fragment>
-                );
-              })}
+            return isLogout ? (
+              <button
+                key={index}
+                onClick={handleLogout}
+                className="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-white/5"
+              >
+                {Icon && <Icon className="h-4 w-4 text-red-400" />}
+                <span className="text-sm text-red-400">{item.label}</span>
+              </button>
+            ) : (
+              <Link
+                key={index}
+                to={item.href || "#"}
+                className="flex items-center gap-3 px-4 py-3 transition hover:bg-white/5"
+              >
+                {Icon && <Icon className="h-4 w-4 text-slate-300" />}
+                <span className="text-sm text-slate-200">
+                  {item.label}
+                </span>
+              </Link>
+            );
+          })}
         </div>
       </Card>
     </div>

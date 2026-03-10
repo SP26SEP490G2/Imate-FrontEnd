@@ -11,7 +11,7 @@ import type { CommonParams, PaginatedApiResponse } from "@/types/common/paginati
 export const getAllPositions = async (
     params?: CommonParams
 ): Promise<PaginatedApiResponse<PositionItem>> => {
-    const response = await apiClient.get<{ data: PositionItem[] }>(
+    const response = await apiClient.get<any>(
         APIConfig.Position.GetAllPositions,
         { params }
     );
@@ -25,9 +25,12 @@ export const getAllPositions = async (
         totalPages: 0
     };
 
+    const responseData = response.data;
+    const items = responseData.data || responseData.items || (Array.isArray(responseData) ? responseData : []);
+
     return {
-        data: response.data.data || [],
-        totalCount: pagination.totalCount || pagination.TotalCount,
+        data: items,
+        totalCount: pagination.totalCount || pagination.TotalCount || items.length,
         pageNumber: pagination.pageNumber || pagination.PageNumber,
         pageSize: pagination.pageSize || pagination.PageSize,
         totalPages: pagination.totalPages || pagination.TotalPages
@@ -42,7 +45,7 @@ export const getAllPositions = async (
 export const getAllSkills = async (
     params?: CommonParams
 ): Promise<PaginatedApiResponse<SkillItem>> => {
-    const response = await apiClient.get<{ data: SkillItem[] }>(
+    const response = await apiClient.get<any>(
         APIConfig.Skills.GetAllSkills,
         { params }
     );
@@ -56,9 +59,12 @@ export const getAllSkills = async (
         totalPages: 0
     };
 
+    const responseData = response.data;
+    const items = responseData.data || responseData.items || (Array.isArray(responseData) ? responseData : []);
+
     return {
-        data: response.data.data || [],
-        totalCount: pagination.totalCount || pagination.TotalCount,
+        data: items,
+        totalCount: pagination.totalCount || pagination.TotalCount || items.length,
         pageNumber: pagination.pageNumber || pagination.PageNumber,
         pageSize: pagination.pageSize || pagination.PageSize,
         totalPages: pagination.totalPages || pagination.TotalPages
@@ -73,7 +79,7 @@ export const getAllSkills = async (
 export const getAllCompanies = async (
     params?: CommonParams
 ): Promise<PaginatedApiResponse<CompanyItem>> => {
-    const response = await apiClient.get<{ data: CompanyItem[] }>(
+    const response = await apiClient.get<any>(
         APIConfig.Companies.GetAllCompanies,
         { params }
     );
@@ -87,9 +93,12 @@ export const getAllCompanies = async (
         totalPages: 0
     };
 
+    const responseData = response.data;
+    const items = responseData.data || responseData.items || (Array.isArray(responseData) ? responseData : []);
+
     return {
-        data: response.data.data || [],
-        totalCount: pagination.totalCount || pagination.TotalCount,
+        data: items,
+        totalCount: pagination.totalCount || pagination.TotalCount || items.length,
         pageNumber: pagination.pageNumber || pagination.PageNumber,
         pageSize: pagination.pageSize || pagination.PageSize,
         totalPages: pagination.totalPages || pagination.TotalPages

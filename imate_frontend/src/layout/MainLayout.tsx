@@ -1,7 +1,7 @@
 import React from "react";
 import { Outlet, useLocation, Navigate } from "react-router-dom";
 import HomePage from "@/pages/guest/HomePage";
-import Header from "@/components/candidate/header";
+import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/store/AuthContext";
 
@@ -82,7 +82,7 @@ const MainLayout: React.FC = () => {
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col bg-white">
+    <div className="relative flex min-h-screen flex-col">
       {/* Isolated Header */}
       <Header />
 

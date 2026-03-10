@@ -21,12 +21,18 @@ export const buttonVariants = cva(
 
         outline:
           "border border-slate-600 text-slate-200 hover:border-neon-blue hover:text-white",
+        
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+
       },
 
       size: {
         sm: "text-xs px-2.5 py-1.5",
         md: "text-sm px-3.5 py-2",
         lg: "text-base px-5 py-2.5",
+        icon: "size-9",
+        "icon-sm": "size-8",
+        "icon-lg": "size-10",
       },
     },
 
@@ -39,7 +45,7 @@ export const buttonVariants = cva(
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+  VariantProps<typeof buttonVariants> {
   icon?: React.ReactNode
 }
 

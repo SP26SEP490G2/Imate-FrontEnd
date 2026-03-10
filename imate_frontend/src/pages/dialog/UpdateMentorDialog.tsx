@@ -247,32 +247,32 @@ const UpdateMentorDialog: React.FC<UpdateMentorDialogProps> = ({ type, onSubmit,
                 <Popover open={openBankSelect} onOpenChange={setOpenBankSelect} modal={false}>
                   <PopoverTrigger asChild>
                     <button type="button" className="flex w-full cursor-pointer items-center justify-between rounded-md border border-white/10 bg-[#0F1333] px-4 py-3 text-left text-sm transition hover:border-white/20 focus:outline-none">
-  <div className="flex items-center gap-3 truncate">
-    {selectedBank ? (
-      <>
-        <img
-          src={selectedBank.logo}
-          alt={selectedBank.name}
-          className="h-8 w-8 rounded-md border border-white/10 bg-white object-contain p-1"
-        />
+                      <div className="flex items-center gap-3 truncate">
+                        {selectedBank ? (
+                          <>
+                            <img
+                              src={selectedBank.logo}
+                              alt={selectedBank.name}
+                              className="h-8 w-8 rounded-md border border-white/10 bg-white object-contain p-1"
+                            />
 
-        <div className="flex flex-col truncate">
-          <span className="truncate text-[15px] font-medium text-white">
-            {selectedBank.name}
-          </span>
+                            <div className="flex flex-col truncate">
+                              <span className="truncate text-[15px] font-medium text-white">
+                                {selectedBank.name}
+                              </span>
 
-          <span className="text-xs text-[#A0A3BD]">
-            {selectedBank.code}
-          </span>
-        </div>
-      </>
-    ) : (
-      <span className="text-[#A0A3BD]">Chọn ngân hàng</span>
-    )}
-  </div>
+                              <span className="text-xs text-[#A0A3BD]">
+                                {selectedBank.code}
+                              </span>
+                            </div>
+                          </>
+                        ) : (
+                          <span className="text-[#A0A3BD]">Chọn ngân hàng</span>
+                        )}
+                      </div>
 
-  <ChevronDown className="h-4 w-4 text-[#A0A3BD]" />
-</button>
+                      <ChevronDown className="h-4 w-4 text-[#A0A3BD]" />
+                    </button>
                   </PopoverTrigger>
 
                   <PopoverContent align="start" onWheel={(e) => e.stopPropagation()} className="hide-scrollbar z-[100] w-[var(--radix-popover-trigger-width)] border border-white/10 bg-[#11142D] p-0 shadow-xl" sideOffset={5}>

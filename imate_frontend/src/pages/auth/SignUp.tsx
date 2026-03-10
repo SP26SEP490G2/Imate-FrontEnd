@@ -15,7 +15,7 @@ function SignUp() {
   const [role, setRole] = useState<UserRole>("Candidate");
   const [viewPassword, setViewPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [formData, setFormData] = useState<Omit<RegisterEmailData, "role">>({ fullName: "", email: "", password: "" });
+  const [formData, setFormData] = useState<Omit<RegisterEmailData, "role">>({ fullName: "", email: "", password: "", confirmPassword: "" });
   const [recruiterStep, setRecruiterStep] = useState<1 | 2>(1);
   const [recruiterFormData, setRecruiterFormData] = useState<{
     companyName: string;
@@ -446,6 +446,27 @@ const getRoleLabel = (r: UserRole) => {
                 type={viewPassword ? "text" : "password"}
                 name="password"
                 value={formData.password}
+                onChange={handleChange}
+                placeholder="••••••••"
+                className="w-full bg-slate-900/50 border border-white/10 rounded-xl h-14 px-5 pr-12 focus:ring-2 focus:ring-indigo-500/50"
+              />
+              <button
+                type="button"
+                onClick={toogleViewPassword}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+              >
+                {viewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm text-slate-300">Xác nhận Mật khẩu</label>
+            <div className="relative">
+              <input
+                type={viewPassword ? "text" : "password"}
+                name="confirmPassword"
+                value={formData.confirmPassword}
                 onChange={handleChange}
                 placeholder="••••••••"
                 className="w-full bg-slate-900/50 border border-white/10 rounded-xl h-14 px-5 pr-12 focus:ring-2 focus:ring-indigo-500/50"

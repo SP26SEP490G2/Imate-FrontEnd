@@ -17,7 +17,6 @@ const AuthenticatedRouter: RouteObject[] = [
     ),
     children: [
       { path: "profile", element: <ViewProfile /> },
-
       // { path: "/save-question", element: <ViewSaveQuestion /> },
       // { path: "/transactions", element: <TransactionHistoryPage /> },
       // { path: "/wallet", element: <WalletSummary /> },

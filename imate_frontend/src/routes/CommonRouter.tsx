@@ -11,9 +11,20 @@ import ManagementLayout from "@/layout/ManagementLayout";
 import ViewSubscriptionPage from "../pages/guest/ViewSubscriptionPage";
 
 import type { RouteObject } from "react-router-dom";
+import MainLayout from "@/layout/MainLayout";
 
 const CommonRouter: RouteObject[] = [
-  { path: "/Trang-chu", element: <HomePage /> },
+
+  {
+    path: "/",
+    element: (
+        <MainLayout />
+    ),
+    children: [
+        { path: "/Trang-chu", element: <HomePage /> },
+
+    ],
+  },
   { path: "/Ngan-hang-cau-hoi-he-thong", element: <SystemQuestionBank /> },
   { path: "/Staff/Quan-ly-cau-hoi", element: <StaffQuestionManagement /> },
   { path: "/Staff/Them-cau-hoi", element: <AddSystemQuestion /> },

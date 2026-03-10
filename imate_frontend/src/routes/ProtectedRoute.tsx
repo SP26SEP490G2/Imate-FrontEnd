@@ -1,7 +1,7 @@
 import { useAuth } from "@/store/AuthContext";
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import PeppoLoading from "@/components/custom/imateLoading";
+import ImateLoading from "@/components/custom/imateLoading";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -9,13 +9,14 @@ interface ProtectedRouteProps {
 }
 
 const SKIP_AUTH_FOR_TEST = true;
+const MANAGEMENT_ROUTES = ["/management-dashboard"];
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole }) => {
   const { isAuthenticated, user, isLoading } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
-    return <PeppoLoading type="screen" />;
+    return <ImateLoading type="screen" />;
   }
   if (!SKIP_AUTH_FOR_TEST && !isAuthenticated) {
     return <Navigate to="/sign-in" replace />;
@@ -48,6 +49,16 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole 
         if (redirect) return redirect;
       }
       // Tất cả các trường hợp khác: chặn truy cập
+      return <Navigate to="/unauthorized" replace />;
+    }
+  }
+
+  const isManagementRoute = MANAGEMENT_ROUTES.some(route => 
+    location.pathname === route || location.pathname.startsWith(route + "/")
+  );
+
+  if (!SKIP_AUTH_FOR_TEST && isManagementRoute) {
+    if (user?.role !== "Admin" && user?.role !== "Staff") {
       return <Navigate to="/unauthorized" replace />;
     }
   }

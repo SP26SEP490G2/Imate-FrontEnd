@@ -1,33 +1,7 @@
 import { NavLink, Outlet, useNavigate, Navigate } from "react-router-dom";
 import { LogOut } from "lucide-react";
-import { managementRoutes } from "@/config/managementRoutes";
+import { managementRoutes, recruiterManagementRoutes } from "@/config/managementRoutes";
 import { useAuth } from "@/store/AuthContext";
-import React from 'react';
-
-class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: Error | null}> {
-  constructor(props: any) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-
-  static getDerivedStateFromError(error: Error) {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error: Error, errorInfo: any) {
-    console.error("ManagementLayout ErrorBoundary caught an error", error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return <div className="p-8 text-white bg-red-900 min-h-screen">
-        <h1>Something went wrong in ManagementLayout.</h1>
-        <pre className="mt-4 text-xs">{this.state.error?.toString()}</pre>
-      </div>;
-    }
-    return this.props.children;
-  }
-}
 
 export default function ManagementLayout() {
   const { user, logout, isLoading, isAuthenticated } = useAuth();
@@ -43,8 +17,8 @@ export default function ManagementLayout() {
     return <Navigate to="/sign-in" replace />;
   }
 
-  // Chỉ cho Admin và Staff truy cập management dashboard
-  if (user.role !== "Admin" && user.role !== "Staff") {
+  // Chỉ cho Admin, Staff và Recruiter truy cập management dashboard
+  if (!["Admin", "Staff", "Recruiter"].includes(user.role)) {
     return <Navigate to="/unauthorized" replace />;
   }
 
@@ -62,14 +36,20 @@ export default function ManagementLayout() {
     role: user.role || "Role",
   };
 
+  const basePath = user?.role === "Recruiter"
+    ? "/recruiter-dashboard"
+    : "/management-dashboard";
+
+  const routes =
+    user?.role === "Recruiter" ? recruiterManagementRoutes : visibleRoutes;
+
   const handleLogout = () => {
     logout();
     navigate("/Trang-chu");
   };
 
   return (
-    <ErrorBoundary>
-      <div className="flex h-screen">
+    <div className="flex h-screen bg-slate-950">
 
         {/* Sidebar */}
         <aside className="w-72 flex flex-col justify-between bg-gradient-to-b from-[#0f172a] to-[#020617] border-r border-slate-800">
@@ -95,13 +75,13 @@ export default function ManagementLayout() {
             {/* Menu */}
             <nav className="mt-6 flex flex-col">
 
-              {visibleRoutes.map((item) => {
+              {routes.map((item) => {
                 const Icon = item.icon;
 
                 return (
                   <NavLink
                     key={item.path}
-                    to={`/management-dashboard/${item.path}`}
+                    to={`${basePath}/${item.path}`}
                     className={({ isActive }) =>
                       `flex items-center gap-3 px-8 py-4 text-sm font-medium transition-all
                       ${
@@ -154,11 +134,10 @@ export default function ManagementLayout() {
         </aside>
 
         {/* Content */}
-        <main className="flex-1 overflow-y-auto bg-slate-50">
+        <main className="flex-1 overflow-y-auto px-4 py-2 bg-[radial-gradient(circle_at_top_right,#151336,#020617)]">
           <Outlet />
         </main>
 
-      </div>
-    </ErrorBoundary>
+    </div>
   );
 }

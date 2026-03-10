@@ -1,5 +1,5 @@
 import type React from "react";
-
+import { Globe, Users, MapPin } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/store/AuthContext";
@@ -22,6 +22,7 @@ import usePriceUpdateControl from "@/helpers/usePriceUpdateControl";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { CommonBreadcrumb } from "@/components/ui/breadcrumb";
 import { cn } from "@/lib/utils";
+import UpdateRecruiterDialog from "../dialog/UpdateRecruiterDialog";
 
 const nameSchema = z.object({
   fullName: z.string().min(2, "Tên phải có ít nhất 2 ký tự"),
@@ -35,6 +36,7 @@ const ViewProfile = () => {
   const { user, refetchUser, isLoading } = useAuth(); // Lấy cả isLoading để điều khiển render
   const { canUpdate, remainingTimeDisplay, recordUpdate } = usePriceUpdateControl();
   const [loaded, setLoaded] = useState(false);
+
   // --- Lấy bank detail ---
   useEffect(() => {
     if (!user?.bankCode) return;
@@ -123,6 +125,7 @@ const ViewProfile = () => {
   }, [user, refetchUser]);
 
   const currentPlan = user?.subscription || "Gói Thường";
+  const isRecruiter = user?.role === "Recruiter";
   const isMentor = user?.role === "Mentor";
   const isAdmin = user?.role === "Admin";
   const isStaff = user?.role === "Staff";
@@ -167,7 +170,7 @@ const ViewProfile = () => {
                   {loaded ? <img src={avatarPreview} className="h-full w-full object-cover" /> : <span className="font-semibold text-white">{getInitials(user?.fullName || "User")}</span>}
                 </div>
                 {isEditMode && (
-                  <Button variant="default" size="icon" className="absolute bottom-0 right-0 h-9 w-9 rounded-full bg-gradient-to-r from-[#6C63FF] to-[#8B5CF6] text-white shadow-lg transition hover:brightness-110" onClick={handleCameraClick}>
+                  <Button className="absolute bottom-0 right-0 h-9 w-9 rounded-full bg-gradient-to-r from-[#6C63FF] to-[#8B5CF6] text-white shadow-lg transition hover:brightness-110" onClick={handleCameraClick}>
                     <Camera className="h-4 w-4" />
                   </Button>
                 )}
@@ -471,13 +474,115 @@ const ViewProfile = () => {
           </div>
         )}
 
+        {/* === RECRUITER DETAILS SECTION === */}
+{isRecruiter && (
+  <div className="mx-auto mt-10 space-y-8">
+
+    {/* Company Info */}
+    <Card className="rounded-[16px] border border-white/10 bg-[#11142D] shadow-[0_20px_40px_rgba(0,0,0,0.35)]">
+<CardHeader className="flex items-center justify-between">
+  <CardTitle className="flex items-center gap-2 text-white">
+    <Building size={18} />
+    Thông tin công ty
+  </CardTitle>
+
+  <UpdateRecruiterDialog
+    data={user}
+    onSubmit={() => refetchUser()}
+  />
+</CardHeader>
+
+      <CardContent className="space-y-5">
+
+        {/* Company Logo + Name */}
+        {(user.companyLogo || user.companyName) && (
+          <div className="flex items-center gap-4">
+            {user.companyLogo && (
+              <img
+                src={user.companyLogo}
+                className="h-16 w-16 rounded-lg object-contain bg-white p-2"
+              />
+            )}
+
+            <div>
+              <p className="text-sm text-gray-400">Tên công ty</p>
+              <p className="text-white font-semibold">
+                {user.companyName || "Chưa cập nhật"}
+              </p>
+            </div>
+          </div>
+        )}
+        {/* RecruiterPhone */}
+        {user.phone && (
+          <div className="flex items-center gap-3">
+            <Phone size={18} className="text-gray-400" />
+            <div>
+              <p className="text-sm text-gray-400">Số điện thoại</p>
+              <p className="text-sm text-[#A0A3BD]">{user.phone}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Website */}
+        {user.website && (
+          <div className="flex items-center gap-3">
+            <Globe size={18} className="text-gray-400" />
+            <a
+              href={user.website}
+              target="_blank"
+              className="text-[#A78BFA] text-sm hover:underline"
+            >
+              {user.website}
+            </a>
+          </div>
+        )}
+
+        {/* Industry */}
+        {user.industry && (
+          <div className="flex items-center gap-3">
+            <Briefcase size={18} className="text-gray-400" />
+            <div>
+              <p className="text-sm text-gray-400">Lĩnh vực</p>
+              <p className="text-sm text-[#A0A3BD]">{user.industry}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Company Size */}
+        {user.companySize && (
+          <div className="flex items-center gap-3">
+            <Users size={18} className="text-gray-400" />
+            <div>
+              <p className="text-sm text-gray-400">Quy mô công ty</p>
+              <p className="text-sm text-[#A0A3BD]">{user.companySize}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Address */}
+        {user.address && (
+          <div className="flex items-center gap-3">
+            <MapPin size={18} className="text-gray-400" />
+            <div>
+              <p className="text-sm text-gray-400">Địa chỉ</p>
+              <p className="text-sm text-[#A0A3BD]">{user.address}</p>
+            </div>
+          </div>
+        )}
+
+      </CardContent>
+    </Card>
+
+  </div>
+)}
+
         {/* === 3. CONTENT AREA (Settings Tab) === */}
-        <div className={`mx-auto grid grid-cols-1 gap-8 ${!(isMentor || isAdmin || isStaff) ? "mt-10 lg:grid-cols-3" : "mt-8 lg:grid-cols-1"}`}>
+        <div className={`mx-auto grid grid-cols-1 gap-8 ${!(isMentor || isAdmin || isStaff || isRecruiter) ? "mt-10 lg:grid-cols-3" : "mt-8 lg:grid-cols-1"}`}>
           <div className="flex flex-col gap-8 lg:col-span-2">
             <SettingTab />
           </div>
 
-          {!(isMentor || isAdmin || isStaff) && (
+          {!(isMentor || isAdmin || isStaff || isRecruiter) && (
             <div className="lg:col-span-1">
               <Card className="sticky top-24 bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/30 dark:to-blue-900/30">
                 <CardHeader>

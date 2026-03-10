@@ -34,6 +34,14 @@ const APIConfig = {
     GetSystemQuestionDetail: "/get-system-question-detail/{questionId}",
   },
 
+  // Category endpoints
+  Category: {
+    GetAllCategories: "/get-categories",
+    AddCategory:"/categories",
+    UpdateCategory: "/categories/{categoryId}",
+    GetAffectedQuestions: "/categories/{categoryId}/affected-questions",
+  },
+
   // Position endpoints
   Position: {
     GetAllPositions: "/get-positions",
@@ -52,6 +60,8 @@ const APIConfig = {
   // Recruiter endpoints
   Recruiter: {
     SubmitRecruiterProfile: "/recruiters/submit-profile",
+    GetJobApplicationList: "job-applications",
+    GetRecruiterJobApplication: "recruiter-job-applications"
   },
 
   // Staff review endpoints (baseURL thường đã có /api)
