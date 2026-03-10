@@ -4,17 +4,18 @@ import {
     createSystemQuestionForStaff
 } from '@/services/questionService';
 import {
+    getAllCategories,
     getAllPositions,
     getAllSkills
 } from '@/services/commonService';
 import { getListQuestionCategories } from '@/services/questionService';
 import type {
     CreateSystemQuestionRequest,
-    DifficultyLevel,
     PositionItem,
     SkillItem,
     CategoryItem
 } from '@/types/common/question';
+import { DIFFICULTY_LEVEL, DIFFICULTY_MAP } from '@/constants/common';
 import { ChevronLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -26,7 +27,7 @@ const AddSystemQuestion: React.FC = () => {
     // Form state
     const [formData, setFormData] = useState<CreateSystemQuestionRequest>({
         content: '',
-        difficulty: 'Easy',
+        difficulty: DIFFICULTY_LEVEL.EASY, // Changed to number
         sampleAnswer: '',
         categoryIds: [],
         skillIds: [],
@@ -52,12 +53,13 @@ const AddSystemQuestion: React.FC = () => {
             const [positionsRes, skillsRes, categoriesRes] = await Promise.all([
                 getAllPositions({ pageSize: 100, isActive: true }),
                 getAllSkills({ pageSize: 100, isActive: true }),
+                getAllCategories({ pageSize: 100, isActive: true }),
                 getListQuestionCategories()
             ]);
 
             setPositions(positionsRes.data);
             setSkills(skillsRes.data);
-            setCategories(categoriesRes);
+            setCategories(categoriesRes.data);
         } catch (error) {
             console.error('Failed to fetch dropdown data:', error);
             toast.error('Không thể tải dữ liệu. Vui lòng thử lại sau.');
@@ -130,7 +132,7 @@ const AddSystemQuestion: React.FC = () => {
         }
     };
 
-    const handleDifficultyChange = (difficulty: DifficultyLevel) => {
+    const handleDifficultyChange = (difficulty: 0 | 1 | 2) => {
         setFormData(prev => ({ ...prev, difficulty }));
         if (errors.difficulty) {
             setErrors(prev => ({ ...prev, difficulty: '' }));
@@ -244,7 +246,7 @@ const AddSystemQuestion: React.FC = () => {
                                     Cấp độ <span className="text-red-400">*</span>
                                 </label>
                                 <div className="flex flex-wrap gap-3">
-                                    {(['Easy', 'Medium', 'Hard'] as DifficultyLevel[]).map((level) => (
+                                    {([DIFFICULTY_LEVEL.EASY, DIFFICULTY_LEVEL.MEDIUM, DIFFICULTY_LEVEL.HARD] as const).map((level) => (
                                         <button
                                             key={level}
                                             type="button"
@@ -254,7 +256,7 @@ const AddSystemQuestion: React.FC = () => {
                                                 : 'border-white/10 bg-white/5 text-white/60 hover:border-white/30'
                                                 }`}
                                         >
-                                            {level}
+                                            {DIFFICULTY_MAP[level]}
                                         </button>
                                     ))}
                                 </div>

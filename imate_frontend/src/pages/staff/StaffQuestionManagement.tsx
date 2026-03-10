@@ -17,6 +17,7 @@ import type {
   PositionItem,
   SkillItem
 } from '@/types/common/question';
+import { DIFFICULTY_MAP, DIFFICULTY_LEVEL } from '@/constants/common';
 import {
   Eye,
   Pencil,
@@ -118,7 +119,7 @@ const StaffQuestionManagement: React.FC = () => {
       setLoading(true);
       setError(null);
       const result = await getAllSystemQuestionsForStaff(systemFilters);
-      setSystemQuestions(result.data);
+      setSystemQuestions(result.items || []);
       setSystemPagination({
         totalCount: result.totalCount,
         pageNumber: result.pageNumber,
@@ -138,7 +139,8 @@ const StaffQuestionManagement: React.FC = () => {
       setLoading(true);
       setError(null);
       const result = await getAllContributedQuestionsForStaff(contributedFilters);
-      setContributedQuestions(result.data);
+      console.log('Fetched contributed questions:', result);
+      setContributedQuestions(result.items || []);
       setContributedPagination({
         totalCount: result.totalCount,
         pageNumber: result.pageNumber,
@@ -178,8 +180,10 @@ const StaffQuestionManagement: React.FC = () => {
   };
 
   const handleEditQuestion = (questionId: number) => {
+    console.log('handleEditQuestion called with ID:', questionId);
     setSelectedQuestionId(questionId);
     setUpdateModalOpen(true);
+    console.log('Modal should open now');
   };
 
   const handleUpdateSuccess = () => {
@@ -284,9 +288,9 @@ const StaffQuestionManagement: React.FC = () => {
   };
 
   const getPositionBadgeClass = (position: string) => {
-    if (position?.toLowerCase().includes('frontend') || position?.toLowerCase().includes('front-end')) {
+    if (position?.toLowerCase().includes('Backend Developer') || position?.toLowerCase().includes('Backend Developer')) {
       return 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
-    } else if (position?.toLowerCase().includes('backend') || position?.toLowerCase().includes('back-end')) {
+    } else if (position?.toLowerCase().includes('Backend Developer') || position?.toLowerCase().includes('Backend Developer')) {
       return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
     } else if (position?.toLowerCase().includes('design') || position?.toLowerCase().includes('ui')) {
       return 'bg-pink-500/10 text-pink-400 border-pink-500/20';
@@ -549,16 +553,16 @@ const StaffQuestionManagement: React.FC = () => {
                           </span>
                         </td>
                         <td className="px-6 py-6">
-                          <span className={`px-3 py-1 rounded-md text-xs font-bold border ${getPositionBadgeClass(question.positionName || '')}`}>
-                            {question.positionName || 'N/A'}
+                          <span className={`px-3 py-1 rounded-md text-xs font-bold border bg-indigo-500/10 text-indigo-400 border-indigo-500/20`}>
+                            {question.positionsName || 'N/A'}
                           </span>
                         </td>
                         <td className="px-6 py-6 text-sm text-slate-400">
-                          {question.skillName || 'N/A'}
+                          {question.skillsName || 'N/A'}
                         </td>
                         <td className="px-6 py-6">
-                          <span className={`px-3 py-1 rounded-md text-xs font-bold border ${getLevelBadgeClass(question.difficulty)}`}>
-                            {question.difficulty}
+                          <span className={`px-3 py-1 rounded-md text-xs font-bold border ${getLevelBadgeClass(DIFFICULTY_MAP[question.difficulty as 0 | 1 | 2] || 'Easy')}`}>
+                            {DIFFICULTY_MAP[question.difficulty as 0 | 1 | 2] || 'N/A'}
                           </span>
                         </td>
                         <td className="px-8 py-6">
@@ -606,12 +610,12 @@ const StaffQuestionManagement: React.FC = () => {
                           </span>
                         </td>
                         <td className="px-6 py-6">
-                          <span className={`px-3 py-1 rounded-md text-xs font-bold border ${getPositionBadgeClass(question.positionName || '')}`}>
-                            {question.positionName || 'N/A'}
+                          <span className={`px-3 py-1 rounded-md text-xs font-bold border ${getPositionBadgeClass(question.positionsName || '')}`}>
+                            {question.positionsName || 'N/A'}
                           </span>
                         </td>
                         <td className="px-6 py-6 text-sm text-slate-400">
-                          {question.skillName || 'N/A'}
+                          {question.skillsName || 'N/A'}
                         </td>
                         <td className="px-6 py-6">
                           <span className={`px-3 py-1 rounded-md text-xs font-bold border ${getLevelBadgeClass(question.level)}`}>
