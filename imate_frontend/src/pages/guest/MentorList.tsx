@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
+import Header from '@/components/common/Header';
+import Footer from '@/components/common/Footer';
 import { getListPreviewMentors } from '@/services/mentorService';
 import { getAllPositions, getAllSkills, getAllCompanies } from '@/services/commonService';
 import type { ListPreviewMentorResponse } from '@/types/common/mentor';

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import Header from "@/components/common/Header";
+import Footer from "@/components/common/Footer";
 import { getMentorApplicationById } from "@/services/staffReviewService";
 import type { StaffMentorApplication } from "@/types/response/staffReview.response";
 import {
