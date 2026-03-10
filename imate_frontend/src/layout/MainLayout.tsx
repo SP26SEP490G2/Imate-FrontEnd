@@ -18,7 +18,7 @@ const MainLayout: React.FC = () => {
 
     const staffOnlyRoutes = ["/staff/manage-question", "/staff/manage-category", "/staff/manage-application", "/staff/manage-report", "/staff/manage-community", "/staff/manage-transaction", "/staff/view-profile"];
 
-    const adminOnlyRoutes = ["/admin/manage-user", "/admin/manage-subscription", "/admin/manage-question", "/admin/manage-category", "/admin/manage-application", "/admin/manage-community", "/admin/manage-report", "/admin/manage-transaction", "/admin/view-profile"];
+    const adminOnlyRoutes: string[] = [];
 
     // Chặn mentor (kể cả pending) truy cập candidate routes
     if (user.role === "Mentor") {

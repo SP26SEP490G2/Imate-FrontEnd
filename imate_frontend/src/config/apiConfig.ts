@@ -73,6 +73,8 @@ const APIConfig = {
   // Subscription endpoints
   Subscription: {
     GetSubscriptionPackages: "/subscription-packages",
+    GetSubscriptionOverview: "/subscription-packages/overview",
+    UpdateSubscriptionPackagePrice: "/subscription-packages",
   },
 } as const;
 
