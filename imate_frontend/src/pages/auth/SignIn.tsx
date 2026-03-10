@@ -52,7 +52,7 @@ function SignIn() {
       case "Recruiter":
         // Tương tự Mentor:
         if (user.accountStatus === "Active") {
-          navigate("/recruiter/dashboard");
+          navigate("/recruiter-dashboard/job-posts");
         } else if (user.accountStatus === "PendingVerification") {
           navigate("/recruiter-pending-application");
         } else {
