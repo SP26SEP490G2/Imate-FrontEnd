@@ -43,6 +43,16 @@ export default function ManagementLayout() {
     return <Navigate to="/sign-in" replace />;
   }
 
+  // Chỉ cho Admin và Staff truy cập management dashboard
+  if (user.role !== "Admin" && user.role !== "Staff") {
+    return <Navigate to="/unauthorized" replace />;
+  }
+
+  // Lọc sidebar chỉ hiện route phù hợp với role
+  const visibleRoutes = managementRoutes.filter(
+    (route) => route.allowedRoles.includes(user.role!)
+  );
+
   const sidebarUser = {
     name: user.fullName || "User",
     email: user.email || "",
@@ -85,7 +95,7 @@ export default function ManagementLayout() {
             {/* Menu */}
             <nav className="mt-6 flex flex-col">
 
-              {managementRoutes.map((item) => {
+              {visibleRoutes.map((item) => {
                 const Icon = item.icon;
 
                 return (
