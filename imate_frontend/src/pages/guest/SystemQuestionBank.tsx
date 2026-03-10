@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import Header from '../../components/Header';
-import Footer from '@/components/Footer';
+import Header from '../../components/common/Header';
+import Footer from '@/components/common/Footer';
 import { getQuestionBankList, getListQuestionCategories } from '../../services/questionService';
 import type { QuestionBankListResponse, CategoryItem, GetQuestionBankListRequest } from '../../types/common/question';
 import { COMMON_CODE, COMMON_COLOR, COMMON_DATE } from '@/constants/common';

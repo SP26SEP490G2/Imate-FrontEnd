@@ -15,6 +15,7 @@ import type {
     SkillItem,
     CategoryItem
 } from '@/types/common/question';
+import { DIFFICULTY_MAP, DIFFICULTY_LEVEL } from '@/constants/common';
 import { X } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -37,7 +38,7 @@ const UpdateSystemQuestionModal: React.FC<UpdateSystemQuestionModalProps> = ({
     // Form state
     const [formData, setFormData] = useState<UpdateSystemQuestionRequest>({
         content: '',
-        difficulty: 'Easy',
+        difficulty: DIFFICULTY_LEVEL.EASY,
         sampleAnswer: '',
         isActive: true,
         categoryIds: [],
@@ -69,19 +70,34 @@ const UpdateSystemQuestionModal: React.FC<UpdateSystemQuestionModalProps> = ({
                 getListQuestionCategories()
             ]);
 
+            console.log('Question Detail:', questionDetail);
+
             setPositions(positionsRes.data);
             setSkills(skillsRes.data);
             setCategories(categoriesRes);
 
+            // Match names to IDs since API returns names instead of IDs
+            const categoryIds = categoriesRes
+                .filter(c => questionDetail.categoriesName?.includes(c.name))
+                .map(c => c.id);
+            
+            const skillIds = skillsRes.data
+                .filter(s => questionDetail.skillsName?.includes(s.name))
+                .map(s => s.id);
+            
+            const positionIds = positionsRes.data
+                .filter(p => questionDetail.positionsName?.includes(p.name))
+                .map(p => p.id);
+
             // Populate form with question details
             setFormData({
-                content: questionDetail.content,
+                content: questionDetail.content || '',
                 difficulty: questionDetail.difficulty,
-                sampleAnswer: questionDetail.sampleAnswer,
+                sampleAnswer: questionDetail.sampleAnswer || '',
                 isActive: questionDetail.isActive,
-                categoryIds: questionDetail.categories.map(c => c.id),
-                skillIds: questionDetail.skills.map(s => s.id),
-                positionIds: questionDetail.positions.map(p => p.id)
+                categoryIds: categoryIds,
+                skillIds: skillIds,
+                positionIds: positionIds
             });
         } catch (error) {
             console.error('Failed to fetch question data:', error);
@@ -263,7 +279,7 @@ const UpdateSystemQuestionModal: React.FC<UpdateSystemQuestionModalProps> = ({
                                     Cấp độ <span className="text-red-400">*</span>
                                 </label>
                                 <div className="flex flex-wrap gap-3">
-                                    {(['Easy', 'Medium', 'Hard'] as DifficultyLevel[]).map((level) => (
+                                    {([DIFFICULTY_LEVEL.EASY, DIFFICULTY_LEVEL.MEDIUM, DIFFICULTY_LEVEL.HARD] as const).map((level) => (
                                         <button
                                             key={level}
                                             type="button"
@@ -273,7 +289,7 @@ const UpdateSystemQuestionModal: React.FC<UpdateSystemQuestionModalProps> = ({
                                                 : 'border-white/10 bg-white/5 text-white/60 hover:border-white/30'
                                                 }`}
                                         >
-                                            {level}
+                                            {DIFFICULTY_MAP[level]}
                                         </button>
                                     ))}
                                 </div>

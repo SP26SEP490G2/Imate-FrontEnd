@@ -60,7 +60,7 @@ export interface GetListQuestionCategoriesResponse {
 }
 
 // Types for Difficulty and Level
-export type DifficultyLevel = "Easy" | "Medium" | "Hard";
+export type DifficultyLevel = 0 | 1 | 2; // 0 = Easy, 1 = Medium, 2 = Hard
 
 export type Level = "Intern" | "Fresher" | "Junior" | "Middle" | "Senior";
 
@@ -68,9 +68,9 @@ export type Level = "Intern" | "Fresher" | "Junior" | "Middle" | "Senior";
 export interface StaffSystemQuestionItem {
   id: number;
   content: string;
-  positionName?: string;
-  skillName?: string;
-  categoryName?: string;
+  positionsName?: string;
+  skillsName?: string;
+  categoriesName?: string;
   difficulty: DifficultyLevel;
   isActive: boolean;
   createdAt: string;
@@ -80,9 +80,9 @@ export interface StaffSystemQuestionItem {
 export interface StaffContributedQuestionItem {
   id: number;
   content: string;
-  positionName?: string;
-  skillName?: string;
-  categoryName?: string;
+  positionsName?: string;
+  skillsName?: string;
+  categoriesName?: string;
   companyName?: string;
   level: Level;
   isActive: boolean;
@@ -91,11 +91,13 @@ export interface StaffContributedQuestionItem {
 }
 
 export interface StaffQuestionListResponse<T> {
-  data: T[];
+  items: T[];
   totalCount: number;
   pageNumber: number;
   pageSize: number;
   totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
 }
 
 // Request Parameters
@@ -134,6 +136,12 @@ export interface SkillItem {
   id: number;
   name: string;
 }
+
+export interface CategoryItem {
+  id: number;
+  name: string;
+}
+
 
 export interface CompanyItem {
   id: number;
