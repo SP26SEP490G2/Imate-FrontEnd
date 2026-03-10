@@ -5,14 +5,18 @@ import { useAuth } from "@/store/AuthContext";
 import { useEffect } from 'react';
 
 export default function ManagementLayout() {
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!user || !["Admin", "Staff", "Recruiter"].includes(user.role)) {
+    if (!isLoading && (!user || !["Admin", "Staff", "Recruiter"].includes(user.role))) {
       navigate("/Trang-chu", { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, navigate, isLoading]);
+
+  if (isLoading) {
+    return null; // Or a loading spinner if preferred: <ImateLoading type="screen" />
+  }
 
   if (!user || !["Admin", "Staff", "Recruiter"].includes(user.role)) {
     return null;
@@ -26,7 +30,7 @@ export default function ManagementLayout() {
       "https://i.pinimg.com/736x/3c/67/75/3c67757cef723535a7484a6c7bfbfc43.jpg",
     role: user.role,
   };
-
+  console.log("role:", user?.role);
   const basePath = user?.role === "Recruiter"
     ? "/recruiter-dashboard"
     : "/management-dashboard";
@@ -75,10 +79,9 @@ export default function ManagementLayout() {
                   to={`${basePath}/${item.path}`}
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-8 py-4 text-sm font-medium transition-all
-                    ${
-                      isActive
-                        ? "text-white bg-gradient-to-l from-purple-500/20 to-transparent border-r-4 border-purple-500"
-                        : "text-slate-400 hover:text-white hover:bg-slate-800/40"
+                    ${isActive
+                      ? "text-white bg-gradient-to-l from-purple-500/20 to-transparent border-r-4 border-purple-500"
+                      : "text-slate-400 hover:text-white hover:bg-slate-800/40"
                     }`
                   }
                 >
