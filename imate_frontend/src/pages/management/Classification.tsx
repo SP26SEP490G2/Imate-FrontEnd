@@ -38,6 +38,18 @@ const tabs = [
   { label: "Công ty", value: "companies" },
 ];
 
+const SORT_OPTIONS = [
+  { value: "createdat-desc", label: "Mới nhất" },
+  { value: "createdat-asc", label: "Cũ nhất" },
+  { value: "name-asc", label: "Tên A → Z" },
+  { value: "name-desc", label: "Tên Z → A" },
+];
+
+const STATUS_OPTIONS = [
+  { value: "all", label: "Tất cả" },
+  { value: "true", label: "Hoạt động" },
+  { value: "false", label: "Vô hiệu" },
+];
 export default function Classification() {
   const [tab, setTab] = useState("categories");
 
@@ -243,9 +255,11 @@ export default function Classification() {
                   }}
                   className="bg-slate-800 border border-slate-700 rounded-md px-4 py-2 text-slate-200 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer min-w-[160px]"
                 >
-                  <option value="all">Tất cả</option>
-                  <option value="true">Hoạt động</option>
-                  <option value="false">Vô hiệu</option>
+                  {STATUS_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
               </div>
               <span className="whitespace-nowrap">Sắp xếp theo:</span>
@@ -260,12 +274,11 @@ export default function Classification() {
                   }}
                   className="bg-slate-800 border border-slate-700 rounded-md px-4 py-2 pr-10 text-slate-200 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer min-w-[200px]"
                 >
-                  <option value="createdat-desc">Mới nhất</option>
-                  <option value="createdat-asc">Cũ nhất</option>
-                  <option value="name-asc">Tên A → Z</option>
-                  <option value="name-desc">Tên Z → A</option>
-                  <option value="questioncount-asc">Số câu hỏi ít nhất</option>
-                  <option value="questioncount-desc">Số câu hỏi nhiều nhất</option>
+                  {SORT_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
                 <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400" />
               </div>
@@ -366,9 +379,11 @@ export default function Classification() {
                   }}
                   className="bg-slate-800 border border-slate-700 rounded-md px-4 py-2 text-slate-200 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer min-w-[160px]"
                 >
-                  <option value="all">Tất cả</option>
-                  <option value="true">Hoạt động</option>
-                  <option value="false">Vô hiệu</option>
+                  {STATUS_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
               </div>
               <span className="whitespace-nowrap">Sắp xếp theo:</span>
@@ -383,12 +398,11 @@ export default function Classification() {
                   }}
                   className="bg-slate-800 border border-slate-700 rounded-md px-4 py-2 pr-10 text-slate-200 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer min-w-[200px]"
                 >
-                  <option value="createdat-desc">Mới nhất</option>
-                  <option value="createdat-asc">Cũ nhất</option>
-                  <option value="name-asc">Tên A → Z</option>
-                  <option value="name-desc">Tên Z → A</option>
-                  <option value="questioncount-asc">Số câu hỏi ít nhất</option>
-                  <option value="questioncount-desc">Số câu hỏi nhiều nhất</option>
+                  {SORT_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
                 <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400" />
               </div>

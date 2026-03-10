@@ -36,7 +36,7 @@ export function UpdateSkillDialog({ open, onOpenChange, skill, onSuccess }: Upda
     setLoading(true);
 
     if (!name.trim()) {
-      setError("Vui lòng nhập tên kĩ năng");
+      toast.error("Vui lòng nhập tên kĩ năng");
       setLoading(false);
       return;
     }

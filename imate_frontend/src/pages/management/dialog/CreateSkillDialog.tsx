@@ -22,7 +22,7 @@ export function CreateSkillDialog({ open, onOpenChange, onSuccess }: CreateSkill
     setLoading(true);
 
     if (!name.trim()) {
-      setError("Vui lòng nhập tên kĩ năng");
+      toast.error("Vui lòng nhập tên kĩ năng");
       setLoading(false);
       return;
     }

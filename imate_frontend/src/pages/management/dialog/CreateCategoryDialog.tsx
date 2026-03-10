@@ -39,7 +39,7 @@ export function CreateCategoryDialog({
     setLoading(true);
 
     if (!name.trim()) {
-      setError("Vui lòng nhập tên danh mục");
+      toast.error("Vui lòng nhập tên thể loại");
       setLoading(false);
       return;
     }
@@ -89,11 +89,6 @@ export function CreateCategoryDialog({
               autoFocus
             />
           </div>
-
-          {/* Error message dưới input (cho các lỗi khác) */}
-          {error && (
-            <p className="text-sm text-red-400">{error}</p>
-          )}
 
           <DialogFooter>
             <DialogClose asChild>
