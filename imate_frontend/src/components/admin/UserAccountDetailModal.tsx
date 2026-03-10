@@ -335,13 +335,23 @@ type AccountDetailData =
   | { role: "staff"; data: AccountDetailStaffResponse };
 
 function getPrimaryRole(roles?: string[]): string {
-  const role = roles?.[0] ?? "";
-  if (role.includes("Mentor")) return "mentor";
-  if (role.includes("Candidate")) return "candidate";
+  if (!roles || roles.length === 0) return "staff";
+  // Check ALL roles with priority: Staff > Mentor > Candidate
+  if (roles.some((r) => r.includes("Staff"))) return "staff";
+  if (roles.some((r) => r.includes("Mentor"))) return "mentor";
+  if (roles.some((r) => r.includes("Candidate"))) return "candidate";
   return "staff";
 }
 
-async function fetchAccountDetail(id: number, role: string): Promise<AccountDetailData> {
+function getUserRoleList(roles?: string[]): string[] {
+  const result: string[] = [];
+  if (roles?.some((r) => r.includes("Staff"))) result.push("staff");
+  if (roles?.some((r) => r.includes("Mentor"))) result.push("mentor");
+  if (roles?.some((r) => r.includes("Candidate"))) result.push("candidate");
+  return result.length > 0 ? result : ["staff"];
+}
+
+async function fetchSingleRole(id: number, role: string): Promise<AccountDetailData> {
   if (role === "mentor") {
     const data = await viewDetailAccountMentor(id);
     return { role: "mentor", data };
@@ -352,6 +362,20 @@ async function fetchAccountDetail(id: number, role: string): Promise<AccountDeta
   }
   const data = await viewDetailAccountStaff(id);
   return { role: "staff", data };
+}
+
+async function fetchAccountDetail(id: number, roles?: string[]): Promise<AccountDetailData> {
+  const roleList = getUserRoleList(roles);
+  // Try each role the user has; fallback to next if one fails
+  for (let i = 0; i < roleList.length; i++) {
+    try {
+      return await fetchSingleRole(id, roleList[i]);
+    } catch (err) {
+      if (i === roleList.length - 1) throw err; // Last role, re-throw
+      // Otherwise try the next role
+    }
+  }
+  throw new Error("Cannot load account detail");
 }
 
 function roleBadgeClass(role: string) {
@@ -377,7 +401,7 @@ export default function UserAccountDetailModal({
 
   const { data: detail, isLoading, isError, refetch } = useQuery<AccountDetailData>({
     queryKey: ["account-detail", user?.id, primaryRole],
-    queryFn: () => fetchAccountDetail(user!.id, primaryRole),
+    queryFn: () => fetchAccountDetail(user!.id, user?.roles),
     enabled: open && !!user,
   });
 
@@ -495,7 +519,7 @@ export default function UserAccountDetailModal({
             <div className="flex flex-col items-center justify-center py-10 gap-3">
               <AlertCircle size={28} className="text-rose-500" />
               <p className="text-sm text-slate-400 text-center">
-                MSG07: Không thể tải thông tin người dùng. Vui lòng thử lại.
+                Không thể tải thông tin. Vui lòng thử lại
               </p>
               <Button
                 variant="outline"
