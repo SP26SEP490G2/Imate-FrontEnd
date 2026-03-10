@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Users, Zap, UserPlus, Eye, Trash2, Search } from "lucide-react";
 import { getOverviewAccount, getAccountList, updateAccountState } from "@/services/accountService";
 import type { OverviewChartAccountResponse, AccountResponse } from "@/types/response/account.response";
+import { MSG09, MSG10 } from "@/constants/messages";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -9,9 +10,11 @@ import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import UserAccountDetailModal from "@/components/admin/UserAccountDetailModal";
+import CreateStaffModal from "@/components/admin/CreateStaffModal";
 
 // This layout replicates the mockup
 export default function UserManagement() {
@@ -28,7 +31,15 @@ export default function UserManagement() {
 
   // Detail modal
   const [selectedUser, setSelectedUser] = useState<AccountResponse | null>(null);
+
+  // Confirmation dialog for status toggle
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    user: AccountResponse | null;
+    newChecked: boolean;
+  }>({ open: false, user: null, newChecked: false });
   const [modalOpen, setModalOpen] = useState(false);
+  const [createStaffOpen, setCreateStaffOpen] = useState(false);
 
   const fetchOverview = async () => {
     try {
@@ -82,23 +93,49 @@ export default function UserManagement() {
     return () => clearTimeout(timer);
   }, [searchTerm, roleFilter, page]);
 
-  const handleStatusChange = async (user: AccountResponse, checked: boolean) => {
+  // Show confirmation dialog before changing status
+  const handleStatusToggle = (user: AccountResponse, checked: boolean) => {
+    setConfirmDialog({ open: true, user, newChecked: checked });
+  };
+
+  // Actually perform the status change after confirmation
+  const handleConfirmStatusChange = async () => {
+    // Capture values BEFORE closing dialog to avoid race condition
+    const user = confirmDialog.user;
+    const newChecked = confirmDialog.newChecked;
+    
+    if (!user) return;
+
+    // Close dialog immediately
+    setConfirmDialog({ open: false, user: null, newChecked: false });
+
+    // Backend AccountStatus enum: Active=0, Suspended=1, PendingVerification=2
+    // Backend endpoint expects string: "Active" or "Suspended"
+    const newStatusStr = newChecked ? "Active" : "Suspended";
+    const newStatusNum = newChecked ? 0 : 1;
+
+    // Save previous state for rollback
+    const previousUsers = [...users];
+
+    // Optimistic update: update UI immediately
+    setUsers(prev =>
+      prev.map(u =>
+        u.id === user.id ? { ...u, status: newStatusNum } : u
+      )
+    );
+
     try {
-      // Assuming status 1 = active, 0 = inactive, 2 = suspended?
-      // The requirement doesn't specify the exact enum mapping, using 1 as active, 0 as inactive usually.
-      // Let's toggle
-      const newStatus = checked ? 1 : 0; 
       await updateAccountState({ 
         id: user.id, 
-        email: user.email,
-        fullName: user.fullName,
-        status: newStatus 
+        status: newStatusStr 
       });
-      toast.success("Cập nhật trạng thái thành công");
-      // Update local state
-      setUsers(users.map(u => u.id === user.id ? { ...u, status: newStatus } : u));
+      toast.success(MSG09);
+      // Cập nhật overview stats (không refetch users vì optimistic update đã đúng)
+      fetchOverview();
     } catch (error) {
-      toast.error("Cập nhật trạng thái thất bại");
+      // Revert to previous state on failure
+      setUsers(previousUsers);
+      toast.error(MSG10);
     }
   };
 
@@ -120,7 +157,10 @@ export default function UserManagement() {
           <Button variant="ghost" size="md" className="bg-slate-800/50 hover:bg-slate-700/50 rounded-lg text-slate-300">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
           </Button>
-          <Button className="bg-purple-600 hover:bg-purple-700 text-white gap-2 font-medium px-4 shadow-lg shadow-purple-900/20">
+          <Button
+            className="bg-purple-600 hover:bg-purple-700 text-white gap-2 font-medium px-4 shadow-lg shadow-purple-900/20"
+            onClick={() => setCreateStaffOpen(true)}
+          >
             <span className="text-lg leading-none">+</span> Thêm tài khoản nhân viên
           </Button>
         </div>
@@ -300,8 +340,8 @@ export default function UserManagement() {
                     </td>
                     <td className="px-6 py-4">
                       <Switch 
-                        checked={user.status === 1 || user.status === 2} // assuming 1 is active, adjust accordingly
-                        onCheckedChange={(c) => handleStatusChange(user, c)}
+                        checked={user.status === 0} // Active=0 in backend enum
+                        onCheckedChange={(c) => handleStatusToggle(user, c)}
                         className="data-[state=checked]:bg-purple-600 data-[state=unchecked]:bg-slate-700" 
                       />
                     </td>
@@ -401,6 +441,54 @@ export default function UserManagement() {
         user={selectedUser}
         open={modalOpen}
         onClose={() => { setModalOpen(false); setSelectedUser(null); }}
+      />
+
+      {/* Confirmation Dialog for Status Toggle */}
+      <AlertDialog
+        open={confirmDialog.open}
+        onOpenChange={(open) => {
+          if (!open) setConfirmDialog({ open: false, user: null, newChecked: false });
+        }}
+      >
+        <AlertDialogContent className="bg-[#111827] border-slate-800 text-slate-200">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white">
+              {confirmDialog.newChecked ? "Kích hoạt tài khoản" : "Vô hiệu hóa tài khoản"}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-400">
+              {confirmDialog.newChecked 
+                ? <>Bạn có chắc chắn muốn <span className="text-emerald-400 font-medium">kích hoạt</span> tài khoản <span className="text-white font-medium">"{confirmDialog.user?.fullName}"</span>?</>
+                : <>Bạn có chắc chắn muốn <span className="text-rose-400 font-medium">vô hiệu hóa</span> tài khoản <span className="text-white font-medium">"{confirmDialog.user?.fullName}"</span>? Người dùng sẽ không thể đăng nhập.</>
+              }
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel 
+              onClick={() => setConfirmDialog({ open: false, user: null, newChecked: false })}
+              className="bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white"
+            >
+              Hủy
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmStatusChange}
+              className={cn(
+                "font-medium",
+                confirmDialog.newChecked 
+                  ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                  : "bg-rose-600 hover:bg-rose-700 text-white"
+              )}
+            >
+              {confirmDialog.newChecked ? "Kích hoạt" : "Vô hiệu hóa"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Create Staff Modal */}
+      <CreateStaffModal
+        open={createStaffOpen}
+        onClose={() => setCreateStaffOpen(false)}
+        onCreated={() => { fetchUsers(); fetchOverview(); }}
       />
     </div>
   );
