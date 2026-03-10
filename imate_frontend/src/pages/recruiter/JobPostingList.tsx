@@ -4,6 +4,15 @@ import Footer from "@/components/common/Footer";
 import type { JobItem, JobResponse } from "@/types/common/recruiter";
 import { getRecruiterJobApplications } from "@/services/recruiterService_PhuDK/recruiterService";
 import UpdateJobPostModal from "@/components/recruiter/UpdateJobPostModal";
+import {
+    Pagination,
+    PaginationContent,
+    PaginationEllipsis,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from "@/components/ui/pagination";
 const JobPostingList: React.FC = () => {
     const [data, setData] = useState<JobResponse | null>(null);
     const [loading, setLoading] = useState(true);
@@ -40,13 +49,20 @@ const JobPostingList: React.FC = () => {
                 pageNumber: result.pageNumber,
                 totalPages: result.totalPages,
                 totalCount: result.totalCount,
-                jobs: result.data,
+                items: result.items,
             });
-
         } catch (err) {
             console.error("Error fetching jobs:", err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleSearch = () => {
+        if (pageNumber === 1) {
+            fetchJobs();
+        } else {
+            setPageNumber(1);
         }
     };
 
@@ -142,7 +158,7 @@ const JobPostingList: React.FC = () => {
                         {/* Button */}
 
                         <button
-                            onClick={fetchJobs}
+                            onClick={handleSearch}
                             className="bg-indigo-500 text-white px-8 py-3 rounded-xl font-bold text-sm">
                             Search
                         </button>
@@ -176,7 +192,7 @@ const JobPostingList: React.FC = () => {
                                         </tr>
                                     ))
                                 ) : (
-                                    data?.jobs.map((job) => (
+                                    data?.items.map((job) => (
 
                                         <tr key={job.id} className="hover:bg-white/5 transition-all">
 
@@ -249,6 +265,60 @@ const JobPostingList: React.FC = () => {
                             </tbody>
                         </table>
                     </div>
+
+                    {/* PAGINATION */}
+                    {data && data.totalPages >= 1 && (
+                        <div className="mt-8 flex justify-center">
+                            <Pagination>
+                                <PaginationContent>
+                                    <PaginationItem>
+                                        <PaginationPrevious 
+                                            onClick={() => setPageNumber(prev => Math.max(1, prev - 1))}
+                                            className={pageNumber === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                        />
+                                    </PaginationItem>
+                                    
+                                    {Array.from({ length: data.totalPages }, (_, i) => i + 1).map((page) => {
+                                        // Show: First page, Last page, and pages around current page
+                                        // If total pages is small (<= 5), show all
+                                        const isNearCurrent = Math.abs(page - pageNumber) <= 1;
+                                        const isFirstOrLast = page === 1 || page === data.totalPages;
+
+                                        if (data.totalPages <= 5 || isFirstOrLast || isNearCurrent) {
+                                          return (
+                                            <PaginationItem key={page}>
+                                                <PaginationLink
+                                                    isActive={pageNumber === page}
+                                                    onClick={() => setPageNumber(page)}
+                                                    className="cursor-pointer"
+                                                >
+                                                    {page}
+                                                </PaginationLink>
+                                            </PaginationItem>
+                                          );
+                                        }
+
+                                        // Show ellipsis if we are at the jump points
+                                        if (page === 2 && pageNumber > 3) {
+                                          return <PaginationItem key="ellipsis-start"><PaginationEllipsis /></PaginationItem>;
+                                        }
+                                        if (page === data.totalPages - 1 && pageNumber < data.totalPages - 2) {
+                                          return <PaginationItem key="ellipsis-end"><PaginationEllipsis /></PaginationItem>;
+                                        }
+
+                                        return null;
+                                    })}
+
+                                    <PaginationItem>
+                                        <PaginationNext 
+                                            onClick={() => setPageNumber(prev => Math.min(data.totalPages, prev + 1))}
+                                            className={pageNumber === data.totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                        />
+                                    </PaginationItem>
+                                </PaginationContent>
+                            </Pagination>
+                        </div>
+                    )}
                 </div>
             </main>
             {showEditModal && selectedJob && (
