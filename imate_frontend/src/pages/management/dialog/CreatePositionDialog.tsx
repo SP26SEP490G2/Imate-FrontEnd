@@ -13,49 +13,47 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-import { AddCategory } from "@/services/categoryService";
-import type { CategorySubmit } from "@/types/request/category.request";
+import { addPosition } from "@/services/positionService"; // ← service bạn đã có
+import type { FormAddPosition } from "@/types/request/position.request";
 
-import { toast } from "react-toastify"; // ← import toast
+import { toast } from "react-toastify";
 
-interface CreateCategoryDialogProps {
+interface CreatePositionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
 }
 
-export function CreateCategoryDialog({
+export function CreatePositionDialog({
   open,
   onOpenChange,
   onSuccess,
-}: CreateCategoryDialogProps) {
+}: CreatePositionDialogProps) {
   const [name, setName] = React.useState("");
   const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     setLoading(true);
 
     if (!name.trim()) {
-      toast.error("Vui lòng nhập tên thể loại");
+      toast.error("Vui lòng nhập tên vị trí");
       setLoading(false);
       return;
     }
 
-    const payload: CategorySubmit = {
+    const payload: FormAddPosition = {
       name: name.trim(),
     };
 
     try {
-      await AddCategory(payload);
-      toast.success("Thêm thể loại thành công!");
+      await addPosition(payload);
+      toast.success("Thêm vị trí thành công!");
       setName("");
       onOpenChange(false);
       onSuccess?.();
     } catch (err: any) {
-      const message = err.response?.data?.message || "Thêm thể loại thất bại. Vui lòng thử lại.";
+      const message = err.response?.data?.message || "Thêm vị trí thất bại. Vui lòng thử lại.";
       toast.error(message);
     } finally {
       setLoading(false);
@@ -67,7 +65,7 @@ export function CreateCategoryDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold text-white">
-            Thêm thể loại mới
+            Thêm vị trí mới
           </DialogTitle>
           <DialogDescription>
           </DialogDescription>
@@ -79,13 +77,13 @@ export function CreateCategoryDialog({
               htmlFor="name"
               className="block text-sm font-medium text-slate-200"
             >
-              Tên danh mục
+              Tên vị trí
             </label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Nhập tên danh mục..."
+              placeholder="VD: Full-stack Developer"
               className="bg-slate-800 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-primary/50"
               disabled={loading}
               autoFocus

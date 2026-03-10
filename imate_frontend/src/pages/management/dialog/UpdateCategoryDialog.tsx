@@ -7,6 +7,7 @@ import {
   DialogTitle,
   DialogFooter,
   DialogClose,
+  DialogDescription,
 } from "@/components/ui/dialog";
 
 import { Button } from "@/components/ui/button";
@@ -83,6 +84,8 @@ export function UpdateCategoryDialog({
           <DialogTitle className="text-xl font-semibold text-white">
             Cập nhật thể loại
           </DialogTitle>
+          <DialogDescription>
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">

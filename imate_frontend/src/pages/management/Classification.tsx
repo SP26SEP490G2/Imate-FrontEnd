@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Pencil, Trash, ChevronDown, Search } from "lucide-react";
+import { Plus, Pencil, ChevronDown, Search } from "lucide-react";
 
 import { AppTabs } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -23,18 +23,23 @@ import { Input } from "@/components/ui/input";
 import { getListDetailCategory } from "@/services/categoryService";
 import type { ListCategoryResponse } from "@/types/response/category.response";
 
-import { getAllSkill } from "@/services/skillService"; // service kỹ năng
+import { getAllSkill } from "@/services/skillService";
 import type { Skill } from "@/types/model/skill.model";
+
+import { getListPosition } from "@/services/positionService"; // ← import service vị trí
+import type { ListPositionResponse, PositionResponse } from "@/types/response/position.response";
 
 import { CreateCategoryDialog } from "@/pages/management/dialog/CreateCategoryDialog";
 import { UpdateCategoryDialog } from "./dialog/UpdateCategoryDialog";
-import { CreateSkillDialog } from "./dialog/CreateSkillDialog"; // bạn tạo file này
-import { UpdateSkillDialog } from "./dialog/UpdateSkillDialog"; // bạn tạo file này
+import { CreateSkillDialog } from "./dialog/CreateSkillDialog";
+import { UpdateSkillDialog } from "./dialog/UpdateSkillDialog";
+import { CreatePositionDialog } from "./dialog/CreatePositionDialog";     // ← thêm
+import { UpdatePositionDialog } from "./dialog/UpdatePositionDialog";   // ← thêm
 
 const tabs = [
   { label: "Thể loại", value: "categories" },
   { label: "Vị trí", value: "positions" },
-  { label: "Kĩ năng", value: "skills" }, // ← thêm tab Kĩ năng (chữ i ngắn)
+  { label: "Kĩ năng", value: "skills" },
   { label: "Công ty", value: "companies" },
 ];
 
@@ -50,6 +55,7 @@ const STATUS_OPTIONS = [
   { value: "true", label: "Hoạt động" },
   { value: "false", label: "Vô hiệu" },
 ];
+
 export default function Classification() {
   const [tab, setTab] = useState("categories");
 
@@ -74,6 +80,24 @@ export default function Classification() {
     name: string;
     isActive: boolean;
   } | null>(null);
+
+  // --- VỊ TRÍ ---
+  const [positions, setPositions] = useState<PositionResponse[]>([]);
+  const [posLoading, setPosLoading] = useState(false);
+  const [posError, setPosError] = useState<string | null>(null);
+
+  const [posPage, setPosPage] = useState(1);
+  const [posPageSize, setPosPageSize] = useState(10);
+  const [posTotalPages, setPosTotalPages] = useState(1);
+
+  const [posSearchTerm, setPosSearchTerm] = useState("");
+  const [posSortBy, setPosSortBy] = useState<string>("createdat");
+  const [posSortOrder, setPosSortOrder] = useState<"asc" | "desc">("desc");
+  const [posIsActiveFilter, setPosIsActiveFilter] = useState<boolean | null>(null);
+
+  const [openCreatePosDialog, setOpenCreatePosDialog] = useState(false);
+  const [openUpdatePosDialog, setOpenUpdatePosDialog] = useState(false);
+  const [selectedPosition, setSelectedPosition] = useState<PositionResponse | null>(null);
 
   // --- KĨ NĂNG ---
   const [skills, setSkills] = useState<Skill[]>([]);
@@ -120,6 +144,33 @@ export default function Classification() {
     }
   };
 
+  // Fetch Vị trí
+  const fetchPositions = async () => {
+    setPosLoading(true);
+    setPosError(null);
+
+    try {
+      const response = await getListPosition(
+        posPage,
+        posPageSize,
+        posIsActiveFilter,
+        posSearchTerm,
+        posSortBy,
+        posSortOrder
+      );
+
+      if (response) {
+        setPositions(response.items || []);
+        setPosTotalPages(response.totalPages || 1);
+      }
+    } catch (err: any) {
+      console.error("Lỗi tải danh sách vị trí:", err);
+      setPosError("Không thể tải danh sách vị trí.");
+    } finally {
+      setPosLoading(false);
+    }
+  };
+
   // Fetch Kỹ năng
   const fetchSkills = async () => {
     setSkillLoading(true);
@@ -150,24 +201,27 @@ export default function Classification() {
 
   useEffect(() => {
     if (tab === "categories") fetchCategories();
+    if (tab === "positions") fetchPositions();
     if (tab === "skills") fetchSkills();
   }, [
     tab,
     catPage, catPageSize, catSearchTerm, catSortBy, catSortOrder, catIsActiveFilter,
-    skillPage, skillPageSize, skillSearchTerm, skillSortBy, skillSortOrder, skillIsActiveFilter
+    posPage, posPageSize, posSearchTerm, posSortBy, posSortOrder, posIsActiveFilter,
+    skillPage, skillPageSize, skillSearchTerm, skillSortBy, skillSortOrder, skillIsActiveFilter,
   ]);
 
-  const handleAddCategorySuccess = () => {
-    fetchCategories();
-  };
-
-  const handleAddSkillSuccess = () => {
-    fetchSkills();
-  };
+  const handleAddCategorySuccess = () => fetchCategories();
+  const handleAddPositionSuccess = () => fetchPositions();
+  const handleAddSkillSuccess = () => fetchSkills();
 
   const handleEditCategory = (cat: { id: number; name: string; isActive: boolean }) => {
     setSelectedCategory(cat);
     setOpenUpdateCatDialog(true);
+  };
+
+  const handleEditPosition = (pos: PositionResponse) => {
+    setSelectedPosition(pos);
+    setOpenUpdatePosDialog(true);
   };
 
   const handleEditSkill = (skill: Skill) => {
@@ -179,6 +233,9 @@ export default function Classification() {
     if (tab === "categories") {
       setCatPageSize(size);
       setCatPage(1);
+    } else if (tab === "positions") {
+      setPosPageSize(size);
+      setPosPage(1);
     } else if (tab === "skills") {
       setSkillPageSize(size);
       setSkillPage(1);
@@ -201,11 +258,19 @@ export default function Classification() {
         <Button
           variant="primary"
           icon={<Plus size={16} />}
-          onClick={() =>
-            tab === "categories" ? setOpenCreateCatDialog(true) : setOpenCreateSkillDialog(true)
-          }
+          onClick={() => {
+            if (tab === "categories") setOpenCreateCatDialog(true);
+            else if (tab === "positions") setOpenCreatePosDialog(true);
+            else if (tab === "skills") setOpenCreateSkillDialog(true);
+          }}
         >
-          Thêm {tab === "categories" ? "thể loại" : "kĩ năng"} mới
+          Thêm{" "}
+          {tab === "categories"
+            ? "thể loại"
+            : tab === "positions"
+            ? "vị trí"
+            : "kĩ năng"}{" "}
+          mới
         </Button>
       </div>
 
@@ -216,6 +281,7 @@ export default function Classification() {
         onChange={(value) => {
           setTab(value);
           setCatPage(1);
+          setPosPage(1);
           setSkillPage(1);
         }}
       />
@@ -230,8 +296,7 @@ export default function Classification() {
             </div>
 
             <div className="flex items-center gap-4 text-sm text-slate-400">
-              {/* Sắp xếp */}
-            <div className="relative min-w-[240px]">
+              <div className="relative min-w-[240px]">
                 <Input
                   placeholder="Tìm theo tên thể loại..."
                   value={catSearchTerm}
@@ -344,6 +409,128 @@ export default function Classification() {
         </div>
       )}
 
+      {tab === "positions" && (
+        <div className="space-y-6">
+          {/* Toolbar vị trí */}
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-4 flex-wrap">
+              <h2 className="text-xl font-semibold text-white">Danh sách vị trí</h2>
+            </div>
+
+            <div className="flex items-center gap-4 text-sm text-slate-400">
+              <div className="relative min-w-[240px]">
+                <Input
+                  placeholder="Tìm theo tên vị trí..."
+                  value={posSearchTerm}
+                  onChange={(e) => {
+                    setPosSearchTerm(e.target.value);
+                    setPosPage(1);
+                  }}
+                  className="pl-10 pr-4 py-2 w-full bg-slate-800 border-slate-700 text-slate-100 placeholder:text-slate-500"
+                />
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-slate-400 whitespace-nowrap">Trạng thái:</span>
+                <select
+                  value={posIsActiveFilter === null ? "all" : posIsActiveFilter.toString()}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setPosIsActiveFilter(val === "all" ? null : val === "true");
+                    setPosPage(1);
+                  }}
+                  className="bg-slate-800 border border-slate-700 rounded-md px-4 py-2 text-slate-200 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer min-w-[160px]"
+                >
+                  {STATUS_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <span className="whitespace-nowrap">Sắp xếp theo:</span>
+              <div className="relative inline-block">
+                <select
+                  value={`${posSortBy}-${posSortOrder}`}
+                  onChange={(e) => {
+                    const [newSortBy, newSortOrder] = e.target.value.split("-");
+                    setPosSortBy(newSortBy);
+                    setPosSortOrder(newSortOrder as "asc" | "desc");
+                    setPosPage(1);
+                  }}
+                  className="bg-slate-800 border border-slate-700 rounded-md px-4 py-2 pr-10 text-slate-200 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer min-w-[200px]"
+                >
+                  {SORT_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400" />
+              </div>
+            </div>
+          </div>
+
+          {/* Bảng vị trí */}
+          {posLoading ? (
+            <div className="text-center py-12 text-slate-400">Đang tải...</div>
+          ) : posError ? (
+            <div className="text-center py-12 text-red-400">{posError}</div>
+          ) : positions.length === 0 ? (
+            <div className="text-center py-12 text-slate-400">Chưa có vị trí nào</div>
+          ) : (
+            <Table
+              page={posPage}
+              totalPages={posTotalPages}
+              pageSize={posPageSize}
+              onPageChange={setPosPage}
+              onPageSizeChange={handlePageSizeChange}
+              maxHeight="55vh"
+            >
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Tên</TableHead>
+                  <TableHead>Số câu hỏi</TableHead>
+                  <TableHead>Trạng thái</TableHead>
+                  <TableHead className="w-[140px] text-right">Hành động</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {positions.map((pos) => (
+                  <TableRow key={pos.id}>
+                    <TableCell>{pos.id}</TableCell>
+                    <TableCell className="font-medium">{pos.name}</TableCell>
+                    <TableCell>{pos.questionCount}</TableCell>
+                    <TableCell>
+                      <StatusBadge status={pos.isActive ? "active" : "inactive"}>
+                        {pos.isActive ? "Hoạt động" : "Vô hiệu"}
+                      </StatusBadge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex gap-2 justify-end">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              icon={<Pencil size={14} />}
+                              onClick={() => handleEditPosition(pos)}
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent>Sửa</TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </div>
+      )}
+
       {tab === "skills" && (
         <div className="space-y-6">
           {/* Toolbar kỹ năng */}
@@ -352,7 +539,6 @@ export default function Classification() {
               <h2 className="text-xl font-semibold text-white">Danh sách kĩ năng</h2>
             </div>
 
-            {/* Sắp xếp kỹ năng */}
             <div className="flex items-center gap-4 text-sm text-slate-400">
               <div className="relative min-w-[240px]">
                 <Input
@@ -367,7 +553,6 @@ export default function Classification() {
                 <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               </div>
 
-              {/* Bộ lọc trạng thái kỹ năng */}
               <div className="flex items-center gap-3">
                 <span className="text-sm text-slate-400 whitespace-nowrap">Trạng thái:</span>
                 <select
@@ -468,7 +653,7 @@ export default function Classification() {
         </div>
       )}
 
-      {tab !== "categories" && tab !== "skills" && (
+      {tab === "companies" && (
         <div className="text-center py-20 text-slate-500">
           Chức năng đang được phát triển...
         </div>
@@ -489,6 +674,24 @@ export default function Classification() {
           onSuccess={() => {
             fetchCategories();
             setSelectedCategory(null);
+          }}
+        />
+      )}
+
+      <CreatePositionDialog
+        open={openCreatePosDialog}
+        onOpenChange={setOpenCreatePosDialog}
+        onSuccess={handleAddPositionSuccess}
+      />
+
+      {selectedPosition && (
+        <UpdatePositionDialog
+          open={openUpdatePosDialog}
+          onOpenChange={setOpenUpdatePosDialog}
+          position={selectedPosition}
+          onSuccess={() => {
+            fetchPositions();
+            setSelectedPosition(null);
           }}
         />
       )}

@@ -3,7 +3,6 @@ export type PositionResponse = Position & {
   questionCount: number;
   createdAt?: string;
   updatedAt?: string;
-  skills: { name: string; id: number }[];
 };
 export interface ListPositionResponse {
   items: PositionResponse[];

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "react-toastify";
@@ -48,6 +48,8 @@ export function CreateSkillDialog({ open, onOpenChange, onSuccess }: CreateSkill
           <DialogTitle className="text-xl font-semibold text-white">
             Thêm kĩ năng mới
           </DialogTitle>
+          <DialogDescription>
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">

@@ -2,13 +2,20 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { LogOut } from "lucide-react";
 import { managementRoutes, recruiterManagementRoutes } from "@/config/managementRoutes";
 import { useAuth } from "@/store/AuthContext";
+import { useEffect } from 'react';
 
 export default function ManagementLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (!user || !["Admin", "Staff", "Recruiter"].includes(user.role)) {
+      navigate("/Trang-chu", { replace: true });
+    }
+  }, [user, navigate]);
+
   if (!user || !["Admin", "Staff", "Recruiter"].includes(user.role)) {
-    return navigate("/Trang-chu");
+    return null;
   }
 
   const sidebarUser = {
