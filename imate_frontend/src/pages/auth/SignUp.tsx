@@ -7,6 +7,7 @@ import { auth } from "@/lib/firebaseConfig";
 import { getAuth, GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup, signOut, type UserCredential } from "firebase/auth";
 import { toast } from "react-toastify";
 import { useAuth } from "@/store/AuthContext";
+import { managementRoutes } from "@/config/managementRoutes";
 function SignUp() {
   var navigate = useNavigate();
   const { refetchUser } = useAuth();
@@ -35,7 +36,7 @@ function SignUp() {
   const handleNavigation = (user: User) => {
     switch (user?.role) {
       case "Admin":
-        navigate("/admin/manage-user");
+        navigate(`/management-dashboard/${managementRoutes[0].path}`);
         break;
       case "Staff":
         navigate("/staff/manage-question");

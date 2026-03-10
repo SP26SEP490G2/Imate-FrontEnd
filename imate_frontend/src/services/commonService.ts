@@ -1,6 +1,6 @@
 import apiClient from "./apiClient";
 import APIConfig from "@/config/apiConfig";
-import type { PositionItem, SkillItem, CompanyItem } from "@/types/common/question";
+import type { PositionItem, SkillItem, CompanyItem, CategoryItem } from "@/types/common/question";
 import type { CommonParams, PaginatedApiResponse } from "@/types/common/pagination";
 
 /** Backend trả về PagedList<T> với Items (camelCase: items) */
@@ -92,6 +92,40 @@ export const getAllSkills = async (
     pageNumber: fromHeader?.PageNumber ?? fromHeader?.pageNumber ?? body.PageNumber ?? body.pageNumber ?? params?.pageNumber ?? 1,
     pageSize: fromHeader?.PageSize ?? fromHeader?.pageSize ?? body.PageSize ?? body.pageSize ?? params?.pageSize ?? 10,
     totalPages: fromHeader?.TotalPages ?? fromHeader?.totalPages ?? body.TotalPages ?? body.totalPages ?? 0,
+  };
+};
+
+export const getAllCategories = async (
+  params?: CommonParams
+): Promise<PaginatedApiResponse<CategoryItem>> => {
+  const response = await apiClient.get<any>(
+    APIConfig.Category.GetAllCategories,
+    { params }
+  );
+
+  // Extract pagination from headers
+  const paginationHeader = response.headers["x-pagination"];
+  const pagination = paginationHeader
+    ? JSON.parse(paginationHeader)
+    : {
+        totalCount: 0,
+        pageSize: params?.pageSize || 10,
+        pageNumber: params?.pageNumber || 1,
+        totalPages: 0,
+      };
+
+  const responseData = response.data;
+  const items =
+    responseData.data ||
+    responseData.items ||
+    (Array.isArray(responseData) ? responseData : []);
+
+  return {
+    data: items,
+    totalCount: pagination.totalCount || pagination.TotalCount || items.length,
+    pageNumber: pagination.pageNumber || pagination.PageNumber,
+    pageSize: pagination.pageSize || pagination.PageSize,
+    totalPages: pagination.totalPages || pagination.TotalPages,
   };
 };
 

@@ -1,7 +1,7 @@
 import { useAuth } from "@/store/AuthContext";
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import PeppoLoading from "@/components/custom/imateLoading";
+import ImateLoading from "@/components/custom/imateLoading";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -9,13 +9,14 @@ interface ProtectedRouteProps {
 }
 
 const SKIP_AUTH_FOR_TEST = true;
+const MANAGEMENT_ROUTES = ["/management-dashboard"];
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole }) => {
   const { isAuthenticated, user, isLoading } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
-    return <PeppoLoading type="screen" />;
+    return <ImateLoading type="screen" />;
   }
   if (!SKIP_AUTH_FOR_TEST && !isAuthenticated) {
     return <Navigate to="/sign-in" replace />;
@@ -52,7 +53,19 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole 
     }
   }
 
+  const isManagementRoute = MANAGEMENT_ROUTES.some(route => 
+    location.pathname === route || location.pathname.startsWith(route + "/")
+  );
+
+  if (!SKIP_AUTH_FOR_TEST && isManagementRoute) {
+    if (user?.role !== "Admin" && user?.role !== "Staff") {
+      return <Navigate to="/unauthorized" replace />;
+    }
+  }
+
   if (!SKIP_AUTH_FOR_TEST && !requiredRole && user?.role) {
+    const adminOnlyRoutes: string[] = [];
+
     const candidateOnlyRoutes = ["/save-question", "/cv-management", "/practice-with-AI", "/setup-ai-interview", "/interview-schedule", "/mentor-practice-history", "/view-application"];
 
     const mentorOnlyRoutes = ["/mentor/interview-schedule", "/mentor/income", "/mentor/interview-history", "/mentor/candidate-ratings", "/mentor/recurring-slots", "/mentor/view-application", "/mentor/my-contributed-questions"];
@@ -60,8 +73,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole 
     const recruiterOnlyRoutes = ["/recruiter/dashboard", "/recruiter/manage-jobs", "/recruiter/candidate-pool"];
 
     const staffOnlyRoutes = ["/staff/manage-question", "/staff/manage-category", "/staff/manage-application", "/staff/manage-report", "/staff/manage-community", "/staff/manage-transaction", "/staff/view-profile"];
-
-    const adminOnlyRoutes = ["/admin/manage-user", "/admin/manage-subscription", "/admin/manage-question", "/admin/manage-category", "/admin/manage-application", "/admin/manage-community", "/admin/manage-report", "/admin/manage-transaction", "/admin/view-profile"];
 
     // Chặn mentor (kể cả pending) truy cập candidate routes
     if (user.role === "Mentor") {

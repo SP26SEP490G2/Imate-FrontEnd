@@ -2,7 +2,21 @@
  * Question related constants
  */
 
-// Difficulty levels
+// Difficulty levels (number values for API)
+export const DIFFICULTY_LEVEL = {
+  EASY: 0,
+  MEDIUM: 1,
+  HARD: 2,
+} as const;
+
+// Difficulty mapping: number to display text
+export const DIFFICULTY_MAP = {
+  0: 'Easy',
+  1: 'Medium',
+  2: 'Hard',
+} as const;
+
+// Difficulty levels (legacy string values)
 export const COMMON_CODE = {
   EASY: 'Easy',
   MEDIUM: 'Medium',

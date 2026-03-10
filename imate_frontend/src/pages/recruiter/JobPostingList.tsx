@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import Header from "../../components/Header";
-import Footer from "@/components/Footer";
+import Header from "../../components/common/Header";
+import Footer from "@/components/common/Footer";
 import type { JobItem, JobResponse } from "@/types/common/recruiter";
 import { getRecruiterJobApplications } from "@/services/recruiterService_PhuDK/recruiterService";
-
+import UpdateJobPostModal from "@/components/recruiter/UpdateJobPostModal";
 const JobPostingList: React.FC = () => {
     const [data, setData] = useState<JobResponse | null>(null);
     const [loading, setLoading] = useState(true);
@@ -14,6 +14,14 @@ const JobPostingList: React.FC = () => {
 
     const [pageNumber, setPageNumber] = useState(1);
     const pageSize = 5;
+
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [selectedJob, setSelectedJob] = useState<JobItem | null>(null);
+
+    const handleEdit = (job: JobItem) => {
+        setSelectedJob(job);
+        setShowEditModal(true);
+    };
 
 
     const fetchJobs = async () => {
@@ -123,8 +131,7 @@ const JobPostingList: React.FC = () => {
 
                             <select
                                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-slate-300"
-                                onChange={(e) => setEmploymentType(e.target.value)}
-                            >
+                                onChange={(e) => setEmploymentType(e.target.value)}>
                                 <option value="">All</option>
                                 <option>Full-time</option>
                                 <option>Part-time</option>
@@ -136,8 +143,7 @@ const JobPostingList: React.FC = () => {
 
                         <button
                             onClick={fetchJobs}
-                            className="bg-indigo-500 text-white px-8 py-3 rounded-xl font-bold text-sm"
-                        >
+                            className="bg-indigo-500 text-white px-8 py-3 rounded-xl font-bold text-sm">
                             Search
                         </button>
                     </section>
@@ -172,10 +178,7 @@ const JobPostingList: React.FC = () => {
                                 ) : (
                                     data?.jobs.map((job) => (
 
-                                        <tr
-                                            key={job.id}
-                                            className="hover:bg-white/5 transition-all"
-                                        >
+                                        <tr key={job.id} className="hover:bg-white/5 transition-all">
 
                                             <td className="px-8 py-6 text-white font-semibold">
                                                 {job.title}
@@ -201,8 +204,7 @@ const JobPostingList: React.FC = () => {
                                                 <span
                                                     className={`px-3 py-1 rounded-md text-xs font-bold border ${getStatusColor(
                                                         job.status
-                                                    )}`}
-                                                >
+                                                    )}`}>
                                                     {job.status}
                                                 </span>
                                             </td>
@@ -213,9 +215,8 @@ const JobPostingList: React.FC = () => {
 
                                                 {/* Edit */}
 
-                                                <button
-                                                    className="p-2 rounded-lg bg-white/5 hover:bg-indigo-500 text-slate-400 hover:text-white"
-                                                >
+                                                <button onClick={() => handleEdit(job)}
+                                                    className="p-2 rounded-lg bg-white/5 hover:bg-indigo-500 text-slate-400 hover:text-white cursor-pointer">
                                                     <span className="material-symbols-outlined">
                                                         edit
                                                     </span>
@@ -224,10 +225,18 @@ const JobPostingList: React.FC = () => {
                                                 {/* View Candidates */}
 
                                                 <button
-                                                    className="p-2 rounded-lg bg-white/5 hover:bg-green-500 text-slate-400 hover:text-white"
-                                                >
+                                                    className="p-2 rounded-lg bg-white/5 hover:bg-green-500 text-slate-400 hover:text-white cursor-pointer">
                                                     <span className="material-symbols-outlined">
                                                         group
+                                                    </span>
+                                                </button>
+
+                                                {/* Close Job */}
+
+                                                <button
+                                                    className="p-2 rounded-lg bg-white/5 hover:bg-red-500 text-slate-400 hover:text-white cursor-pointer">
+                                                    <span className="material-symbols-outlined">
+                                                        Cancel
                                                     </span>
                                                 </button>
 
@@ -242,9 +251,17 @@ const JobPostingList: React.FC = () => {
                     </div>
                 </div>
             </main>
-
+            {showEditModal && selectedJob && (
+                <UpdateJobPostModal
+                    open={showEditModal}
+                    job={selectedJob}
+                    onClose={() => setShowEditModal(false)}
+                    onSuccess={fetchJobs}
+                />
+            )}
         </div>
-    );
-};
 
+    );
+
+};
 export default JobPostingList;

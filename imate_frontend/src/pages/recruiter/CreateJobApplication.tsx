@@ -1,10 +1,14 @@
-import React, { useState } from "react";
-import { X } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { X, Check, ChevronsUpDown, Loader2 } from "lucide-react";
+import { getAllPositions, getAllSkills } from "@/services/commonService";
+import type { PositionItem, SkillItem } from "@/types/common/question";
+import { Badge } from "@/components/ui/badge";
+import { CreateJobPost } from "@/services/recruiterService_PhuDK/recruiterService";
+import { toast } from "react-toastify";
 
 const CreateJobApplication: React.FC = () => {
   const [form, setForm] = useState({
     title: "",
-    position: "",
     employmentType: "Full-time",
     location: "",
     minSalary: "",
@@ -12,9 +16,38 @@ const CreateJobApplication: React.FC = () => {
     description: "",
     applicationDeadline: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedPositions, setSelectedPositions] = useState<PositionItem[]>([]);
+  const [selectedSkills, setSelectedSkills] = useState<SkillItem[]>([]);
 
-  const [skills, setSkills] = useState<string[]>([]);
-  const [skillInput, setSkillInput] = useState("");
+  const [availablePositions, setAvailablePositions] = useState<PositionItem[]>([]);
+  const [availableSkills, setAvailableSkills] = useState<SkillItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const [positionSearch, setPositionSearch] = useState("");
+  const [skillSearch, setSkillSearch] = useState("");
+  const [showPositionDropdown, setShowPositionDropdown] = useState(false);
+  const [showSkillDropdown, setShowSkillDropdown] = useState(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [positionsRes, skillsRes] = await Promise.all([
+          getAllPositions({ pageSize: 100, isActive: true }),
+          getAllSkills({ pageSize: 100 }),
+        ]);
+        setAvailablePositions(positionsRes.data);
+        setAvailableSkills(skillsRes.data);
+        console.log("Fetched skillsRes:", skillsRes);
+      } catch (error) {
+        console.error("Failed to fetch skills/positions:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -25,32 +58,75 @@ const CreateJobApplication: React.FC = () => {
     });
   };
 
-  const addSkill = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && skillInput.trim()) {
-      e.preventDefault();
+  const togglePosition = (pos: PositionItem) => {
+    if (selectedPositions.find(p => p.id === pos.id)) {
+      setSelectedPositions(selectedPositions.filter(p => p.id !== pos.id));
+    } else {
+      setSelectedPositions([...selectedPositions, pos]);
+    }
+    setPositionSearch("");
+  };
 
-      if (!skills.includes(skillInput.trim())) {
-        setSkills([...skills, skillInput.trim()]);
-      }
+  const toggleSkill = (skill: SkillItem) => {
+    if (selectedSkills.find(s => s.id === skill.id)) {
+      setSelectedSkills(selectedSkills.filter(s => s.id !== skill.id));
+    } else {
+      setSelectedSkills([...selectedSkills, skill]);
+    }
+    setSkillSearch("");
+  };
 
-      setSkillInput("");
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      const payload = {
+        ...form,
+        JobPositions: selectedPositions.map(p => p.id),
+        JobSkills: selectedSkills.map(s => s.id),
+      };
+      setIsSubmitting(true);
+
+      await CreateJobPost(payload);
+      setIsSubmitting(false);
+
+      toast.success("Tạo Job thành công!");
+
+      // reset form
+      setForm({
+        title: "",
+        employmentType: "Full-time",
+        location: "",
+        minSalary: "",
+        maxSalary: "",
+        description: "",
+        applicationDeadline: "",
+      });
+
+      // clear positions + skills
+      setSelectedPositions([]);
+      setSelectedSkills([]);
+
+      setPositionSearch("");
+      setSkillSearch("");
+
+    } catch (error) {
+      console.error(error);
+      toast.error("Tạo Job thất bại. Vui lòng thử lại.");
+      setIsSubmitting(false);
+
     }
   };
 
-  const removeSkill = (skill: string) => {
-    setSkills(skills.filter((s) => s !== skill));
-  };
+  const filteredPositions = availablePositions.filter(p =>
+    p.name.toLowerCase().includes(positionSearch.toLowerCase()) &&
+    !selectedPositions.find(sp => sp.id === p.id)
+  );
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const payload = {
-      ...form,
-      skills,
-    };
-
-    console.log("Create Job Payload:", payload);
-  };
+  const filteredSkills = availableSkills.filter(s =>
+    s.name.toLowerCase().includes(skillSearch.toLowerCase()) &&
+    !selectedSkills.find(ss => ss.id === s.id)
+  );
 
   return (
     <div className="min-h-screen w-full bg-[#050816] text-white flex justify-center px-6 py-16 relative overflow-hidden">
@@ -92,19 +168,67 @@ const CreateJobApplication: React.FC = () => {
               />
             </div>
 
-            {/* Job Position */}
-            <div className="space-y-2">
+            {/* Job Position (Multi-select) */}
+            <div className="space-y-2 relative">
               <label className="text-[#A0A3BD] text-sm">
-                Job Position
+                Job Positions
               </label>
 
-              <input
-                name="position"
-                value={form.position}
-                onChange={handleChange}
-                placeholder="Backend Engineer / Frontend Engineer"
-                className="w-full h-[48px] px-4 rounded-[12px] bg-[#0F1333] border border-[rgba(255,255,255,0.1)] focus:border-[#8B5CF6] outline-none placeholder-[#6B6F8E]"
-              />
+              <div
+                className="min-h-[48px] flex flex-wrap gap-2 p-2 rounded-[12px] bg-[#0F1333] border border-[rgba(255,255,255,0.1)] cursor-text"
+                onClick={() => setShowPositionDropdown(!showPositionDropdown)}
+              >
+                {selectedPositions.map((pos) => (
+                  <Badge
+                    key={pos.id}
+                    variant="secondary"
+                    className="flex items-center gap-1 bg-[#161A3F] text-[#A0A3BD] border-none px-3 py-1 rounded-full"
+                  >
+                    {pos.name}
+                    <span
+                      className="ml-1 p-0.5 rounded-full hover:bg-red-500/20 cursor-pointer transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        togglePosition(pos);
+                      }}
+                    >
+                      <X size={14} className="hover:text-red-400" />
+                    </span>
+                  </Badge>
+                ))}
+                <input
+                  placeholder={selectedPositions.length === 0 ? "Select positions..." : ""}
+                  className="flex-1 bg-transparent outline-none text-sm placeholder-[#6B6F8E] min-w-[120px]"
+                  value={positionSearch}
+                  onChange={(e) => {
+                    setPositionSearch(e.target.value);
+                    setShowPositionDropdown(true);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                />
+                <ChevronsUpDown size={18} className="text-[#6B6F8E] self-center ml-auto" />
+              </div>
+
+              {showPositionDropdown && (
+                <div className="absolute z-50 w-full mt-1 bg-[#11142D] border border-[rgba(255,255,255,0.1)] rounded-[12px] shadow-xl max-h-[200px] overflow-y-auto custom-scrollbar">
+                  {loading ? (
+                    <div className="p-4 flex justify-center"><Loader2 className="animate-spin text-[#8B5CF6]" /></div>
+                  ) : filteredPositions.length > 0 ? (
+                    filteredPositions.map(pos => (
+                      <div
+                        key={pos.id}
+                        className="px-4 py-2 hover:bg-[#161A3F] cursor-pointer transition text-sm flex items-center justify-between"
+                        onClick={() => togglePosition(pos)}
+                      >
+                        {pos.name}
+                        {selectedPositions.find(p => p.id === pos.id) && <Check size={14} className="text-[#8B5CF6]" />}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-4 text-center text-sm text-[#6B6F8E]">No positions found</div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Employment + Location */}
@@ -144,40 +268,67 @@ const CreateJobApplication: React.FC = () => {
 
             </div>
 
-            {/* Job Skills */}
-            <div className="space-y-2">
+            {/* Job Skills (Multi-select) */}
+            <div className="space-y-2 relative">
               <label className="text-[#A0A3BD] text-sm">
                 Job Skills
               </label>
 
-              <div className="flex flex-wrap gap-2 p-3 rounded-[12px] bg-[#0F1333] border border-[rgba(255,255,255,0.1)]">
-
-                {skills.map((skill) => (
-                  <div
-                    key={skill}
-                    className="flex items-center gap-1 px-3 py-1 rounded-full text-sm bg-[#161A3F] text-[#A0A3BD]"
+              <div
+                className="min-h-[48px] flex flex-wrap gap-2 p-2 rounded-[12px] bg-[#0F1333] border border-[rgba(255,255,255,0.1)] cursor-text"
+                onClick={() => setShowSkillDropdown(!showSkillDropdown)}
+              >
+                {selectedSkills.map((skill) => (
+                  <Badge
+                    key={skill.id}
+                    variant="secondary"
+                    className="flex items-center gap-1 bg-[#161A3F] text-[#A0A3BD] border-none px-3 py-1 rounded-full"
                   >
-                    {skill}
-
-                    <button
-                      type="button"
-                      onClick={() => removeSkill(skill)}
-                      className="hover:text-red-400"
+                    {skill.name}
+                    <span
+                      className="ml-1 p-0.5 rounded-full hover:bg-red-500/20 cursor-pointer transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleSkill(skill);
+                      }}
                     >
-                      <X size={14} />
-                    </button>
-                  </div>
+                      <X size={14} className="hover:text-red-400" />
+                    </span>
+                  </Badge>
                 ))}
-
                 <input
-                  value={skillInput}
-                  onChange={(e) => setSkillInput(e.target.value)}
-                  onKeyDown={addSkill}
-                  placeholder="Type skill and press Enter"
-                  className="flex-1 bg-transparent outline-none text-sm placeholder-[#6B6F8E]"
+                  placeholder={selectedSkills.length === 0 ? "Type skill..." : ""}
+                  className="flex-1 bg-transparent outline-none text-sm placeholder-[#6B6F8E] min-w-[120px]"
+                  value={skillSearch}
+                  onChange={(e) => {
+                    setSkillSearch(e.target.value);
+                    setShowSkillDropdown(true);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
                 />
-
+                <ChevronsUpDown size={18} className="text-[#6B6F8E] self-center ml-auto" />
               </div>
+
+              {showSkillDropdown && (
+                <div className="absolute z-50 w-full mt-1 bg-[#11142D] border border-[rgba(255,255,255,0.1)] rounded-[12px] shadow-xl max-h-[200px] overflow-y-auto custom-scrollbar">
+                  {loading ? (
+                    <div className="p-4 flex justify-center"><Loader2 className="animate-spin text-[#8B5CF6]" /></div>
+                  ) : filteredSkills.length > 0 ? (
+                    filteredSkills.map(skill => (
+                      <div
+                        key={skill.id}
+                        className="px-4 py-2 hover:bg-[#161A3F] cursor-pointer transition text-sm flex items-center justify-between"
+                        onClick={() => toggleSkill(skill)}
+                      >
+                        {skill.name}
+                        {selectedSkills.find(s => s.id === skill.id) && <Check size={14} className="text-[#8B5CF6]" />}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-4 text-center text-sm text-[#6B6F8E]">No skills found</div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Salary */}
@@ -258,9 +409,10 @@ const CreateJobApplication: React.FC = () => {
 
               <button
                 type="submit"
-                className="h-[48px] px-8 rounded-[12px] font-semibold bg-gradient-to-r from-[#6C63FF] to-[#8B5CF6] hover:brightness-110 transition shadow-lg"
+                disabled={isSubmitting}
+                className="h-[48px] px-8 rounded-[12px] font-semibold bg-gradient-to-r from-[#6C63FF] to-[#8B5CF6]"
               >
-                Create Job
+                {isSubmitting ? "Creating..." : "Create Job"}
               </button>
 
             </div>
@@ -269,6 +421,16 @@ const CreateJobApplication: React.FC = () => {
         </div>
 
       </div>
+      {/* Click outside to close dropdowns */}
+      {(showPositionDropdown || showSkillDropdown) && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => {
+            setShowPositionDropdown(false);
+            setShowSkillDropdown(false);
+          }}
+        />
+      )}
     </div>
   );
 };

@@ -31,7 +31,15 @@ const APIConfig = {
     GetAllContributedQuestionsForStaff: "/get-all-contributed-question-banks-for-staff",
     CreateSystemQuestionForStaff: "/create-system-question-for-staff",
     UpdateSystemQuestionForStaff: "/update-system-question-for-staff/{questionId}",
-    GetSystemQuestionDetail: "/get-system-question-detail/{questionId}",
+    GetSystemQuestionDetail: "/get-system-question-by-id/{questionId}",
+  },
+
+  // Category endpoints
+  Category: {
+    GetAllCategories: "/get-categories",
+    AddCategory:"/categories",
+    UpdateCategory: "/categories/{categoryId}",
+    GetAffectedQuestions: "/categories/{categoryId}/affected-questions",
   },
 
   // Position endpoints (không dùng leading slash để axios nối đúng với baseURL .../api)
@@ -53,6 +61,7 @@ const APIConfig = {
   Recruiter: {
     SubmitRecruiterProfile: "/recruiters/submit-profile",
     GetJobApplicationList: "job-applications",
+    GetRecruiterJobApplication: "recruiter-job-applications"
   },
 
   // Staff review endpoints (baseURL thường đã có /api)
@@ -64,6 +73,8 @@ const APIConfig = {
   // Subscription endpoints
   Subscription: {
     GetSubscriptionPackages: "/subscription-packages",
+    GetSubscriptionOverview: "/subscription-packages/overview",
+    UpdateSubscriptionPackagePrice: "/subscription-packages",
   },
 } as const;
 

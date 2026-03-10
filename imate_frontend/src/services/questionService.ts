@@ -60,7 +60,7 @@ export const getListQuestionCategories = async (): Promise<CategoryItem[]> => {
 export const getAllSystemQuestionsForStaff = async (
   params: GetSystemQuestionParams
 ): Promise<StaffQuestionListResponse<StaffSystemQuestionItem>> => {
-  const response = await apiClient.get<{ data: StaffSystemQuestionItem[] }>(
+  const response = await apiClient.get<{ items: StaffSystemQuestionItem[] }>(
     APIConfig.Question.GetAllSystemQuestionsForStaff,
     { params }
   );
@@ -75,11 +75,13 @@ export const getAllSystemQuestionsForStaff = async (
   };
 
   return {
-    data: response.data.data || [],
-    totalCount: pagination.totalCount || pagination.TotalCount,
-    pageNumber: pagination.pageNumber || pagination.PageNumber,
-    pageSize: pagination.pageSize || pagination.PageSize,
-    totalPages: pagination.totalPages || pagination.TotalPages
+    items: response.data.items || [],
+   totalCount: Number(pagination.totalCount || pagination.TotalCount || 0),
+  pageNumber: Number(pagination.pageNumber || pagination.PageNumber || 1),
+  pageSize: Number(pagination.pageSize || pagination.PageSize || 10),
+  totalPages: Number(pagination.totalPages || pagination.TotalPages || 0),
+    hasNextPage: pagination.hasNextPage || pagination.HasNextPage || false,
+    hasPreviousPage: pagination.hasPreviousPage || pagination.HasPreviousPage || false
   };
 };
 
@@ -91,7 +93,7 @@ export const getAllSystemQuestionsForStaff = async (
 export const getAllContributedQuestionsForStaff = async (
   params: GetContributedQuestionParams
 ): Promise<StaffQuestionListResponse<StaffContributedQuestionItem>> => {
-  const response = await apiClient.get<{ data: StaffContributedQuestionItem[] }>(
+  const response = await apiClient.get<{ items: StaffContributedQuestionItem[] }>(
     APIConfig.Question.GetAllContributedQuestionsForStaff,
     { params }
   );
@@ -106,13 +108,15 @@ export const getAllContributedQuestionsForStaff = async (
   };
 
   return {
-    data: response.data.data || [],
-    totalCount: pagination.totalCount || pagination.TotalCount,
-    pageNumber: pagination.pageNumber || pagination.PageNumber,
-    pageSize: pagination.pageSize || pagination.PageSize,
-    totalPages: pagination.totalPages || pagination.TotalPages
+    items: response.data.items || [],
+   totalCount: Number(pagination.totalCount || pagination.TotalCount || 0),
+  pageNumber: Number(pagination.pageNumber || pagination.PageNumber || 1),
+  pageSize: Number(pagination.pageSize || pagination.PageSize || 10),
+  totalPages: Number(pagination.totalPages || pagination.TotalPages || 0),
+    hasNextPage: pagination.hasNextPage || pagination.HasNextPage || false,
+    hasPreviousPage: pagination.hasPreviousPage || pagination.HasPreviousPage || false
   };
-};
+  };
 
 /**
  * Create a new system question for staff
@@ -154,8 +158,8 @@ export const updateSystemQuestionForStaff = async (
 export const getSystemQuestionDetail = async (
   questionId: number
 ): Promise<SystemQuestionDetail> => {
-  const response = await apiClient.get<{ data: SystemQuestionDetail }>(
+  const response = await apiClient.get<SystemQuestionDetail>(
     APIConfig.Question.GetSystemQuestionDetail.replace('{questionId}', String(questionId))
   );
-  return response.data.data;
+  return response.data;
 };
