@@ -7,6 +7,7 @@ import {
   DialogTitle,
   DialogFooter,
   DialogClose,
+  DialogDescription,
 } from "@/components/ui/dialog";
 
 import { Button } from "@/components/ui/button";
@@ -53,7 +54,7 @@ export function UpdateCategoryDialog({
     setLoading(true);
 
     if (!name.trim()) {
-      setError("Vui lòng nhập tên danh mục");
+      toast.error("Vui lòng nhập tên thể loại");
       setLoading(false);
       return;
     }
@@ -65,11 +66,11 @@ export function UpdateCategoryDialog({
 
     try {
       await UpdateCategory(payload, category.id);
-      toast.success("Cập nhật danh mục thành công!");
+      toast.success("Cập nhật thể loại thành công!");
       onOpenChange(false);
       onSuccess?.();
     } catch (err: any) {
-      const message = err.response?.data?.message || "Cập nhật danh mục thất bại. Vui lòng thử lại.";
+      const message = err.response?.data?.message || "Cập nhật thể loại thất bại. Vui lòng thử lại.";
       toast.error(message);
     } finally {
       setLoading(false);
@@ -83,6 +84,8 @@ export function UpdateCategoryDialog({
           <DialogTitle className="text-xl font-semibold text-white">
             Cập nhật thể loại
           </DialogTitle>
+          <DialogDescription>
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -122,11 +125,6 @@ export function UpdateCategoryDialog({
               />
             </div>
           </div>
-
-          {/* Error message */}
-          {error && (
-            <p className="text-sm text-red-400">{error}</p>
-          )}
 
           {/* Footer */}
           <DialogFooter>

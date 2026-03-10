@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -36,7 +36,7 @@ export function UpdateSkillDialog({ open, onOpenChange, skill, onSuccess }: Upda
     setLoading(true);
 
     if (!name.trim()) {
-      setError("Vui lòng nhập tên kĩ năng");
+      toast.error("Vui lòng nhập tên kĩ năng");
       setLoading(false);
       return;
     }
@@ -66,6 +66,8 @@ export function UpdateSkillDialog({ open, onOpenChange, skill, onSuccess }: Upda
           <DialogTitle className="text-xl font-semibold text-white">
             Cập nhật kĩ năng
           </DialogTitle>
+          <DialogDescription>
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
