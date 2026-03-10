@@ -1,8 +1,8 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import Header from "../../components/Header";
-import Footer from "@/components/Footer";
+import Header from "../../components/common/Header";
+import Footer from "@/components/common/Footer";
 import { useSubscriptionPackages } from "@/hooks/useSubscriptionPackages";
 import { useAuth } from "@/store/AuthContext";
 

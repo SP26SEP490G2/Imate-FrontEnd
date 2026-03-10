@@ -31,7 +31,7 @@ const APIConfig = {
     GetAllContributedQuestionsForStaff: "/get-all-contributed-question-banks-for-staff",
     CreateSystemQuestionForStaff: "/create-system-question-for-staff",
     UpdateSystemQuestionForStaff: "/update-system-question-for-staff/{questionId}",
-    GetSystemQuestionDetail: "/get-system-question-detail/{questionId}",
+    GetSystemQuestionDetail: "/get-system-question-by-id/{questionId}",
   },
 
   // Category endpoints
@@ -48,12 +48,12 @@ const APIConfig = {
   },
 
   // Skills endpoints
-  Skills: {
+  Skill: {
     GetAllSkills: "/get-skills",
   },
 
   // Companies endpoints
-  Companies: {
+  Company: {
     GetAllCompanies: "/get-companies",
   },
 

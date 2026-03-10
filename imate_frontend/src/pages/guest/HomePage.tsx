@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import Header from '../../components/Header';
-import Footer from '@/components/Footer';
+import Header from '../../components/common/Header';
+import Footer from '@/components/common/Footer';
 import { getListPreviewMentors } from '../../services/mentorService';
 import { getListHotQuestions } from '../../services/questionService';
 import type { ListPreviewMentorResponse } from '../../types/common/mentor';

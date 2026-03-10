@@ -1,8 +1,8 @@
 import React from "react";
 import { Outlet, useLocation, Navigate } from "react-router-dom";
 import HomePage from "@/pages/guest/HomePage";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import Header from "@/components/common/Header";
+import Footer from "@/components/common/Footer";
 import { useAuth } from "@/store/AuthContext";
 
 const MainLayout: React.FC = () => {
