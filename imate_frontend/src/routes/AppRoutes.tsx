@@ -20,6 +20,8 @@ import ResetPassword from "@/pages/auth/ResetPassword";
 // Pages - Guest
 import HomePage from "@/pages/main/public/HomePage";
 import ViewSubscriptionPage from "@/pages/main/public/ViewSubscriptionPage";
+import MentorList from "@/pages/main/public/MentorList";
+import MentorDetail from "@/pages/main/public/MentorDetail";
 
 // Pages - Candidate
 import ViewProfile from "@/pages/candidate/ViewProfile";
@@ -34,6 +36,7 @@ import RecruiterPendingApplication from "@/pages/recruiter/PendingApplication";
 
 // Pages - Staff
 import ReviewMentorApplication from "@/pages/staff/ReviewMentorApplication";
+import MentorDetailForStaff from "@/pages/staff/MentorDetailForStaff";
 
 // Config
 import { ROLES } from "@/constants/role";
@@ -79,6 +82,8 @@ const routeConfigs: RouteConfig[] = [
   { path: "/view-question-bank",  element: <ViewQuestionBank />,     layout: LAYOUT.MAIN },
   { path: "/view-subscription",     element: <ViewSubscriptionPage />,   layout: LAYOUT.MAIN },
   { path: "/pricing",               element: <ViewSubscriptionPage />,   layout: LAYOUT.MAIN },
+  { path: "/view-mentor",           element: <MentorList />,             layout: LAYOUT.MAIN },
+  { path: "/view-mentor/:id",       element: <MentorDetail />,           layout: LAYOUT.MAIN },
 
   // ===== MAIN LAYOUT ROUTES =====
   { path: "/profile",                        element: <ViewProfile />,                layout: LAYOUT.MAIN, requireAuth: true },
@@ -91,6 +96,7 @@ const routeConfigs: RouteConfig[] = [
   { path: "/management/view-questions",      element: <ViewQuestions />,   layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
   { path: "/management/applications",  element: <ReviewMentorApplication />,   layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
   { path: "/management/classification",        element: <Classification />,         layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
+  { path: "/management/applications/mentor/:id", element: <MentorDetailForStaff />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
 
   { path: "/management/users", element: <UserManagement />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN] },
   { path: "/management/subscriptions", element: <SubscriptionManagement />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN] },

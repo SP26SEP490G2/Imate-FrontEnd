@@ -47,7 +47,7 @@ const MentorDetailForStaff: React.FC = () => {
     setActionLoading("approve");
     try {
       await reviewMentorApplication(Number(id), { isApproved: true, note: null });
-      navigate("/staff/manage-application", { replace: true });
+      navigate("/management/applications", { replace: true });
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Duyệt thất bại.");
     } finally {
@@ -60,7 +60,7 @@ const MentorDetailForStaff: React.FC = () => {
     setActionLoading("reject");
     try {
       await reviewMentorApplication(Number(id), { isApproved: false, note: "Từ chối từ trang chi tiết." });
-      navigate("/staff/manage-application", { replace: true });
+      navigate("/management/applications", { replace: true });
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Từ chối thất bại.");
     } finally {
@@ -82,7 +82,7 @@ const MentorDetailForStaff: React.FC = () => {
         <div className="mx-auto max-w-4xl">
           <p className="text-red-400">{error}</p>
           <Link
-            to="/staff/manage-application"
+            to="/management/applications"
             className="mt-4 inline-block text-[#5D5FEF] hover:underline"
           >
             ← Quay lại danh sách đơn ứng tuyển
@@ -99,7 +99,7 @@ const MentorDetailForStaff: React.FC = () => {
       <div className="mx-auto max-w-4xl">
         {/* Breadcrumbs */}
         <nav className="mb-6 flex items-center gap-2 text-sm text-gray-400">
-          <Link to="/staff/manage-application" className="hover:text-white">
+          <Link to="/management/applications" className="hover:text-white">
             Đơn ứng tuyển
           </Link>
           <ChevronRight className="h-4 w-4" />
@@ -274,7 +274,7 @@ const MentorDetailForStaff: React.FC = () => {
         </div>
 
         <Link
-          to="/staff/manage-application"
+          to="/management/applications"
           className="mt-6 inline-block text-sm text-gray-400 hover:text-white"
         >
           ← Quay lại danh sách đơn ứng tuyển

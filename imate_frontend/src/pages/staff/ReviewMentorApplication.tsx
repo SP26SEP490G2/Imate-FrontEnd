@@ -78,7 +78,7 @@ const ReviewMentorApplication: React.FC = () => {
   };
 
   const handleViewDetails = (accountId: number) => {
-    navigate(`/staff/manage-application/mentor/${accountId}`);
+    navigate(`/management/applications/mentor/${accountId}`);
   };
 
   return (
