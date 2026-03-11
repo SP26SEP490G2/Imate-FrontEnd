@@ -67,6 +67,8 @@ const APIConfig = {
     GetPendingMentors: "/staff-review/mentors/pending",
     GetMentorById: "/staff-review/mentors",
     ReviewMentor: "/staff-review/mentors",
+    GetPendingRecruiters: "/staff-review/recruiters/pending",
+    ReviewRecruiter: "/staff-review/recruiters",
   },
   
   // Subscription endpoints

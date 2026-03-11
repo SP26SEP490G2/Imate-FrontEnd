@@ -11,6 +11,7 @@ export interface User {
   role: "Mentor" | "Candidate" | "Recruiter" | string;
   isNewAccount?: boolean; // Flag để biết đây có phải là account mới không
   accountStatus?: "Active" | "PendingVerification" | "Suspended"; // Trạng thái tài khoản
+  verificationStatus?: "Pending" | "Approved" | "Rejected"; // Trạng thái phê duyệt (nếu có form)
   // Thông tin cơ bản
   bio?: string;
   phone?: string;

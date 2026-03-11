@@ -5,6 +5,7 @@ import type {
   PagedStaffMentorApplicationsRaw,
   StaffMentorApplication,
   StaffMentorApplicationRaw,
+  StaffRecruiterApplication,
 } from "@/types/response/staffReview.response";
 
 export interface GetPendingMentorsParams {
@@ -78,6 +79,25 @@ export const reviewMentorApplication = async (
   payload: ReviewMentorPayload
 ): Promise<{ message: string }> => {
   const url = `${APIConfig.StaffReview.ReviewMentor}/${id}/review`;
+  const res = await apiClient.post<{ message: string }>(url, payload);
+  return res.data;
+};
+
+export const getPendingRecruiterApplications = async (): Promise<StaffRecruiterApplication[]> => {
+  const res = await apiClient.get<StaffRecruiterApplication[]>(APIConfig.StaffReview.GetPendingRecruiters);
+  return res.data ?? [];
+};
+
+export interface ReviewRecruiterPayload {
+  isApproved: boolean;
+  note?: string | null;
+}
+
+export const reviewRecruiterApplication = async (
+  id: number,
+  payload: ReviewRecruiterPayload
+): Promise<{ message: string }> => {
+  const url = `${APIConfig.StaffReview.ReviewRecruiter}/${id}/review`;
   const res = await apiClient.post<{ message: string }>(url, payload);
   return res.data;
 };
