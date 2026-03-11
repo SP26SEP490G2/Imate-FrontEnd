@@ -35,9 +35,9 @@ export default function ManagementLayout() {
       "https://i.pinimg.com/736x/3c/67/75/3c67757cef723535a7484a6c7bfbfc43.jpg",
     role: user.role || "Role",
   };
-
+  console.log("role:", user?.role);
   const basePath = user?.role === "Recruiter"
-    ? "/recruiter-dashboard"
+    ? "recruiter-dashboard"
     : "/management";
 
   const routes =

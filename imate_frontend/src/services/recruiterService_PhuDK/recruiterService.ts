@@ -1,7 +1,7 @@
 import apiClient from "@/services/apiClient";
 import type { User } from "@/types/common/auth";
-import type { JobItem } from "@/types/common/recruiter";
-import type { PaginatedApiResponse, CommonParams } from "@/types/common/pagination";
+import type { JobItem, JobResponse } from "@/types/common/recruiter";
+import type { PaginatedApiResponse } from "@/types/common/pagination";
 import type { GetJobApplicationsRequest } from "@/types/common/recruiter";
 import APIConfig from "@/config/apiConfig";
 
@@ -20,33 +20,39 @@ export const updateRecruiterProfile = async (data: User) => {
 
 export const getRecruiterJobApplications = async (
   params?: GetJobApplicationsRequest
-): Promise<PaginatedApiResponse<JobItem>> => {
+): Promise<JobResponse> => {
+  const queryParams = {
+    PageNumber: params?.pageNumber,
+    PageSize: params?.pageSize,
+    SearchTerm: params?.searchTerm,
+    Location: params?.location,
+    EmploymentType: params?.employmentType,
+    Status: params?.status,
+  };
 
-  const response = await apiClient.get<{ data: JobItem[] }>(
+  const response = await apiClient.get(
     APIConfig.Recruiter.GetRecruiterJobApplication,
-    { params }
+    { params: queryParams }
   );
+  return response.data.data as JobResponse;
 
   // Extract pagination from header
-  const paginationHeader = response.headers["x-pagination"];
+  // const paginationHeader =response.headers["X-Pagination"];
 
-  const pagination = paginationHeader
-    ? JSON.parse(paginationHeader)
-    : {
-        totalCount: 0,
-        pageSize: params?.pageSize || 10,
-        pageNumber: params?.pageNumber || 1,
-        totalPages: 0,
-      };
-    console.log("JOBDATA: ", response.data);
+  // const pagination = paginationHeader
+  //   ? JSON.parse(paginationHeader)
+  //   : {
+  //       totalCount: 0,
+  //       pageSize: params?.pageSize || 10,
+  //       pageNumber: params?.pageNumber || 1,
+  //       totalPages: 0,
+  //     };
+  //   console.log("JOBDATA: ", response);
+  //   console.log("Pagination info: ", pagination);
 
-  return {
-    data: response.data.data || [],
-    totalCount: pagination.totalCount || pagination.TotalCount,
-    pageNumber: pagination.pageNumber || pagination.PageNumber,
-    pageSize: pagination.pageSize || pagination.PageSize,
-    totalPages: pagination.totalPages || pagination.TotalPages,
-  };
+  // return {
+  //   response.
+  // };
 }
 
 export const CreateJobPost = async (data: any) => {

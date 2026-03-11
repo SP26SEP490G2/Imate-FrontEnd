@@ -103,7 +103,7 @@ function Table({
                 variant="ghost"
                 disabled={page === 1}
                 onClick={() => onPageChange?.(1)}
-                className="h-8 w-8"
+                className="h-8 w-8 cursor-pointer"
               >
                 <ChevronsLeft className="w-4 h-4" />
               </Button>
@@ -114,7 +114,7 @@ function Table({
                 variant="ghost"
                 disabled={page === 1}
                 onClick={() => onPageChange?.(page - 1)}
-                className="h-8 w-8"
+                className="h-8 w-8 cursor-pointer"
               >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
@@ -127,7 +127,7 @@ function Table({
                     key={p}
                     size="sm"
                     variant={p === page ? "primary" : "ghost"}
-                    className="h-6 min-w-6 px-2 rounded-sm"
+                    className="h-6 min-w-6 px-2 rounded-sm cursor-pointer"
                     onClick={() => onPageChange?.(p)}
                   >
                     {p}
@@ -142,7 +142,7 @@ function Table({
                 variant="ghost"
                 disabled={page === totalPages}
                 onClick={() => onPageChange?.(page + 1)}
-                className="h-8 w-8"
+                className="h-8 w-8 cursor-pointer"
               >
                 <ChevronRight className="w-4 h-4" />
               </Button>
@@ -153,7 +153,7 @@ function Table({
                 variant="ghost"
                 disabled={page === totalPages}
                 onClick={() => onPageChange?.(totalPages)}
-                className="h-8 w-8"
+                className="h-8 w-8 cursor-pointer"
               >
                 <ChevronsRight className="w-4 h-4" />
               </Button>
