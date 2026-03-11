@@ -41,8 +41,8 @@ function TabsTrigger({
       data-slot="tabs-trigger"
       className={cn(
         "relative pb-3 text-sm font-medium text-slate-400 transition-colors hover:text-white",
-        "data-[state=active]:text-purple-400",
-        "after:absolute after:left-0 after:-bottom-[1px] after:h-[2px] after:w-full after:scale-x-0 after:bg-gradient-to-r after:from-purple-500 after:to-purple-400 after:transition-transform",
+        "data-[state=active]:text-indigo-400",
+        "after:absolute after:left-0 after:-bottom-[1px] after:h-[2px] after:w-full after:scale-x-0 after:bg-gradient-to-r after:from-indigo-500 after:to-indigo-400 after:transition-transform",
         "data-[state=active]:after:scale-x-100",
         className
       )}
