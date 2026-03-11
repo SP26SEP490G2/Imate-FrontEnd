@@ -33,6 +33,8 @@ function mapItem(raw: StaffMentorApplicationRaw): StaffMentorApplication {
     positions: raw.positions ?? [],
     companies: raw.companies ?? [],
     createdAt: raw.createdAt,
+    avgRatings: raw.avgRatings ?? raw.AvgRatings ?? null,
+    totalRatingCount: raw.totalRatingCount ?? raw.TotalRatingCount ?? null,
   };
 }
 
