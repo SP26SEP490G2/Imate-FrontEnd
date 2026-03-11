@@ -396,7 +396,7 @@ const AdminAuditLog: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       <p className="text-xs text-slate-400">
-                        {item.action} {item.entityType} ID {item.id}
+                        {item.action} {item.entityType}
                       </p>
                     </TableCell>
                     <TableCell>
