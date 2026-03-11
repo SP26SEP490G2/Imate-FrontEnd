@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import Header from '../../components/common/Header';
+import Header from '../../../components/common/Header';
 import Footer from '@/components/common/Footer';
-import { getListPreviewMentors } from '../../services/mentorService';
-import { getListHotQuestions } from '../../services/questionService';
-import type { ListPreviewMentorResponse } from '../../types/common/mentor';
-import type { ListHotQuestionResponse } from '../../types/common/question';
+import { getListPreviewMentors } from '../../../services/mentorService';
+import { getListHotQuestions } from '../../../services/questionService';
+import type { ListPreviewMentorResponse } from '../../../types/common/mentor';
+import type { ListHotQuestionResponse } from '../../../types/common/question';
 
 const HomePage: React.FC = () => {
   const [mentors, setMentors] = useState<ListPreviewMentorResponse[]>([]);

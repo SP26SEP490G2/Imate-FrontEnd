@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from "react";
-import Header from "../../components/common/Header";
-import Footer from "@/components/common/Footer";
 import type { JobItem, JobResponse } from "@/types/common/recruiter";
 import { getRecruiterJobApplications } from "@/services/recruiterService_PhuDK/recruiterService";
-import UpdateJobPostModal from "@/components/recruiter/UpdateJobPostModal";
+import UpdateJobPostModal from "@/dialog/recruiter/UpdateJobPostModal";
 const JobPostingList: React.FC = () => {
     const [data, setData] = useState<JobResponse | null>(null);
     const [loading, setLoading] = useState(true);
@@ -12,7 +10,7 @@ const JobPostingList: React.FC = () => {
     const [location, setLocation] = useState<string | undefined>();
     const [employmentType, setEmploymentType] = useState<string | undefined>();
 
-    const [pageNumber, setPageNumber] = useState(1);
+    const [pageNumber] = useState(1);
     const pageSize = 5;
 
     const [showEditModal, setShowEditModal] = useState(false);

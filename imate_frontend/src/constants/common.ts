@@ -39,3 +39,10 @@ export const COMMON_DATE = {
   ONE_DAY_AGO: '1 ngày trước',
   DAYS_AGO: 'ngày trước',
 } as const;
+
+export const LAYOUT = {
+  MANAGEMENT: "management",
+  MAIN: "main",
+  NONE: "none",
+} as const;
+

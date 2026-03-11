@@ -72,6 +72,7 @@ function SignIn() {
     e.preventDefault();
     try {
       const user = await login({ email, password });
+      localStorage.setItem("user", JSON.stringify(user));
       toast.success(`Imate xin chào, ${user.fullName}!`);
       handleNavigation(user);
     } catch (err: any) {
@@ -96,6 +97,7 @@ function SignIn() {
 
       // Nếu có role hợp lệ, hiển thị toast chào mừng và navigate
       toast.success(`Imate xin chào, ${user.fullName}!`);
+      localStorage.setItem("user", JSON.stringify(user));
       handleNavigation(user);
     } catch (err: any) {
       // Nếu user đóng popup, không hiển thị lỗi
