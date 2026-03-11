@@ -12,7 +12,7 @@ interface TableProps extends React.ComponentProps<"table"> {
   page?: number
   totalPages?: number
   pageSize?: number
-  totalItems?: number
+  totalCount?: number
   onPageChange?: (page: number) => void
   onPageSizeChange?: (size: number) => void
   maxHeight?: number | string
@@ -23,7 +23,7 @@ function Table({
   page = 1,
   totalPages = 1,
   pageSize = 10,
-  totalItems,
+  totalCount,
   onPageChange,
   onPageSizeChange,
   maxHeight = 500,
@@ -33,17 +33,24 @@ function Table({
 
   const hasPagination = onPageChange !== undefined
 
-  const start = (page - 1) * pageSize + 1
-  const end = Math.min(page * pageSize, totalItems ?? page * pageSize)
+  const start =
+    totalCount === 0 ? 0 : (page - 1) * pageSize + 1
+
+  const end = Math.min(
+    page * pageSize,
+    totalCount ?? page * pageSize
+  )
 
   // pagination window
   const visiblePages = React.useMemo(() => {
     const pages = []
+
     let startPage = Math.max(1, page - 2)
     let endPage = Math.min(totalPages, page + 2)
 
     if (page <= 3) endPage = Math.min(5, totalPages)
-    if (page >= totalPages - 2) startPage = Math.max(1, totalPages - 4)
+    if (page >= totalPages - 2)
+      startPage = Math.max(1, totalPages - 4)
 
     for (let i = startPage; i <= endPage; i++) {
       pages.push(i)
@@ -61,7 +68,10 @@ function Table({
         style={{ maxHeight }}
       >
         <table
-          className={cn("w-full text-sm border-collapse", className)}
+          className={cn(
+            "w-full text-sm border-collapse",
+            className
+          )}
           {...props}
         >
           {children}
@@ -72,9 +82,35 @@ function Table({
       {hasPagination && (
         <div className="flex items-center justify-between border-t border-slate-700 bg-slate-800/40 px-4 py-3">
 
-          {/* info */}
+          {/* result info */}
           <div className="text-sm text-slate-400">
-            {totalItems && <>Showing {start}-{end} of {totalItems}</>}
+
+            {totalCount !== undefined && (
+
+              totalCount === 0
+                ? (
+                  <span>No results</span>
+                )
+                : (
+                  <>
+                    Hiển thị{" "}
+                    <span className="font-semibold text-slate-200">
+                      {start}
+                    </span>
+                    {" - "}
+                    <span className="font-semibold text-slate-200">
+                      {end}
+                    </span>
+                    {" của "}
+                    <span className="font-semibold text-slate-200">
+                      {totalCount}
+                    </span>{" "}
+                    kết quả
+                  </>
+                )
+
+            )}
+
           </div>
 
           <div className="flex items-center gap-3 ml-auto">
@@ -119,7 +155,7 @@ function Table({
                 <ChevronLeft className="w-4 h-4" />
               </Button>
 
-              {/* page numbers box */}
+              {/* page numbers */}
               <div className="flex items-center gap-1 bg-slate-800 border border-slate-700 rounded-md px-1 py-1">
 
                 {visiblePages.map((p) => (
@@ -166,7 +202,10 @@ function Table({
   )
 }
 
-function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
+function TableHeader({
+  className,
+  ...props
+}: React.ComponentProps<"thead">) {
   return (
     <thead
       className={cn(
@@ -178,10 +217,16 @@ function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
   )
 }
 
-function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
+function TableBody({
+  className,
+  ...props
+}: React.ComponentProps<"tbody">) {
   return (
     <tbody
-      className={cn("divide-y divide-slate-700", className)}
+      className={cn(
+        "divide-y divide-slate-700",
+        className
+      )}
       {...props}
     />
   )
@@ -196,13 +241,11 @@ function TableToolbar({
 }) {
   return (
     <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700 bg-slate-900/40">
-      
-      {/* title */}
+
       <div className="text-lg font-semibold text-white">
         {title}
       </div>
 
-      {/* actions */}
       <div className="flex items-center gap-3">
         {right}
       </div>
@@ -211,16 +254,25 @@ function TableToolbar({
   )
 }
 
-function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
+function TableRow({
+  className,
+  ...props
+}: React.ComponentProps<"tr">) {
   return (
     <tr
-      className={cn("hover:bg-slate-800/40 transition-colors", className)}
+      className={cn(
+        "hover:bg-slate-800/40 transition-colors",
+        className
+      )}
       {...props}
     />
   )
 }
 
-function TableHead({ className, ...props }: React.ComponentProps<"th">) {
+function TableHead({
+  className,
+  ...props
+}: React.ComponentProps<"th">) {
   return (
     <th
       className={cn(
@@ -232,10 +284,16 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
   )
 }
 
-function TableCell({ className, ...props }: React.ComponentProps<"td">) {
+function TableCell({
+  className,
+  ...props
+}: React.ComponentProps<"td">) {
   return (
     <td
-      className={cn("px-4 py-3 text-slate-200", className)}
+      className={cn(
+        "px-4 py-3 text-slate-200",
+        className
+      )}
       {...props}
     />
   )
