@@ -4,11 +4,7 @@ import { getRecruiterJobApplications } from "@/services/recruiterService_PhuDK/r
 import {
     Pagination,
     PaginationContent,
-    PaginationEllipsis,
     PaginationItem,
-    PaginationLink,
-    PaginationNext,
-    PaginationPrevious,
 } from "@/components/ui/pagination";
 import UpdateJobPostModal from "@/dialog/recruiter/UpdateJobPostModal";
 const JobPostingList: React.FC = () => {
@@ -19,7 +15,7 @@ const JobPostingList: React.FC = () => {
     const [location, setLocation] = useState<string | undefined>();
     const [employmentType, setEmploymentType] = useState<string | undefined>();
 
-    const [pageNumber] = useState(1);
+    const [pageNumber, setPageNumber] = useState(1);
     const pageSize = 5;
 
     const [showEditModal, setShowEditModal] = useState(false);
@@ -265,53 +261,78 @@ const JobPostingList: React.FC = () => {
                     </div>
 
                     {/* PAGINATION */}
-                    {data && data.totalPages >= 1 && (
-                        <div className="mt-8 flex justify-center">
-                            <Pagination>
+                    {data && data.totalPages > 0 && (
+                        <div className="flex items-center justify-between pb-10 mt-8">
+                            <p className="text-sm text-[#6B6F8E]">
+                                Hiển thị <span className="text-white font-medium">{(pageNumber - 1) * pageSize + 1}-{Math.min(pageNumber * pageSize, data.totalCount)}</span> trên <span className="text-white font-medium">{data.totalCount}</span> kết quả
+                            </p>
+                            <Pagination className="justify-end w-auto mx-0">
                                 <PaginationContent>
                                     <PaginationItem>
-                                        <PaginationPrevious 
-                                            onClick={() => setPageNumber(prev => Math.max(1, prev - 1))}
-                                            className={pageNumber === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                        />
+                                        <button
+                                            disabled={pageNumber === 1}
+                                            className="h-9 w-9 border border-white/10 bg-[#11142D] text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer rounded-lg flex items-center justify-center transition-all"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                if (pageNumber > 1) setPageNumber(pageNumber - 1);
+                                            }}
+                                        >
+                                            <span className="material-symbols-outlined text-sm">chevron_left</span>
+                                        </button>
                                     </PaginationItem>
-                                    
+
                                     {Array.from({ length: data.totalPages }, (_, i) => i + 1).map((page) => {
-                                        // Show: First page, Last page, and pages around current page
-                                        // If total pages is small (<= 5), show all
                                         const isNearCurrent = Math.abs(page - pageNumber) <= 1;
                                         const isFirstOrLast = page === 1 || page === data.totalPages;
 
                                         if (data.totalPages <= 5 || isFirstOrLast || isNearCurrent) {
-                                          return (
-                                            <PaginationItem key={page}>
-                                                <PaginationLink
-                                                    isActive={pageNumber === page}
-                                                    onClick={() => setPageNumber(page)}
-                                                    className="cursor-pointer"
-                                                >
-                                                    {page}
-                                                </PaginationLink>
-                                            </PaginationItem>
-                                          );
+                                            return (
+                                                <PaginationItem key={page}>
+                                                    <button
+                                                        className={`h-9 w-9 cursor-pointer rounded-lg text-xs font-bold transition-all ${pageNumber === page
+                                                                ? "bg-[#6C63FF] text-white hover:bg-[#5D54E5]"
+                                                                : "bg-transparent text-[#6B6F8E] hover:text-white hover:bg-white/5 border border-transparent"
+                                                            }`}
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            setPageNumber(page);
+                                                        }}
+                                                    >
+                                                        {page}
+                                                    </button>
+                                                </PaginationItem>
+                                            );
                                         }
 
-                                        // Show ellipsis if we are at the jump points
                                         if (page === 2 && pageNumber > 3) {
-                                          return <PaginationItem key="ellipsis-start"><PaginationEllipsis /></PaginationItem>;
+                                            return (
+                                                <PaginationItem key="ellipsis-start">
+                                                    <span className="text-[#6B6F8E] px-2">...</span>
+                                                </PaginationItem>
+                                            );
                                         }
                                         if (page === data.totalPages - 1 && pageNumber < data.totalPages - 2) {
-                                          return <PaginationItem key="ellipsis-end"><PaginationEllipsis /></PaginationItem>;
+                                            return (
+                                                <PaginationItem key="ellipsis-end">
+                                                    <span className="text-[#6B6F8E] px-2">...</span>
+                                                </PaginationItem>
+                                            );
                                         }
 
                                         return null;
                                     })}
 
                                     <PaginationItem>
-                                        <PaginationNext 
-                                            onClick={() => setPageNumber(prev => Math.min(data.totalPages, prev + 1))}
-                                            className={pageNumber === data.totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                                        />
+                                        <button
+                                            disabled={pageNumber === data.totalPages}
+                                            className="h-9 w-9 border border-white/10 bg-[#11142D] text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer rounded-lg flex items-center justify-center transition-all"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                if (pageNumber < data.totalPages) setPageNumber(pageNumber + 1);
+                                            }}
+                                        >
+                                            <span className="material-symbols-outlined text-sm">chevron_right</span>
+                                        </button>
                                     </PaginationItem>
                                 </PaginationContent>
                             </Pagination>

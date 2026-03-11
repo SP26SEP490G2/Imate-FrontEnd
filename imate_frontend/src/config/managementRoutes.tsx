@@ -6,6 +6,7 @@ import {
   Briefcase,
   PlusCircle,
   Layers,
+  Logs,
 } from "lucide-react";
 
 import AddSystemQuestion from "@/pages/management/question/AddSystemQuestion";
@@ -16,6 +17,7 @@ import JobPostingList from "@/pages/recruiter/JobPostingList";
 import CreateJobApplication from "@/pages/recruiter/CreateJobApplication";
 import Classification from "@/pages/management/classification/Classification";
 import ViewQuestions from "@/pages/management/question/ViewQuestions";
+import AdminAuditLog from "@/pages/admin/AdminAuditLog";
 
 export const managementRoutes = [
   {label: "Thêm câu hỏi",
@@ -58,6 +60,13 @@ export const managementRoutes = [
     icon: CreditCard,
     path: "subscriptions",
     element: <SubscriptionManagement />,
+    allowedRoles: ["Admin"],
+  },
+    {
+    label: "Quản lý gói đăng ký",
+    icon: Logs,
+    path: "saudit-logs",
+    element: <AdminAuditLog />,
     allowedRoles: ["Admin"],
   },
 ];

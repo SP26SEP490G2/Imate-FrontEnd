@@ -10,12 +10,12 @@ import { updateRecruiterProfile } from "@/services/recruiterService_PhuDK/recrui
 import type { User } from "@/types/common/auth";
 
 const recruiterSchema = z.object({
-    companyName: z.string().min(2),
+    companyName: z.string().min(2, "Tên công ty phải ≥ 2 ký tự"),
+    phone: z.string().min(10, "SĐT phải ≥ 10 số").max(15, "SĐT tối đa 15 số"),
     website: z.string().optional(),
-    industry: z.string().min(2),
-    companySize: z.string().min(1),
-    address: z.string().min(2),
-    phone: z.string().min(10).max(15),
+    industry: z.string().min(2, "Ngành nghề phải ≥ 2 ký tự"),
+    companySize: z.string().min(1, "Chọn quy mô công ty"),
+    address: z.string().min(2, "Địa chỉ phải ≥ 2 ký tự"),
 });
 
 interface Props {
@@ -47,6 +47,7 @@ const UpdateRecruiterDialog: React.FC<Props> = ({ data, onSubmit }) => {
             });
         }
     }, [open, data]);
+const [errors, setErrors] = useState<Record<string, string>>({});
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -55,11 +56,28 @@ const UpdateRecruiterDialog: React.FC<Props> = ({ data, onSubmit }) => {
             ...prev,
             [name]: value,
         }));
+        setErrors((prev) => ({
+            ...prev,
+            [name]: "",
+        }));
     };
 
     const handleSubmit = async () => {
         try {
-            recruiterSchema.parse(formData);
+            const result = recruiterSchema.safeParse(formData);
+            if (!result.success) {
+                const fieldErrors: Record<string, string> = {};
+
+                result.error.issues.forEach((issue) => {
+                    const field = issue.path[0] as string;
+                    fieldErrors[field] = issue.message;
+                });
+
+                setErrors(fieldErrors);
+                return;
+            }
+
+            setErrors({});
 
             await updateRecruiterProfile({
                 ...data,
@@ -72,7 +90,13 @@ const UpdateRecruiterDialog: React.FC<Props> = ({ data, onSubmit }) => {
 
             setOpen(false);
         } catch (err: any) {
-            toast.error("Dữ liệu không hợp lệ: " + err.message);
+            const message =
+                err?.response?.data?.detail ||
+                err?.response?.data?.title ||
+                err?.message ||
+                "Có lỗi xảy ra";
+
+            toast.error(message);
         }
     };
 
@@ -101,6 +125,9 @@ const UpdateRecruiterDialog: React.FC<Props> = ({ data, onSubmit }) => {
                             value={formData.companyName}
                             onChange={handleChange}
                         />
+                        {errors.companyName && (
+                            <p className="text-red-500 text-sm mt-1">{errors.companyName}</p>
+                        )}
                     </div>
 
                     <div>
@@ -110,6 +137,9 @@ const UpdateRecruiterDialog: React.FC<Props> = ({ data, onSubmit }) => {
                             value={formData.phone}
                             onChange={handleChange}
                         />
+                        {errors.phone && (
+                            <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
+                        )}
                     </div>
                     <div>
                         <Label>Website</Label>
@@ -127,6 +157,9 @@ const UpdateRecruiterDialog: React.FC<Props> = ({ data, onSubmit }) => {
                             value={formData.industry}
                             onChange={handleChange}
                         />
+                        {errors.industry && (
+                            <p className="text-red-500 text-sm mt-1">{errors.industry}</p>
+                        )}
                     </div>
 
                     <div>
@@ -136,6 +169,9 @@ const UpdateRecruiterDialog: React.FC<Props> = ({ data, onSubmit }) => {
                             value={formData.companySize}
                             onChange={handleChange}
                         />
+                        {errors.companySize && (
+                            <p className="text-red-500 text-sm mt-1">{errors.companySize}</p>
+                        )}
                     </div>
 
                     <div>
@@ -145,6 +181,9 @@ const UpdateRecruiterDialog: React.FC<Props> = ({ data, onSubmit }) => {
                             value={formData.address}
                             onChange={handleChange}
                         />
+                        {errors.address && (
+                            <p className="text-red-500 text-sm mt-1">{errors.address}</p>
+                        )}
                     </div>
 
                     <Button

@@ -37,7 +37,7 @@ export default function ManagementLayout() {
   };
   console.log("role:", user?.role);
   const basePath = user?.role === "Recruiter"
-    ? "/recruiter-dashboard"
+    ? "recruiter-dashboard"
     : "/management";
 
   const routes =

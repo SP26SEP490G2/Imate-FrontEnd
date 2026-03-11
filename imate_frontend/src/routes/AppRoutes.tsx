@@ -41,6 +41,9 @@ import { ROLES } from "@/constants/role";
 import { LAYOUT } from "@/constants/common";
 import ViewQuestions from "@/pages/management/question/ViewQuestions";
 import ViewQuestionBank from "@/pages/main/public/ViewQuestionBank";
+import JobPostingList from "@/pages/recruiter/JobPostingList";
+import CreateJobApplication from "@/pages/recruiter/CreateJobApplication";
+import AdminAuditLog from "@/pages/admin/AdminAuditLog";
 
 /**
  * Route Configuration Type
@@ -89,6 +92,10 @@ const routeConfigs: RouteConfig[] = [
   { path: "/management/view-questions",      element: <ViewQuestions />,   layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
   { path: "/management/add-question",        element: <AddSystemQuestion />,         layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
   { path: "/management/manage-application",  element: <ReviewMentorApplication />,   layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
+  { path: "/management/recruiter-dashboard/job-applications",  element: <JobPostingList />,   layout: LAYOUT.MANAGEMENT, roles: [ROLES.RECRUITER] },
+  { path: "/management/recruiter-dashboard/create-job-posting",  element: <CreateJobApplication />,   layout: LAYOUT.MANAGEMENT, roles: [ROLES.RECRUITER] },
+  { path: "/management/admin/audit-logs",  element: <AdminAuditLog />,   layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN] }
+
 ];
 
 /**
@@ -141,7 +148,7 @@ const buildRoutes = (configs: RouteConfig[]): RouteObject[] => {
   if (managementRoutes.length > 0) {
     result.push({
       path: "/management",
-      element: <RoleGuard requiredRoles={["Admin", "Staff"]}><ManagementLayout /></RoleGuard>,
+      element: <RoleGuard requiredRoles={["Admin", "Staff","Recruiter"]}><ManagementLayout /></RoleGuard>,
       children: managementRoutes.map(config => ({
         path: config.path.replace("/management/", ""),
         element: wrapWithGuards(config.element, config.requireAuth, config.roles),
