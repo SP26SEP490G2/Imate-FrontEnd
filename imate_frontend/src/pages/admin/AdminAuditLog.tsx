@@ -67,6 +67,7 @@ const AdminAuditLog: React.FC = () => {
 
   // DERIVED STATE
   const totalPage = data?.totalPages || 0;
+  const totalCount = data?.totalCount || 0;
   const [paginationRange, setPaginationRange] = useState<(number | "dots")[]>([]);
 
   //==========USE EFFECT==========
@@ -329,7 +330,9 @@ const AdminAuditLog: React.FC = () => {
             <Table
               page={currentPage}
               totalPages={totalPage}
+              totalCount = {totalCount}
               pageSize={PAGE_SIZE}
+              onPageSizeChange={() => {}}
               onPageChange={handlePageChange}
               maxHeight="55vh"
             >
