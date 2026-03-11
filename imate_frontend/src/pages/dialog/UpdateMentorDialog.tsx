@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChevronDown, Edit } from "lucide-react";
 import type { BankInfo } from "@/types/common/data";
-import { getBankList, updateMentorProfile } from "@/services/mentorService_PhuDK/mentorService";
+import { getBankList, updateMentorProfile } from "@/services/mentorService";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { User } from "@/types/common/auth";
 import { toast } from "react-toastify";
