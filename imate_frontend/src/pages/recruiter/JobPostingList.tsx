@@ -21,8 +21,7 @@ import { Input } from "@/components/ui/input";
 
 import type { JobItem, JobResponse } from "@/types/common/recruiter";
 import { getRecruiterJobApplications } from "@/services/recruiterService_PhuDK/recruiterService";
-import UpdateJobPostModal from "@/dialog/recruiter/UpdateJobPostModal";
-
+import UpdateJobPostModal from "@/dialog/main/recruiter/UpdateJobPostModal";
 const JobPostingList: React.FC = () => {
     const navigate = useNavigate();
 

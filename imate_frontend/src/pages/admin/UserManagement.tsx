@@ -13,8 +13,8 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import UserAccountDetailModal from "@/dialog/account/UserAccountDetailModal";
-import CreateStaffModal from "@/dialog/account/CreateStaffModal";
+import UserAccountDetailModal from "@/dialog/management/account/UserAccountDetailModal";
+import CreateStaffModal from "@/dialog/management/account/CreateStaffModal";
 
 // This layout replicates the mockup
 export default function UserManagement() {

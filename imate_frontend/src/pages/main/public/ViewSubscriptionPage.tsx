@@ -83,11 +83,10 @@ const ViewSubscriptionPage: React.FC = () => {
                 return (
                   <article
                     key={subscriptionPackage.id}
-                    className={`relative rounded-3xl border p-8 backdrop-blur-sm transition-all ${
-                      subscriptionPackage.isRecommended
+                    className={`relative rounded-3xl border p-8 backdrop-blur-sm transition-all ${subscriptionPackage.isRecommended
                         ? "bg-gradient-to-b from-indigo-500/20 to-purple-500/10 border-indigo-400/50 shadow-xl shadow-indigo-900/30"
                         : "bg-[#1e293b]/45 border-white/10"
-                    }`}
+                      }`}
                   >
                     {subscriptionPackage.isRecommended && (
                       <span className="absolute top-5 right-5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 px-3 py-1 text-[11px] font-bold text-white">
@@ -110,11 +109,10 @@ const ViewSubscriptionPage: React.FC = () => {
 
                     <button
                       onClick={handleCtaClick}
-                      className={`w-full py-3 rounded-xl font-bold transition-all ${
-                        subscriptionPackage.isRecommended
+                      className={`w-full py-3 rounded-xl font-bold transition-all ${subscriptionPackage.isRecommended
                           ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:opacity-90"
                           : "bg-white text-[#0f172a] hover:bg-slate-100"
-                      }`}
+                        }`}
                     >
                       {isFree ? "Bắt đầu ngay" : "Mua ngay"}
                     </button>

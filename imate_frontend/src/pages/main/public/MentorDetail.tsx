@@ -1,7 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import Header from "@/components/common/Header";
-import Footer from "@/components/common/Footer";
 import { getMentorApplicationById } from "@/services/staffReviewService";
 import type { StaffMentorApplication } from "@/types/response/staffReview.response";
 import {
@@ -70,7 +68,6 @@ const MentorDetail: React.FC = () => {
   if (error && !mentor) {
     return (
       <div className="min-h-screen bg-[#0a0b14] font-sans">
-        <Header />
         <main className="max-w-4xl mx-auto px-6 py-12 text-white">
           <p className="text-red-400 mb-4">{error}</p>
           <Link
@@ -80,7 +77,6 @@ const MentorDetail: React.FC = () => {
             <ChevronLeft className="w-4 h-4" /> Kết nối Mentor
           </Link>
         </main>
-        <Footer />
       </div>
     );
   }
@@ -100,8 +96,6 @@ const MentorDetail: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#0a0b14] font-sans text-white">
-      <Header />
-
       <main className="max-w-6xl mx-auto px-6 py-6 md:py-8">
         {/* Breadcrumb */}
         <Link
@@ -300,8 +294,6 @@ const MentorDetail: React.FC = () => {
           </div>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 };

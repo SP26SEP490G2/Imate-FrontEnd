@@ -20,6 +20,8 @@ import ResetPassword from "@/pages/auth/ResetPassword";
 // Pages - Guest
 import HomePage from "@/pages/main/public/HomePage";
 import ViewSubscriptionPage from "@/pages/main/public/ViewSubscriptionPage";
+import MentorList from "@/pages/main/public/MentorList";
+import MentorDetail from "@/pages/main/public/MentorDetail";
 
 // Pages - Candidate
 import ViewProfile from "@/pages/candidate/ViewProfile";
@@ -33,8 +35,8 @@ import SubmitRecruiterApplication from "@/pages/recruiter/SubmitRecruiterApplica
 import RecruiterPendingApplication from "@/pages/recruiter/PendingApplication";
 
 // Pages - Staff
-import AddSystemQuestion from "@/pages/management/question/AddSystemQuestion";
 import ReviewMentorApplication from "@/pages/staff/ReviewMentorApplication";
+import MentorDetailForStaff from "@/pages/staff/MentorDetailForStaff";
 
 // Config
 import { ROLES } from "@/constants/role";
@@ -83,6 +85,8 @@ const routeConfigs: RouteConfig[] = [
   { path: "/view-question-bank",  element: <ViewQuestionBank />,     layout: LAYOUT.MAIN },
   { path: "/view-subscription",     element: <ViewSubscriptionPage />,   layout: LAYOUT.MAIN },
   { path: "/pricing",               element: <ViewSubscriptionPage />,   layout: LAYOUT.MAIN },
+  { path: "/view-mentor",           element: <MentorList />,             layout: LAYOUT.MAIN },
+  { path: "/view-mentor/:id",       element: <MentorDetail />,           layout: LAYOUT.MAIN },
 
   // ===== MAIN LAYOUT ROUTES =====
   { path: "/profile",                        element: <ViewProfile />,                layout: LAYOUT.MAIN, requireAuth: true },
@@ -93,7 +97,6 @@ const routeConfigs: RouteConfig[] = [
 
   // ===== MANAGEMENT LAYOUT ROUTES =====
   { path: "/management/view-questions",      element: <ViewQuestions />,   layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
-  { path: "/management/add-question",        element: <AddSystemQuestion />,         layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
   { path: "/management/manage-application",  element: <ReviewMentorApplication />,   layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
   { path: "/management/recruiter-dashboard/job-applications",  element: <JobPostingList />,   layout: LAYOUT.MANAGEMENT, roles: [ROLES.RECRUITER] },
   { path: "/management/recruiter-dashboard/create-job-posting",  element: <CreateJobApplication />,   layout: LAYOUT.MANAGEMENT, roles: [ROLES.RECRUITER] },
@@ -101,6 +104,7 @@ const routeConfigs: RouteConfig[] = [
 
   { path: "/management/applications",  element: <ReviewMentorApplication />,   layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
   { path: "/management/classification",        element: <Classification />,         layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
+  { path: "/management/applications/mentor/:id", element: <MentorDetailForStaff />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
 
   { path: "/management/users", element: <UserManagement />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN] },
   { path: "/management/subscriptions", element: <SubscriptionManagement />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN] },
