@@ -37,6 +37,7 @@ import RecruiterPendingApplication from "@/pages/recruiter/PendingApplication";
 // Pages - Staff
 import ReviewMentorApplication from "@/pages/staff/ReviewMentorApplication";
 import MentorDetailForStaff from "@/pages/staff/MentorDetailForStaff";
+import RecruiterDetailForStaff from "@/pages/staff/RecruiterDetailForStaff";
 
 // Config
 import { ROLES } from "@/constants/role";
@@ -97,6 +98,7 @@ const routeConfigs: RouteConfig[] = [
   { path: "/management/applications",  element: <ReviewMentorApplication />,   layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
   { path: "/management/classification",        element: <Classification />,         layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
   { path: "/management/applications/mentor/:id", element: <MentorDetailForStaff />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
+  { path: "/management/applications/recruiter/:id", element: <RecruiterDetailForStaff />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
 
   { path: "/management/users", element: <UserManagement />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN] },
   { path: "/management/subscriptions", element: <SubscriptionManagement />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN] },

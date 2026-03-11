@@ -37,23 +37,30 @@ function SignIn() {
         navigate(`/management/${managementRoutes[0].path}`);
         break;
       case "Mentor":
-        // Kiểm tra AccountStatus:
-        // - Active: đã được duyệt → navigate đến trang mentor chính
-        // - PendingVerification: đã submit form HOẶC đang chờ duyệt → navigate đến pending-application
-        // - Nếu không có status hoặc status khác: account mới chưa nộp hồ sơ
         if (user.accountStatus === "Active") {
           navigate("/mentor/interview-schedule");
-        } else if (user.accountStatus === "PendingVerification") {
+        } else if (user.verificationStatus === "Rejected") {
+          toast.error("Hồ sơ Mentor của bạn đã bị từ chối. Vui lòng kiểm tra lại thông tin và nộp lại.");
+          navigate("/submit-mentor-application");
+        } else if (user.verificationStatus === "Approved") {
+          navigate("/mentor/interview-schedule"); // Trùng với Active nhưng phòng hờ
+        } else if (user.verificationStatus === "Pending" || user.accountStatus === "PendingVerification") {
           navigate("/pending-application");
         } else {
           navigate("/submit-mentor-application");
         }
         break;
       case "Recruiter":
-        // Tương tự Mentor:
-        if (user.accountStatus === "Active") {
-          navigate("/recruiter/dashboard");
-        } else if (user.accountStatus === "PendingVerification") {
+        if (user.isNewAccount && user.verificationStatus !== "Rejected") {
+          navigate("/submit-recruiter-application");
+        } else if (user.accountStatus === "Active") {
+          navigate("/management/recruiter-dashboard/create-job-posting");
+        } else if (user.verificationStatus === "Rejected") {
+          toast.error("Hồ sơ Nhà tuyển dụng của bạn đã bị từ chối. Vui lòng kiểm tra lại thông tin và nộp lại.");
+          navigate("/submit-recruiter-application");
+        } else if (user.verificationStatus === "Approved") {
+          navigate("/management/recruiter-dashboard/create-job-posting");
+        } else if (user.verificationStatus === "Pending" || user.accountStatus === "PendingVerification") {
           navigate("/recruiter-pending-application");
         } else {
           navigate("/submit-recruiter-application");
