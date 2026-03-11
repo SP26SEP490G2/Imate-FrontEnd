@@ -53,7 +53,6 @@ function SignUp() {
         } else if (user.verificationStatus === "Approved") {
           navigate("/management/recruiter-dashboard/create-job-posting");
         } else if (user.verificationStatus === "Pending" || user.accountStatus === "PendingVerification") {
-
           navigate("/recruiter-pending-application");
         } else {
           navigate("/submit-recruiter-application");
