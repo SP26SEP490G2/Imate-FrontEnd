@@ -47,7 +47,6 @@ export const managementRoutes = [
     element: <UserManagement />,
     allowedRoles: ["Admin"],
   },
-  ,
   {
     label: "Quản lý câu hỏi",
     icon: Users,

@@ -31,10 +31,10 @@ function SignIn() {
   const handleNavigation = (user: User) => {
     switch (user?.role) {
       case "Admin":
-        navigate(`/management-dashboard/${managementRoutes[0].path}`);
+        navigate(`/management/${managementRoutes[0].path}`);
         break;
       case "Staff":
-        navigate(`/management-dashboard/${managementRoutes[0].path}`);
+        navigate(`/management/${managementRoutes[0].path}`);
         break;
       case "Mentor":
         // Kiểm tra AccountStatus:

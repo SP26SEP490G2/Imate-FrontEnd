@@ -44,6 +44,9 @@ import ViewQuestionBank from "@/pages/main/public/ViewQuestionBank";
 import JobPostingList from "@/pages/recruiter/JobPostingList";
 import CreateJobApplication from "@/pages/recruiter/CreateJobApplication";
 import AdminAuditLog from "@/pages/admin/AdminAuditLog";
+import Classification from "@/pages/management/classification/Classification";
+import UserManagement from "@/pages/admin/UserManagement";
+import SubscriptionManagement from "@/pages/admin/SubscriptionManagement";
 
 /**
  * Route Configuration Type
@@ -94,8 +97,13 @@ const routeConfigs: RouteConfig[] = [
   { path: "/management/manage-application",  element: <ReviewMentorApplication />,   layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
   { path: "/management/recruiter-dashboard/job-applications",  element: <JobPostingList />,   layout: LAYOUT.MANAGEMENT, roles: [ROLES.RECRUITER] },
   { path: "/management/recruiter-dashboard/create-job-posting",  element: <CreateJobApplication />,   layout: LAYOUT.MANAGEMENT, roles: [ROLES.RECRUITER] },
-  { path: "/management/admin/audit-logs",  element: <AdminAuditLog />,   layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN] }
+  { path: "/management/admin/audit-logs",  element: <AdminAuditLog />,   layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN] },
 
+  { path: "/management/applications",  element: <ReviewMentorApplication />,   layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
+  { path: "/management/classification",        element: <Classification />,         layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
+
+  { path: "/management/users", element: <UserManagement />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN] },
+  { path: "/management/subscriptions", element: <SubscriptionManagement />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN] },
 ];
 
 /**

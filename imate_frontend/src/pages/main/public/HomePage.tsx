@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import Header from '../../../components/common/Header';
-import Footer from '@/components/common/Footer';
 import { getListPreviewMentors } from '../../../services/mentorService';
 import { getListHotQuestions } from '../../../services/questionService';
 import type { ListPreviewMentorResponse } from '../../../types/common/mentor';
@@ -367,7 +365,6 @@ const HomePage: React.FC = () => {
           </div>
         </section>
       </main>
-      <Footer />
     </div>
   );
 };
