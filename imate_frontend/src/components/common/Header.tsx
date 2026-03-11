@@ -24,7 +24,7 @@ function Header() {
 
   // menu cho guest
   const guestMenu = [
-    { label: "Ngân hàng câu hỏi", href: "/Ngan-hang-cau-hoi-he-thong" },
+    { label: "Ngân hàng câu hỏi", href: "/view-question-bank" },
     { label: "Luyện tập AI", href: "/practice-with-AI" },
     { label: "Mentor", href: "/view-mentor" },
     { label: "Bảng giá", href: "/view-subscription" },
