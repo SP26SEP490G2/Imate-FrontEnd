@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth } from "@/store/AuthContext";
@@ -63,16 +63,18 @@ export default function SubmitMentorApplication() {
     }
   };
 
-  if (!user || user.role !== "Mentor") {
-    navigate("/", { replace: true });
-    return null;
-  }
-  if (user.accountStatus === "Active") {
-    navigate("/mentor/interview-schedule", { replace: true });
-    return null;
-  }
-  if (user.accountStatus === "PendingVerification") {
-    navigate("/pending-application", { replace: true });
+  // Sử dụng useEffect để redirect, tránh warning navigate() during render
+  useEffect(() => {
+    if (!user || user.role !== "Mentor") {
+      navigate("/", { replace: true });
+    } else if (user.accountStatus === "Active") {
+      navigate("/mentor/interview-schedule", { replace: true });
+    }
+    // Không redirect khi PendingVerification – đây là trạng thái của Mentor mới chưa nộp hồ sơ
+  }, [user, navigate]);
+
+  // Hiển thị loading trong khi đang redirect
+  if (!user || user.role !== "Mentor" || user.accountStatus === "Active") {
     return null;
   }
 
