@@ -86,7 +86,7 @@ export default function ManagementLayout() {
                       `flex items-center gap-3 px-8 py-4 text-sm font-medium transition-all
                       ${
                         isActive
-                          ? "text-white bg-gradient-to-r from-indigo-500/20 to-transparent border-l-4 border-indigo-500 "
+                          ? "text-white bg-gradient-to-l from-indigo-500/20 to-transparent border-r-4 border-indigo-500"
                           : "text-slate-400 hover:text-white hover:bg-slate-800/40"
                       }`
                     }

@@ -67,6 +67,7 @@ export default function Classification() {
   const [catPage, setCatPage] = useState(1);
   const [catPageSize, setCatPageSize] = useState(10);
   const [catTotalPages, setCatTotalPages] = useState(1);
+  const [catTotalCount, setCatTotalCount] = useState(0);
 
   const [catSearchTerm, setCatSearchTerm] = useState("");
   const [catSortBy, setCatSortBy] = useState<string>("createdat");
@@ -89,6 +90,7 @@ export default function Classification() {
   const [posPage, setPosPage] = useState(1);
   const [posPageSize, setPosPageSize] = useState(10);
   const [posTotalPages, setPosTotalPages] = useState(1);
+  const [posTotalCount, setPosTotalCount] = useState(0);
 
   const [posSearchTerm, setPosSearchTerm] = useState("");
   const [posSortBy, setPosSortBy] = useState<string>("createdat");
@@ -107,6 +109,7 @@ export default function Classification() {
   const [skillPage, setSkillPage] = useState(1);
   const [skillPageSize, setSkillPageSize] = useState(10);
   const [skillTotalPages, setSkillTotalPages] = useState(1);
+  const [skillTotalCount, setSkillTotalCount] = useState(0);
 
   const [skillSearchTerm, setSkillSearchTerm] = useState("");
   const [skillSortBy, setSkillSortBy] = useState<string>("createdat");
@@ -135,6 +138,7 @@ export default function Classification() {
       if (response) {
         setCategories(response.items || []);
         setCatTotalPages(response.totalPages || 1);
+        setCatTotalCount(response.totalCount || 0);
       }
     } catch (err: any) {
       console.error("Lỗi tải danh sách thể loại:", err);
@@ -162,6 +166,7 @@ export default function Classification() {
       if (response) {
         setPositions(response.items || []);
         setPosTotalPages(response.totalPages || 1);
+        setPosTotalCount(response.totalCount || 0);
       }
     } catch (err: any) {
       console.error("Lỗi tải danh sách vị trí:", err);
@@ -190,6 +195,7 @@ export default function Classification() {
       if (response) {
         setSkills(response.items || []);
         setSkillTotalPages(response.totalPages || 1);
+        setSkillTotalCount(response.totalCount || 0);
       }
     } catch (err: any) {
       console.error("Lỗi tải danh sách kĩ năng:", err);
@@ -248,10 +254,10 @@ export default function Classification() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-bold text-white mb-2">
-            Quản lý hạng mục IT
+            Quản lý hạng mục
           </h1>
           <p className="text-slate-400">
-            Quản lý chuyên môn, vị trí, kỹ năng và công ty đặc thù ngành CNTT
+            Quản lý thể loại, vị trí, kỹ năng và công ty đặc thù ngành CNTT
           </p>
         </div>
 
@@ -361,6 +367,7 @@ export default function Classification() {
             <Table
               page={catPage}
               totalPages={catTotalPages}
+              totalCount={catTotalCount}
               pageSize={catPageSize}
               onPageChange={setCatPage}
               onPageSizeChange={handlePageSizeChange}
@@ -484,6 +491,7 @@ export default function Classification() {
               page={posPage}
               totalPages={posTotalPages}
               pageSize={posPageSize}
+              totalCount={posTotalCount}
               onPageChange={setPosPage}
               onPageSizeChange={handlePageSizeChange}
               maxHeight="55vh"
@@ -605,6 +613,7 @@ export default function Classification() {
             <Table
               page={skillPage}
               totalPages={skillTotalPages}
+              totalCount={skillTotalCount}
               pageSize={skillPageSize}
               onPageChange={setSkillPage}
               onPageSizeChange={handlePageSizeChange}
