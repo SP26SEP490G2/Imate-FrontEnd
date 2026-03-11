@@ -5,7 +5,10 @@ import {
   getAllContributedQuestionsForStaff,
   getListQuestionCategories
 } from '@/services/questionService';
-import UpdateSystemQuestionModal from '@/components/staff/UpdateSystemQuestionModal';
+import { getListPosition } from '@/services/positionService';
+import { getAllSkill } from '@/services/skillService';
+import { DIFFICULTY_OPTIONS } from '@/constants/enum';
+import UpdateSystemQuestionModal from '@/dialog/question/UpdateSystemQuestionModal';
 import type {
   StaffSystemQuestionItem,
   StaffContributedQuestionItem,
@@ -17,21 +20,23 @@ import type {
   PositionItem,
   SkillItem
 } from '@/types/common/question';
-import { DIFFICULTY_MAP, DIFFICULTY_LEVEL } from '@/constants/common';
+import {DIFFICULTY_MAP } from '@/constants/common';
 import {
   Eye,
   Pencil,
   Trash2,
   Plus,
   Download,
-  Upload,
-  ChevronLeft,
-  ChevronRight
+  Upload
 } from 'lucide-react';
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 type TabType = 'system' | 'contributed';
 
-const StaffQuestionManagement: React.FC = () => {
+const ViewQuestions: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>('system');
   const [loading, setLoading] = useState(false);
@@ -75,26 +80,16 @@ const StaffQuestionManagement: React.FC = () => {
     sortOrder: 'desc'
   });
 
-  // Dropdown options (mock data - replace with API calls)
-  const [positions] = useState<PositionItem[]>([
-    { id: 1, name: 'Frontend Developer' },
-    { id: 2, name: 'Backend Developer' },
-    { id: 3, name: 'UI/UX Designer' }
-  ]);
-
-  const [skills] = useState<SkillItem[]>([
-    { id: 1, name: 'ReactJS' },
-    { id: 2, name: 'NodeJS' },
-    { id: 3, name: 'Python' },
-    { id: 4, name: 'JavaScript' },
-    { id: 5, name: 'TypeScript' }
-  ]);
-
+  // Dropdown options from API
+  const [positions, setPositions] = useState<PositionItem[]>([]);
+  const [skills, setSkills] = useState<SkillItem[]>([]);
   const [_categories, setCategories] = useState<CategoryItem[]>([]);
 
   // Fetch data on mount and when filters change
   useEffect(() => {
     fetchCategories();
+    fetchPositions();
+    fetchSkills();
   }, []);
 
   useEffect(() => {
@@ -111,6 +106,28 @@ const StaffQuestionManagement: React.FC = () => {
       setCategories(result);
     } catch (error) {
       console.error('Failed to fetch categories:', error);
+    }
+  };
+
+  const fetchPositions = async () => {
+    try {
+      const result = await getListPosition(1, null, true, '', 'name', 'asc');
+      if (result && result.items) {
+        setPositions(result.items.map(item => ({ id: item.id, name: item.name })));
+      }
+    } catch (error) {
+      console.error('Failed to fetch positions:', error);
+    }
+  };
+
+  const fetchSkills = async () => {
+    try {
+      const result = await getAllSkill(1, null, true, '', 'name', 'asc');
+      if (result && result.items) {
+        setSkills(result.items.map(item => ({ id: item.id, name: item.name })));
+      }
+    } catch (error) {
+      console.error('Failed to fetch skills:', error);
     }
   };
 
@@ -171,11 +188,13 @@ const StaffQuestionManagement: React.FC = () => {
     }));
   };
 
-  const handlePageChange = (pageNumber: number) => {
+  const handlePageSizeChange = (pageSize: number) => {
     if (activeTab === 'system') {
-      handleSystemFilterChange('pageNumber', pageNumber);
+      handleSystemFilterChange('pageSize', pageSize);
+      handleSystemFilterChange('pageNumber', 1);
     } else {
-      handleContributedFilterChange('pageNumber', pageNumber);
+      handleContributedFilterChange('pageSize', pageSize);
+      handleContributedFilterChange('pageNumber', 1);
     }
   };
 
@@ -195,107 +214,12 @@ const StaffQuestionManagement: React.FC = () => {
     }
   };
 
-  const renderPagination = () => {
-    const pagination = activeTab === 'system' ? systemPagination : contributedPagination;
-    const { pageNumber, totalPages, totalCount, pageSize } = pagination;
-
-    const pages = [];
-
-    if (totalPages <= 7) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      if (pageNumber <= 3) {
-        pages.push(1, 2, 3, 4, '...', totalPages);
-      } else if (pageNumber >= totalPages - 2) {
-        pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
-      } else {
-        pages.push(1, '...', pageNumber - 1, pageNumber, pageNumber + 1, '...', totalPages);
-      }
-    }
-
-    const startItem = (pageNumber - 1) * pageSize + 1;
-    const endItem = Math.min(pageNumber * pageSize, totalCount);
-
-    return (
-      <div className="mt-10 flex flex-col md:flex-row items-center justify-between gap-6">
-        <p className="text-slate-500 text-sm">
-          Hiển thị <span className="text-white font-bold">{startItem}-{endItem}</span> trên{' '}
-          <span className="text-white font-bold">{totalCount.toLocaleString()}</span> câu hỏi
-        </p>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => handlePageChange(pageNumber - 1)}
-            disabled={pageNumber === 1}
-            className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:bg-white/10 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed bg-[#1e293b]/40 border border-white/5"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-
-          {pages.map((page, index) => {
-            if (page === '...') {
-              return (
-                <span key={`ellipsis-${index}`} className="text-slate-600 px-2 font-bold">
-                  ...
-                </span>
-              );
-            }
-
-            return (
-              <button
-                key={page}
-                onClick={() => handlePageChange(page as number)}
-                className={`w-10 h-10 rounded-xl font-bold transition-all ${pageNumber === page
-                  ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30'
-                  : 'bg-[#1e293b]/40 text-slate-400 hover:bg-white/10 hover:text-white border border-white/5'
-                  }`}
-              >
-                {page}
-              </button>
-            );
-          })}
-
-          <button
-            onClick={() => handlePageChange(pageNumber + 1)}
-            disabled={pageNumber === totalPages}
-            className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:bg-white/10 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed bg-[#1e293b]/40 border border-white/5"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
-    );
-  };
-
-  const getLevelBadgeClass = (level: string) => {
-    const levelLower = level.toLowerCase();
-    switch (levelLower) {
-      case 'junior':
-      case 'fresher':
-      case 'intern':
-      case 'easy':
-        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
-      case 'middle':
-      case 'medium':
-        return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-      case 'senior':
-      case 'hard':
-        return 'bg-red-500/10 text-red-400 border-red-500/20';
-      default:
-        return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
-    }
-  };
-
-  const getPositionBadgeClass = (position: string) => {
-    if (position?.toLowerCase().includes('Backend Developer') || position?.toLowerCase().includes('Backend Developer')) {
-      return 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
-    } else if (position?.toLowerCase().includes('Backend Developer') || position?.toLowerCase().includes('Backend Developer')) {
-      return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-    } else if (position?.toLowerCase().includes('design') || position?.toLowerCase().includes('ui')) {
-      return 'bg-pink-500/10 text-pink-400 border-pink-500/20';
-    }
-    return 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
+  const getDifficultyStatus = (difficulty: string): "active" | "pending" | "error" | "inactive" | "draft" => {
+    const diffLower = difficulty.toLowerCase();
+    if (diffLower === 'easy' || diffLower === 'intern' || diffLower === 'fresher') return 'active';
+    if (diffLower === 'medium' || diffLower === 'junior' || diffLower === 'middle') return 'pending';
+    if (diffLower === 'hard' || diffLower === 'senior') return 'error';
+    return 'inactive';
   };
 
   return (
@@ -332,7 +256,7 @@ const StaffQuestionManagement: React.FC = () => {
                   Import câu hỏi
                 </button>
                 <button
-                  onClick={() => navigate('/staff/add-system-question')}
+                  onClick={() => navigate('/management/add-question')}
                   className="bg-gradient-to-r from-indigo-500 to-purple-500 px-4 py-3 rounded-xl flex items-center gap-2 text-sm font-bold shadow-lg shadow-indigo-500/20 hover:opacity-90 transition-all text-white"
                 >
                   <Plus className="w-4 h-4" />
@@ -425,7 +349,7 @@ const StaffQuestionManagement: React.FC = () => {
                     onChange={(e) => {
                       const value = e.target.value || undefined;
                       if (activeTab === 'system') {
-                        handleSystemFilterChange('difficulty', value as DifficultyLevel);
+                        handleSystemFilterChange('difficulty', value as DifficultyLevel | undefined);
                       } else {
                         handleContributedFilterChange('level', value as Level);
                       }
@@ -434,20 +358,10 @@ const StaffQuestionManagement: React.FC = () => {
                   >
                     <option value="">Tất cả</option>
                     {activeTab === 'system' ? (
-                      <>
-                        <option value="Easy">Easy</option>
-                        <option value="Medium">Medium</option>
-                        <option value="Hard">Hard</option>
-                      </>
-                    ) : (
-                      <>
-                        <option value="Intern">Intern</option>
-                        <option value="Fresher">Fresher</option>
-                        <option value="Junior">Junior</option>
-                        <option value="Middle">Middle</option>
-                        <option value="Senior">Senior</option>
-                      </>
-                    )}
+                      DIFFICULTY_OPTIONS.map(option => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))
+                    ) : null}
                   </select>
                 </div>
 
@@ -475,56 +389,68 @@ const StaffQuestionManagement: React.FC = () => {
           </section>
 
           {/* Data Table Section */}
-          <div className="overflow-x-auto rounded-2xl border border-white/5">
-            <table className="w-full text-left border-collapse bg-[#1e293b]/40 backdrop-blur-sm">
-              <thead>
-                <tr className="bg-white/5 text-slate-400 text-xs font-bold uppercase tracking-widest border-b border-white/10">
-                  <th className="px-8 py-5">STT</th>
-                  <th className="px-8 py-5">Câu hỏi</th>
-                  <th className="px-6 py-5">Vị trí</th>
-                  <th className="px-6 py-5">Kỹ năng</th>
-                  <th className="px-6 py-5">Cấp độ</th>
-                  <th className="px-8 py-5 text-center">Hành động</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
+          <Table
+            page={activeTab === 'system' ? systemPagination.pageNumber : contributedPagination.pageNumber}
+            totalPages={activeTab === 'system' ? systemPagination.totalPages : contributedPagination.totalPages}
+            pageSize={activeTab === 'system' ? systemPagination.pageSize : contributedPagination.pageSize}
+            totalItems={activeTab === 'system' ? systemPagination.totalCount : contributedPagination.totalCount}
+            onPageChange={(page) => {
+              if (activeTab === 'system') {
+                handleSystemFilterChange('pageNumber', page);
+              } else {
+                handleContributedFilterChange('pageNumber', page);
+              }
+            }}
+            onPageSizeChange={handlePageSizeChange}
+          >
+            <TableHeader>
+              <TableRow>
+                <TableHead className="px-8 py-5">STT</TableHead>
+                <TableHead className="px-8 py-5">Câu hỏi</TableHead>
+                <TableHead className="px-6 py-5">Vị trí</TableHead>
+                <TableHead className="px-6 py-5">Kỹ năng</TableHead>
+                <TableHead className="px-6 py-5">Cấp độ</TableHead>
+                <TableHead className="px-8 py-5 text-center">Hành động</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
                 {loading ? (
                   // Loading skeleton
                   <>
                     {[1, 2, 3, 4, 5].map((i) => (
-                      <tr key={i} className="animate-pulse">
-                        <td className="px-8 py-6">
+                      <TableRow key={i} className="animate-pulse">
+                        <TableCell className="px-8 py-6">
                           <div className="h-4 bg-slate-700 rounded w-8"></div>
-                        </td>
-                        <td className="px-8 py-6">
+                        </TableCell>
+                        <TableCell className="px-8 py-6">
                           <div className="space-y-2">
                             <div className="h-4 bg-slate-700 rounded w-3/4"></div>
                             <div className="h-3 bg-slate-800 rounded w-32"></div>
                           </div>
-                        </td>
-                        <td className="px-6 py-6">
+                        </TableCell>
+                        <TableCell className="px-6 py-6">
                           <div className="h-6 bg-slate-700 rounded w-20"></div>
-                        </td>
-                        <td className="px-6 py-6">
+                        </TableCell>
+                        <TableCell className="px-6 py-6">
                           <div className="h-4 bg-slate-700 rounded w-24"></div>
-                        </td>
-                        <td className="px-6 py-6">
+                        </TableCell>
+                        <TableCell className="px-6 py-6">
                           <div className="h-6 bg-slate-700 rounded w-16"></div>
-                        </td>
-                        <td className="px-8 py-6">
+                        </TableCell>
+                        <TableCell className="px-8 py-6">
                           <div className="flex items-center justify-center gap-3">
                             <div className="h-8 w-8 bg-slate-700 rounded-lg"></div>
                             <div className="h-8 w-8 bg-slate-700 rounded-lg"></div>
                             <div className="h-8 w-8 bg-slate-700 rounded-lg"></div>
                           </div>
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     ))}
                   </>
                 ) : error ? (
                   // Error state
-                  <tr>
-                    <td colSpan={6} className="px-8 py-12 text-center">
+                  <TableRow>
+                    <TableCell colSpan={6} className="px-8 py-12 text-center">
                       <p className="text-red-400 mb-4">{error}</p>
                       <button
                         onClick={() => {
@@ -538,130 +464,140 @@ const StaffQuestionManagement: React.FC = () => {
                       >
                         Thử lại
                       </button>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ) : activeTab === 'system' ? (
                   systemQuestions.length > 0 ? (
                     systemQuestions.map((question, index) => (
-                      <tr key={question.id} className="group hover:bg-white/5 transition-all">
-                        <td className="px-8 py-6 text-sm text-slate-400">
+                      <TableRow key={question.id} className="group hover:bg-white/5 transition-all">
+                        <TableCell className="px-8 py-6 text-sm text-slate-400">
                           {String((systemPagination.pageNumber - 1) * systemPagination.pageSize + index + 1).padStart(2, '0')}
-                        </td>
-                        <td className="px-8 py-6">
+                        </TableCell>
+                        <TableCell className="px-8 py-6">
                           <span className="text-white font-semibold group-hover:text-indigo-400 transition-colors cursor-pointer">
                             {question.content}
                           </span>
-                        </td>
-                        <td className="px-6 py-6">
-                          <span className={`px-3 py-1 rounded-md text-xs font-bold border bg-indigo-500/10 text-indigo-400 border-indigo-500/20`}>
+                        </TableCell>
+                        <TableCell className="px-6 py-6">
+                          <StatusBadge status="inactive">
                             {question.positionsName || 'N/A'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-6 text-sm text-slate-400">
+                          </StatusBadge>
+                        </TableCell>
+                        <TableCell className="px-6 py-6 text-sm text-slate-400">
                           {question.skillsName || 'N/A'}
-                        </td>
-                        <td className="px-6 py-6">
-                          <span className={`px-3 py-1 rounded-md text-xs font-bold border ${getLevelBadgeClass(DIFFICULTY_MAP[question.difficulty as 0 | 1 | 2] || 'Easy')}`}>
+                        </TableCell>
+                        <TableCell className="px-6 py-6">
+                          <StatusBadge status={getDifficultyStatus(DIFFICULTY_MAP[question.difficulty as 0 | 1 | 2] || 'Easy')}>
                             {DIFFICULTY_MAP[question.difficulty as 0 | 1 | 2] || 'N/A'}
-                          </span>
-                        </td>
-                        <td className="px-8 py-6">
+                          </StatusBadge>
+                        </TableCell>
+                        <TableCell className="px-8 py-6">
                           <div className="flex items-center justify-center gap-3">
-                            <button
-                              className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-white hover:bg-indigo-500 transition-all"
-                              title="Xem"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleEditQuestion(question.id)}
-                              className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-white hover:bg-indigo-500 transition-all"
-                              title="Sửa"
-                            >
-                              <Pencil className="w-4 h-4" />
-                            </button>
-                            <button
-                              className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all"
-                              title="Xóa"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button size="sm" variant="ghost" className="p-2 h-8 w-8">
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Xem</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost" 
+                                  className="p-2 h-8 w-8"
+                                  onClick={() => handleEditQuestion(question.id)}
+                                >
+                                  <Pencil className="w-4 h-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Sửa</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button size="sm" variant="ghost" className="p-2 h-8 w-8 text-red-400 hover:text-red-500">
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Xóa</TooltipContent>
+                            </Tooltip>
                           </div>
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     ))
                   ) : (
-                    <tr>
-                      <td colSpan={6} className="px-8 py-12 text-center text-slate-400">
+                    <TableRow>
+                      <TableCell colSpan={6} className="px-8 py-12 text-center text-slate-400">
                         Không có câu hỏi nào
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   )
                 ) : (
                   contributedQuestions.length > 0 ? (
                     contributedQuestions.map((question, index) => (
-                      <tr key={question.id} className="group hover:bg-white/5 transition-all">
-                        <td className="px-8 py-6 text-sm text-slate-400">
+                      <TableRow key={question.id} className="group hover:bg-white/5 transition-all">
+                        <TableCell className="px-8 py-6 text-sm text-slate-400">
                           {String((contributedPagination.pageNumber - 1) * contributedPagination.pageSize + index + 1).padStart(2, '0')}
-                        </td>
-                        <td className="px-8 py-6">
+                        </TableCell>
+                        <TableCell className="px-8 py-6">
                           <span className="text-white font-semibold group-hover:text-indigo-400 transition-colors cursor-pointer">
                             {question.content}
                           </span>
-                        </td>
-                        <td className="px-6 py-6">
-                          <span className={`px-3 py-1 rounded-md text-xs font-bold border ${getPositionBadgeClass(question.positionsName || '')}`}>
+                        </TableCell>
+                        <TableCell className="px-6 py-6">
+                          <StatusBadge status="inactive">
                             {question.positionsName || 'N/A'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-6 text-sm text-slate-400">
+                          </StatusBadge>
+                        </TableCell>
+                        <TableCell className="px-6 py-6 text-sm text-slate-400">
                           {question.skillsName || 'N/A'}
-                        </td>
-                        <td className="px-6 py-6">
-                          <span className={`px-3 py-1 rounded-md text-xs font-bold border ${getLevelBadgeClass(question.level)}`}>
+                        </TableCell>
+                        <TableCell className="px-6 py-6">
+                          <StatusBadge status={getDifficultyStatus(question.level)}>
                             {question.level}
-                          </span>
-                        </td>
-                        <td className="px-8 py-6">
+                          </StatusBadge>
+                        </TableCell>
+                        <TableCell className="px-8 py-6">
                           <div className="flex items-center justify-center gap-3">
-                            <button
-                              className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-white hover:bg-indigo-500 transition-all"
-                              title="Xem"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                            <button
-                              className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-white hover:bg-indigo-500 transition-all"
-                              title="Sửa"
-                            >
-                              <Pencil className="w-4 h-4" />
-                            </button>
-                            <button
-                              className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all"
-                              title="Xóa"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button size="sm" variant="ghost" className="p-2 h-8 w-8">
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Xem</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button size="sm" variant="ghost" className="p-2 h-8 w-8">
+                                  <Pencil className="w-4 h-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Sửa</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button size="sm" variant="ghost" className="p-2 h-8 w-8 text-red-400 hover:text-red-500">
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Xóa</TooltipContent>
+                            </Tooltip>
                           </div>
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     ))
                   ) : (
-                    <tr>
-                      <td colSpan={6} className="px-8 py-12 text-center text-slate-400">
+                    <TableRow>
+                      <TableCell colSpan={6} className="px-8 py-12 text-center text-slate-400">
                         Không có câu hỏi nào
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   )
                 )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          {((activeTab === 'system' && systemQuestions.length > 0) ||
-            (activeTab === 'contributed' && contributedQuestions.length > 0)) &&
-            renderPagination()}
+            </TableBody>
+          </Table>
         </div>
       </main>
 
@@ -681,4 +617,4 @@ const StaffQuestionManagement: React.FC = () => {
   );
 };
 
-export default StaffQuestionManagement;
+export default ViewQuestions;

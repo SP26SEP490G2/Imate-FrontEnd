@@ -18,8 +18,6 @@ const APIConfig = {
   Mentor: {
     GetListPreviewMentors: "get-list-preview-mentors",
     SubmitMentorProfile: "profile/mentor",
-
-
   },
 
   // Question endpoints (không dùng leading slash để axios nối đúng baseURL .../api)
@@ -70,6 +68,7 @@ const APIConfig = {
     GetMentorById: "/staff-review/mentors",
     ReviewMentor: "/staff-review/mentors",
   },
+  
   // Subscription endpoints
   Subscription: {
     GetSubscriptionPackages: "/subscription-packages",

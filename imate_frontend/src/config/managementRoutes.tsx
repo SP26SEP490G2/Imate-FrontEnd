@@ -8,13 +8,14 @@ import {
   Layers,
 } from "lucide-react";
 
-import AddSystemQuestion from "@/pages/staff/AddSystemQuestion";
+import AddSystemQuestion from "@/pages/management/question/AddSystemQuestion";
 import ReviewMentorApplication from "@/pages/staff/ReviewMentorApplication";
 import UserManagement from "@/pages/admin/UserManagement";
 import SubscriptionManagement from "@/pages/admin/SubscriptionManagement";
 import JobPostingList from "@/pages/recruiter/JobPostingList";
 import CreateJobApplication from "@/pages/recruiter/CreateJobApplication";
-import Classification from "@/pages/management/Classification";
+import Classification from "@/pages/management/classification/Classification";
+import ViewQuestions from "@/pages/management/question/ViewQuestions";
 
 export const managementRoutes = [
   {label: "Thêm câu hỏi",
@@ -43,6 +44,14 @@ export const managementRoutes = [
     path: "users",
     element: <UserManagement />,
     allowedRoles: ["Admin"],
+  },
+  ,
+  {
+    label: "Quản lý câu hỏi",
+    icon: Users,
+    path: "view-questions",
+    element: <ViewQuestions />,
+    allowedRoles: ["Admin", "Staff"],
   },
   {
     label: "Quản lý gói đăng ký",

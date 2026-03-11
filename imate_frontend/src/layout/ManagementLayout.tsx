@@ -24,7 +24,7 @@ export default function ManagementLayout() {
 
   // Lọc sidebar chỉ hiện route phù hợp với role
   const visibleRoutes = managementRoutes.filter(
-    (route) => route.allowedRoles.includes(user.role!)
+    (route:any) => route.allowedRoles.includes(user.role!)
   );
 
   const sidebarUser = {
@@ -38,7 +38,7 @@ export default function ManagementLayout() {
   console.log("role:", user?.role);
   const basePath = user?.role === "Recruiter"
     ? "/recruiter-dashboard"
-    : "/management-dashboard";
+    : "/management";
 
   const routes =
     user?.role === "Recruiter" ? recruiterManagementRoutes : visibleRoutes;
@@ -75,7 +75,7 @@ export default function ManagementLayout() {
             {/* Menu */}
             <nav className="mt-6 flex flex-col">
 
-              {routes.map((item) => {
+              {routes.map((item:any) => {
                 const Icon = item.icon;
 
                 return (
