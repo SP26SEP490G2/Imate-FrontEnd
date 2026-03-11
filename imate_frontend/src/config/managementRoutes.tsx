@@ -62,9 +62,9 @@ export const managementRoutes = [
     allowedRoles: ["Admin"],
   },
     {
-    label: "Quản lý gói đăng ký",
+    label: "Quản lý truy vết hệ thống",
     icon: Logs,
-    path: "saudit-logs",
+    path: "admin/audit-logs",
     element: <AdminAuditLog />,
     allowedRoles: ["Admin"],
   },

@@ -52,6 +52,8 @@ export default function CreateStaffModal({ open, onClose, onCreated }: CreateSta
 
     setLoading(true);
     try {
+      
+      //await addAccount({ fullName: fullName.trim(), email: email.trim() });
       await addAccount({ fullName: fullName.trim(), email: email.trim() });
       toast.success(MSG09);
       resetForm();

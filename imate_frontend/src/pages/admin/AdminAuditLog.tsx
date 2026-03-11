@@ -3,28 +3,24 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 // 2. ICONS
-import { Eye, Search, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Eye, Search } from "lucide-react";
 
 // 3. UTILITIES & SERVICES
-import { getPaginationRange } from "@/helpers/getPaginationRange";
 import { getAuditLogs, getAuditLogDetail, getAuditLogFilterOptions } from "@/services/auditLogService";
 import { getInitials, getAvatarColor } from "@/helpers/common";
 import { cn } from "@/lib/utils";
 
 // 4. UI COMPONENTS
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { AppTabs } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 // 5. TYPES
 import type { PaginatedAuditLogResponse, AuditLogListResponse, AuditLogDetailResponse } from "@/types/response/audit-log.response";
+import { getPaginationRange } from "@/helpers/getPaginationRange";
 
 const PAGE_SIZE = 10;
 
@@ -247,102 +243,79 @@ const AdminAuditLog: React.FC = () => {
 
 
   return (
-    <div className="min-h-screen bg-[#050816] p-6 lg:p-8 relative overflow-hidden">
-      {/* Background Blobs */}
-      <div className="imate-glow-blob -top-20 -left-20" />
-      <div className="imate-glow-blob bottom-[-100px] right-[-100px]" style={{ background: 'radial-gradient(circle, rgba(79, 70, 229, 0.2) 0%, transparent 70%)' }} />
+    <div className="p-6 space-y-6 min-h-full">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-4xl font-bold text-white mb-2">Truy vết hệ thống</h1>
+          <p className="text-slate-400">Theo dõi và quản lý nhật ký hoạt động của nhân viên trên nền tảng IMATE.</p>
+        </div>
+      </div>
 
-      <div className="max-w-[1400px] mx-auto space-y-8 relative z-10">
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-white mb-2">Truy vết hệ thống</h1>
-            <p className="text-[#A0A3BD] max-w-2xl">Theo dõi và quản lý nhật ký hoạt động của nhân viên trên nền tảng IMATE.</p>
+      {/* Tabs */}
+      <AppTabs
+        tabs={[
+          { label: "Tất cả", value: "all" },
+          { label: "Hôm nay", value: "today" }
+        ]}
+        value={currentTab}
+        onChange={handleTabChange}
+      />
+
+      <div className="space-y-6">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
+            <h2 className="text-xl font-semibold text-white">Danh sách truy vết</h2>
           </div>
 
-          <div className="flex items-center gap-3">
-            <Tabs value={currentTab} onValueChange={handleTabChange} className="w-auto">
-              <TabsList className="bg-[#11142D] border border-white/10 p-1 h-11 rounded-xl">
-                <TabsTrigger
-                  value="all"
-                  className={cn(
-                    "px-6 py-2 rounded-lg text-sm font-medium transition-all",
-                    "data-[state=active]:bg-[#6C63FF] data-[state=active]:text-white text-[#A0A3BD]"
-                  )}
-                >
-                  Tất cả
-                </TabsTrigger>
-                <TabsTrigger
-                  value="today"
-                  className={cn(
-                    "px-6 py-2 rounded-lg text-sm font-medium transition-all",
-                    "data-[state=active]:bg-[#6C63FF] data-[state=active]:text-white text-[#A0A3BD]"
-                  )}
-                >
-                  Hôm nay
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
+          <div className="flex items-center gap-4 text-sm text-slate-400">
+            <div className="relative min-w-[240px]">
+              <Input
+                placeholder="Tìm nội dung, ID..."
+                value={formFilter.search}
+                onChange={(e) => setFormFilter((prev) => ({ ...prev, search: e.target.value }))}
+                onKeyDown={handleSearchKeyDown}
+                className="pl-10 pr-4 py-2 w-full bg-slate-800 border-slate-700 text-slate-100 placeholder:text-slate-500"
+              />
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            </div>
+
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-slate-400 whitespace-nowrap">Người dùng:</span>
+              <select
+                value={formFilter.staffName}
+                onChange={(e) => handleFilterChange("staffName", e.target.value)}
+                className="bg-slate-800 border border-slate-700 rounded-md px-4 py-2 text-slate-200 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer min-w-[160px]"
+              >
+                <option value="all">Tất cả người dùng</option>
+                {filterOptions.staffNames.map((name) => (
+                  <option key={name} value={name}>{name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-slate-400 whitespace-nowrap">Loại Entity:</span>
+              <select
+                value={formFilter.entityType}
+                onChange={(e) => handleFilterChange("entityType", e.target.value)}
+                className="bg-slate-800 border border-slate-700 rounded-md px-4 py-2 text-slate-200 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer min-w-[160px]"
+              >
+                <option value="all">Tất cả loại</option>
+                {filterOptions.entityTypes.map((entity) => (
+                  <option key={entity} value={entity}>{entity}</option>
+                ))}
+              </select>
+            </div>
+
+            <Button
+              onClick={handleSearchSubmit}
+              variant="secondary"
+            >
+              Tìm kiếm
+            </Button>
           </div>
         </div>
-
-        {/* Filters Card */}
-        <section className="bg-[#1e293b]/40 p-6 rounded-2xl border border-white/5 mb-8 flex flex-col lg:flex-row gap-4 items-end">
-          <div className="w-full lg:w-48 space-y-2">
-            <label className="text-xs font-bold text-slate-400 uppercase">
-              Người dùng
-            </label>
-            <Select value={formFilter.staffName} onValueChange={(value) => handleFilterChange("staffName", value)}>
-              <SelectTrigger className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 h-auto text-sm text-white outline-none focus:ring-[#8B5CF6] transition-all">
-                <SelectValue placeholder="Chọn người dùng" />
-              </SelectTrigger>
-              <SelectContent className="bg-[#11142D] border-white/10 text-white rounded-xl">
-                <SelectItem value="all">Tất cả người dùng</SelectItem>
-                {filterOptions.staffNames.map((name) => (
-                  <SelectItem key={name} value={name}>{name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="w-full lg:w-48 space-y-2">
-            <label className="text-xs font-bold text-slate-400 uppercase">
-              Loại Entity
-            </label>
-            <Select value={formFilter.entityType} onValueChange={(value) => handleFilterChange("entityType", value)}>
-              <SelectTrigger className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 h-auto text-sm text-white outline-none focus:ring-[#8B5CF6] transition-all">
-                <SelectValue placeholder="Chọn loại entity" />
-              </SelectTrigger>
-              <SelectContent className="bg-[#11142D] border-white/10 text-white rounded-xl">
-                <SelectItem value="all">Tất cả loại</SelectItem>
-                {filterOptions.entityTypes.map((entity) => (
-                  <SelectItem key={entity} value={entity}>{entity}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex-1 space-y-2 w-full">
-            <label className="text-xs font-bold text-slate-400 uppercase">
-              Tìm kiếm
-            </label>
-            <input
-              type="text"
-              placeholder="Tìm nội dung, ID..."
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none"
-              value={formFilter.search}
-              onChange={(e) => setFormFilter((prev) => ({ ...prev, search: e.target.value }))}
-              onKeyDown={handleSearchKeyDown}
-            />
-          </div>
-
-          <button
-            onClick={handleSearchSubmit}
-            className="bg-indigo-500 text-white px-8 py-3 rounded-xl font-bold text-sm cursor-pointer hover:bg-indigo-600 transition-colors"
-          >
-            Tìm kiếm
-          </button>
-        </section>
 
         {/* Table Content */}
         <div className="imate-card overflow-hidden border-white/5">
@@ -370,149 +343,85 @@ const AdminAuditLog: React.FC = () => {
               <p className="text-lg">Không tìm thấy dữ liệu phù hợp</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table className="w-full border-collapse">
-                <TableHeader>
-                  <TableRow className="border-b border-white/5 hover:bg-transparent bg-white/[0.02]">
-                    <TableHead className="w-[60px] text-center font-bold text-[#6B6F8E] uppercase text-[10px] tracking-widest py-5">#</TableHead>
-                    <TableHead className="font-bold text-[#6B6F8E] uppercase text-[10px] tracking-widest py-5">Người dùng</TableHead>
-                    <TableHead className="font-bold text-[#6B6F8E] uppercase text-[10px] tracking-widest py-5">Hành động</TableHead>
-                    <TableHead className="font-bold text-[#6B6F8E] uppercase text-[10px] tracking-widest py-5">Đối tượng</TableHead>
-                    <TableHead className="font-bold text-[#6B6F8E] uppercase text-[10px] tracking-widest py-5">Nội dung</TableHead>
-                    <TableHead className="font-bold text-[#6B6F8E] uppercase text-[10px] tracking-widest py-5">Thời gian</TableHead>
-                    <TableHead className="w-[80px] text-center py-5"></TableHead>
-                  </TableRow>
-                </TableHeader>
+            <Table
+              page={currentPage}
+              totalPages={totalPage}
+              pageSize={PAGE_SIZE}
+              onPageChange={handlePageChange}
+              maxHeight="55vh"
+            >
+              <TableHeader>
+                <TableRow>
+                  <TableHead>#</TableHead>
+                  <TableHead>Người dùng</TableHead>
+                  <TableHead>Hành động</TableHead>
+                  <TableHead>Đối tượng</TableHead>
+                  <TableHead>Nội dung</TableHead>
+                  <TableHead>Thời gian</TableHead>
+                  <TableHead className="w-[140px] text-right">Chi tiết</TableHead>
+                </TableRow>
+              </TableHeader>
 
-                <TableBody>
-                  {data?.items.map((item, index) => (
-                    <TableRow key={item.id} className="border-b border-white/5 hover:bg-white/[0.02] group transition-colors">
-                      <TableCell className="text-center font-mono text-[#6B6F8E] text-xs">
-                        {String((currentPage - 1) * PAGE_SIZE + (index + 1)).padStart(2, '0')}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-4">
-                          <div className="relative">
-                            <Avatar className="h-10 w-10 ring-2 ring-white/5 group-hover:ring-indigo-500/30 transition-all">
-                              <AvatarFallback className={cn("font-bold text-white shadow-inner", getAvatarColor(item.staffName))}>
-                                {getInitials(item.staffName)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-[#22C55E] border-2 border-[#11142D]" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-semibold text-white group-hover:text-indigo-300 transition-colors">{item.staffName}</p>
-                            <p className="text-[11px] text-[#6B6F8E] font-medium">{item.staffEmail}</p>
-                          </div>
+              <TableBody>
+                {data?.items.map((item, index) => (
+                  <TableRow key={item.id}>
+                    <TableCell>{String((currentPage - 1) * PAGE_SIZE + (index + 1)).padStart(2, '0')}</TableCell>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-8 w-8">
+                          <AvatarFallback className={cn("text-xs font-bold text-white", getAvatarColor(item.staffName))}>
+                            {getInitials(item.staffName)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="text-sm font-medium text-white">{item.staffName}</p>
+                          <p className="text-[11px] text-slate-500">{item.staffEmail}</p>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className={cn(
-                          "inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border",
-                          item.action.toLowerCase().includes("create") || item.action.toLowerCase().includes("thêm")
-                            ? "bg-green-500/10 text-green-400 border-green-500/20"
-                            : item.action.toLowerCase().includes("update") || item.action.toLowerCase().includes("sửa")
-                              ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"
-                              : "bg-red-500/10 text-red-400 border-red-500/20"
-                        )}>
-                          {item.action}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-xs font-semibold text-white px-2 py-1 rounded-md bg-white/5 border border-white/5">{item.entityType}</span>
-                      </TableCell>
-                      <TableCell>
-                        <p className="text-xs text-[#A0A3BD] line-clamp-1 max-w-[200px]">
-                          {item.action} {item.entityType} ID {item.id}
-                        </p>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span className="text-xs text-white font-medium">{formatDate(item.actionTime).split("\n")[0]}</span>
-                          <span className="text-[10px] text-[#6B6F8E]">{formatDate(item.actionTime).split("\n")[1]}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <button
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className={cn(
+                        "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border",
+                        item.action.toLowerCase().includes("create") || item.action.toLowerCase().includes("thêm")
+                          ? "bg-green-500/10 text-green-400 border-green-500/20"
+                          : item.action.toLowerCase().includes("update") || item.action.toLowerCase().includes("sửa")
+                            ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"
+                            : "bg-red-500/10 text-red-400 border-red-500/20"
+                      )}>
+                        {item.action}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-xs px-2 py-1 bg-slate-800 rounded-md text-slate-300 border border-slate-700">{item.entityType}</span>
+                    </TableCell>
+                    <TableCell>
+                      <p className="text-xs text-slate-400">
+                        {item.action} {item.entityType} ID {item.id}
+                      </p>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span className="text-xs font-medium text-white">{formatDate(item.actionTime).split("\n")[0]}</span>
+                        <span className="text-[10px] text-slate-500">{formatDate(item.actionTime).split("\n")[1]}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex gap-2 justify-end">
+                        <Button className="cursor-pointer"
+                          size="sm"
+                          variant="secondary"
                           onClick={() => handleViewDetails(item.id)}
-                          className="p-2 rounded-lg text-[#6B6F8E] hover:text-white hover:bg-white/5 transition-all"
                         >
-                          <Eye className="h-4 w-4" />
-                        </button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                          <Eye size={14} />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           )}
         </div>
-
-        {/* Improved Pagination */}
-        {totalPage > 0 && (
-          <div className="flex items-center justify-between pb-10">
-            <p className="text-sm text-[#6B6F8E]">
-              Hiển thị <span className="text-white font-medium">{(currentPage - 1) * PAGE_SIZE + 1}-{Math.min(currentPage * PAGE_SIZE, data?.items.length || 0)}</span> kết quả
-            </p>
-            <Pagination className="justify-end w-auto mx-0">
-              <PaginationContent>
-                <PaginationItem>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    disabled={currentPage === 1}
-                    className="h-9 w-9 border-white/10 bg-[#11142D] text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer rounded-lg transition-all"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (currentPage > 1) handlePageChange(currentPage - 1);
-                    }}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                </PaginationItem>
-
-                {paginationRange.map((page, index) => (
-                  <PaginationItem key={index}>
-                    {page === "dots" ? (
-                      <PaginationEllipsis className="text-[#6B6F8E]" />
-                    ) : (
-                      <Button
-                        variant={page === currentPage ? "default" : "ghost"}
-                        className={cn(
-                          "h-9 w-9 rounded-lg text-xs font-bold transition-all cursor-pointer border border-transparent",
-                          page === currentPage
-                            ? "bg-[#6C63FF] text-white hover:bg-[#5D54E5]"
-                            : "bg-transparent text-[#6B6F8E] hover:text-white hover:bg-white/5"
-                        )}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handlePageChange(page);
-                        }}
-                      >
-                        {page}
-                      </Button>
-                    )}
-                  </PaginationItem>
-                ))}
-
-                <PaginationItem>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    disabled={currentPage === totalPage}
-                    className="h-9 w-9 border-white/10 bg-[#11142D] text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer rounded-lg transition-all"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (currentPage < totalPage) handlePageChange(currentPage + 1);
-                    }}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          </div>
-        )}
       </div>
 
       {/* Modern Detail Dialog */}
