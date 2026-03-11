@@ -140,7 +140,7 @@ const CreateJobApplication: React.FC = () => {
         {/* Header */}
         <div className="mb-10 text-center">
           <h1 className="text-[36px] font-bold tracking-[-0.5px]">
-            Create Job Posting
+            Đăng bài tuyển dụng mới
           </h1>
 
           <p className="text-[#A0A3BD] mt-3 text-[16px]">

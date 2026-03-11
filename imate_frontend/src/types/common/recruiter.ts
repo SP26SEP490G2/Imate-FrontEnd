@@ -23,7 +23,7 @@ export interface GetJobApplicationsRequest {
 }
 
 export interface JobResponse {
-  jobs: JobItem[];
+  items: JobItem[];
   totalCount: number;
   totalPages: number;
   pageNumber: number;
