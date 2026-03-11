@@ -30,11 +30,11 @@ import { getListPosition } from "@/services/positionService"; // ← import serv
 import type { ListPositionResponse, PositionResponse } from "@/types/response/position.response";
 
 import { CreateCategoryDialog } from "@/pages/management/dialog/CreateCategoryDialog";
-import { UpdateCategoryDialog } from "./dialog/UpdateCategoryDialog";
-import { CreateSkillDialog } from "./dialog/CreateSkillDialog";
-import { UpdateSkillDialog } from "./dialog/UpdateSkillDialog";
-import { CreatePositionDialog } from "./dialog/CreatePositionDialog";     // ← thêm
-import { UpdatePositionDialog } from "./dialog/UpdatePositionDialog";   // ← thêm
+import { UpdateCategoryDialog } from "../dialog/UpdateCategoryDialog";
+import { CreateSkillDialog } from "../dialog/CreateSkillDialog";
+import { UpdateSkillDialog } from "../dialog/UpdateSkillDialog";
+import { CreatePositionDialog } from "../dialog/CreatePositionDialog";     // ← thêm
+import { UpdatePositionDialog } from "../dialog/UpdatePositionDialog";   // ← thêm
 
 const tabs = [
   { label: "Thể loại", value: "categories" },

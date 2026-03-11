@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import Header from "../../components/common/Header";
+import Header from "../../../components/common/Header";
 import Footer from "@/components/common/Footer";
 import { useSubscriptionPackages } from "@/hooks/useSubscriptionPackages";
 import { useAuth } from "@/store/AuthContext";
@@ -30,8 +30,6 @@ const ViewSubscriptionPage: React.FC = () => {
 
   return (
     <div className="font-sans bg-[#020617] min-h-screen">
-      <Header />
-
       <main className="px-6 pb-20 pt-16">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-14">

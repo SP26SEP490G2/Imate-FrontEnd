@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { X, Check, ChevronsUpDown, Loader2 } from "lucide-react";
-import { getAllPositions, getAllSkills } from "@/services/commonService";
+import { getAllPositions, getAllSkills } from "@/services/classificationService";
 import type { PositionItem, SkillItem } from "@/types/common/question";
 import { Badge } from "@/components/ui/badge";
 import { UpdateJobApplication } from "@/services/recruiterService_PhuDK/recruiterService";

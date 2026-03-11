@@ -345,7 +345,7 @@ const AddSystemQuestion: React.FC = () => {
                         <div className="flex justify-end gap-4">
                             <button
                                 type="button"
-                                onClick={() => navigate('/staff/question-management')}
+                                onClick={() => navigate('/management/view-questions')}
                                 disabled={loading}
                                 className="px-8 py-3 rounded-xl bg-[#1e293b]/40 border border-white/5 text-slate-300 hover:bg-white/10 hover:text-white transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                             >
