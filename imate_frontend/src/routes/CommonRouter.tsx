@@ -6,6 +6,8 @@ import ReviewMentorApplication from "@/pages/staff/ReviewMentorApplication";
 import MentorDetailForStaff from "@/pages/staff/MentorDetailForStaff";
 import HomePage from "../pages/guest/HomePage";
 import SystemQuestionBank from "../pages/guest/SystemQuestionBank";
+import MentorList from "../pages/guest/MentorList";
+import MentorDetail from "../pages/guest/MentorDetail";
 import { managementRoutes } from "@/config/managementRoutes";
 import ManagementLayout from "@/layout/ManagementLayout";
 import ViewSubscriptionPage from "../pages/guest/ViewSubscriptionPage";
@@ -14,6 +16,9 @@ import type { RouteObject } from "react-router-dom";
 import MainLayout from "@/layout/MainLayout";
 
 const CommonRouter: RouteObject[] = [
+  { path: "/Trang-chu", element: <HomePage /> },
+  { path: "/view-mentor", element: <MentorList /> },
+  { path: "/view-mentor/:id", element: <MentorDetail /> },
 
   {
     path: "/",
