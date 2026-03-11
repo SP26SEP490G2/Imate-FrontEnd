@@ -64,3 +64,20 @@ export interface StaffMentorApplicationRaw {
   AvgRatings?: number | null;
   TotalRatingCount?: number | null;
 }
+
+/** Ứng với StaffRecruiterApplicationResponse từ backend */
+export interface StaffRecruiterApplication {
+  accountId: number;
+  fullName: string;
+  email: string;
+  avatarUrl?: string | null;
+  companyName: string;
+  companyLogo?: string | null;
+  website?: string | null;
+  industry: string;
+  companySize?: string | null;
+  address?: string | null;
+  phone?: string | null;
+  verificationStatus: string;
+  createdAt: string;
+}

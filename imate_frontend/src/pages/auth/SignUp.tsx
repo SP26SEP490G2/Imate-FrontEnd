@@ -1,10 +1,9 @@
 import { Eye, EyeOff, CheckCircle2, Quote, Banknote } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { registerWithEmail, registerWithGoogle, generateActionCode, sendActionEmail } from "@/services/authService";
+import { registerWithEmail, generateActionCode, sendActionEmail } from "@/services/authService";
 import type { RegisterEmailData, UserRole, User } from "@/types/common/auth";
-import { auth } from "@/lib/firebaseConfig";
-import { getAuth, GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup, signOut, type UserCredential } from "firebase/auth";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { toast } from "react-toastify";
 import { useAuth } from "@/store/AuthContext";
 import { managementRoutes } from "@/config/managementRoutes";
@@ -16,20 +15,6 @@ function SignUp() {
   const [viewPassword, setViewPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<Omit<RegisterEmailData, "role">>({ fullName: "", email: "", password: "", confirmPassword: "" });
-  const [recruiterStep, setRecruiterStep] = useState<1 | 2>(1);
-  const [recruiterFormData, setRecruiterFormData] = useState<{
-    companyName: string;
-    workforceSize: string;
-    fieldOfActivity: string;
-    position: string;
-    authenticDocuments: File | null;
-  }>({
-    companyName: "",
-    workforceSize: "",
-    fieldOfActivity: "",
-    position: "",
-    authenticDocuments: null,
-  });
   const [isLoading, setIsLoading] = useState(false);
 
   // Hàm navigate theo role
@@ -42,20 +27,32 @@ function SignUp() {
         navigate("/staff/manage-question");
         break;
       case "Mentor":
-        // Kiểm tra AccountStatus:
-        if (user.accountStatus === "Active") {
+        if (user.isNewAccount && user.verificationStatus !== "Rejected") {
+          navigate("/submit-mentor-application");
+        } else if (user.accountStatus === "Active") {
           navigate("/mentor/interview-schedule");
-        } else if (user.accountStatus === "PendingVerification") {
+        } else if (user.verificationStatus === "Rejected") {
+          toast.error("Hồ sơ Mentor của bạn đã bị từ chối. Vui lòng kiểm tra lại thông tin và nộp lại.");
+          navigate("/submit-mentor-application");
+        } else if (user.verificationStatus === "Approved") {
+          navigate("/mentor/interview-schedule");
+        } else if (user.verificationStatus === "Pending" || user.accountStatus === "PendingVerification") {
           navigate("/pending-application");
         } else {
           navigate("/submit-mentor-application");
         }
         break;
       case "Recruiter":
-        // Tương tự Mentor:
-        if (user.accountStatus === "Active") {
+        if (user.isNewAccount && user.verificationStatus !== "Rejected") {
+          navigate("/submit-recruiter-application");
+        } else if (user.accountStatus === "Active") {
           navigate("/management/recruiter-dashboard/create-job-posting");
-        } else if (user.accountStatus === "PendingVerification") {
+        } else if (user.verificationStatus === "Rejected") {
+          toast.error("Hồ sơ Nhà tuyển dụng của bạn đã bị từ chối. Vui lòng kiểm tra lại thông tin và nộp lại.");
+          navigate("/submit-recruiter-application");
+        } else if (user.verificationStatus === "Approved") {
+          navigate("/management/recruiter-dashboard/create-job-posting");
+        } else if (user.verificationStatus === "Pending" || user.accountStatus === "PendingVerification") {
           navigate("/recruiter-pending-application");
         } else {
           navigate("/submit-recruiter-application");
@@ -79,33 +76,7 @@ function SignUp() {
     if (error) setError(null); // Xóa lỗi khi người dùng bắt đầu nhập lại
   };
 
-  const handleRecruiterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setRecruiterFormData({ ...recruiterFormData, [e.target.name]: e.target.value });
-    if (error) setError(null);
-  };
 
-  const handleRecruiterFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] ?? null;
-    setRecruiterFormData({ ...recruiterFormData, authenticDocuments: file });
-    if (error) setError(null);
-  };
-
-  const handleRecruiterNextStep = () => {
-    const workforceSize = Number.parseInt(recruiterFormData.workforceSize, 10);
-
-    if (!recruiterFormData.companyName || !recruiterFormData.workforceSize || !recruiterFormData.fieldOfActivity) {
-      setError("Vui lòng điền đầy đủ thông tin công ty để chuyển sang bước tiếp theo.");
-      return;
-    }
-
-    if (Number.isNaN(workforceSize) || workforceSize <= 0) {
-      setError("Workforce Size phải là một số lớn hơn 0.");
-      return;
-    }
-
-    setError(null);
-    setRecruiterStep(2);
-  };
 
   const selectRole = (nextRole: UserRole) => {
     setRole(nextRole);
@@ -142,23 +113,27 @@ const getRoleLabel = (r: UserRole) => {
       // Gộp formData với role hiện tại
       const dataToSend: RegisterEmailData = { ...formData, role };
 
-      await registerWithEmail(dataToSend);
+      const responseData = await registerWithEmail(dataToSend);
+      
+      // LƯU LOCAL TOKEN VÀ REFETCH USER
+      localStorage.setItem("authToken", responseData.token);
+      localStorage.setItem("user", JSON.stringify(responseData.user));
+      await refetchUser();
+
       const auth = getAuth();
-      const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
-      if (userCredential.user) {
-        try {
-          const oobCode = await generateActionCode(formData.email, "VERIFY_EMAIL");
-          await sendActionEmail(oobCode, "startingimate@gmail.com", "VERIFY_EMAIL");
-        } catch (emailError: any) {
-          console.error("Failed to send verification email:", emailError);
-        }
+      try {
+        await signInWithEmailAndPassword(auth, formData.email, formData.password);
+        const oobCode = await generateActionCode(formData.email, "VERIFY_EMAIL");
+        await sendActionEmail(oobCode, formData.email, "VERIFY_EMAIL");
+      } catch (emailError: any) {
+        console.error("Failed to send verification email:", emailError);
       }
-      await signOut(auth);
 
       // Sử dụng role đã chọn trong thông báo
       const roleLabel = getRoleLabel(role);
-      toast.success(`Đăng ký thành công vai trò ${roleLabel}! Vui lòng kiểm tra email của bạn để xác minh tài khoản trước khi đăng nhập.`);
-      navigate("/sign-in");
+      toast.success(`Đăng ký thành công vai trò ${roleLabel}!`);
+      
+      handleNavigation(responseData.user);
     } catch (err: any) {
       console.error("Lỗi đăng ký:", err);
 
@@ -182,92 +157,7 @@ const getRoleLabel = (r: UserRole) => {
   };
 
   // --- LOGIC ĐĂNG KÝ/ĐĂNG NHẬP VỚI GOOGLE ---
-  const handleGoogleSignUp = async () => {
-    setError(null);
-    setIsLoading(true);
 
-    // MẸO: Tạo listener để bắt sự kiện người dùng quay lại tab (do tắt popup)
-    // Giúp nút bấm sáng lại NGAY LẬP TỨC thay vì đợi Firebase polling (1-2s)
-    const checkFocus = () => {
-      setIsLoading(false);
-      window.removeEventListener('focus', checkFocus);
-    };
-    window.addEventListener('focus', checkFocus);
-
-    try {
-      const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({
-        prompt: "select_account",
-      });
-
-      // Bước 1: Đăng nhập với Firebase
-      const result: UserCredential = await signInWithPopup(auth, provider);
-
-      // Nếu thành công, xóa listener đi để tránh conflict
-      window.removeEventListener('focus', checkFocus);
-
-      if (!result.user) {
-        throw new Error("Không thể lấy thông tin người dùng từ Google.");
-      }
-
-      const idToken: string = await result.user.getIdToken();
-
-      // Bước 2: Gửi ID Token VÀ role đến API Backend
-      const responseData = await registerWithGoogle({ idToken, role }); // Truyền role đã chọn
-
-      // 3. LƯU LOCAL TOKEN VÀ REFETCH USER
-      localStorage.setItem("authToken", responseData.token);
-      localStorage.setItem("user", JSON.stringify(responseData.user));
-
-      // Refetch user để cập nhật context
-      await refetchUser();
-
-      // Kiểm tra xem đây có phải là account mới hay account đã tồn tại
-      if (responseData.user.isNewAccount) {
-        toast.success(`Đăng ký thành công với vai trò ${getRoleLabel(role)}!`);
-      } else {
-        toast.success("Đăng nhập thành công!");
-      }
-
-      // Navigate
-      handleNavigation(responseData.user);
-
-    } catch (err: any) {
-      // Xóa listener nếu có lỗi xảy ra
-      window.removeEventListener('focus', checkFocus);
-      setIsLoading(false); // Đảm bảo tắt loading
-
-      // --- BỘ LỌC LỖI (QUAN TRỌNG) ---
-      // Bỏ qua các lỗi do người dùng tự tắt popup hoặc do hệ thống hủy
-      if (
-        err.code === "auth/popup-closed-by-user" || 
-        err.code === "auth/cancelled-popup-request" ||
-        err.message?.includes("closed-by-user") ||
-        err.message?.includes("cancelled-popup-request")
-      ) {
-        setError(null);
-        return; // Im lặng return, không hiện Toast lỗi
-      }
-      // -------------------------------
-
-      let errorMessage = "Đăng nhập Google thất bại.";
-
-      // Xử lý các trường hợp lỗi cụ thể từ Backend
-      if (err.response && err.response.data && err.response.data.message) {
-        errorMessage = err.response.data.message;
-        if (errorMessage.includes("đã được đăng ký bằng phương thức khác")) {
-          errorMessage = "Email này đã được đăng ký bằng phương thức khác. Vui lòng đăng nhập bằng Email/Mật khẩu hoặc sử dụng tài khoản Google khác.";
-        }
-      } else if (err.message) {
-        errorMessage = err.message;
-      }
-
-      console.error("Lỗi Google Sign-up:", err);
-      setError(errorMessage);
-      toast.error(errorMessage);
-    } 
-    // Không cần finally setIsLoading(false) ở đây nữa vì đã xử lý kỹ ở trên
-  };
 
   return (
   <div className="flex min-h-screen w-full bg-[#020617] text-white overflow-hidden">
@@ -408,7 +298,7 @@ const getRoleLabel = (r: UserRole) => {
           </p>
           {(role === "Mentor" || role === "Recruiter") && (
             <p className="mt-2 text-xs text-indigo-300/90">
-              Sau khi đăng ký, bạn cần đăng nhập và nộp hồ sơ {role} tại bước tiếp theo.
+              Sau khi đăng ký, hệ thống sẽ tự động đăng nhập và chuyển hướng bạn đến trang nộp hồ sơ {role}.
             </p>
           )}
         </div>
