@@ -41,6 +41,9 @@ import { ROLES } from "@/constants/role";
 import { LAYOUT } from "@/constants/common";
 import ViewQuestions from "@/pages/management/question/ViewQuestions";
 import ViewQuestionBank from "@/pages/main/public/ViewQuestionBank";
+import Classification from "@/pages/management/classification/Classification";
+import UserManagement from "@/pages/admin/UserManagement";
+import SubscriptionManagement from "@/pages/admin/SubscriptionManagement";
 
 /**
  * Route Configuration Type
@@ -88,7 +91,11 @@ const routeConfigs: RouteConfig[] = [
   // ===== MANAGEMENT LAYOUT ROUTES =====
   { path: "/management/view-questions",      element: <ViewQuestions />,   layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
   { path: "/management/add-question",        element: <AddSystemQuestion />,         layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
-  { path: "/management/manage-application",  element: <ReviewMentorApplication />,   layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
+  { path: "/management/applications",  element: <ReviewMentorApplication />,   layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
+  { path: "/management/classification",        element: <Classification />,         layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
+
+  { path: "/management/users", element: <UserManagement />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN] },
+  { path: "/management/subscriptions", element: <SubscriptionManagement />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN] },
 ];
 
 /**
