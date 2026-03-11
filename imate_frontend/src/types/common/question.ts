@@ -186,9 +186,15 @@ export interface SystemQuestionDetail {
   difficulty: DifficultyLevel;
   sampleAnswer: string;
   isActive: boolean;
-  categories: CategoryItem[];
-  skills: SkillItem[];
-  positions: PositionItem[];
-  createdAt: string;
-  updatedAt: string;
+  isFromSystem: boolean;
+  creatorId: number;
+  creatorName: string;
+  categories?: CategoryItem[];
+  skills?: SkillItem[];
+  positions?: PositionItem[];
+  categoriesName: string[];
+  skillsName: string[];
+  positionsName: string[];
+  createdAt?: string;
+  updatedAt?: string;
 }

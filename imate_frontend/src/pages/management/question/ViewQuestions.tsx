@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   getAllSystemQuestionsForStaff,
   getAllContributedQuestionsForStaff,
@@ -8,7 +7,8 @@ import {
 import { getListPosition } from '@/services/positionService';
 import { getAllSkill } from '@/services/skillService';
 import { DIFFICULTY_OPTIONS } from '@/constants/enum';
-import UpdateSystemQuestionModal from '@/dialog/question/UpdateSystemQuestionModal';
+import { UpdateSystemQuestionModal } from '@/dialog/management/question/UpdateSystemQuestionModal';
+import { CreateSystemQuestionDialog } from '@/dialog/management/question/CreateSystemQuestionDialog';
 import type {
   StaffSystemQuestionItem,
   StaffContributedQuestionItem,
@@ -37,7 +37,6 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip
 type TabType = 'system' | 'contributed';
 
 const ViewQuestions: React.FC = () => {
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>('system');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,6 +44,9 @@ const ViewQuestions: React.FC = () => {
   // Update modal state
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
   const [selectedQuestionId, setSelectedQuestionId] = useState<number | null>(null);
+
+  // Create question modal state
+  const [createModalOpen, setCreateModalOpen] = useState(false);
 
   // System Questions State
   const [systemQuestions, setSystemQuestions] = useState<StaffSystemQuestionItem[]>([]);
@@ -229,18 +231,11 @@ const ViewQuestions: React.FC = () => {
         <div className="max-w-7xl mx-auto">
           {/* Header Section */}
           <header className="mb-10">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-bold mb-4">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-400"></span>
-              </span>
-              STAFF PANEL
-            </div>
 
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+            <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-4xl md:text-5xl font-extrabold mb-4 bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
-                  Quản lý câu hỏi
+                <h1 className="text-4xl font-bold text-white mb-2">
+                Quản lý câu hỏi
                 </h1>
                 <p className="text-slate-400 max-w-2xl">
                   Quản lý và cập nhật ngân hàng câu hỏi hệ thống.
@@ -256,7 +251,7 @@ const ViewQuestions: React.FC = () => {
                   Import câu hỏi
                 </button>
                 <button
-                  onClick={() => navigate('/management/add-question')}
+                  onClick={() => setCreateModalOpen(true)}
                   className="bg-gradient-to-r from-indigo-500 to-purple-500 px-4 py-3 rounded-xl flex items-center gap-2 text-sm font-bold shadow-lg shadow-indigo-500/20 hover:opacity-90 transition-all text-white"
                 >
                   <Plus className="w-4 h-4" />
@@ -410,6 +405,7 @@ const ViewQuestions: React.FC = () => {
                 <TableHead className="px-6 py-5">Vị trí</TableHead>
                 <TableHead className="px-6 py-5">Kỹ năng</TableHead>
                 <TableHead className="px-6 py-5">Cấp độ</TableHead>
+                <TableHead className="px-6 py-5">Trạng thái</TableHead>
                 <TableHead className="px-8 py-5 text-center">Hành động</TableHead>
               </TableRow>
             </TableHeader>
@@ -437,6 +433,9 @@ const ViewQuestions: React.FC = () => {
                         <TableCell className="px-6 py-6">
                           <div className="h-6 bg-slate-700 rounded w-16"></div>
                         </TableCell>
+                        <TableCell className="px-6 py-6">
+                          <div className="h-6 bg-slate-700 rounded w-20"></div>
+                        </TableCell>
                         <TableCell className="px-8 py-6">
                           <div className="flex items-center justify-center gap-3">
                             <div className="h-8 w-8 bg-slate-700 rounded-lg"></div>
@@ -450,7 +449,7 @@ const ViewQuestions: React.FC = () => {
                 ) : error ? (
                   // Error state
                   <TableRow>
-                    <TableCell colSpan={6} className="px-8 py-12 text-center">
+                    <TableCell colSpan={7} className="px-8 py-12 text-center">
                       <p className="text-red-400 mb-4">{error}</p>
                       <button
                         onClick={() => {
@@ -491,16 +490,13 @@ const ViewQuestions: React.FC = () => {
                             {DIFFICULTY_MAP[question.difficulty as 0 | 1 | 2] || 'N/A'}
                           </StatusBadge>
                         </TableCell>
+                        <TableCell className="px-6 py-6">
+                          <StatusBadge status={question.isActive ? "active" : "inactive"}>
+                            {question.isActive ? "Hoạt động" : "Vô hiệu"}
+                          </StatusBadge>
+                        </TableCell>
                         <TableCell className="px-8 py-6">
                           <div className="flex items-center justify-center gap-3">
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button size="sm" variant="ghost" className="p-2 h-8 w-8">
-                                  <Eye className="w-4 h-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Xem</TooltipContent>
-                            </Tooltip>
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Button 
@@ -514,21 +510,13 @@ const ViewQuestions: React.FC = () => {
                               </TooltipTrigger>
                               <TooltipContent>Sửa</TooltipContent>
                             </Tooltip>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button size="sm" variant="ghost" className="p-2 h-8 w-8 text-red-400 hover:text-red-500">
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Xóa</TooltipContent>
-                            </Tooltip>
                           </div>
                         </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={6} className="px-8 py-12 text-center text-slate-400">
+                      <TableCell colSpan={7} className="px-8 py-12 text-center text-slate-400">
                         Không có câu hỏi nào
                       </TableCell>
                     </TableRow>
@@ -558,6 +546,11 @@ const ViewQuestions: React.FC = () => {
                             {question.level}
                           </StatusBadge>
                         </TableCell>
+                        <TableCell className="px-6 py-6">
+                          <StatusBadge status={question.isActive ? "active" : "inactive"}>
+                            {question.isActive ? "Hoạt động" : "Vô hiệu"}
+                          </StatusBadge>
+                        </TableCell>
                         <TableCell className="px-8 py-6">
                           <div className="flex items-center justify-center gap-3">
                             <Tooltip>
@@ -580,7 +573,7 @@ const ViewQuestions: React.FC = () => {
                               <TooltipTrigger asChild>
                                 <Button size="sm" variant="ghost" className="p-2 h-8 w-8 text-red-400 hover:text-red-500">
                                   <Trash2 className="w-4 h-4" />
-                                </Button>
+                                </Button>7
                               </TooltipTrigger>
                               <TooltipContent>Xóa</TooltipContent>
                             </Tooltip>
@@ -590,7 +583,7 @@ const ViewQuestions: React.FC = () => {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={6} className="px-8 py-12 text-center text-slate-400">
+                      <TableCell colSpan={7} className="px-8 py-12 text-center text-slate-400">
                         Không có câu hỏi nào
                       </TableCell>
                     </TableRow>
@@ -605,14 +598,27 @@ const ViewQuestions: React.FC = () => {
       {selectedQuestionId && (
         <UpdateSystemQuestionModal
           questionId={selectedQuestionId}
-          isOpen={updateModalOpen}
-          onClose={() => {
-            setUpdateModalOpen(false);
-            setSelectedQuestionId(null);
+          open={updateModalOpen}
+          onOpenChange={(open: boolean) => {
+            setUpdateModalOpen(open);
+            if (!open) {
+              setSelectedQuestionId(null);
+            }
           }}
           onSuccess={handleUpdateSuccess}
         />
       )}
+
+      {/* Create Question Modal */}
+      <CreateSystemQuestionDialog
+        open={createModalOpen}
+        onOpenChange={setCreateModalOpen}
+        onSuccess={() => {
+          if (activeTab === 'system') {
+            fetchSystemQuestions();
+          }
+        }}
+      />
     </div>
   );
 };

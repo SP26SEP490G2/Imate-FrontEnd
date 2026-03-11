@@ -33,7 +33,6 @@ import SubmitRecruiterApplication from "@/pages/recruiter/SubmitRecruiterApplica
 import RecruiterPendingApplication from "@/pages/recruiter/PendingApplication";
 
 // Pages - Staff
-import AddSystemQuestion from "@/pages/management/question/AddSystemQuestion";
 import ReviewMentorApplication from "@/pages/staff/ReviewMentorApplication";
 
 // Config
@@ -90,7 +89,6 @@ const routeConfigs: RouteConfig[] = [
 
   // ===== MANAGEMENT LAYOUT ROUTES =====
   { path: "/management/view-questions",      element: <ViewQuestions />,   layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
-  { path: "/management/add-question",        element: <AddSystemQuestion />,         layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
   { path: "/management/applications",  element: <ReviewMentorApplication />,   layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
   { path: "/management/classification",        element: <Classification />,         layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
 

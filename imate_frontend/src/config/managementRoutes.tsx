@@ -8,7 +8,6 @@ import {
   Layers,
 } from "lucide-react";
 
-import AddSystemQuestion from "@/pages/management/question/AddSystemQuestion";
 import ReviewMentorApplication from "@/pages/staff/ReviewMentorApplication";
 import UserManagement from "@/pages/admin/UserManagement";
 import SubscriptionManagement from "@/pages/admin/SubscriptionManagement";
@@ -18,12 +17,6 @@ import Classification from "@/pages/management/classification/Classification";
 import ViewQuestions from "@/pages/management/question/ViewQuestions";
 
 export const managementRoutes = [
-  {label: "Thêm câu hỏi",
-    icon: FileText,
-    path: "add-question",
-    element: <AddSystemQuestion />,
-    allowedRoles: ["Staff", "Admin"],
-  },
   {
     label: "Đơn ứng tuyển",
     icon: BarChart3,
