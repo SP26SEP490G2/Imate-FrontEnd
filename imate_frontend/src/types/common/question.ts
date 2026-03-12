@@ -27,12 +27,56 @@ export interface QuestionBankItem {
   createdAt: string;
 }
 
+export interface SystemQuestionBankItem {
+  skillId: number;
+  positionId: number;
+  categoryId: number;
+  difficulty: DifficultyLevel;
+  sortBy: string;
+  sortOrder: "asc" | "desc";
+}
+
+export interface ContributeQuestionBankItem {
+  skillId: number;
+  positionId: number;
+  categoryId: number;
+  companyId: number;
+  level: Level;
+  difficulty: DifficultyLevel;
+  sortBy: string;
+  sortOrder: "asc" | "desc";
+}
+
 export interface QuestionBankListResponse {
   questions: QuestionBankItem[];
   totalCount: number;
   pageNumber: number;
   pageSize: number;
   totalPages: number;
+}
+
+export interface SystemQuestionBankListResponse {
+  questions: SystemQuestionBankItem[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export interface ContributeQuestionBankListResponse {
+  questions: ContributeQuestionBankItem[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export interface GetSystemQuestionBankListResponse {
+  data: SystemQuestionBankListResponse;
+}
+
+export interface GetContributeQuestionBankListResponse {
+  data: ContributeQuestionBankListResponse;
 }
 
 export interface GetQuestionBankListResponse {
@@ -62,7 +106,7 @@ export interface GetListQuestionCategoriesResponse {
 // Types for Difficulty and Level
 export type DifficultyLevel = 0 | 1 | 2; // 0 = Easy, 1 = Medium, 2 = Hard
 
-export type Level = "Intern" | "Fresher" | "Junior" | "Middle" | "Senior";
+export type Level = 0 | 1 | 2 | 3 | 4 | 5; // 0 = Intern, 1 = Junior, 2 = Middle, 3 = Senior, 4 = Lead, 5 = Manager
 
 // Staff Question Management Types
 export interface StaffSystemQuestionItem {
@@ -80,14 +124,19 @@ export interface StaffSystemQuestionItem {
 export interface StaffContributedQuestionItem {
   id: number;
   content: string;
-  positionsName?: string;
-  skillsName?: string;
-  categoriesName?: string;
-  companyName?: string;
-  level: Level;
+  difficulty: DifficultyLevel | null;
+  isFromSystem: boolean;
   isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  creatorId: number;
+  creatorName: string;
+  sampleAnswer?: string;
+  contributedDetailId?: number;
+  contributedDetail?: any;
+  categoriesName: string[];
+  skillsName: string[];
+  positionsName: string[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface StaffQuestionListResponse<T> {
@@ -118,7 +167,7 @@ export interface GetContributedQuestionParams {
   positionId?: number;
   categoryId?: number;
   companyId?: number;
-  level?: Level;
+  difficulty?: DifficultyLevel;
   isActive?: boolean;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
@@ -177,6 +226,19 @@ export interface CreateQuestionResponse {
 export interface UpdateQuestionResponse {
   message: string;
   questionId: number;
+}
+
+// Contribute Question Request (Candidate)
+export interface ContributeQuestionRequest {
+  content: string;
+  companyId: number;
+  positionIds: number[];
+  level: Level;
+  difficulty: DifficultyLevel;
+  skillIds: number[];
+  interviewDate: string; // DateOnly serialized as string "YYYY-MM-DD"
+  categoryIds: number[];
+  userAnswer: string;
 }
 
 // Detailed Question for Edit

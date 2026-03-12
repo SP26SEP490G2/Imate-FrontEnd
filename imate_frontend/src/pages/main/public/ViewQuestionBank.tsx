@@ -9,6 +9,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip
 import { Eye, Plus } from 'lucide-react';
 import QuestionContributedCard from '@/components/custom/QuestionContributedCard';
 import { getAllCategories } from '@/services/categoryService';
+import { CreateContributeQuestionDialog } from '@/dialog/main/question/CreateContributeQuestionDialog';
 
 type TabType = 'system' | 'contributed';
 
@@ -18,6 +19,7 @@ const ViewQuestionBank: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [categories, setCategories] = useState<CategoryItem[]>([]);
+  const [contributeModalOpen, setContributeModalOpen] = useState(false);
   
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
@@ -155,7 +157,10 @@ const ViewQuestionBank: React.FC = () => {
               </div>
               
               {activeTab === 'contributed' && (
-                <button className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-6 py-3 rounded-xl font-bold text-sm hover:opacity-90 transition-all flex items-center gap-2 shadow-lg shadow-indigo-500/20 self-start md:self-auto">
+                <button 
+                  onClick={() => setContributeModalOpen(true)}
+                  className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-6 py-3 rounded-xl font-bold text-sm hover:opacity-90 transition-all flex items-center gap-2 shadow-lg shadow-indigo-500/20 self-start md:self-auto"
+                >
                   <Plus className="w-4 h-4" />
                   Thêm câu hỏi
                 </button>
@@ -420,6 +425,18 @@ const ViewQuestionBank: React.FC = () => {
           )}
         </div>
       </main>
+
+      {/* Contribute Question Modal */}
+      <CreateContributeQuestionDialog
+        open={contributeModalOpen}
+        onOpenChange={setContributeModalOpen}
+        onSuccess={() => {
+          // Refresh contributed questions list if needed
+          if (activeTab === 'contributed') {
+            fetchQuestions();
+          }
+        }}
+      />
     </div>
   );
 };
