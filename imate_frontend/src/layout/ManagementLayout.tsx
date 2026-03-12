@@ -2,6 +2,7 @@ import { NavLink, Outlet, useNavigate, Navigate } from "react-router-dom";
 import { LogOut } from "lucide-react";
 import { managementRoutes, recruiterManagementRoutes } from "@/config/managementRoutes";
 import { useAuth } from "@/store/AuthContext";
+import { Button } from "@/components/ui/button";
 
 export default function ManagementLayout() {
   const { user, logout, isLoading, isAuthenticated } = useAuth();
@@ -121,13 +122,13 @@ export default function ManagementLayout() {
               </div>
             </div>
 
-            <button
+            <Button
               onClick={handleLogout}
-              className="flex items-center gap-2 w-full text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 px-3 py-2 rounded-md transition"
+              variant="danger"
             >
               <LogOut size={16} />
               Đăng xuất
-            </button>
+            </Button>
 
           </div>
 
