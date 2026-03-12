@@ -42,12 +42,18 @@ const APIConfig = {
 
   // Position endpoints (không dùng leading slash để axios nối đúng với baseURL .../api)
   Position: {
-    GetAllPositions: "get-positions",
+    GetAllPositions: "/get-positions",
+    AddPosition: "/positions",
+    UpdatePosition: "/positions/{positionId}",
+    GetAffectedQuestions: "/positions/{positionId}/affected-questions",
   },
 
   // Skills endpoints
   Skills: {
-    GetAllSkills: "get-skills",
+    GetAllSkills: "/get-skills",
+    AddSkill: "/skills",
+    UpdateSkill: "/skills/{skillId}",
+    GetAffectedQuestions: "/skills/{skillId}/affected-questions",
   },
 
   // Companies endpoints
