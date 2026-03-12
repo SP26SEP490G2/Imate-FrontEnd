@@ -107,3 +107,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **State Management:** Use `@tanstack/react-query` for API state (caching, fetching, updating) and React Context (`src/store/*`) for global client state when needed.
 - **Language:** UI Text and Labels should primarily be in Vietnamese.
 - **File Extensions:** Use `.tsx` for React UI components and `.ts` for pure TypeScript logic files and domain definitions.
+
+
+
+
+
+
