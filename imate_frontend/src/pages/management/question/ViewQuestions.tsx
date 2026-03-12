@@ -10,6 +10,7 @@ import { DIFFICULTY_OPTIONS } from '@/constants/enum';
 import { UpdateSystemQuestionModal } from '@/dialog/management/question/UpdateSystemQuestionModal';
 import { CreateSystemQuestionDialog } from '@/dialog/management/question/CreateSystemQuestionDialog';
 import { CreateContributeQuestionDialog } from '@/dialog/main/question/CreateContributeQuestionDialog';
+import { ViewContributeQuestionModal } from '@/dialog/main/question/ViewContributeQuestionModal';
 import type {
   StaffSystemQuestionItem,
   StaffContributedQuestionItem,
@@ -24,7 +25,6 @@ import {DIFFICULTY_MAP } from '@/constants/common';
 import {
   Eye,
   Pencil,
-  Trash2,
   Plus,
   Download,
   Upload
@@ -50,6 +50,10 @@ const ViewQuestions: React.FC = () => {
   
   // Create contribute question modal state
   const [contributeModalOpen, setContributeModalOpen] = useState(false);
+
+  // View contribute question modal state
+  const [viewContributeModalOpen, setViewContributeModalOpen] = useState(false);
+  const [selectedContributeQuestionId, setSelectedContributeQuestionId] = useState<number | null>(null);
 
   // System Questions State
   const [systemQuestions, setSystemQuestions] = useState<StaffSystemQuestionItem[]>([]);
@@ -217,6 +221,11 @@ const ViewQuestions: React.FC = () => {
     } else {
       fetchContributedQuestions();
     }
+  };
+
+  const handleViewContributeQuestion = (questionId: number) => {
+    setSelectedContributeQuestionId(questionId);
+    setViewContributeModalOpen(true);
   };
 
   const getDifficultyStatus = (difficulty: string): "active" | "pending" | "error" | "inactive" | "draft" => {
@@ -390,7 +399,7 @@ const ViewQuestions: React.FC = () => {
             page={activeTab === 'system' ? systemPagination.pageNumber : contributedPagination.pageNumber}
             totalPages={activeTab === 'system' ? systemPagination.totalPages : contributedPagination.totalPages}
             pageSize={activeTab === 'system' ? systemPagination.pageSize : contributedPagination.pageSize}
-            totalItems={activeTab === 'system' ? systemPagination.totalCount : contributedPagination.totalCount}
+            totalCount={activeTab === 'system' ? systemPagination.totalCount : contributedPagination.totalCount}
             onPageChange={(page) => {
               if (activeTab === 'system') {
                 handleSystemFilterChange('pageNumber', page);
@@ -566,12 +575,19 @@ const ViewQuestions: React.FC = () => {
                         </TableCell>
                         <TableCell className="px-8 py-6">
                           <div className="flex items-center justify-center gap-3">
+                            <Tooltip>
                               <TooltipTrigger asChild>
-                                <Button size="sm" variant="ghost" className="p-2 h-8 w-8">
-                                  <Pencil className="w-4 h-4" />
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost" 
+                                  className="p-2 h-8 w-8"
+                                  onClick={() => handleViewContributeQuestion(question.id)}
+                                >
+                                  <Eye className="w-4 h-4" />
                                 </Button>
                               </TooltipTrigger>
-                              <TooltipContent>Sửa</TooltipContent>
+                              <TooltipContent>Xem chi tiết</TooltipContent>
+                            </Tooltip>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -625,6 +641,20 @@ const ViewQuestions: React.FC = () => {
           }
         }}
       />
+
+      {/* View Contribute Question Modal */}
+      {selectedContributeQuestionId && (
+        <ViewContributeQuestionModal
+          questionId={selectedContributeQuestionId}
+          open={viewContributeModalOpen}
+          onOpenChange={(open: boolean) => {
+            setViewContributeModalOpen(open);
+            if (!open) {
+              setSelectedContributeQuestionId(null);
+            }
+          }}
+        />
+      )}
     </div>
   );
 };
