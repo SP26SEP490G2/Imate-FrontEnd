@@ -16,6 +16,8 @@ export type FormAddCompanyRequest = Pick<Company, "name"> & {
   imageFile: File | null;
 };
 // /api/company-staff/{id}
-export type FormUpdateCompanyRequest = Pick<Company, "name"> & {
+export type FormUpdateCompanyRequest = Pick<Company, "name" | "isActive"> & {
+  name: string;
   newImageFile: File | null;
+  isActive: boolean;
 };

@@ -13,7 +13,7 @@ export const getListCompany = async (PageNumber: number, PageSize: number, Searc
       ...(SortOrder && { SortOrder }),
     });
 
-    const res = await apiClient.get(`/company-staff?${params.toString()}`);
+    const res = await apiClient.get(`/get-companies?${params.toString()}`);
 
     return res.data as ListCompanyResponse;
   } catch (error) {
@@ -53,17 +53,26 @@ export const addCompany = async (data: FormAddCompanyRequest) => {
 //company.update
 export const updateCompany = async (id: number, data: FormUpdateCompanyRequest) => {
   try {
-    console.log("dataAPi", data);
+    console.log("data gửi lên API:", data);
+
     const formData = new FormData();
     formData.append("name", data.name);
+    formData.append("isActive", data.isActive.toString());
+
     if (data.newImageFile) {
       formData.append("newImageFile", data.newImageFile);
     }
-    const res = await apiClient.put(`/company-staff/${id}`, formData);
-    return res;
+
+    const res = await apiClient.put(`/company-staff/${id}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    return res.data; // thành công → trả data
   } catch (error: any) {
-    console.log("error fetch postitions: ", error);
-    return error?.response.data;
+    console.error("Lỗi khi cập nhật công ty:", error);
+    throw error;
   }
 };
 

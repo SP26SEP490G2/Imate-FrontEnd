@@ -26,15 +26,23 @@ import type { ListCategoryResponse } from "@/types/response/category.response";
 import { getAllSkill } from "@/services/skillService";
 import type { Skill } from "@/types/model/skill.model";
 
-import { getListPosition } from "@/services/positionService"; // ← import service vị trí
-import type { ListPositionResponse, PositionResponse } from "@/types/response/position.response";
+import { getListCompany } from "@/services/companyService";
+import type { Company } from "@/types/model/company.model";
+
+import { getListPosition } from "@/services/positionService";
+import type {PositionResponse } from "@/types/response/position.response";
 
 import { CreateCategoryDialog } from "@/pages/management/dialog/CreateCategoryDialog";
 import { UpdateCategoryDialog } from "../dialog/UpdateCategoryDialog";
 import { CreateSkillDialog } from "../dialog/CreateSkillDialog";
 import { UpdateSkillDialog } from "../dialog/UpdateSkillDialog";
-import { CreatePositionDialog } from "../dialog/CreatePositionDialog";     // ← thêm
-import { UpdatePositionDialog } from "../dialog/UpdatePositionDialog";   // ← thêm
+import { CreatePositionDialog } from "../dialog/CreatePositionDialog";
+import { UpdatePositionDialog } from "../dialog/UpdatePositionDialog";
+import { CreateCompanyDialog } from "@/pages/management/dialog/CreateCompanyDialog";
+import { UpdateCompanyDialog } from "@/pages/management/dialog/UpdateCompanyDialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
+
 
 const tabs = [
   { label: "Thể loại", value: "categories" },
@@ -120,11 +128,29 @@ export default function Classification() {
   const [openUpdateSkillDialog, setOpenUpdateSkillDialog] = useState(false);
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
 
+  // --- CÔNG TY ---
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [compLoading, setCompLoading] = useState(false);
+  const [compError, setCompError] = useState<string | null>(null);
+
+  const [compPage, setCompPage] = useState(1);
+  const [compPageSize, setCompPageSize] = useState(10);
+  const [compTotalPages, setCompTotalPages] = useState(1);
+  const [compTotalCount, setCompTotalCount] = useState(0);
+
+  const [compSearchTerm, setCompSearchTerm] = useState("");
+  const [compSortBy, setCompSortBy] = useState<string>("createdat");
+  const [compSortOrder, setCompSortOrder] = useState<"asc" | "desc">("desc");
+  const [compIsActiveFilter, setCompIsActiveFilter] = useState<boolean | null>(null);
+
+  const [openCreateCompDialog, setOpenCreateCompDialog] = useState(false);
+  const [openUpdateCompDialog, setOpenUpdateCompDialog] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+
   // Fetch Thể loại
   const fetchCategories = async () => {
     setCatLoading(true);
     setCatError(null);
-
     try {
       const response = await getListDetailCategory(
         catPage,
@@ -134,7 +160,6 @@ export default function Classification() {
         catSortBy,
         catSortOrder
       );
-
       if (response) {
         setCategories(response.items || []);
         setCatTotalPages(response.totalPages || 1);
@@ -152,7 +177,6 @@ export default function Classification() {
   const fetchPositions = async () => {
     setPosLoading(true);
     setPosError(null);
-
     try {
       const response = await getListPosition(
         posPage,
@@ -162,7 +186,6 @@ export default function Classification() {
         posSortBy,
         posSortOrder
       );
-
       if (response) {
         setPositions(response.items || []);
         setPosTotalPages(response.totalPages || 1);
@@ -180,7 +203,6 @@ export default function Classification() {
   const fetchSkills = async () => {
     setSkillLoading(true);
     setSkillError(null);
-
     try {
       const response = await getAllSkill(
         skillPage,
@@ -189,9 +211,8 @@ export default function Classification() {
         skillSearchTerm,
         skillSortBy,
         skillSortOrder,
-        null // PositionId nếu cần sau
+        null
       );
-
       if (response) {
         setSkills(response.items || []);
         setSkillTotalPages(response.totalPages || 1);
@@ -205,20 +226,49 @@ export default function Classification() {
     }
   };
 
+  // Fetch Công ty
+  const fetchCompanies = async () => {
+    setCompLoading(true);
+    setCompError(null);
+    try {
+      const response = await getListCompany(
+        compPage,
+        compPageSize,
+        compSearchTerm,
+        compIsActiveFilter,
+        compSortBy,
+        compSortOrder
+      );
+      if (response) {
+        setCompanies(response.items || []);
+        setCompTotalPages(response.totalPages || 1);
+        setCompTotalCount(response.totalCount || 0);
+      }
+    } catch (err: any) {
+      console.error("Lỗi tải danh sách công ty:", err);
+      setCompError("Không thể tải danh sách công ty.");
+    } finally {
+      setCompLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (tab === "categories") fetchCategories();
     if (tab === "positions") fetchPositions();
     if (tab === "skills") fetchSkills();
+    if (tab === "companies") fetchCompanies();
   }, [
     tab,
     catPage, catPageSize, catSearchTerm, catSortBy, catSortOrder, catIsActiveFilter,
     posPage, posPageSize, posSearchTerm, posSortBy, posSortOrder, posIsActiveFilter,
     skillPage, skillPageSize, skillSearchTerm, skillSortBy, skillSortOrder, skillIsActiveFilter,
+    compPage, compPageSize, compSearchTerm, compSortBy, compSortOrder, compIsActiveFilter,
   ]);
 
   const handleAddCategorySuccess = () => fetchCategories();
   const handleAddPositionSuccess = () => fetchPositions();
   const handleAddSkillSuccess = () => fetchSkills();
+  const handleAddCompanySuccess = () => fetchCompanies();
 
   const handleEditCategory = (cat: { id: number; name: string; isActive: boolean }) => {
     setSelectedCategory(cat);
@@ -235,6 +285,11 @@ export default function Classification() {
     setOpenUpdateSkillDialog(true);
   };
 
+  const handleEditCompany = (comp: Company) => {
+  setSelectedCompany(comp);
+  setOpenUpdateCompDialog(true);
+};
+
   const handlePageSizeChange = (size: number) => {
     if (tab === "categories") {
       setCatPageSize(size);
@@ -245,8 +300,12 @@ export default function Classification() {
     } else if (tab === "skills") {
       setSkillPageSize(size);
       setSkillPage(1);
+    } else if (tab === "companies") {
+      setCompPageSize(size);
+      setCompPage(1);
     }
   };
+  
 
   return (
     <div className="p-6 space-y-6 min-h-full">
@@ -268,6 +327,7 @@ export default function Classification() {
             if (tab === "categories") setOpenCreateCatDialog(true);
             else if (tab === "positions") setOpenCreatePosDialog(true);
             else if (tab === "skills") setOpenCreateSkillDialog(true);
+            else if (tab === "companies") setOpenCreateCompDialog(true);
           }}
         >
           Thêm{" "}
@@ -275,7 +335,9 @@ export default function Classification() {
             ? "thể loại"
             : tab === "positions"
             ? "vị trí"
-            : "kĩ năng"}{" "}
+            : tab === "skills"
+            ? "kĩ năng"
+            : "công ty"}{" "}
           mới
         </Button>
       </div>
@@ -289,6 +351,7 @@ export default function Classification() {
           setCatPage(1);
           setPosPage(1);
           setSkillPage(1);
+          setCompPage(1);
         }}
       />
 
@@ -659,12 +722,159 @@ export default function Classification() {
               </TableBody>
             </Table>
           )}
+
         </div>
       )}
+      
 
       {tab === "companies" && (
-        <div className="text-center py-20 text-slate-500">
-          Chức năng đang được phát triển...
+        <div className="space-y-6">
+          {/* Toolbar công ty */}
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-4 flex-wrap">
+              <h2 className="text-xl font-semibold text-white">Danh sách công ty</h2>
+            </div>
+
+            <div className="flex items-center gap-4 text-sm text-slate-400">
+              <div className="relative min-w-[240px]">
+                <Input
+                  placeholder="Tìm theo tên công ty..."
+                  value={compSearchTerm}
+                  onChange={(e) => {
+                    setCompSearchTerm(e.target.value);
+                    setCompPage(1);
+                  }}
+                  className="pl-10 pr-4 py-2 w-full bg-slate-800 border-slate-700 text-slate-100 placeholder:text-slate-500"
+                />
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-slate-400 whitespace-nowrap">Trạng thái:</span>
+                <select
+                  value={compIsActiveFilter === null ? "all" : compIsActiveFilter.toString()}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setCompIsActiveFilter(val === "all" ? null : val === "true");
+                    setCompPage(1);
+                  }}
+                  className="bg-slate-800 border border-slate-700 rounded-md px-4 py-2 text-slate-200 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer min-w-[160px]"
+                >
+                  {STATUS_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <span className="whitespace-nowrap">Sắp xếp theo:</span>
+              <div className="relative inline-block">
+                <select
+                  value={`${compSortBy}-${compSortOrder}`}
+                  onChange={(e) => {
+                    const [newSortBy, newSortOrder] = e.target.value.split("-");
+                    setCompSortBy(newSortBy);
+                    setCompSortOrder(newSortOrder as "asc" | "desc");
+                    setCompPage(1);
+                  }}
+                  className="bg-slate-800 border border-slate-700 rounded-md px-4 py-2 pr-10 text-slate-200 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer min-w-[200px]"
+                >
+                  {SORT_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400" />
+              </div>
+            </div>
+          </div>
+
+          {/* Bảng công ty */}
+          {compLoading ? (
+            <div className="text-center py-12 text-slate-400">Đang tải...</div>
+          ) : compError ? (
+            <div className="text-center py-12 text-red-400">{compError}</div>
+          ) : companies.length === 0 ? (
+            <div className="text-center py-12 text-slate-400">Chưa có công ty nào</div>
+          ) : (
+            <Table
+              page={compPage}
+              totalPages={compTotalPages}
+              totalCount={compTotalCount}
+              pageSize={compPageSize}
+              onPageChange={setCompPage}
+              onPageSizeChange={handlePageSizeChange}
+              maxHeight="55vh"
+            >
+              <TableHeader>
+                <TableRow>
+                  <TableHead>STT</TableHead>
+                  <TableHead>Công ty</TableHead>
+                  <TableHead>Trạng thái</TableHead>
+                  <TableHead className="w-[140px] text-right">Hành động</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {companies.map((comp, index) => (
+                  <TableRow key={comp.id}>
+                    <TableCell>
+                      {String((compPage - 1) * compPageSize + index + 1).padStart(2, "0")}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar>
+                          {comp.imageUrl ? (
+                            <AvatarImage 
+                              src={comp.imageUrl} 
+                              alt={comp.name} 
+                              className="object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          ) : null}
+                          <AvatarFallback 
+                            className={cn(
+                              "text-sm font-bold text-white",
+                              getAvatarColor(comp.name) 
+                            )}
+                          >
+                            {getInitials(comp.name)}
+                          </AvatarFallback>
+                        </Avatar>
+
+                        <div>
+                          <p className="font-medium">{comp.name}</p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge status={comp.isActive ? "active" : "inactive"}>
+                        {comp.isActive ? "Hoạt động" : "Vô hiệu"}
+                      </StatusBadge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex gap-2 justify-end">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              icon={<Pencil size={14} />}
+                              onClick={() => handleEditCompany(comp)}
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent>Sửa</TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </div>
       )}
 
@@ -722,6 +932,56 @@ export default function Classification() {
           }}
         />
       )}
+
+      <CreateCompanyDialog
+        open={openCreateCompDialog}
+        onOpenChange={setOpenCreateCompDialog}
+        onSuccess={handleAddCompanySuccess}
+      />
+
+      {selectedCompany && (
+        <UpdateCompanyDialog
+          open={openUpdateCompDialog}
+          onOpenChange={setOpenUpdateCompDialog}
+          company={selectedCompany}
+          onSuccess={() => {
+            fetchCompanies();
+            setSelectedCompany(null);
+          }}
+        />
+      )}
     </div>
   );
+}
+
+export function getInitials(name: string): string {
+  if (!name) return "?";
+  const words = name.trim().split(/\s+/);
+  if (words.length === 1) {
+    return words[0].slice(0, 2).toUpperCase();
+  }
+  return (words[0][0] + words[1][0]).toUpperCase();
+}
+
+export function getAvatarColor(name: string): string {
+  const colors = [
+    "bg-red-600",
+    "bg-blue-600",
+    "bg-green-600",
+    "bg-yellow-600",
+    "bg-purple-600",
+    "bg-pink-600",
+    "bg-indigo-600",
+    "bg-teal-600",
+    "bg-orange-600",
+    "bg-cyan-600",
+  ];
+
+  // Hash đơn giản dựa trên tên
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % colors.length;
+  return colors[index];
 }
