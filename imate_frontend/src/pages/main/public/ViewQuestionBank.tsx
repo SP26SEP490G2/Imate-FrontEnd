@@ -243,7 +243,7 @@ const ViewQuestionBank: React.FC = () => {
               page={pageNumber}
               totalPages={data?.totalPages || 0}
               pageSize={pageSize}
-              totalItems={data?.totalCount || 0}
+              totalCount={data?.totalCount || 0}
               onPageChange={(page) => setPageNumber(page)}
               onPageSizeChange={handlePageSizeChange}
             >

@@ -30,6 +30,7 @@ const APIConfig = {
     CreateSystemQuestionForStaff: "/create-system-question-for-staff",
     UpdateSystemQuestionForStaff: "/update-system-question-for-staff/{questionId}",
     GetSystemQuestionDetail: "/get-system-question-by-id/{questionId}",
+    GetContributedQuestionDetail: "/get-contributed-question-by-id/{questionId}",
     ContributeQuestion: "/contribute-question",
   },
 
