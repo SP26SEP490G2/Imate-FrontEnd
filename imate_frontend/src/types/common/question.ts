@@ -260,3 +260,24 @@ export interface SystemQuestionDetail {
   createdAt?: string;
   updatedAt?: string;
 }
+
+// Contributed Question Detail for View
+export interface ContributedQuestionDetail {
+  id: number;
+  content: string;
+  difficulty: DifficultyLevel | null;
+  level: Level | null;
+  isFromSystem: boolean;
+  isActive: boolean;
+  creatorId: number;
+  creatorName: string;
+  companyName: string;
+  sampleAnswer?: string;
+  contributedDetailId?: number;
+  contributedDetail?: any;
+  categoriesName: string[];
+  skillsName: string[];
+  positionsName: string[];
+  createdAt?: string;
+  updatedAt?: string;
+}

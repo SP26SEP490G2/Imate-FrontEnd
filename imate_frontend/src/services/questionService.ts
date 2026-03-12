@@ -18,6 +18,7 @@ import type {
   CreateQuestionResponse,
   UpdateQuestionResponse,
   SystemQuestionDetail,
+  ContributedQuestionDetail,
   ContributeQuestionRequest,
 } from "@/types/common/question";
 
@@ -161,6 +162,20 @@ export const getSystemQuestionDetail = async (
 ): Promise<SystemQuestionDetail> => {
   const response = await apiClient.get<SystemQuestionDetail>(
     APIConfig.Question.GetSystemQuestionDetail.replace('{questionId}', String(questionId))
+  );
+  return response.data;
+};
+
+/**
+ * Get detailed information for a specific contributed question (for viewing)
+ * @param questionId - ID of the question
+ * @returns Promise with contributed question details
+ */
+export const getContributedQuestionDetail = async (
+  questionId: number
+): Promise<ContributedQuestionDetail> => {
+  const response = await apiClient.get<ContributedQuestionDetail>(
+    APIConfig.Question.GetContributedQuestionDetail.replace('{questionId}', String(questionId))
   );
   return response.data;
 };
