@@ -2,6 +2,8 @@
  * API Configuration - Contains all API endpoint URIs
  */
 
+import { CreateJobPost } from "@/services/recruiterService";
+
 const APIConfig = {
   // Auth endpoints
   Auth: {
@@ -66,7 +68,11 @@ const APIConfig = {
   Recruiter: {
     SubmitRecruiterProfile: "/recruiters/submit-profile",
     GetJobApplicationList: "job-applications",
-    GetRecruiterJobApplication: "recruiter-job-applications"
+    GetRecruiterJobApplication: "recruiter-job-applications",
+    UpdateRecruiterProfile: "/recruiter-profile",
+    CreateJobPost: "/create-job-posts",
+    UpdateJobApplication: "/update-job-applications",
+    CloseJobApplication: "/close-job-applications",
   },
 
   // Staff review endpoints (baseURL thường đã có /api)

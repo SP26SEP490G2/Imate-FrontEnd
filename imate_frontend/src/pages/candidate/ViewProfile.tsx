@@ -23,6 +23,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { CommonBreadcrumb } from "@/components/ui/breadcrumb";
 import { cn } from "@/lib/utils";
 import UpdateRecruiterDialog from "../dialog/UpdateRecruiterDialog";
+import  "@/constants/messages";
+import { MSG09, MSG10 } from "@/constants/messages";
 
 const nameSchema = z.object({
   fullName: z.string().min(2, "Tên phải có ít nhất 2 ký tự"),
@@ -107,9 +109,9 @@ const ViewProfile = () => {
       await refetchUser();
       setIsEditMode(false);
       setAvatarFile(null);
-      toast.success("Cập nhật profile thành công!");
+      toast.success(MSG09);
     } catch (error) {
-      toast.error("Cập nhật profile thất bại");
+      toast.error(MSG10);
       console.log(error);
     } finally {
       setIsSubmitting(false);

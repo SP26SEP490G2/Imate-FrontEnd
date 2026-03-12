@@ -15,7 +15,7 @@ export const submitRecruiterProfile = async (payload: SubmitRecruiterProfileRequ
 
 export const updateRecruiterProfile = async (data: User) => {
   try {
-    const res = await apiClient.put("/recruiter-profile", data);
+    const res = await apiClient.put(APIConfig.Recruiter.UpdateRecruiterProfile, data);
 
     return res.data;
   } catch (error) {
@@ -45,7 +45,7 @@ export const getRecruiterJobApplications = async (
 
 export const CreateJobPost = async (data: any) => {
   try {
-    return await apiClient.post("/create-job-posts", data);
+    return await apiClient.post(APIConfig.Recruiter.CreateJobPost, data);
   } catch (error) {
     console.log("Error creating job post: ", error);
     throw error;
@@ -54,7 +54,7 @@ export const CreateJobPost = async (data: any) => {
 
 export const UpdateJobApplication = async (data: any) => {
   try {
-    const res = await apiClient.put("/update-job-applications", data);
+    const res = await apiClient.put(APIConfig.Recruiter.UpdateJobApplication, data);
 
     return res.data;
   } catch (error) {
@@ -65,7 +65,7 @@ export const UpdateJobApplication = async (data: any) => {
 
 export const CloseJobApplication = async (data: any) => {
   try {
-    const res = await apiClient.put("/Close-job-applications", data);
+    const res = await apiClient.put(APIConfig.Recruiter.CloseJobApplication, data);
 
     return res.data;
   } catch (error) {
