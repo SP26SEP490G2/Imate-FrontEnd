@@ -3,6 +3,25 @@
  */
 
 // Difficulty levels (number values for API)
+export const LEVEL = {
+  INTERN: 0,
+  JUNIOR: 1,
+  MIDDLE: 2,
+  SENIOR: 3,
+  LEAD: 4,
+  MANAGER: 5
+} as const;
+
+// Difficulty mapping: number to display text
+export const LEVEL_MAP = {
+  0: 'Intern',
+  1: 'Junior',
+  2: 'Middle',
+  3: 'Senior',
+  4: 'Lead',
+  5: 'Manager',
+} as const;
+
 export const DIFFICULTY_LEVEL = {
   EASY: 0,
   MEDIUM: 1,
@@ -15,6 +34,7 @@ export const DIFFICULTY_MAP = {
   1: 'Medium',
   2: 'Hard',
 } as const;
+
 
 // Difficulty levels (legacy string values)
 export const COMMON_CODE = {

@@ -17,7 +17,8 @@ import type {
   UpdateSystemQuestionRequest,
   CreateQuestionResponse,
   UpdateQuestionResponse,
-  SystemQuestionDetail
+  SystemQuestionDetail,
+  ContributeQuestionRequest,
 } from "@/types/common/question";
 
 /**
@@ -160,6 +161,21 @@ export const getSystemQuestionDetail = async (
 ): Promise<SystemQuestionDetail> => {
   const response = await apiClient.get<SystemQuestionDetail>(
     APIConfig.Question.GetSystemQuestionDetail.replace('{questionId}', String(questionId))
+  );
+  return response.data;
+};
+
+/**
+ * Contribute a question (for Candidate)
+ * @param request - Contribute question request data
+ * @returns Promise with create response
+ */
+export const contributeQuestion = async (
+  request: ContributeQuestionRequest
+): Promise<CreateQuestionResponse> => {
+  const response = await apiClient.post<CreateQuestionResponse>(
+    APIConfig.Question.ContributeQuestion,
+    request
   );
   return response.data;
 };

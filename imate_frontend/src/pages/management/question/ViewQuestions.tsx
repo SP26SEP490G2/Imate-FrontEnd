@@ -9,13 +9,13 @@ import { getAllSkill } from '@/services/skillService';
 import { DIFFICULTY_OPTIONS } from '@/constants/enum';
 import { UpdateSystemQuestionModal } from '@/dialog/management/question/UpdateSystemQuestionModal';
 import { CreateSystemQuestionDialog } from '@/dialog/management/question/CreateSystemQuestionDialog';
+import { CreateContributeQuestionDialog } from '@/dialog/main/question/CreateContributeQuestionDialog';
 import type {
   StaffSystemQuestionItem,
   StaffContributedQuestionItem,
   GetSystemQuestionParams,
   GetContributedQuestionParams,
   DifficultyLevel,
-  Level,
   CategoryItem,
   PositionItem,
   SkillItem
@@ -47,6 +47,9 @@ const ViewQuestions: React.FC = () => {
 
   // Create question modal state
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  
+  // Create contribute question modal state
+  const [contributeModalOpen, setContributeModalOpen] = useState(false);
 
   // System Questions State
   const [systemQuestions, setSystemQuestions] = useState<StaffSystemQuestionItem[]>([]);
@@ -217,10 +220,10 @@ const ViewQuestions: React.FC = () => {
   };
 
   const getDifficultyStatus = (difficulty: string): "active" | "pending" | "error" | "inactive" | "draft" => {
-    const diffLower = difficulty.toLowerCase();
-    if (diffLower === 'easy' || diffLower === 'intern' || diffLower === 'fresher') return 'active';
-    if (diffLower === 'medium' || diffLower === 'junior' || diffLower === 'middle') return 'pending';
-    if (diffLower === 'hard' || diffLower === 'senior') return 'error';
+    const diffLower = difficulty?.toLowerCase();
+    if (diffLower === 'easy') return 'active';
+    if (diffLower === 'medium') return 'pending';
+    if (diffLower === 'hard') return 'error';
     return 'inactive';
   };
 
@@ -251,7 +254,7 @@ const ViewQuestions: React.FC = () => {
                   Import câu hỏi
                 </button>
                 <button
-                  onClick={() => setCreateModalOpen(true)}
+                  onClick={() => activeTab === 'system' ? setCreateModalOpen(true) : setContributeModalOpen(true)}
                   className="bg-gradient-to-r from-indigo-500 to-purple-500 px-4 py-3 rounded-xl flex items-center gap-2 text-sm font-bold shadow-lg shadow-indigo-500/20 hover:opacity-90 transition-all text-white"
                 >
                   <Plus className="w-4 h-4" />
@@ -338,25 +341,24 @@ const ViewQuestions: React.FC = () => {
                   <select
                     value={
                       activeTab === 'system'
-                        ? systemFilters.difficulty || ''
-                        : contributedFilters.level || ''
+                        ? (systemFilters.difficulty !== undefined ? String(systemFilters.difficulty) : '')
+                        : (contributedFilters.difficulty !== undefined ? String(contributedFilters.difficulty) : '')
                     }
                     onChange={(e) => {
-                      const value = e.target.value || undefined;
+                      const value = e.target.value;
+                      const numValue = value ? parseInt(value) as DifficultyLevel : undefined;
                       if (activeTab === 'system') {
-                        handleSystemFilterChange('difficulty', value as DifficultyLevel | undefined);
+                        handleSystemFilterChange('difficulty', numValue);
                       } else {
-                        handleContributedFilterChange('level', value as Level);
+                        handleContributedFilterChange('difficulty', numValue);
                       }
                     }}
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none transition-all"
                   >
                     <option value="">Tất cả</option>
-                    {activeTab === 'system' ? (
-                      DIFFICULTY_OPTIONS.map(option => (
-                        <option key={option.value} value={option.value}>{option.label}</option>
-                      ))
-                    ) : null}
+                    {DIFFICULTY_OPTIONS.map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
                   </select>
                 </div>
 
@@ -405,6 +407,9 @@ const ViewQuestions: React.FC = () => {
                 <TableHead className="px-6 py-5">Vị trí</TableHead>
                 <TableHead className="px-6 py-5">Kỹ năng</TableHead>
                 <TableHead className="px-6 py-5">Cấp độ</TableHead>
+                {activeTab === 'contributed' && (
+                  <TableHead className="px-6 py-5">Người đăng</TableHead>
+                )}
                 <TableHead className="px-6 py-5">Trạng thái</TableHead>
                 <TableHead className="px-8 py-5 text-center">Hành động</TableHead>
               </TableRow>
@@ -433,6 +438,11 @@ const ViewQuestions: React.FC = () => {
                         <TableCell className="px-6 py-6">
                           <div className="h-6 bg-slate-700 rounded w-16"></div>
                         </TableCell>
+                        {activeTab === 'contributed' && (
+                          <TableCell className="px-6 py-6">
+                            <div className="h-4 bg-slate-700 rounded w-24"></div>
+                          </TableCell>
+                        )}
                         <TableCell className="px-6 py-6">
                           <div className="h-6 bg-slate-700 rounded w-20"></div>
                         </TableCell>
@@ -449,7 +459,7 @@ const ViewQuestions: React.FC = () => {
                 ) : error ? (
                   // Error state
                   <TableRow>
-                    <TableCell colSpan={7} className="px-8 py-12 text-center">
+                    <TableCell colSpan={activeTab === 'contributed' ? 8 : 7} className="px-8 py-12 text-center">
                       <p className="text-red-400 mb-4">{error}</p>
                       <button
                         onClick={() => {
@@ -535,16 +545,19 @@ const ViewQuestions: React.FC = () => {
                         </TableCell>
                         <TableCell className="px-6 py-6">
                           <StatusBadge status="inactive">
-                            {question.positionsName || 'N/A'}
+                            {question.positionsName?.length > 0 ? question.positionsName.join(', ') : 'N/A'}
                           </StatusBadge>
                         </TableCell>
                         <TableCell className="px-6 py-6 text-sm text-slate-400">
-                          {question.skillsName || 'N/A'}
+                          {question.skillsName?.length > 0 ? question.skillsName.join(', ') : 'N/A'}
                         </TableCell>
                         <TableCell className="px-6 py-6">
-                          <StatusBadge status={getDifficultyStatus(question.level)}>
-                            {question.level}
+                          <StatusBadge status={getDifficultyStatus(question.difficulty !== null ? DIFFICULTY_MAP[question.difficulty] : 'N/A')}>
+                            {question.difficulty !== null ? DIFFICULTY_MAP[question.difficulty] : 'N/A'}
                           </StatusBadge>
+                        </TableCell>
+                        <TableCell className="px-6 py-6 text-sm text-slate-400">
+                          {question.creatorName || 'N/A'}
                         </TableCell>
                         <TableCell className="px-6 py-6">
                           <StatusBadge status={question.isActive ? "active" : "inactive"}>
@@ -553,37 +566,19 @@ const ViewQuestions: React.FC = () => {
                         </TableCell>
                         <TableCell className="px-8 py-6">
                           <div className="flex items-center justify-center gap-3">
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button size="sm" variant="ghost" className="p-2 h-8 w-8">
-                                  <Eye className="w-4 h-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Xem</TooltipContent>
-                            </Tooltip>
-                            <Tooltip>
                               <TooltipTrigger asChild>
                                 <Button size="sm" variant="ghost" className="p-2 h-8 w-8">
                                   <Pencil className="w-4 h-4" />
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent>Sửa</TooltipContent>
-                            </Tooltip>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button size="sm" variant="ghost" className="p-2 h-8 w-8 text-red-400 hover:text-red-500">
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>7
-                              </TooltipTrigger>
-                              <TooltipContent>Xóa</TooltipContent>
-                            </Tooltip>
                           </div>
                         </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={7} className="px-8 py-12 text-center text-slate-400">
+                      <TableCell colSpan={8} className="px-8 py-12 text-center text-slate-400">
                         Không có câu hỏi nào
                       </TableCell>
                     </TableRow>
@@ -616,6 +611,17 @@ const ViewQuestions: React.FC = () => {
         onSuccess={() => {
           if (activeTab === 'system') {
             fetchSystemQuestions();
+          }
+        }}
+      />
+
+      {/* Contribute Question Modal */}
+      <CreateContributeQuestionDialog
+        open={contributeModalOpen}
+        onOpenChange={setContributeModalOpen}
+        onSuccess={() => {
+          if (activeTab === 'contributed') {
+            fetchContributedQuestions();
           }
         }}
       />
