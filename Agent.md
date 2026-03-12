@@ -1,115 +1,130 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+File này cung cấp hướng dẫn cho Claude Code (claude.ai/code) khi làm việc với code trong repository này.
 
-## Repository layout
+## Cấu trúc Repository
 
-- Git repo root contains the frontend app in `imate_frontend/`.
-- Run Node/Vite commands against that subdirectory (examples below use `npm --prefix imate_frontend ...`).
+- Thư mục gốc của Git repo chứa ứng dụng frontend trong `imate_frontend/`.
+- Chạy các lệnh Node/Vite trong thư mục con đó (ví dụ bên dưới sử dụng `npm --prefix imate_frontend ...`).
 
-## Development commands
+## Các lệnh phát triển
 
-- Install dependencies:
+- Cài đặt dependencies:
   - `npm --prefix imate_frontend install`
-- Start local dev server:
+- Khởi chạy dev server cục bộ:
   - `npm --prefix imate_frontend run dev`
-- Build production bundle (includes TypeScript project build via `tsc -b`):
+- Build bản production (bao gồm TypeScript project build qua `tsc -b`):
   - `npm --prefix imate_frontend run build`
 - Lint:
   - `npm --prefix imate_frontend run lint`
-- Preview built app:
+- Xem trước ứng dụng đã build:
   - `npm --prefix imate_frontend run preview`
-- Lint a single file:
+- Lint một file đơn lẻ:
   - `npm --prefix imate_frontend exec eslint src/pages/staff/AddSystemQuestion.tsx`
-- Type-check only:
+- Chỉ kiểm tra type:
   - `npm --prefix imate_frontend exec tsc -b`
 
 ## Tests
 
-- There is currently no test script in `imate_frontend/package.json` and no `*.test`/`*.spec` files detected.
-- A “run single test” command is not available until a test runner is added.
+- Hiện tại chưa có test script trong `imate_frontend/package.json` và không phát hiện file `*.test`/`*.spec` nào.
+- Lệnh "chạy test đơn lẻ" chưa khả dụng cho đến khi thêm test runner.
 
-## High-level architecture
+## Kiến trúc tổng quan
 
-### App bootstrap and global providers
+### Khởi tạo App và các Provider toàn cục
 
-- Entry point is `imate_frontend/src/main.tsx`.
-- `BrowserRouter` is mounted in `main.tsx`, then `App` mounts global providers in this order:
+- Điểm khởi đầu (entry point) là `imate_frontend/src/main.tsx`.
+- `BrowserRouter` được mount trong `main.tsx`, sau đó `App` mount các provider toàn cục theo thứ tự:
   - `QueryClientProvider` (TanStack Query)
   - `GoogleOAuthProvider`
   - `AppProvider`
   - `AuthProvider`
-- `SignalRProvider` exists (`src/store/SignalRContext.tsx`) but is currently commented out in `App.tsx`.
+- `SignalRProvider` tồn tại (`src/store/SignalRContext.tsx`) nhưng hiện đang bị comment out trong `App.tsx`.
 
-### Routing model
+### Mô hình Routing
 
-- Route table is composed in `src/routes/index.tsx` by concatenating:
-  - `AuthRouter` (sign-in/up, verify/reset password)
-  - `CommonRouter` (guest + some staff question pages)
-  - `AuthenticatedRouter` (wrapped in `ProtectedRoute` and `MainLayout`)
-- `AuthenticatedRouter` currently nests authenticated pages under `/` with `MainLayout` and child routes like `profile`, `submit-mentor-application`, `pending-application`.
+- Bảng route được tổ hợp trong `src/routes/index.tsx` bằng cách nối:
+  - `AuthRouter` (đăng nhập/đăng ký, xác minh/đặt lại mật khẩu)
+  - `CommonRouter` (trang khách + một số trang câu hỏi của staff)
+  - `AuthenticatedRouter` (được bọc trong `ProtectedRoute` và `MainLayout`)
+- `AuthenticatedRouter` hiện lồng các trang xác thực dưới `/` với `MainLayout` và các route con như `profile`, `submit-mentor-application`, `pending-application`.
 
-### Authorization and role gating
+### Phân quyền và kiểm soát vai trò
 
-- Core auth/authorization logic is split between:
+- Logic xác thực/phân quyền cốt lõi được chia giữa:
   - `src/routes/ProtectedRoute.tsx`
   - `src/layout/MainLayout.tsx`
-- Both files maintain hardcoded role-route allow/deny lists.
-- Mentor `PendingVerification` flow is special-cased: redirect to either `pending-application` or `submit-mentor-application` based on mentor-profile-like fields on `user`.
-- Admin is allowed to access staff routes in the role checks.
+- Cả hai file đều duy trì danh sách cho phép/từ chối role-route được hardcode.
+- Luồng Mentor `PendingVerification` được xử lý đặc biệt: chuyển hướng đến `pending-application` hoặc `submit-mentor-application` dựa trên các trường giống mentor-profile trên `user`.
+- Admin được phép truy cập các route của staff trong các kiểm tra vai trò.
 
-### API layer and backend contract
+### Tầng API và giao tiếp Backend
 
-- All HTTP calls go through `src/services/apiClient.ts` (Axios instance).
-- Base URL comes from `VITE_API_BASE_URL`.
+- Tất cả các lời gọi HTTP đều đi qua `src/services/apiClient.ts` (instance Axios).
+- Base URL lấy từ `VITE_API_BASE_URL`.
 - Request interceptor:
-  - Adds `Authorization: Bearer <authToken>` from `localStorage`.
-  - Defaults `Content-Type: application/json` except FormData.
+  - Thêm `Authorization: Bearer <authToken>` từ `localStorage`.
+  - Mặc định `Content-Type: application/json` trừ khi là FormData.
 - Response interceptor:
-  - Handles `401` with refresh-token flow (`POST /refresh-token`).
-  - Queues concurrent failed requests during refresh and retries after token renewal.
-  - Clears local auth state and redirects to `/sign-in` if refresh fails.
-- Endpoint constants are centralized in `src/config/apiConfig.ts`.
-- Domain service modules in `src/services/` (auth, account, mentor, question, common) wrap endpoint calls.
-- Several list endpoints depend on `x-pagination` response headers and on payload shape `response.data.data`.
+  - Xử lý `401` với luồng refresh-token (`POST /refresh-token`).
+  - Xếp hàng các request thất bại đồng thời trong quá trình refresh và thử lại sau khi đổi token.
+  - Xóa trạng thái auth cục bộ và chuyển hướng đến `/sign-in` nếu refresh thất bại.
+- Các hằng số endpoint được tập trung trong `src/config/apiConfig.ts`.
+- Các module service theo domain trong `src/services/` (auth, account, mentor, question, common) bọc các lời gọi endpoint.
+- Một số endpoint danh sách phụ thuộc vào response header `x-pagination` và cấu trúc payload `response.data.data`.
 
-### Authentication model
+### Mô hình Xác thực
 
-- Firebase is used for client-side auth bootstrap (`src/lib/firebaseConfig.ts`) and then backend token exchange.
-- Email login flow:
+- Firebase được sử dụng để khởi tạo xác thực phía client (`src/lib/firebaseConfig.ts`) và sau đó trao đổi token với backend.
+- Luồng đăng nhập email:
   1. Firebase `signInWithEmailAndPassword`
-  2. Send Firebase ID token to backend (`/login-email`)
-  3. Persist backend tokens (`authToken`, `refreshToken`) and fetch `/profile`
-- Google login flow follows similar token exchange via `/google`.
-- Auth state lives in `src/store/AuthContext.tsx` and mirrors user data into `localStorage` key `user`.
+  2. Gửi Firebase ID token đến backend (`/login-email`)
+  3. Lưu lại backend tokens (`authToken`, `refreshToken`) và gọi `/profile`
+- Luồng đăng nhập Google tương tự qua trao đổi token với endpoint `/google`.
+- Trạng thái auth nằm trong `src/store/AuthContext.tsx` và đồng bộ dữ liệu user vào `localStorage` với key `user`.
 
-### UI stack and conventions
+### UI Stack và quy ước
 
 - React 19 + Vite + TypeScript.
-- Tailwind CSS v4 via `@tailwindcss/vite`.
-- UI primitives are largely in `src/components/ui/*` (Radix/shadcn-style components).
-- Toast systems: both `react-toastify` and `sonner` are used.
-- Route labels/UI text are primarily Vietnamese.
+- Tailwind CSS v4 qua `@tailwindcss/vite`.
+- Các UI primitive chủ yếu nằm trong `src/components/ui/*` (kiểu Radix/shadcn).
+- Hệ thống Toast: sử dụng cả `react-toastify` và `sonner`.
+- Nhãn route/văn bản UI chủ yếu bằng tiếng Việt.
 
-## Environment variables
+## Biến môi trường
 
-- Current `.env` contains:
+- File `.env` hiện tại chứa:
   - `VITE_PORT`
   - `VITE_API_BASE_URL`
-- `App.tsx` reads Google client ID from `import.meta.env.REACT_APP_GOOGLE_CLIENT_ID` (note non-`VITE_` prefix). Keep this in mind when configuring env values for local/dev/prod.
+- `App.tsx` đọc Google client ID từ `import.meta.env.REACT_APP_GOOGLE_CLIENT_ID` (lưu ý tiền tố không phải `VITE_`). Hãy ghi nhớ điều này khi cấu hình giá trị env cho local/dev/prod.
 
-## Coding Conventions
+## Quy ước viết code
 
-- **Components:** PascalCase, typically stored in `src/components/...` or `src/pages/...`.
-- **Styling:** Use Tailwind CSS with the `cn()` utility (`clsx` + `tailwind-merge`) from `@/lib/utils` for conditional classes.
-- **UI Primitives:** Use Radix/shadcn-style components located in `src/components/ui/*`.
-- **API Calls:** Do not use `fetch` or `axios` directly inside React components. Define API methods in `src/services/*` utilizing the configured `apiClient.ts` instance to ensure interceptors handle tokens properly.
-- **State Management:** Use `@tanstack/react-query` for API state (caching, fetching, updating) and React Context (`src/store/*`) for global client state when needed.
-- **Language:** UI Text and Labels should primarily be in Vietnamese.
-- **File Extensions:** Use `.tsx` for React UI components and `.ts` for pure TypeScript logic files and domain definitions.
+- **Components:** PascalCase, thường lưu trong `src/components/...` hoặc `src/pages/...`.
+- **Styling:** Sử dụng Tailwind CSS với tiện ích `cn()` (`clsx` + `tailwind-merge`) từ `@/lib/utils` cho class có điều kiện.
+- **UI Primitives:** Sử dụng các component kiểu Radix/shadcn nằm trong `src/components/ui/*`.
+- **Gọi API:** Không sử dụng `fetch` hoặc `axios` trực tiếp bên trong React component. Định nghĩa các method API trong `src/services/*` sử dụng instance `apiClient.ts` đã cấu hình để đảm bảo interceptor xử lý token đúng cách.
+- **Quản lý State:** Sử dụng `@tanstack/react-query` cho state API (caching, fetching, updating) và React Context (`src/store/*`) cho state client toàn cục khi cần.
+- **Ngôn ngữ:** Text và Label trên giao diện chủ yếu bằng tiếng Việt.
+- **Phần mở rộng file:** Sử dụng `.tsx` cho React UI component và `.ts` cho file TypeScript thuần và định nghĩa domain.
 
+- **Sử dụng hằng số (Constants):** Khi code bất kỳ màn hình nào, **bắt buộc** kiểm tra và sử dụng các biến `const` đã được định nghĩa trong thư mục `src/constants/`. Các file constant hiện có bao gồm:
+  - `common.ts` – các hằng số dùng chung (role, status, v.v.)
+  - `messages.ts` – các thông báo hệ thống (MSG01, MSG02, ...)
+  - `enum.ts` – các enum dùng chung
+  - `role.ts` – các hằng số vai trò
+  - `menu.ts` – cấu hình menu
+  - `code.ts` – các mã code
+  - `other.ts` – các hằng số khác
+  
+  **Không hardcode** các giá trị đã có sẵn trong các file constant. Luôn import từ `@/constants/...` để đảm bảo tính nhất quán và dễ bảo trì.
 
-
-
-
-
+- **Button Variants:** Tất cả các button trong hệ thống **phải sử dụng** component `Button` từ `src/components/ui/button.tsx` với một trong các variant đã định nghĩa sẵn để đảm bảo đồng nhất giao diện:
+  - `primary` – Gradient tím-xanh, có shadow, dùng cho hành động chính (CTA)
+  - `secondary` – Nền slate tối, viền, dùng cho hành động phụ
+  - `danger` – Tông đỏ, dùng cho hành động nguy hiểm (xóa, hủy, v.v.)
+  - `ghost` – Không nền, chỉ text, dùng cho hành động ít quan trọng
+  - `outline` – Chỉ viền, dùng cho hành động thay thế
+  - `default` – Style mặc định của hệ thống
+  
+  **Không tự style button bằng Tailwind CSS thủ công.** Luôn sử dụng `<Button variant="..." size="...">` để giữ giao diện thống nhất toàn hệ thống.

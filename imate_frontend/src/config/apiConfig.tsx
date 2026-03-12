@@ -77,6 +77,13 @@ const APIConfig = {
     GetSubscriptionOverview: "/subscription-packages/overview",
     UpdateSubscriptionPackagePrice: "/subscription-packages",
   },
+
+  // CV endpoints
+  CV: {
+    Upload: "/cv/upload",
+    GetList: "/cv/list",
+    Delete: "/cv/{cvId}",
+  },
 } as const;
 
 export default APIConfig;

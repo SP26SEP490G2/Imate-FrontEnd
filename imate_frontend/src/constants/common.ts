@@ -86,3 +86,18 @@ export const ROLE_BADGE_COLORS: Record<string, string> = {
  */
 export const DEFAULT_BADGE_COLOR = "bg-[#2e1c0c] text-amber-400";
 
+/**
+ * CV Upload constraints
+ */
+export const CV_UPLOAD = {
+  MAX_SIZE_MB: 5,
+  MAX_SIZE_BYTES: 5 * 1024 * 1024,
+  ACCEPTED_TYPES: [
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ],
+  ACCEPTED_EXTENSIONS: ".pdf,.doc,.docx",
+  ACCEPTED_DISPLAY: "PDF, DOC, DOCX",
+} as const;
+
