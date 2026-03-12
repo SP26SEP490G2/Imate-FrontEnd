@@ -84,6 +84,11 @@ const APIConfig = {
     GetList: "/cv/list",
     Delete: "/cv/{cvId}",
   },
+
+  // AI endpoints
+  AI: {
+    AnalyseCv: "/ai/analyse-cv",
+  },
 } as const;
 
 export default APIConfig;
