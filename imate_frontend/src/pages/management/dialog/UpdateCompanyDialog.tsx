@@ -13,113 +13,129 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-
-import { updatePosition } from "@/services/positionService";
-import type { FormUpdatePosition } from "@/types/request/position.request";
-
+import { Label } from "@/components/ui/label";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "react-toastify";
 
-interface UpdatePositionDialogProps {
+import { updateCompany } from "@/services/companyService"; // ← import từ service
+import type { FormUpdateCompanyRequest } from "@/types/request/company.request";
+import type { Company } from "@/types/model/company.model";
+
+interface UpdateCompanyDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  position: {
-    id: number;
-    name: string;
-    isActive: boolean;
-  } | null;
+  company: Company;
   onSuccess?: () => void;
 }
 
-export function UpdatePositionDialog({
+export function UpdateCompanyDialog({
   open,
   onOpenChange,
-  position,
+  company,
   onSuccess,
-}: UpdatePositionDialogProps) {
-  const [name, setName] = React.useState("");
-  const [isActive, setIsActive] = React.useState(true);
+}: UpdateCompanyDialogProps) {
+  const [name, setName] = React.useState(company.name);
+  const [isActive, setIsActive] = React.useState(company.isActive);
   const [loading, setLoading] = React.useState(false);
 
-  // Đồng bộ state khi position thay đổi hoặc dialog mở
+  // Đồng bộ state khi company thay đổi
   React.useEffect(() => {
-    if (position) {
-      setName(position.name);
-      setIsActive(position.isActive);
-    }
-  }, [position, open]);
+    setName(company.name);
+    setIsActive(company.isActive);
+  }, [company, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    if (!position?.id) {
-      toast.error("Không tìm thấy vị trí để cập nhật");
-      setLoading(false);
-      return;
-    }
-
     if (!name.trim()) {
-      toast.error("Vui lòng nhập tên vị trí");
+      toast.error("Vui lòng nhập tên công ty");
       setLoading(false);
       return;
     }
 
-    const payload: FormUpdatePosition = {
+    const payload: FormUpdateCompanyRequest = {
       name: name.trim(),
-      isActive,
+      newImageFile: null,
+      isActive: isActive,
     };
 
     try {
-      await updatePosition(position.id, payload);
-      toast.success("Cập nhật vị trí thành công!");
+      await updateCompany(company.id, payload);
+      toast.success("Cập nhật công ty thành công!");
       onOpenChange(false);
       onSuccess?.();
     } catch (err: any) {
-      const message = err.response?.data?.message || "Cập nhật vị trí thất bại. Vui lòng thử lại.";
+      const message = err.response?.data?.message || "Cập nhật công ty thất bại. Vui lòng thử lại.";
       toast.error(message);
     } finally {
       setLoading(false);
     }
   };
 
-  if (!position) return null;
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold text-white">
-            Cập nhật vị trí
+            Cập nhật công ty
           </DialogTitle>
           <DialogDescription>
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Tên vị trí */}
+          {/* Tên công ty */}
           <div className="space-y-2">
-            <label
-              htmlFor="name"
-              className="block text-sm font-medium text-slate-200"
-            >
-              Tên vị trí <span className="text-red-400">*</span>
-            </label>
+            <Label htmlFor="name" className="text-sm font-medium text-slate-200">
+              Tên công ty <span className="text-red-400">*</span>
+            </Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Nhập tên vị trí..."
+              placeholder="Nhập tên công ty..."
               className="bg-slate-800 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-primary/50"
               disabled={loading}
               autoFocus
             />
           </div>
 
+          {/* Logo hiện tại (không cho thay) */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium text-slate-200">Logo hiện tại</Label>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="relative h-20 w-20 rounded-md overflow-hidden bg-slate-700 border border-slate-600 cursor-not-allowed opacity-70">
+                    {company.imageUrl ? (
+                      <img
+                        src={company.imageUrl}
+                        alt={company.name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center text-xs text-slate-400">
+                        Chưa có logo
+                      </div>
+                    )}
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-xs font-medium">
+                      Không thể thay đổi
+                    </div>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Chức năng thay đổi logo đang được phát triển
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+
           {/* Trạng thái hoạt động */}
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-slate-200">
+            <Label className="text-sm font-medium text-slate-200">
               Trạng thái hoạt động
-            </label>
+            </Label>
             <div className="flex items-center gap-2">
               <span className="text-sm text-slate-400">
                 {isActive ? "Hoạt động" : "Vô hiệu"}
@@ -133,7 +149,6 @@ export function UpdatePositionDialog({
             </div>
           </div>
 
-          {/* Footer */}
           <DialogFooter>
             <DialogClose asChild>
               <Button
