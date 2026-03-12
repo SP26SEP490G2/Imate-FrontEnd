@@ -248,7 +248,7 @@ export default function UserManagement() {
           >
             <TableHeader>
               <TableRow>
-                <TableHead>NO.</TableHead>
+                <TableHead>STT</TableHead>
                 <TableHead>TÊN NGƯỜI DÙNG</TableHead>
                 <TableHead>EMAIL</TableHead>
                 <TableHead>VAI TRÒ</TableHead>
@@ -273,7 +273,7 @@ export default function UserManagement() {
               ) : (
                 users.map((user, index) => (
                   <TableRow key={user.id}>
-                    <TableCell className="whitespace-nowrap text-slate-400">
+                    <TableCell>
                       {String((page - 1) * 10 + index + 1).padStart(2, '0')}
                     </TableCell>
                     <TableCell>

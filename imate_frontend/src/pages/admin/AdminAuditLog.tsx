@@ -302,7 +302,7 @@ const AdminAuditLog: React.FC = () => {
         </div>
 
         {/* Table Content */}
-        <div className="imate-card overflow-hidden border-white/5">
+        <div>
           {loadingData ? (
             <div className="p-8 space-y-4">
               {Array.from({ length: 8 }).map((_, idx) => (
@@ -338,7 +338,7 @@ const AdminAuditLog: React.FC = () => {
             >
               <TableHeader>
                 <TableRow>
-                  <TableHead>#</TableHead>
+                  <TableHead>STT</TableHead>
                   <TableHead>Người dùng</TableHead>
                   <TableHead>Hành động</TableHead>
                   <TableHead>Đối tượng</TableHead>

@@ -396,13 +396,13 @@ const ViewQuestions: React.FC = () => {
         >
             <TableHeader>
               <TableRow>
-                <TableHead className="px-8 py-5">STT</TableHead>
-                <TableHead className="px-8 py-5">Câu hỏi</TableHead>
-                <TableHead className="px-6 py-5">Vị trí</TableHead>
-                <TableHead className="px-6 py-5">Kỹ năng</TableHead>
-                <TableHead className="px-6 py-5">Cấp độ</TableHead>
-                <TableHead className="px-6 py-5">Trạng thái</TableHead>
-                <TableHead className="px-8 py-5 text-center">Hành động</TableHead>
+                <TableHead>STT</TableHead>
+                <TableHead>Câu hỏi</TableHead>
+                <TableHead>Vị trí</TableHead>
+                <TableHead>Kỹ năng</TableHead>
+                <TableHead>Cấp độ</TableHead>
+                <TableHead>Trạng thái</TableHead>
+                <TableHead className="w-[140px] text-right">Hành động</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -411,28 +411,28 @@ const ViewQuestions: React.FC = () => {
                   <>
                     {[1, 2, 3, 4, 5].map((i) => (
                       <TableRow key={i} className="animate-pulse">
-                        <TableCell className="px-8 py-6">
+                        <TableCell>
                           <div className="h-4 bg-slate-700 rounded w-8"></div>
                         </TableCell>
-                        <TableCell className="px-8 py-6">
+                        <TableCell>
                           <div className="space-y-2">
                             <div className="h-4 bg-slate-700 rounded w-3/4"></div>
                             <div className="h-3 bg-slate-800 rounded w-32"></div>
                           </div>
                         </TableCell>
-                        <TableCell className="px-6 py-6">
+                        <TableCell>
                           <div className="h-6 bg-slate-700 rounded w-20"></div>
                         </TableCell>
-                        <TableCell className="px-6 py-6">
+                        <TableCell>
                           <div className="h-4 bg-slate-700 rounded w-24"></div>
                         </TableCell>
-                        <TableCell className="px-6 py-6">
+                        <TableCell>
                           <div className="h-6 bg-slate-700 rounded w-16"></div>
                         </TableCell>
-                        <TableCell className="px-6 py-6">
+                        <TableCell>
                           <div className="h-6 bg-slate-700 rounded w-20"></div>
                         </TableCell>
-                        <TableCell className="px-8 py-6">
+                        <TableCell>
                           <div className="flex items-center justify-center gap-3">
                             <div className="h-8 w-8 bg-slate-700 rounded-lg"></div>
                             <div className="h-8 w-8 bg-slate-700 rounded-lg"></div>
@@ -465,34 +465,34 @@ const ViewQuestions: React.FC = () => {
                   systemQuestions.length > 0 ? (
                     systemQuestions.map((question, index) => (
                       <TableRow key={question.id} className="group hover:bg-white/5 transition-all">
-                        <TableCell className="px-8 py-6 text-sm text-slate-400">
+                        <TableCell>
                           {String((systemPagination.pageNumber - 1) * systemPagination.pageSize + index + 1).padStart(2, '0')}
                         </TableCell>
-                        <TableCell className="px-8 py-6">
+                        <TableCell>
                           <span className="text-white font-semibold group-hover:text-indigo-400 transition-colors cursor-pointer">
                             {question.content}
                           </span>
                         </TableCell>
-                        <TableCell className="px-6 py-6">
+                        <TableCell>
                           <StatusBadge status="inactive">
                             {question.positionsName || 'N/A'}
                           </StatusBadge>
                         </TableCell>
-                        <TableCell className="px-6 py-6 text-sm text-slate-400">
+                        <TableCell>
                           {question.skillsName || 'N/A'}
                         </TableCell>
-                        <TableCell className="px-6 py-6">
+                        <TableCell>
                           <StatusBadge status={getDifficultyStatus(DIFFICULTY_MAP[question.difficulty as 0 | 1 | 2] || 'Easy')}>
                             {DIFFICULTY_MAP[question.difficulty as 0 | 1 | 2] || 'N/A'}
                           </StatusBadge>
                         </TableCell>
-                        <TableCell className="px-6 py-6">
+                        <TableCell>
                           <StatusBadge status={question.isActive ? "active" : "inactive"}>
                             {question.isActive ? "Hoạt động" : "Vô hiệu"}
                           </StatusBadge>
                         </TableCell>
-                        <TableCell className="px-8 py-6">
-                          <div className="flex items-center justify-center gap-3">
+                        <TableCell>
+                          <div className="flex gap-2 justify-end">
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Button 

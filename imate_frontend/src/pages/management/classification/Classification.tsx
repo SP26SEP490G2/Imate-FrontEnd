@@ -375,7 +375,7 @@ export default function Classification() {
             >
               <TableHeader>
                 <TableRow>
-                  <TableHead>ID</TableHead>
+                  <TableHead>STT</TableHead>
                   <TableHead>Tên</TableHead>
                   <TableHead>Số câu hỏi</TableHead>
                   <TableHead>Trạng thái</TableHead>
@@ -385,7 +385,7 @@ export default function Classification() {
               <TableBody>
                 {categories.map((cat) => (
                   <TableRow key={cat.id}>
-                    <TableCell>{cat.id}</TableCell>
+                    <TableCell>{String((catPage - 1) * catPageSize + categories.indexOf(cat) + 1).padStart(2, '0')}</TableCell>
                     <TableCell className="font-medium">{cat.name}</TableCell>
                     <TableCell>{cat.questionCount}</TableCell>
                     <TableCell>
@@ -498,7 +498,7 @@ export default function Classification() {
             >
               <TableHeader>
                 <TableRow>
-                  <TableHead>ID</TableHead>
+                  <TableHead>STT</TableHead>
                   <TableHead>Tên</TableHead>
                   <TableHead>Số câu hỏi</TableHead>
                   <TableHead>Trạng thái</TableHead>
@@ -508,7 +508,7 @@ export default function Classification() {
               <TableBody>
                 {positions.map((pos) => (
                   <TableRow key={pos.id}>
-                    <TableCell>{pos.id}</TableCell>
+                    <TableCell>{String((posPage - 1) * posPageSize + positions.indexOf(pos) + 1).padStart(2, '0')}</TableCell>
                     <TableCell className="font-medium">{pos.name}</TableCell>
                     <TableCell>{pos.questionCount}</TableCell>
                     <TableCell>
@@ -621,7 +621,7 @@ export default function Classification() {
             >
               <TableHeader>
                 <TableRow>
-                  <TableHead>ID</TableHead>
+                  <TableHead>STT</TableHead>
                   <TableHead>Tên</TableHead>
                   <TableHead>Số câu hỏi</TableHead>
                   <TableHead>Trạng thái</TableHead>
@@ -631,7 +631,7 @@ export default function Classification() {
               <TableBody>
                 {skills.map((skill) => (
                   <TableRow key={skill.id}>
-                    <TableCell>{skill.id}</TableCell>
+                    <TableCell>{String((skillPage - 1) * skillPageSize + skills.indexOf(skill) + 1).padStart(2, '0')}</TableCell>
                     <TableCell className="font-medium">{skill.name}</TableCell>
                     <TableCell>{skill.questionCount}</TableCell>
                     <TableCell>
