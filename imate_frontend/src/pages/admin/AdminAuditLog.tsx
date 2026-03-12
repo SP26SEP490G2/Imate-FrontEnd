@@ -19,7 +19,7 @@ import { AppTabs } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 // 5. TYPES
-import type { PaginatedAuditLogResponse, AuditLogListResponse, AuditLogDetailResponse } from "@/types/response/audit-log.response";
+import type { PaginatedAuditLogResponse, AuditLogDetailResponse } from "@/types/response/audit-log.response";
 import { getPaginationRange } from "@/helpers/getPaginationRange";
 
 const PAGE_SIZE = 10;
@@ -211,23 +211,6 @@ const AdminAuditLog: React.FC = () => {
       console.log("Error fetching detail:", error);
     } finally {
       setLoadingDetail(false);
-    }
-  };
-
-  // 6. HELPER FUNCTIONS
-  const getActionColor = (action: string) => {
-    switch (action.toLowerCase()) {
-      case "create":
-      case "thêm":
-        return "text-green-600";
-      case "update":
-      case "sửa":
-        return "text-yellow-600";
-      case "delete":
-      case "xóa":
-        return "text-red-600";
-      default:
-        return "text-gray-600";
     }
   };
 

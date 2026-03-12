@@ -1,8 +1,11 @@
+import axios from "axios";
+import type { User } from "@/types/common/auth";
 import apiClient from "./apiClient";
 import APIConfig from "@/config/apiConfig";
 import type { ListPreviewMentorResponse } from "@/types/common/mentor";
 import type { CommonParams, PaginatedApiResponse } from "@/types/common/pagination";
 import type { SubmitMentorProfileRequest } from "@/types/request/mentor.request";
+import type { BankInfo } from "@/types/common/data";
 
 /** @deprecated Dùng SubmitMentorProfileRequest từ @/types/request/mentor.request */
 export type SubmitMentorProfilePayload = SubmitMentorProfileRequest;
@@ -72,3 +75,45 @@ export const submitMentorProfile = async (payload: SubmitMentorProfileRequest): 
   await apiClient.post(APIConfig.Mentor.SubmitMentorProfile, payload);
 };
 
+
+export const updateMentorProfile = async (data: User) => {
+  try {
+    const res = await apiClient.put("/mentor-profile", data);
+
+    return res.data;
+  } catch (error) {
+    console.log("Error updating mentor profile: ", error);
+    throw error;
+  }
+};
+
+export const getBankDetail = async (bankCode: string) => {
+  try {
+    const res = await axios.get("https://api.vietqr.io/v2/banks");
+
+    const banks = res.data.data || res.data;
+
+    const bank = banks.find((b: any) => b.code.toLowerCase() === bankCode.toLowerCase());
+
+    if (!bank) throw new Error(`Bank with code: ${bankCode} not found`);
+
+    return bank;
+  } catch (error) {
+    console.log("Error fetch bank detail: ", error);
+    throw error;
+  }
+};
+
+export const getBankList = async (): Promise<BankInfo[]> => {
+  try {
+    const res = await apiClient.get("https://api.vietqr.io/v2/banks");
+    if (res.data?.data) {
+      return res.data.data;
+    } else {
+      throw new Error("Invalid response format from VietQR API");
+    }
+  } catch (error) {
+    console.log("Error fetch bank list: ", error);
+    return [];
+  }
+};

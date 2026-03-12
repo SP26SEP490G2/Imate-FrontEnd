@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Edit } from "lucide-react";
 import { z } from "zod";
 import { toast } from "react-toastify";
-import { updateRecruiterProfile } from "@/services/recruiterService_PhuDK/recruiterService";
+import { updateRecruiterProfile } from "@/services/recruiterService";
 import type { User } from "@/types/common/auth";
 
 const recruiterSchema = z.object({
