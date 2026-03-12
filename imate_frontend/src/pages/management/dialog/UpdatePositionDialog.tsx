@@ -102,7 +102,7 @@ export function UpdatePositionDialog({
               htmlFor="name"
               className="block text-sm font-medium text-slate-200"
             >
-              Tên vị trí
+              Tên vị trí <span className="text-red-400">*</span>
             </label>
             <Input
               id="name"
