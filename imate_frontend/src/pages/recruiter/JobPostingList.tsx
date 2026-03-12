@@ -20,7 +20,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { Input } from "@/components/ui/input";
 
 import type { JobItem, JobResponse } from "@/types/common/recruiter";
-import { getRecruiterJobApplications } from "@/services/recruiterService_PhuDK/recruiterService";
+import { getRecruiterJobApplications } from "@/services/recruiterService";
 import UpdateJobPostModal from "@/dialog/main/recruiter/UpdateJobPostModal";
 const JobPostingList: React.FC = () => {
     const navigate = useNavigate();

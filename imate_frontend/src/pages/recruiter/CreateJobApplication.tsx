@@ -3,8 +3,9 @@ import { X, Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { getAllPositions, getAllSkills } from "@/services/commonService";
 import type { PositionItem, SkillItem } from "@/types/common/question";
 import { Badge } from "@/components/ui/badge";
-import { CreateJobPost } from "@/services/recruiterService_PhuDK/recruiterService";
+import { CreateJobPost } from "@/services/recruiterService";
 import { toast } from "react-toastify";
+import { MSG52, MSG53 } from "@/constants/messages";
 
 const CreateJobApplication: React.FC = () => {
   const [form, setForm] = useState({
@@ -90,7 +91,7 @@ const CreateJobApplication: React.FC = () => {
       await CreateJobPost(payload);
       setIsSubmitting(false);
 
-      toast.success("Tạo Job thành công!");
+      toast.success(MSG52);
 
       // reset form
       setForm({
@@ -112,7 +113,7 @@ const CreateJobApplication: React.FC = () => {
 
     } catch (error) {
       console.error(error);
-      toast.error("Tạo Job thất bại. Vui lòng thử lại.");
+      toast.error(MSG53);
       setIsSubmitting(false);
 
     }
