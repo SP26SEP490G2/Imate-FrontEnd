@@ -153,3 +153,15 @@ export const MSG50 = "Ứng tuyển thành công. Vui lòng chờ nhà tuyển d
 
 // MSG51: Already applied
 export const MSG51 = "Bạn đã ứng tuyển vào vị trí này rồi.";
+
+//MSG52: Post Job Success
+export const MSG52 = "Đăng tin tuyển dụng thành công.";
+
+//MSG53: Post Job Failure
+export const MSG53 = "Đăng tin tuyển dụng thất bại. Vui lòng thử lại sau.";
+
+//MSG54: Update Job Success
+export const MSG54 = "Cập nhật tin tuyển dụng thành công.";
+
+//MSG55: Update Job Failure
+export const MSG55 = "Cập nhật tin tuyển dụng thất bại. Vui lòng thử lại sau.";

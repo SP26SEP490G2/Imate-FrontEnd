@@ -141,37 +141,37 @@ function PricingCard({ pkg, index, onEdit }: PricingCardProps) {
   const tier = getTierColor(index);
   return (
     <div
-      className={`relative rounded-2xl border ${tier.border} bg-gradient-to-b ${tier.gradient} backdrop-blur-sm p-6 flex flex-col`}
+      className={`relative rounded-lg border ${tier.border} bg-gradient-to-b ${tier.gradient} p-6 flex flex-col`}
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-1">
+      <div className="flex items-center justify-between mb-2">
         <h3 className="text-white font-bold text-lg">{pkg.name}</h3>
         {index > 0 && (
           <button
             onClick={() => onEdit(pkg)}
-            className={`p-1.5 rounded-lg ${tier.badge} hover:opacity-80 transition-opacity`}
+            className={`p-1.5 rounded-md ${tier.badge} hover:opacity-80 transition-opacity`}
           >
             <Pencil size={14} />
           </button>
         )}
       </div>
-      <p className="text-xs text-slate-400 mb-4 italic">
-        {pkg.duration || "Esse magna sunt proident cupitat dolor."}
+      <p className="text-xs text-slate-400 mb-4">
+        {pkg.duration || "Chưa có mô tả"}
       </p>
 
       {/* Price */}
-      <p className={`text-3xl font-extrabold mb-1 ${tier.text}`}>
-        {formatPrice(pkg.price)}
-        {pkg.price > 0 && <span className="text-base font-normal text-slate-400 ml-1">VNĐ</span>}
-      </p>
-      {pkg.price > 0 && (
-        <p className="text-xs text-slate-500 mb-4">{pkg.duration || "5 phiên phỏng vấn"}</p>
-      )}
-      {pkg.price === 0 && <div className="mb-4" />}
+      <div className="mb-4">
+        <p className={`text-3xl font-bold ${tier.text}`}>
+          {formatPrice(pkg.price)}
+        </p>
+        {pkg.price > 0 && (
+          <p className="text-xs text-slate-400 mt-1">{pkg.duration || "5 phiên phỏng vấn"}</p>
+        )}
+      </div>
 
       {/* Features */}
       <div className="mt-auto">
-        <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-3">Features</p>
+        <p className="text-xs uppercase tracking-wider text-slate-500 font-semibold mb-3">Tính năng</p>
         <ul className="space-y-2">
           {pkg.benefits.map((b, i) => (
             <li key={i} className="flex items-start gap-2 text-sm text-slate-300">
@@ -269,17 +269,16 @@ function EditPriceModal({ open, pkg, onClose, onUpdated }: EditPriceModalProps) 
 
           <div className="flex items-center justify-end gap-3 pt-1">
             <Button
-              variant="outline"
+              variant="secondary"
               onClick={onClose}
               disabled={loading}
-              className="bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white px-6"
             >
               Hủy
             </Button>
             <Button
+              variant="primary"
               onClick={handleSubmit}
               disabled={loading}
-              className="bg-purple-600 hover:bg-purple-700 text-white font-medium px-6 shadow-lg shadow-purple-900/20"
             >
               {loading ? "Đang cập nhật..." : "Cập nhật"}
             </Button>
@@ -329,88 +328,74 @@ export default function SubscriptionManagement() {
   };
 
   return (
-    <div className="p-8 space-y-8 bg-[#0a0f1c] min-h-screen text-slate-200">
+    <div className="p-6 space-y-6 min-h-full">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <div className="flex items-center text-sm text-slate-400 mb-1">
-            <span>Dashboard</span>
-            <span className="mx-2">&gt;</span>
-            <span className="text-slate-300">Quản lý gói đăng ký</span>
-          </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Quản lý gói đăng ký</h1>
+          <h1 className="text-4xl font-bold text-white mb-2">
+            Quản lý gói đăng ký
+          </h1>
+          <p className="text-slate-400">
+            Quản lý và cập nhật các gói đăng ký dịch vụ.
+          </p>
         </div>
       </div>
 
       {/* ── Overview Section ── */}
-      <section>
-        <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-          <Package size={18} className="text-purple-400" /> Tổng quan
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Card 1 — Total sold */}
-          <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-5">
-            <p className="text-xs text-slate-400 mb-2">Tổng số gói bán được</p>
-            <div className="flex items-end justify-between">
-              <div>
-                {overviewLoading ? (
-                  <div className="h-8 w-16 bg-slate-800 rounded animate-pulse" />
-                ) : (
-                  <p className="text-3xl font-extrabold text-white">{overview?.totalSold ?? 0}</p>
-                )}
-              </div>
-              <div className="flex flex-col items-end gap-1">
-                <span className="inline-flex items-center text-xs gap-1 text-purple-400 font-semibold">
-                  <TrendingUp size={12} />
-                </span>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Card 1 — Total sold */}
+        <div className="rounded-lg border border-slate-700/60 bg-slate-800/40 p-5 flex flex-col">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-sm font-medium text-slate-400">Tổng số gói bán được</p>
+            <TrendingUp size={16} className="text-purple-400" />
+          </div>
+          <div className="flex items-center gap-2">
+            {overviewLoading ? (
+              <div className="h-8 w-16 bg-slate-700 rounded animate-pulse" />
+            ) : (
+              <>
+                <p className="text-3xl font-bold text-white">{overview?.totalSold ?? 0}</p>
                 <Sparkline up />
-              </div>
-            </div>
-          </div>
-
-          {/* Card 2 — Revenue */}
-          <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-5">
-            <p className="text-xs text-slate-400 mb-2">Doanh thu</p>
-            <div className="flex items-end justify-between">
-              <div>
-                {overviewLoading ? (
-                  <div className="h-8 w-28 bg-slate-800 rounded animate-pulse" />
-                ) : (
-                  <p className="text-3xl font-extrabold text-white">
-                    {(overview?.totalRevenue ?? 0).toLocaleString("vi-VN")}
-                    <span className="text-base font-normal text-slate-400 ml-1">VNĐ</span>
-                  </p>
-                )}
-              </div>
-              <div className="flex flex-col items-end gap-1">
-                <span className="inline-flex items-center text-xs gap-1 text-rose-400 font-semibold">
-                  <TrendingDown size={12} />
-                </span>
-                <Sparkline up={false} />
-              </div>
-            </div>
-          </div>
-
-          {/* Card 3 — Featured package */}
-          <div className="rounded-xl border border-purple-500/30 bg-gradient-to-br from-purple-900/20 to-slate-900/60 p-5 flex flex-col justify-between">
-            <p className="text-xs text-slate-400 mb-2">Gói đăng ký nổi bật</p>
-            <div className="flex items-center gap-2">
-              <Crown size={20} className="text-purple-400" />
-              <p className="text-2xl font-extrabold text-purple-300">{featured ?? "—"}</p>
-            </div>
+              </>
+            )}
           </div>
         </div>
-      </section>
+
+        {/* Card 2 — Revenue */}
+        <div className="rounded-lg border border-slate-700/60 bg-slate-800/40 p-5 flex flex-col">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-sm font-medium text-slate-400">Doanh thu</p>
+            <TrendingDown size={16} className="text-rose-400" />
+          </div>
+          {overviewLoading ? (
+            <div className="h-8 w-28 bg-slate-700 rounded animate-pulse" />
+          ) : (
+            <p className="text-3xl font-bold text-white">
+              {(overview?.totalRevenue ?? 0).toLocaleString("vi-VN")}
+              <span className="text-sm font-normal text-slate-400 ml-2">VNĐ</span>
+            </p>
+          )}
+        </div>
+
+        {/* Card 3 — Featured package */}
+        <div className="rounded-lg border border-purple-500/30 bg-purple-900/20 p-5 flex flex-col justify-between">
+          <p className="text-sm font-medium text-slate-400 mb-3">Gói đăng ký nổi bật</p>
+          <div className="flex items-center gap-2">
+            <Crown size={18} className="text-purple-400" />
+            <p className="text-2xl font-bold text-purple-300">{featured ?? "—"}</p>
+          </div>
+        </div>
+      </div>
 
       {/* ── Chart Section ── */}
-      <section className="rounded-xl border border-slate-800 bg-slate-900/40 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-white">Thống kê</h2>
-          <div className="flex items-center gap-4 text-xs">
+      <div className="rounded-lg border border-slate-700/60 bg-slate-800/40 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-lg font-semibold text-white">Thống kê doanh thu</h2>
+          <div className="flex items-center gap-4 text-xs text-slate-400">
             {paidPackageNames.map((name, i) => (
               <span key={name} className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: chartColors[i] ?? "#a855f7" }} />
-                {name}
+                <span className="text-slate-300">{name}</span>
               </span>
             ))}
           </div>
@@ -418,44 +403,34 @@ export default function SubscriptionManagement() {
         {overview?.monthlySales ? (
           <AreaChart monthlySales={overview.monthlySales} packageNames={paidPackageNames} />
         ) : overviewLoading ? (
-          <div className="h-64 bg-slate-800/30 rounded animate-pulse" />
+          <div className="h-64 bg-slate-700 rounded animate-pulse" />
         ) : (
           <div className="h-64 flex items-center justify-center text-slate-500">Không có dữ liệu thống kê</div>
         )}
-      </section>
+      </div>
 
       {/* ── Pricing Cards ── */}
-      <section>
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[1, 2, 3].map((item) => (
-              <div key={item} className="animate-pulse rounded-2xl border border-slate-800 bg-slate-900/40 p-6 h-72">
-                <div className="h-5 w-28 bg-slate-800 rounded mb-3" />
-                <div className="h-8 w-36 bg-slate-800 rounded mb-4" />
-                <div className="space-y-2">
-                  <div className="h-3 w-full bg-slate-800 rounded" />
-                  <div className="h-3 w-4/5 bg-slate-800 rounded" />
-                  <div className="h-3 w-3/5 bg-slate-800 rounded" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : error ? (
-          <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-6 py-10 text-center text-rose-300">
-            {MSG07}
-          </div>
-        ) : packages.length === 0 ? (
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 px-6 py-10 text-center text-slate-400">
-            {MSG06}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {packages.slice(0, 3).map((pkg, i) => (
-              <PricingCard key={pkg.id} pkg={pkg} index={i} onEdit={setEditPkg} />
-            ))}
-          </div>
-        )}
-      </section>
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[1, 2, 3].map((item) => (
+            <div key={item} className="animate-pulse rounded-lg border border-slate-700 bg-slate-800/40 p-6 h-72" />
+          ))}
+        </div>
+      ) : error ? (
+        <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-6 py-10 text-center text-rose-300">
+          {MSG07}
+        </div>
+      ) : packages.length === 0 ? (
+        <div className="rounded-lg border border-slate-700 bg-slate-800/40 px-6 py-10 text-center text-slate-400">
+          {MSG06}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {packages.slice(0, 3).map((pkg, i) => (
+            <PricingCard key={pkg.id} pkg={pkg} index={i} onEdit={setEditPkg} />
+          ))}
+        </div>
+      )}
 
       {/* ── Edit Price Modal ── */}
       <EditPriceModal

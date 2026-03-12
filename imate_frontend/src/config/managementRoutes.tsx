@@ -7,6 +7,7 @@ import {
   PlusCircle,
   Layers,
   Logs,
+  FileQuestion,
 } from "lucide-react";
 
 import ReviewMentorApplication from "@/pages/staff/ReviewMentorApplication";
@@ -21,7 +22,7 @@ import AdminAuditLog from "@/pages/admin/AdminAuditLog";
 export const managementRoutes = [
   {
     label: "Đơn ứng tuyển",
-    icon: BarChart3,
+    icon: FileText,
     path: "applications",
     element: <ReviewMentorApplication />,
     allowedRoles: ["Staff", "Admin"],
@@ -42,7 +43,7 @@ export const managementRoutes = [
   },
   {
     label: "Quản lý câu hỏi",
-    icon: Users,
+    icon: FileQuestion,
     path: "view-questions",
     element: <ViewQuestions />,
     allowedRoles: ["Admin", "Staff"],
@@ -55,7 +56,7 @@ export const managementRoutes = [
     allowedRoles: ["Admin"],
   },
     {
-    label: "Quản lý truy vết hệ thống",
+    label: "Truy vết hệ thống",
     icon: Logs,
     path: "admin/audit-logs",
     element: <AdminAuditLog />,

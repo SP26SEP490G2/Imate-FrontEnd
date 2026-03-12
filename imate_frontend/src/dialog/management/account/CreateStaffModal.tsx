@@ -139,14 +139,13 @@ export default function CreateStaffModal({ open, onClose, onCreated }: CreateSta
               variant="outline"
               onClick={handleClose}
               disabled={loading}
-              className="bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white px-6"
             >
               Hủy
             </Button>
             <Button
+              variant="primary"
               onClick={handleSubmit}
               disabled={loading}
-              className="bg-purple-600 hover:bg-purple-700 text-white font-medium px-6 shadow-lg shadow-purple-900/20"
             >
               {loading ? "Đang tạo..." : "Tạo tài khoản"}
             </Button>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth } from "@/store/AuthContext";
@@ -55,16 +55,18 @@ export default function SubmitRecruiterApplication() {
     }
   };
 
-  if (!user || user.role !== "Recruiter") {
-    navigate("/", { replace: true });
-    return null;
-  }
-  if (user.accountStatus === "Active") {
-    navigate("/recruiter/dashboard", { replace: true });
-    return null;
-  }
-  if (user.accountStatus === "PendingVerification") {
-    navigate("/recruiter-pending-application", { replace: true });
+  // Dùng useEffect để redirect, tránh navigate() during render
+  useEffect(() => {
+    if (!user || user.role !== "Recruiter") {
+      navigate("/", { replace: true });
+    } else if (user.accountStatus === "Active") {
+      navigate("/recruiter/dashboard", { replace: true });
+    }
+    // Không redirect PendingVerification – recruiter mới chưa nộp hồ sơ cần ở lại trang này
+  }, [user, navigate]);
+
+  // Hiển thị null trong khi đang redirect
+  if (!user || user.role !== "Recruiter" || user.accountStatus === "Active") {
     return null;
   }
 

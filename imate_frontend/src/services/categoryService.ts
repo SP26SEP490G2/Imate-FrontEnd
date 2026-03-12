@@ -1,4 +1,5 @@
 import apiClient from "./apiClient";
+import APIConfig from "@/config/apiConfig";
 
 import type { CategorySubmit, CategoryUpdate } from "@/types/request/category.request";
 import type { ListCategoryResponse } from "@/types/response/category.response";
@@ -11,7 +12,7 @@ export const getAllCategories = async (
   searchTerm: string,
   SortBy?: string,
   SortOrder?: string,
-  PositionId?: number | null // THAM SỐ MỚI: Dùng để lọc kỹ năng theo vị trí
+  PositionId?: number | null
 ) => {
   try {
     const params = new URLSearchParams({
@@ -24,7 +25,10 @@ export const getAllCategories = async (
       ...(PositionId !== null && PositionId !== undefined && { PositionId: PositionId.toString() }),
     });
 
-    const res = await apiClient.get(`/get-categories?${params.toString()}`);
+    const res = await apiClient.get(
+      `${APIConfig.Category.GetAllCategories}?${params.toString()}`
+    );
+
     return res.data as ListCategoryResponse;
   } catch (error) {
     console.log("error fetch categories: ", error);
@@ -32,7 +36,14 @@ export const getAllCategories = async (
   }
 };
 
-export const getListDetailCategory = async (PageNumber: number, PageSize: number, SearchTerm: string, IsActive: boolean | null, SortBy?: string, SortOrder?: string) => {
+export const getListDetailCategory = async (
+  PageNumber: number,
+  PageSize: number,
+  SearchTerm: string,
+  IsActive: boolean | null,
+  SortBy?: string,
+  SortOrder?: string
+) => {
   try {
     const params = new URLSearchParams({
       PageNumber: PageNumber.toString(),
@@ -43,7 +54,10 @@ export const getListDetailCategory = async (PageNumber: number, PageSize: number
       ...(SortOrder && { SortOrder }),
     });
 
-    const res = await apiClient.get(`${"/get-categories"}?${params.toString()}`);
+    const res = await apiClient.get(
+      `${APIConfig.Category.GetAllCategories}?${params.toString()}`
+    );
+
     return res.data as ListCategoryResponse;
   } catch (error) {
     console.log("error fetch categories: ", error);
@@ -54,7 +68,10 @@ export const getListDetailCategory = async (PageNumber: number, PageSize: number
 export const AddCategory = async (category: CategorySubmit) => {
   console.log("category", category);
   try {
-    const res = await apiClient.post(`/categories`, category);
+    const res = await apiClient.post(
+      APIConfig.Category.AddCategory,
+      category
+    );
     return res;
   } catch (error: any) {
     throw error;
@@ -63,7 +80,12 @@ export const AddCategory = async (category: CategorySubmit) => {
 
 export const UpdateCategory = async (category: CategoryUpdate, id: number) => {
   try {
-    const res = await apiClient.put(`/categories/${id}`, category);
+    const url = APIConfig.Category.UpdateCategory.replace(
+      "{categoryId}",
+      id.toString()
+    );
+
+    const res = await apiClient.put(url, category);
     return res;
   } catch (error: any) {
     console.log("error update category api: ", error.message);
@@ -71,9 +93,20 @@ export const UpdateCategory = async (category: CategoryUpdate, id: number) => {
   }
 };
 
-export const getAffectedQuestions = async (categoryId: number, willBeActive: boolean) => {
+export const getAffectedQuestions = async (
+  categoryId: number,
+  willBeActive: boolean
+) => {
   try {
-    const res = await apiClient.get(`/categories/${categoryId}/affected-questions?willBeActive=${willBeActive}`);
+    const url = APIConfig.Category.GetAffectedQuestions.replace(
+      "{categoryId}",
+      categoryId.toString()
+    );
+
+    const res = await apiClient.get(
+      `${url}?willBeActive=${willBeActive}`
+    );
+
     return res.data as AffectedQuestion[];
   } catch (error) {
     console.log("error fetch affected questions: ", error);

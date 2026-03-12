@@ -19,7 +19,7 @@ import { AppTabs } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 // 5. TYPES
-import type { PaginatedAuditLogResponse, AuditLogListResponse, AuditLogDetailResponse } from "@/types/response/audit-log.response";
+import type { PaginatedAuditLogResponse, AuditLogDetailResponse } from "@/types/response/audit-log.response";
 import { getPaginationRange } from "@/helpers/getPaginationRange";
 
 const PAGE_SIZE = 10;
@@ -67,6 +67,7 @@ const AdminAuditLog: React.FC = () => {
 
   // DERIVED STATE
   const totalPage = data?.totalPages || 0;
+  const totalCount = data?.totalCount || 0;
   const [paginationRange, setPaginationRange] = useState<(number | "dots")[]>([]);
 
   //==========USE EFFECT==========
@@ -213,23 +214,6 @@ const AdminAuditLog: React.FC = () => {
     }
   };
 
-  // 6. HELPER FUNCTIONS
-  const getActionColor = (action: string) => {
-    switch (action.toLowerCase()) {
-      case "create":
-      case "thêm":
-        return "text-green-600";
-      case "update":
-      case "sửa":
-        return "text-yellow-600";
-      case "delete":
-      case "xóa":
-        return "text-red-600";
-      default:
-        return "text-gray-600";
-    }
-  };
-
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const day = date.getDate();
@@ -318,7 +302,7 @@ const AdminAuditLog: React.FC = () => {
         </div>
 
         {/* Table Content */}
-        <div className="imate-card overflow-hidden border-white/5">
+        <div>
           {loadingData ? (
             <div className="p-8 space-y-4">
               {Array.from({ length: 8 }).map((_, idx) => (
@@ -346,13 +330,15 @@ const AdminAuditLog: React.FC = () => {
             <Table
               page={currentPage}
               totalPages={totalPage}
+              totalCount = {totalCount}
               pageSize={PAGE_SIZE}
+              onPageSizeChange={() => {}}
               onPageChange={handlePageChange}
               maxHeight="55vh"
             >
               <TableHeader>
                 <TableRow>
-                  <TableHead>#</TableHead>
+                  <TableHead>STT</TableHead>
                   <TableHead>Người dùng</TableHead>
                   <TableHead>Hành động</TableHead>
                   <TableHead>Đối tượng</TableHead>
