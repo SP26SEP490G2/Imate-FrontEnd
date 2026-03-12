@@ -16,7 +16,7 @@ import SettingTab from "@/components/custom/ViewProfileTabs/SettingTab";
 import { updateMyProfile } from "@/services/accountService";
 import { toast } from "react-toastify";
 import { calculateAge, formatPrice, getAvatarColor, getInitials } from "@/helpers/common";
-import { getBankDetail } from "@/services/mentorService_PhuDK/mentorService";
+import { getBankDetail } from "@/services/mentorService";
 import UpdateMentorDialog from "../dialog/UpdateMentorDialog";
 import usePriceUpdateControl from "@/helpers/usePriceUpdateControl";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";

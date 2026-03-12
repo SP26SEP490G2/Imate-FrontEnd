@@ -95,13 +95,13 @@ export function UpdateCategoryDialog({
               htmlFor="name"
               className="block text-sm font-medium text-slate-200"
             >
-              Tên danh mục
+              Tên thể loại <span className="text-red-400">*</span>
             </label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Nhập tên danh mục..."
+              placeholder="Nhập tên thể loại..."
               className="bg-slate-800 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-primary/50"
               disabled={loading}
               autoFocus

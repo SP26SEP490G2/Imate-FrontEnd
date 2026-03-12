@@ -55,7 +55,7 @@ export function CreateSkillDialog({ open, onOpenChange, onSuccess }: CreateSkill
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <label htmlFor="name" className="block text-sm font-medium text-slate-200">
-              Tên kĩ năng
+              Tên kĩ năng <span className="text-red-400">*</span>
             </label>
             <Input
               id="name"

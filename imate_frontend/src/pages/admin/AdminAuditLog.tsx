@@ -19,7 +19,7 @@ import { AppTabs } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 // 5. TYPES
-import type { PaginatedAuditLogResponse, AuditLogListResponse, AuditLogDetailResponse } from "@/types/response/audit-log.response";
+import type { PaginatedAuditLogResponse, AuditLogDetailResponse } from "@/types/response/audit-log.response";
 import { getPaginationRange } from "@/helpers/getPaginationRange";
 
 const PAGE_SIZE = 10;
@@ -214,23 +214,6 @@ const AdminAuditLog: React.FC = () => {
     }
   };
 
-  // 6. HELPER FUNCTIONS
-  const getActionColor = (action: string) => {
-    switch (action.toLowerCase()) {
-      case "create":
-      case "thêm":
-        return "text-green-600";
-      case "update":
-      case "sửa":
-        return "text-yellow-600";
-      case "delete":
-      case "xóa":
-        return "text-red-600";
-      default:
-        return "text-gray-600";
-    }
-  };
-
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const day = date.getDate();
@@ -319,7 +302,7 @@ const AdminAuditLog: React.FC = () => {
         </div>
 
         {/* Table Content */}
-        <div className="imate-card overflow-hidden border-white/5">
+        <div>
           {loadingData ? (
             <div className="p-8 space-y-4">
               {Array.from({ length: 8 }).map((_, idx) => (
@@ -355,7 +338,7 @@ const AdminAuditLog: React.FC = () => {
             >
               <TableHeader>
                 <TableRow>
-                  <TableHead>#</TableHead>
+                  <TableHead>STT</TableHead>
                   <TableHead>Người dùng</TableHead>
                   <TableHead>Hành động</TableHead>
                   <TableHead>Đối tượng</TableHead>
@@ -517,22 +500,6 @@ const AdminAuditLog: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
-
-      <style>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(255, 255, 255, 0.2);
-        }
-      `}</style>
     </div>
   );
 };

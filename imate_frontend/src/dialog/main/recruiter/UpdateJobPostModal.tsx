@@ -3,7 +3,7 @@ import { X, Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { getAllPositions, getAllSkills } from "@/services/commonService";
 import type { PositionItem, SkillItem } from "@/types/common/question";
 import { Badge } from "@/components/ui/badge";
-import { UpdateJobApplication } from "@/services/recruiterService_PhuDK/recruiterService";
+import { UpdateJobApplication } from "@/services/recruiterService";
 import { toast } from "react-toastify";
 import type { JobItem } from "@/types/common/recruiter";
 

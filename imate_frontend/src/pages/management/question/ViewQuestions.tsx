@@ -9,13 +9,14 @@ import { getAllSkill } from '@/services/skillService';
 import { DIFFICULTY_OPTIONS } from '@/constants/enum';
 import { UpdateSystemQuestionModal } from '@/dialog/management/question/UpdateSystemQuestionModal';
 import { CreateSystemQuestionDialog } from '@/dialog/management/question/CreateSystemQuestionDialog';
+import { CreateContributeQuestionDialog } from '@/dialog/main/question/CreateContributeQuestionDialog';
+import { ViewContributeQuestionModal } from '@/dialog/main/question/ViewContributeQuestionModal';
 import type {
   StaffSystemQuestionItem,
   StaffContributedQuestionItem,
   GetSystemQuestionParams,
   GetContributedQuestionParams,
   DifficultyLevel,
-  Level,
   CategoryItem,
   PositionItem,
   SkillItem
@@ -24,16 +25,12 @@ import {DIFFICULTY_MAP } from '@/constants/common';
 import {
   Eye,
   Pencil,
-  Trash2,
   Plus,
   Download,
-  Upload,
-  ChevronDown,
-  Search
+  Upload
 } from 'lucide-react';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { AppTabs } from '@/components/ui/tabs';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
@@ -50,6 +47,13 @@ const ViewQuestions: React.FC = () => {
 
   // Create question modal state
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  
+  // Create contribute question modal state
+  const [contributeModalOpen, setContributeModalOpen] = useState(false);
+
+  // View contribute question modal state
+  const [viewContributeModalOpen, setViewContributeModalOpen] = useState(false);
+  const [selectedContributeQuestionId, setSelectedContributeQuestionId] = useState<number | null>(null);
 
   // System Questions State
   const [systemQuestions, setSystemQuestions] = useState<StaffSystemQuestionItem[]>([]);
@@ -219,181 +223,192 @@ const ViewQuestions: React.FC = () => {
     }
   };
 
+  const handleViewContributeQuestion = (questionId: number) => {
+    setSelectedContributeQuestionId(questionId);
+    setViewContributeModalOpen(true);
+  };
+
   const getDifficultyStatus = (difficulty: string): "active" | "pending" | "error" | "inactive" | "draft" => {
-    const diffLower = difficulty.toLowerCase();
-    if (diffLower === 'easy' || diffLower === 'intern' || diffLower === 'fresher') return 'active';
-    if (diffLower === 'medium' || diffLower === 'junior' || diffLower === 'middle') return 'pending';
-    if (diffLower === 'hard' || diffLower === 'senior') return 'error';
+    const diffLower = difficulty?.toLowerCase();
+    if (diffLower === 'easy') return 'active';
+    if (diffLower === 'medium') return 'pending';
+    if (diffLower === 'hard') return 'error';
     return 'inactive';
   };
 
   return (
-    <div className="p-6 space-y-6 min-h-full">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-4xl font-bold text-white mb-2">
-            Quản lý câu hỏi
-          </h1>
-          <p className="text-slate-400">
-            Quản lý và cập nhật ngân hàng câu hỏi hệ thống.
-          </p>
-        </div>
+    <div className="font-sans bg-[#020617] min-h-screen">
+      {/* Main Content */}
+      <main className="pb-20 px-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Header Section */}
+          <header className="mb-10">
 
-        <div className="flex items-center gap-3">
-          <Button variant="outline" icon={<Download size={16} />} onClick={() => {}}>
-            Export câu hỏi
-          </Button>
-          <Button variant="outline" icon={<Upload size={16} />} onClick={() => {}}>
-            Import câu hỏi
-          </Button>
-          <Button
-            variant="primary"
-            icon={<Plus size={16} />}
-            onClick={() => setCreateModalOpen(true)}
-          >
-            Thêm câu hỏi
-          </Button>
-        </div>
-      </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-4xl font-bold text-white mb-2">
+                Quản lý câu hỏi
+                </h1>
+                <p className="text-slate-400 max-w-2xl">
+                  Quản lý và cập nhật ngân hàng câu hỏi hệ thống.
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <button className="bg-[#1e293b]/40 backdrop-blur-sm border border-white/5 px-4 py-3 rounded-xl flex items-center gap-2 text-sm font-medium text-slate-300 hover:bg-white/10 hover:text-white transition-all">
+                  <Download className="w-4 h-4" />
+                  Export câu hỏi
+                </button>
+                <button className="bg-[#1e293b]/40 backdrop-blur-sm border border-white/5 px-4 py-3 rounded-xl flex items-center gap-2 text-sm font-medium text-slate-300 hover:bg-white/10 hover:text-white transition-all">
+                  <Upload className="w-4 h-4" />
+                  Import câu hỏi
+                </button>
+                <button
+                  onClick={() => activeTab === 'system' ? setCreateModalOpen(true) : setContributeModalOpen(true)}
+                  className="bg-gradient-to-r from-indigo-500 to-purple-500 px-4 py-3 rounded-xl flex items-center gap-2 text-sm font-bold shadow-lg shadow-indigo-500/20 hover:opacity-90 transition-all text-white"
+                >
+                  <Plus className="w-4 h-4" />
+                  Thêm câu hỏi
+                </button>
+              </div>
+            </div>
+          </header>
 
-      {/* Tabs */}
-      <AppTabs
-        tabs={[
-          { label: 'Câu hỏi hệ thống', value: 'system' },
-          { label: 'Câu hỏi đóng góp', value: 'contributed' },
-        ]}
-        value={activeTab}
-        onChange={(value) => {
-          setActiveTab(value as TabType);
-          setSystemFilters((prev) => ({ ...prev, pageNumber: 1 }));
-          setContributedFilters((prev) => ({ ...prev, pageNumber: 1 }));
-        }}
-      />
+          {/* Filter & Tab Section */}
+          <section className="space-y-6 mb-8">
+            {/* Tabs */}
+            <div className="flex border-b border-white/10 gap-8">
+              <button
+                onClick={() => setActiveTab('system')}
+                className={`pb-4 font-bold text-xs uppercase tracking-widest border-b-2 transition-colors ${activeTab === 'system'
+                  ? 'text-indigo-400 border-indigo-500'
+                  : 'text-slate-400 border-transparent hover:text-white'
+                  }`}
+              >
+                Câu hỏi hệ thống
+              </button>
+              <button
+                onClick={() => setActiveTab('contributed')}
+                className={`pb-4 font-bold text-xs uppercase tracking-widest border-b-2 transition-colors ${activeTab === 'contributed'
+                  ? 'text-indigo-400 border-indigo-500'
+                  : 'text-slate-400 border-transparent hover:text-white'
+                  }`}
+              >
+                Câu hỏi đóng góp
+              </button>
+            </div>
 
-      {/* Toolbar with Filters */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div className="flex items-center gap-4 flex-wrap">
-          <h2 className="text-xl font-semibold text-white">Danh sách câu hỏi</h2>
-        </div>
+            {/* Filters Row */}
+            <div className="bg-[#1e293b]/40 backdrop-blur-sm p-6 rounded-2xl border border-white/5">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {/* Position Filter */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Vị trí</label>
+                  <select
+                    value={activeTab === 'system' ? systemFilters.positionId || '' : contributedFilters.positionId || ''}
+                    onChange={(e) => {
+                      const value = e.target.value ? parseInt(e.target.value) : undefined;
+                      if (activeTab === 'system') {
+                        handleSystemFilterChange('positionId', value);
+                      } else {
+                        handleContributedFilterChange('positionId', value);
+                      }
+                    }}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none transition-all"
+                  >
+                    <option value="">Tất cả</option>
+                    {positions.map(pos => (
+                      <option key={pos.id} value={pos.id}>{pos.name}</option>
+                    ))}
+                  </select>
+                </div>
 
-        <div className="flex items-center gap-4 text-sm text-slate-400 flex-wrap">
-          {/* Position Filter */}
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-slate-400 whitespace-nowrap">Vị trí:</span>
-            <select
-              value={activeTab === 'system' ? systemFilters.positionId || '' : contributedFilters.positionId || ''}
-              onChange={(e) => {
-                const value = e.target.value ? parseInt(e.target.value) : undefined;
-                if (activeTab === 'system') {
-                  handleSystemFilterChange('positionId', value);
-                } else {
-                  handleContributedFilterChange('positionId', value);
-                }
-              }}
-              className="bg-slate-800 border border-slate-700 rounded-md px-4 py-2 text-slate-200 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer min-w-[160px]"
-            >
-              <option value="">Tất cả</option>
-              {positions.map(pos => (
-                <option key={pos.id} value={pos.id}>{pos.name}</option>
-              ))}
-            </select>
-          </div>
+                {/* Skill Filter */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Kỹ năng</label>
+                  <select
+                    value={activeTab === 'system' ? systemFilters.skillId || '' : contributedFilters.skillId || ''}
+                    onChange={(e) => {
+                      const value = e.target.value ? parseInt(e.target.value) : undefined;
+                      if (activeTab === 'system') {
+                        handleSystemFilterChange('skillId', value);
+                      } else {
+                        handleContributedFilterChange('skillId', value);
+                      }
+                    }}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none transition-all"
+                  >
+                    <option value="">Tất cả kỹ năng</option>
+                    {skills.map(skill => (
+                      <option key={skill.id} value={skill.id}>{skill.name}</option>
+                    ))}
+                  </select>
+                </div>
 
-          {/* Skill Filter */}
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-slate-400 whitespace-nowrap">Kỹ năng:</span>
-            <select
-              value={activeTab === 'system' ? systemFilters.skillId || '' : contributedFilters.skillId || ''}
-              onChange={(e) => {
-                const value = e.target.value ? parseInt(e.target.value) : undefined;
-                if (activeTab === 'system') {
-                  handleSystemFilterChange('skillId', value);
-                } else {
-                  handleContributedFilterChange('skillId', value);
-                }
-              }}
-              className="bg-slate-800 border border-slate-700 rounded-md px-4 py-2 text-slate-200 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer min-w-[160px]"
-            >
-              <option value="">Tất cả</option>
-              {skills.map(skill => (
-                <option key={skill.id} value={skill.id}>{skill.name}</option>
-              ))}
-            </select>
-          </div>
+                {/* Level/Difficulty Filter */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Cấp độ</label>
+                  <select
+                    value={
+                      activeTab === 'system'
+                        ? (systemFilters.difficulty !== undefined ? String(systemFilters.difficulty) : '')
+                        : (contributedFilters.difficulty !== undefined ? String(contributedFilters.difficulty) : '')
+                    }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      const numValue = value ? parseInt(value) as DifficultyLevel : undefined;
+                      if (activeTab === 'system') {
+                        handleSystemFilterChange('difficulty', numValue);
+                      } else {
+                        handleContributedFilterChange('difficulty', numValue);
+                      }
+                    }}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none transition-all"
+                  >
+                    <option value="">Tất cả</option>
+                    {DIFFICULTY_OPTIONS.map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </div>
 
-          {/* Level/Difficulty Filter */}
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-slate-400 whitespace-nowrap">Cấp độ:</span>
-            <select
-              value={
-                activeTab === 'system'
-                  ? systemFilters.difficulty || ''
-                  : contributedFilters.level || ''
+                {/* Sort Filter */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Sắp xếp</label>
+                  <select
+                    value={activeTab === 'system' ? systemFilters.sortOrder || 'desc' : contributedFilters.sortOrder || 'desc'}
+                    onChange={(e) => {
+                      const value = e.target.value as 'asc' | 'desc';
+                      if (activeTab === 'system') {
+                        handleSystemFilterChange('sortOrder', value);
+                      } else {
+                        handleContributedFilterChange('sortOrder', value);
+                      }
+                    }}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none transition-all"
+                  >
+                    <option value="desc">Mới nhất</option>
+                    <option value="asc">Cũ nhất</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Data Table Section */}
+          <Table
+            page={activeTab === 'system' ? systemPagination.pageNumber : contributedPagination.pageNumber}
+            totalPages={activeTab === 'system' ? systemPagination.totalPages : contributedPagination.totalPages}
+            pageSize={activeTab === 'system' ? systemPagination.pageSize : contributedPagination.pageSize}
+            totalCount={activeTab === 'system' ? systemPagination.totalCount : contributedPagination.totalCount}
+            onPageChange={(page) => {
+              if (activeTab === 'system') {
+                handleSystemFilterChange('pageNumber', page);
+              } else {
+                handleContributedFilterChange('pageNumber', page);
               }
-              onChange={(e) => {
-                const value = e.target.value || undefined;
-                if (activeTab === 'system') {
-                  handleSystemFilterChange('difficulty', value as DifficultyLevel | undefined);
-                } else {
-                  handleContributedFilterChange('level', value as Level);
-                }
-              }}
-              className="bg-slate-800 border border-slate-700 rounded-md px-4 py-2 text-slate-200 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer min-w-[160px]"
-            >
-              <option value="">Tất cả</option>
-              {activeTab === 'system' ? (
-                DIFFICULTY_OPTIONS.map(option => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))
-              ) : null}
-            </select>
-          </div>
-
-          {/* Sort Filter */}
-          <span className="whitespace-nowrap">Sắp xếp theo:</span>
-          <div className="relative inline-block">
-            <select
-              value={activeTab === 'system' ? systemFilters.sortOrder || 'desc' : contributedFilters.sortOrder || 'desc'}
-              onChange={(e) => {
-                const value = e.target.value as 'asc' | 'desc';
-                if (activeTab === 'system') {
-                  handleSystemFilterChange('sortOrder', value);
-                } else {
-                  handleContributedFilterChange('sortOrder', value);
-                }
-              }}
-              className="bg-slate-800 border border-slate-700 rounded-md px-4 py-2 pr-10 text-slate-200 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer min-w-[200px]"
-            >
-              <option value="desc">Mới nhất</option>
-              <option value="asc">Cũ nhất</option>
-            </select>
-            <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400" />
-          </div>
-        </div>
-      </div>
-
-      {/* Data Table Section */}
-      {loading ? (
-        <div className="text-center py-12 text-slate-400">Đang tải...</div>
-      ) : error ? (
-        <div className="text-center py-12 text-red-400">{error}</div>
-      ) : (
-        <Table
-          page={activeTab === 'system' ? systemPagination.pageNumber : contributedPagination.pageNumber}
-          totalPages={activeTab === 'system' ? systemPagination.totalPages : contributedPagination.totalPages}
-          pageSize={activeTab === 'system' ? systemPagination.pageSize : contributedPagination.pageSize}
-          totalCount={activeTab === 'system' ? systemPagination.totalCount : contributedPagination.totalCount}
-          onPageChange={(page) => {
-            if (activeTab === 'system') {
-              handleSystemFilterChange('pageNumber', page);
-            } else {
-              handleContributedFilterChange('pageNumber', page);
-            }
-          }}
-          onPageSizeChange={handlePageSizeChange}
-          maxHeight="55vh"
-        >
+            }}
+            onPageSizeChange={handlePageSizeChange}
+          >
             <TableHeader>
               <TableRow>
                 <TableHead className="px-8 py-5">STT</TableHead>
@@ -401,6 +416,9 @@ const ViewQuestions: React.FC = () => {
                 <TableHead className="px-6 py-5">Vị trí</TableHead>
                 <TableHead className="px-6 py-5">Kỹ năng</TableHead>
                 <TableHead className="px-6 py-5">Cấp độ</TableHead>
+                {activeTab === 'contributed' && (
+                  <TableHead className="px-6 py-5">Người đăng</TableHead>
+                )}
                 <TableHead className="px-6 py-5">Trạng thái</TableHead>
                 <TableHead className="px-8 py-5 text-center">Hành động</TableHead>
               </TableRow>
@@ -429,6 +447,11 @@ const ViewQuestions: React.FC = () => {
                         <TableCell className="px-6 py-6">
                           <div className="h-6 bg-slate-700 rounded w-16"></div>
                         </TableCell>
+                        {activeTab === 'contributed' && (
+                          <TableCell className="px-6 py-6">
+                            <div className="h-4 bg-slate-700 rounded w-24"></div>
+                          </TableCell>
+                        )}
                         <TableCell className="px-6 py-6">
                           <div className="h-6 bg-slate-700 rounded w-20"></div>
                         </TableCell>
@@ -445,7 +468,7 @@ const ViewQuestions: React.FC = () => {
                 ) : error ? (
                   // Error state
                   <TableRow>
-                    <TableCell colSpan={7} className="px-8 py-12 text-center">
+                    <TableCell colSpan={activeTab === 'contributed' ? 8 : 7} className="px-8 py-12 text-center">
                       <p className="text-red-400 mb-4">{error}</p>
                       <button
                         onClick={() => {
@@ -497,7 +520,7 @@ const ViewQuestions: React.FC = () => {
                               <TooltipTrigger asChild>
                                 <Button 
                                   size="sm" 
-                                  variant="secondary" 
+                                  variant="ghost" 
                                   className="p-2 h-8 w-8"
                                   onClick={() => handleEditQuestion(question.id)}
                                 >
@@ -531,16 +554,19 @@ const ViewQuestions: React.FC = () => {
                         </TableCell>
                         <TableCell className="px-6 py-6">
                           <StatusBadge status="inactive">
-                            {question.positionsName || 'N/A'}
+                            {question.positionsName?.length > 0 ? question.positionsName.join(', ') : 'N/A'}
                           </StatusBadge>
                         </TableCell>
                         <TableCell className="px-6 py-6 text-sm text-slate-400">
-                          {question.skillsName || 'N/A'}
+                          {question.skillsName?.length > 0 ? question.skillsName.join(', ') : 'N/A'}
                         </TableCell>
                         <TableCell className="px-6 py-6">
-                          <StatusBadge status={getDifficultyStatus(question.level)}>
-                            {question.level}
+                          <StatusBadge status={getDifficultyStatus(question.difficulty !== null ? DIFFICULTY_MAP[question.difficulty] : 'N/A')}>
+                            {question.difficulty !== null ? DIFFICULTY_MAP[question.difficulty] : 'N/A'}
                           </StatusBadge>
+                        </TableCell>
+                        <TableCell className="px-6 py-6 text-sm text-slate-400">
+                          {question.creatorName || 'N/A'}
                         </TableCell>
                         <TableCell className="px-6 py-6">
                           <StatusBadge status={question.isActive ? "active" : "inactive"}>
@@ -551,27 +577,16 @@ const ViewQuestions: React.FC = () => {
                           <div className="flex items-center justify-center gap-3">
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Button size="sm" variant="ghost" className="p-2 h-8 w-8">
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost" 
+                                  className="p-2 h-8 w-8"
+                                  onClick={() => handleViewContributeQuestion(question.id)}
+                                >
                                   <Eye className="w-4 h-4" />
                                 </Button>
                               </TooltipTrigger>
-                              <TooltipContent>Xem</TooltipContent>
-                            </Tooltip>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button size="sm" variant="secondary" className="p-2 h-8 w-8">
-                                  <Pencil className="w-4 h-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Sửa</TooltipContent>
-                            </Tooltip>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button size="sm" variant="danger" className="p-2 h-8 w-8 text-red-400 hover:text-red-500">
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>7
-                              </TooltipTrigger>
-                              <TooltipContent>Xóa</TooltipContent>
+                              <TooltipContent>Xem chi tiết</TooltipContent>
                             </Tooltip>
                           </div>
                         </TableCell>
@@ -579,7 +594,7 @@ const ViewQuestions: React.FC = () => {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={7} className="px-8 py-12 text-center text-slate-400">
+                      <TableCell colSpan={8} className="px-8 py-12 text-center text-slate-400">
                         Không có câu hỏi nào
                       </TableCell>
                     </TableRow>
@@ -587,7 +602,8 @@ const ViewQuestions: React.FC = () => {
                 )}
             </TableBody>
           </Table>
-      )}
+        </div>
+      </main>
 
       {/* Update Question Modal */}
       {selectedQuestionId && (
@@ -614,6 +630,31 @@ const ViewQuestions: React.FC = () => {
           }
         }}
       />
+
+      {/* Contribute Question Modal */}
+      <CreateContributeQuestionDialog
+        open={contributeModalOpen}
+        onOpenChange={setContributeModalOpen}
+        onSuccess={() => {
+          if (activeTab === 'contributed') {
+            fetchContributedQuestions();
+          }
+        }}
+      />
+
+      {/* View Contribute Question Modal */}
+      {selectedContributeQuestionId && (
+        <ViewContributeQuestionModal
+          questionId={selectedContributeQuestionId}
+          open={viewContributeModalOpen}
+          onOpenChange={(open: boolean) => {
+            setViewContributeModalOpen(open);
+            if (!open) {
+              setSelectedContributeQuestionId(null);
+            }
+          }}
+        />
+      )}
     </div>
   );
 };

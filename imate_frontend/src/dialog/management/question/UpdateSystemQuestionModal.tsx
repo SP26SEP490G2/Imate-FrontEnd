@@ -15,7 +15,8 @@ import {
 } from '@/services/questionService';
 import {
     getAllPositions,
-    getAllSkills
+    getAllSkills,
+    getAllCategories
 } from '@/services/commonService';
 import { getListQuestionCategories } from '@/services/questionService';
 import type {
@@ -85,17 +86,18 @@ export function UpdateSystemQuestionModal({
                 getSystemQuestionDetail(questionId),
                 getAllPositions({ pageSize: 100, isActive: true }),
                 getAllSkills({ pageSize: 100, isActive: true }),
+                getAllCategories({ pageSize: 100, isActive: true }),
                 getListQuestionCategories()
             ]);
 
             setPositions(positionsRes.data);
             setSkills(skillsRes.data);
-            setCategories(categoriesRes);
+            setCategories(categoriesRes.data);
 
             // Match names to IDs from the fetched lists
             // API returns categoriesName, positionsName, skillsName as string arrays
             const categoryIds = Array.isArray(questionDetail.categoriesName)
-                ? categoriesRes
+                ? categoriesRes.data
                     .filter(c => questionDetail.categoriesName.includes(c.name))
                     .map(c => c.id)
                 : [];
