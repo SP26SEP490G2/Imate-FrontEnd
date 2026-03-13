@@ -10,6 +10,8 @@ import {
   FileQuestion,
 } from "lucide-react";
 
+import { ROLES } from "@/constants/role";
+
 import ReviewMentorApplication from "@/pages/staff/ReviewMentorApplication";
 import UserManagement from "@/pages/admin/UserManagement";
 import SubscriptionManagement from "@/pages/admin/SubscriptionManagement";
@@ -25,42 +27,42 @@ export const managementRoutes = [
     icon: FileText,
     path: "applications",
     element: <ReviewMentorApplication />,
-    allowedRoles: ["Staff", "Admin"],
+    allowedRoles: [ROLES.STAFF, ROLES.ADMIN],
   },
   {
     label: "Quản lý hạng mục",
     icon: Layers,
     path: "classification",
     element: <Classification />,
-    allowedRoles: ["Staff", "Admin"],
+    allowedRoles: [ROLES.STAFF, ROLES.ADMIN],
   },
   {
     label: "Quản lý người dùng",
     icon: Users,
     path: "users",
     element: <UserManagement />,
-    allowedRoles: ["Admin"],
+    allowedRoles: [ROLES.ADMIN],
   },
   {
     label: "Quản lý câu hỏi",
     icon: FileQuestion,
     path: "view-questions",
     element: <ViewQuestions />,
-    allowedRoles: ["Admin", "Staff"],
+    allowedRoles: [ROLES.ADMIN, ROLES.STAFF],
   },
   {
     label: "Quản lý gói đăng ký",
     icon: CreditCard,
     path: "subscriptions",
     element: <SubscriptionManagement />,
-    allowedRoles: ["Admin"],
+    allowedRoles: [ROLES.ADMIN],
   },
     {
     label: "Truy vết hệ thống",
     icon: Logs,
     path: "admin/audit-logs",
     element: <AdminAuditLog />,
-    allowedRoles: ["Admin"],
+    allowedRoles: [ROLES.ADMIN],
   },
 ];
 
