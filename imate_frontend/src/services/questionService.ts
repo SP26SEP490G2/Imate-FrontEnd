@@ -9,6 +9,9 @@ import type {
   GetPublicContributedQuestionBankListRequest,
   GetPublicContributedQuestionBankListResponse,
   PublicContributedQuestionBankListResponse,
+  GetMyContributedQuestionsRequest,
+  MyContributedQuestionItem,
+  MyContributedQuestionListResponse,
   CategoryItem,
   GetListQuestionCategoriesResponse,
   StaffSystemQuestionItem,
@@ -20,6 +23,7 @@ import type {
   UpdateSystemQuestionRequest,
   CreateQuestionResponse,
   UpdateQuestionResponse,
+  ChangeContributedQuestionStatusResponse,
   SystemQuestionDetail,
   ContributedQuestionDetail,
   ContributeQuestionRequest,
@@ -65,6 +69,40 @@ export const getPublicContributedQuestionBankList = async (
     }
   );
   return response.data.data;
+};
+
+/**
+ * Get my contributed questions with filters and pagination
+ * @param request - Filter and pagination parameters
+ * @returns Promise<MyContributedQuestionListResponse>
+ */
+export const getMyContributedQuestions = async (
+  request: GetMyContributedQuestionsRequest
+): Promise<MyContributedQuestionListResponse> => {
+  const response = await apiClient.get<{ items: MyContributedQuestionItem[] }>(
+    APIConfig.Question.GetMyContributedQuestions,
+    {
+      params: request,
+    }
+  );
+
+  const paginationHeader = response.headers['x-pagination'];
+  const pagination = paginationHeader ? JSON.parse(paginationHeader) : {
+    totalCount: 0,
+    pageSize: request.pageSize || 10,
+    pageNumber: request.pageNumber || 1,
+    totalPages: 0,
+  };
+
+  return {
+    items: response.data.items || [],
+    totalCount: Number(pagination.totalCount || pagination.TotalCount || 0),
+    pageNumber: Number(pagination.pageNumber || pagination.PageNumber || 1),
+    pageSize: Number(pagination.pageSize || pagination.PageSize || 10),
+    totalPages: Number(pagination.totalPages || pagination.TotalPages || 0),
+    hasNextPage: Boolean(pagination.hasNextPage || pagination.HasNextPage || false),
+    hasPreviousPage: Boolean(pagination.hasPreviousPage || pagination.HasPreviousPage || false),
+  };
 };
 
 export const getSavedSystemQuestions = async (): Promise<SavedSystemQuestionItem[]> => {
@@ -151,6 +189,59 @@ export const getAllContributedQuestionsForStaff = async (
     hasPreviousPage: pagination.hasPreviousPage || pagination.HasPreviousPage || false
   };
   };
+
+/**
+ * Get all pending contributed questions for staff with filters and pagination
+ * @param params - Filter and pagination parameters
+ * @returns Promise with question list and pagination info
+ */
+export const getAllPendingContributedQuestionsForStaff = async (
+  params: GetContributedQuestionParams
+): Promise<StaffQuestionListResponse<StaffContributedQuestionItem>> => {
+  const response = await apiClient.get<{ items: StaffContributedQuestionItem[] }>(
+    APIConfig.Question.GetAllPendingContributedQuestionsForStaff,
+    { params }
+  );
+
+  const paginationHeader = response.headers['x-pagination'];
+  const pagination = paginationHeader ? JSON.parse(paginationHeader) : {
+    totalCount: 0,
+    pageSize: params.pageSize || 10,
+    pageNumber: params.pageNumber || 1,
+    totalPages: 0
+  };
+
+  return {
+    items: response.data.items || [],
+    totalCount: Number(pagination.totalCount || pagination.TotalCount || 0),
+    pageNumber: Number(pagination.pageNumber || pagination.PageNumber || 1),
+    pageSize: Number(pagination.pageSize || pagination.PageSize || 10),
+    totalPages: Number(pagination.totalPages || pagination.TotalPages || 0),
+    hasNextPage: pagination.hasNextPage || pagination.HasNextPage || false,
+    hasPreviousPage: pagination.hasPreviousPage || pagination.HasPreviousPage || false
+  };
+};
+
+/**
+ * Change contributed question status by staff
+ * @param questionId - Question ID
+ * @param status - true: approve, false: reject
+ * @returns Promise with update result
+ */
+export const changeContributedQuestionStatusForStaff = async (
+  questionId: number,
+  status: boolean
+): Promise<ChangeContributedQuestionStatusResponse> => {
+  const response = await apiClient.put<ChangeContributedQuestionStatusResponse>(
+    APIConfig.Question.ChangeContributedQuestionStatusStaff.replace('{questionId}', String(questionId)),
+    null,
+    {
+      params: { status }
+    }
+  );
+
+  return response.data;
+};
 
 /**
  * Create a new system question for staff

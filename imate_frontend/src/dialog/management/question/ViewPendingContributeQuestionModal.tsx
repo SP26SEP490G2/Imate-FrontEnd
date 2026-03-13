@@ -9,23 +9,29 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { getContributedQuestionDetail } from '@/services/questionService';
+import {
+        getContributedQuestionDetail,
+        changeContributedQuestionStatusForStaff
+} from '@/services/questionService';
 import type { ContributedQuestionDetail } from '@/types/common/question';
 import { DIFFICULTY_MAP, DIFFICULTY_LEVEL } from '@/constants/common';
 import { toast } from 'react-toastify';
 
-interface ViewContributeQuestionModalProps {
+interface ViewPendingContributeQuestionModalProps {
     questionId: number;
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    onStatusChanged?: () => void;
 }
 
-export function ViewContributeQuestionModal({
+export function ViewPendingContributeQuestionModal({
     questionId,
     open,
-    onOpenChange
-}: ViewContributeQuestionModalProps) {
+    onOpenChange,
+    onStatusChanged
+}: ViewPendingContributeQuestionModalProps) {
     const [loadingData, setLoadingData] = useState(true);
+    const [loadingAction, setLoadingAction] = useState(false);
     const [questionData, setQuestionData] = useState<ContributedQuestionDetail | null>(null);
     
     // Track if data has been fetched to prevent duplicate calls
@@ -54,6 +60,21 @@ export function ViewContributeQuestionModal({
             onOpenChange(false);
         } finally {
             setLoadingData(false);
+        }
+    };
+
+    const handleChangeStatus = async (status: boolean) => {
+        try {
+            setLoadingAction(true);
+            await changeContributedQuestionStatusForStaff(questionId, status);
+            toast.success(status ? 'Duyệt câu hỏi thành công.' : 'Từ chối câu hỏi thành công.');
+            onStatusChanged?.();
+            onOpenChange(false);
+        } catch (error: any) {
+            console.error('Failed to change question status:', error);
+            toast.error(error?.response?.data?.message || 'Không thể cập nhật trạng thái câu hỏi. Vui lòng thử lại sau.');
+        } finally {
+            setLoadingAction(false);
         }
     };
 
@@ -206,10 +227,27 @@ export function ViewContributeQuestionModal({
                         </div>
 
                         <DialogFooter>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => handleChangeStatus(false)}
+                                disabled={loadingData || loadingAction}
+                            >
+                                {loadingAction ? 'Đang xử lý...' : 'Reject'}
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="primary"
+                                onClick={() => handleChangeStatus(true)}
+                                disabled={loadingData || loadingAction}
+                            >
+                                {loadingAction ? 'Đang xử lý...' : 'Approve'}
+                            </Button>
                             <DialogClose asChild>
                                 <Button
                                     type="button"
                                     variant="outline"
+                                    disabled={loadingAction}
                                 >
                                     Đóng
                                 </Button>
