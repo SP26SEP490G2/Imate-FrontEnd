@@ -74,10 +74,10 @@ export function CreateContributeQuestionDialog({
     try {
       setLoadingData(true);
       const [positionsRes, skillsRes, categoriesRes, companiesRes] = await Promise.all([
-        getAllPositions({ pageSize: 100, isActive: true }),
-        getAllSkills({ pageSize: 100, isActive: true }),
-        getAllCategories({ pageSize: 100, isActive: true }),
-        getAllCompanies({ pageSize: 100, isActive: true }),
+        getAllPositions({ pageSize: 10, isActive: true }),
+        getAllSkills({ pageSize: 10, isActive: true }),
+        getAllCategories({ pageSize: 10, isActive: true }),
+        getAllCompanies({ pageSize: 10, isActive: true }),
       ]);
 
       setPositions(positionsRes.data);

@@ -8,7 +8,6 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Bookmark } from 'lucide-react';
 import { getContributedQuestionDetail } from '@/services/questionService';
 import type { ContributedQuestionDetail } from '@/types/common/question';
 import { DIFFICULTY_MAP, LEVEL_MAP } from '@/constants/common';
@@ -19,16 +18,12 @@ interface ViewContributeQuestionModalProps {
     questionId: number;
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    isSaved?: boolean;
-    onSaveToggle?: () => void;
 }
 
 export function ViewContributeQuestionModal({
     questionId,
     open,
-    onOpenChange,
-    isSaved = false,
-    onSaveToggle,
+    onOpenChange
 }: ViewContributeQuestionModalProps) {
     const [loadingData, setLoadingData] = useState(true);
     const [questionData, setQuestionData] = useState<ContributedQuestionDetail | null>(null);
@@ -79,29 +74,14 @@ export function ViewContributeQuestionModal({
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-                <div className="flex items-start justify-between gap-4">
-                    <DialogHeader className="flex-1">
-                        <DialogTitle className="text-xl font-semibold text-white">
-                            Chi tiết câu hỏi đóng góp #{questionId}
-                        </DialogTitle>
-                        <DialogDescription className="text-slate-400">
-                            Xem thông tin chi tiết câu hỏi phỏng vấn được đóng góp.
-                        </DialogDescription>
-                    </DialogHeader>
-                    {onSaveToggle && (
-                        <button
-                            onClick={onSaveToggle}
-                            className={`p-2 rounded-lg transition-colors mt-1 ${
-                                isSaved
-                                    ? 'text-yellow-400 hover:text-yellow-300'
-                                    : 'text-slate-500 hover:text-yellow-400'
-                            }`}
-                            title={isSaved ? 'Bỏ lưu' : 'Lưu câu hỏi'}
-                        >
-                            <Bookmark className={`w-5 h-5 ${isSaved ? 'fill-current' : ''}`} />
-                        </button>
-                    )}
-                </div>
+                <DialogHeader>
+                    <DialogTitle className="text-xl font-semibold text-white">
+                        Chi tiết câu hỏi đóng góp #{questionId}
+                    </DialogTitle>
+                    <DialogDescription className="text-slate-400">
+                        Xem thông tin chi tiết câu hỏi phỏng vấn được đóng góp.
+                    </DialogDescription>
+                </DialogHeader>
 
                 {loadingData ? (
                     <div className="py-12 text-center">
@@ -145,7 +125,7 @@ export function ViewContributeQuestionModal({
                             <label className="block text-sm font-medium text-slate-200">
                                 Nội dung câu hỏi
                             </label>
-                            <div className="w-full min-h-32 rounded-lg px-4 py-3 bg-slate-800/40 border border-slate-700 text-slate-100 text-sm whitespace-pre-wrap">
+                            <div className="w-full min-h-[8rem] rounded-lg px-4 py-3 bg-slate-800/40 border border-slate-700 text-slate-100 text-sm whitespace-pre-wrap">
                                 {questionData.content || 'Không có nội dung'}
                             </div>
                         </div>
@@ -156,7 +136,7 @@ export function ViewContributeQuestionModal({
                                 <label className="block text-sm font-medium text-slate-200">
                                     Câu trả lời
                                 </label>
-                                <div className="w-full min-h-40 rounded-lg px-4 py-3 bg-slate-800/40 border border-slate-700 text-slate-100 text-sm whitespace-pre-wrap">
+                                <div className="w-full min-h-[10rem] rounded-lg px-4 py-3 bg-slate-800/40 border border-slate-700 text-slate-100 text-sm whitespace-pre-wrap">
                                     {questionData.sampleAnswer}
                                 </div>
                             </div>
@@ -236,18 +216,7 @@ export function ViewContributeQuestionModal({
                         )}
 
                         {/* Footer with Close Button */}
-                        <div className="flex justify-between items-center pt-4 border-t border-slate-700">
-                            <button
-                                onClick={onSaveToggle}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors text-sm font-medium ${
-                                    isSaved
-                                        ? 'border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10'
-                                        : 'border-slate-600 text-slate-400 hover:border-yellow-500/50 hover:text-yellow-400'
-                                }`}
-                            >
-                                <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
-                                {isSaved ? 'Đã lưu' : 'Lưu câu hỏi'}
-                            </button>
+                        <div className="flex justify-end pt-4 border-t border-slate-700">
                             <DialogClose asChild>
                                 <Button variant="outline">
                                     Đóng

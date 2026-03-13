@@ -6,6 +6,9 @@ import type {
   QuestionBankListResponse,
   GetQuestionBankListResponse,
   GetQuestionBankListRequest,
+  GetPublicContributedQuestionBankListRequest,
+  GetPublicContributedQuestionBankListResponse,
+  PublicContributedQuestionBankListResponse,
   CategoryItem,
   GetListQuestionCategoriesResponse,
   StaffSystemQuestionItem,
@@ -20,6 +23,8 @@ import type {
   SystemQuestionDetail,
   ContributedQuestionDetail,
   ContributeQuestionRequest,
+  SavedSystemQuestionItem,
+  SavedContributedQuestionItem,
 } from "@/types/common/question";
 
 /**
@@ -43,6 +48,33 @@ export const getQuestionBankList = async (request: GetQuestionBankListRequest): 
     params: request
   });
   return response.data.data;
+};
+
+/**
+ * Get public contributed question bank list with filters and pagination
+ * @param request - Filter and pagination parameters
+ * @returns Promise<PublicContributedQuestionBankListResponse>
+ */
+export const getPublicContributedQuestionBankList = async (
+  request: GetPublicContributedQuestionBankListRequest
+): Promise<PublicContributedQuestionBankListResponse> => {
+  const response = await apiClient.get<GetPublicContributedQuestionBankListResponse>(
+    APIConfig.Question.GetPublicContributedQuestionBankList,
+    {
+      params: request,
+    }
+  );
+  return response.data.data;
+};
+
+export const getSavedSystemQuestions = async (): Promise<SavedSystemQuestionItem[]> => {
+  const response = await apiClient.get<SavedSystemQuestionItem[]>(APIConfig.Question.GetSavedSystemQuestions);
+  return response.data || [];
+};
+
+export const getSavedContributedQuestions = async (): Promise<SavedContributedQuestionItem[]> => {
+  const response = await apiClient.get<SavedContributedQuestionItem[]>(APIConfig.Question.GetSavedContributedQuestions);
+  return response.data || [];
 };
 
 /**
@@ -178,6 +210,14 @@ export const getContributedQuestionDetail = async (
     APIConfig.Question.GetContributedQuestionDetail.replace('{questionId}', String(questionId))
   );
   return response.data;
+};
+
+/**
+ * Toggle save/unsave a question (works for both system and contributed)
+ * @param questionId - ID of the question to save/unsave
+ */
+export const saveQuestion = async (questionId: number): Promise<void> => {
+  await apiClient.post(APIConfig.Question.SaveQuestion, { questionId });
 };
 
 /**

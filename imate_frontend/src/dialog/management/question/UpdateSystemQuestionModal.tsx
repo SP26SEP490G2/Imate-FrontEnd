@@ -84,9 +84,9 @@ export function UpdateSystemQuestionModal({
             setLoadingData(true);
             const [questionDetail, positionsRes, skillsRes, categoriesRes] = await Promise.all([
                 getSystemQuestionDetail(questionId),
-                getAllPositions({ pageSize: 100, isActive: true }),
-                getAllSkills({ pageSize: 100, isActive: true }),
-                getAllCategories({ pageSize: 100, isActive: true }),
+                getAllPositions({ pageSize: 10, isActive: true }),
+                getAllSkills({ pageSize: 10, isActive: true }),
+                getAllCategories({ pageSize: 10, isActive: true }),
                 getListQuestionCategories()
             ]);
 

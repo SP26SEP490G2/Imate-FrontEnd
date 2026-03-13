@@ -27,6 +27,54 @@ export interface QuestionBankItem {
   createdAt: string;
 }
 
+export interface PublicQuestionLookupItem {
+  id: number;
+  name: string;
+}
+
+export interface PublicSystemQuestionBankItem {
+  id: number;
+  content: string;
+  difficulty: string | null;
+  sampleAnswer?: string;
+  creatorName: string;
+  createdAt: string;
+  categories: PublicQuestionLookupItem[];
+  skills: PublicQuestionLookupItem[];
+  positions: PublicQuestionLookupItem[];
+  isSaved: boolean;
+}
+
+export interface PublicContributedQuestionDetail {
+  id: number;
+  interviewDate?: string;
+  level?: string;
+  company?: string;
+  companyURL?: string;
+}
+
+export interface PublicContributedQuestionBankItem {
+  id: number;
+  content: string;
+  difficulty?: string | null;
+  sampleAnswer?: string;
+  isActive: boolean;
+  createdAt: string;
+  creatorId: number;
+  creatorName: string;
+  creatorAvatarUrl?: string;
+  creatorRole?: string;
+  contributedDetail?: PublicContributedQuestionDetail;
+  categories: PublicQuestionLookupItem[];
+  skills: PublicQuestionLookupItem[];
+  positions: PublicQuestionLookupItem[];
+  isSaved: boolean;
+}
+
+export type SavedSystemQuestionItem = PublicSystemQuestionBankItem;
+
+export type SavedContributedQuestionItem = PublicContributedQuestionBankItem;
+
 export interface SystemQuestionBankItem {
   skillId: number;
   positionId: number;
@@ -48,11 +96,13 @@ export interface ContributeQuestionBankItem {
 }
 
 export interface QuestionBankListResponse {
-  questions: QuestionBankItem[];
+  items: PublicSystemQuestionBankItem[];
   totalCount: number;
   pageNumber: number;
   pageSize: number;
   totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
 }
 
 export interface SystemQuestionBankListResponse {
@@ -80,17 +130,44 @@ export interface GetContributeQuestionBankListResponse {
 }
 
 export interface GetQuestionBankListResponse {
+  success: boolean;
   data: QuestionBankListResponse;
+  message?: string;
 }
 
 // Request Types
 export interface GetQuestionBankListRequest {
+  skillId?: number;
+  positionId?: number;
   searchTerm?: string;
   categoryId?: number;
-  difficulty?: string;
+  difficulty?: number;
   sortBy?: string;
+  sortOrder?: "asc" | "desc";
   pageNumber?: number;
   pageSize?: number;
+}
+
+export interface GetPublicContributedQuestionBankListRequest extends GetQuestionBankListRequest {
+  companyId?: number;
+  level?: number;
+  companyName?: string;
+}
+
+export interface PublicContributedQuestionBankListResponse {
+  items: PublicContributedQuestionBankItem[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
+
+export interface GetPublicContributedQuestionBankListResponse {
+  success: boolean;
+  data: PublicContributedQuestionBankListResponse;
+  message?: string;
 }
 
 // Category Types
