@@ -181,6 +181,7 @@ export interface MyContributedQuestionItem {
   id: number;
   content: string;
   isActive: boolean;
+  isSaved?: boolean;
   approvalStatus: string;
   sampleAnswer?: string;
   contributedDetailId?: number;

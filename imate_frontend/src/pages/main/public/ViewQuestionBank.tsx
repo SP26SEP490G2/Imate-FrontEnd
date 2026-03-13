@@ -1020,6 +1020,7 @@ const ViewQuestionBank: React.FC = () => {
                 <>
                   {myContributedData.items.map((question) => {
                     const card = buildMyContributedCardData(question);
+                    const saved = isSavedFor('contributed', question.id, Boolean(question.isSaved));
                     return (
                       <QuestionContributedCard
                         key={`my-contributed-${card.id}`}
@@ -1033,9 +1034,11 @@ const ViewQuestionBank: React.FC = () => {
                         position={card.position}
                         level={card.level}
                         rating={card.rating}
+                        isSaved={saved}
                         statusLabel={card.status}
                         statusType={getApprovalStatusBadge(card.status)}
-                        onView={() => handleView(question.id, 'contributed', false, false)}
+                        onView={() => handleView(question.id, 'contributed', saved)}
+                        onSave={() => handleSave('contributed', question.id, saved)}
                       />
                     );
                   })}
