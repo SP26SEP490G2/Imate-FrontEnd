@@ -9,13 +9,13 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Bookmark } from 'lucide-react';
-import { getContributedQuestionDetail } from '@/services/questionService';
-import type { ContributedQuestionDetail } from '@/types/common/question';
-import { DIFFICULTY_MAP, LEVEL_MAP } from '@/constants/common';
+import { getSystemQuestionDetail } from '@/services/questionService';
+import type { SystemQuestionDetail } from '@/types/common/question';
+import { DIFFICULTY_MAP } from '@/constants/common';
 import { toast } from 'react-toastify';
 import { StatusBadge } from '@/components/ui/status-badge';
 
-interface ViewContributeQuestionModalProps {
+interface ViewSystemQuestionModalProps {
     questionId: number;
     open: boolean;
     onOpenChange: (open: boolean) => void;
@@ -23,17 +23,16 @@ interface ViewContributeQuestionModalProps {
     onSaveToggle?: () => void;
 }
 
-export function ViewContributeQuestionModal({
+export function ViewSystemQuestionModal({
     questionId,
     open,
     onOpenChange,
     isSaved = false,
     onSaveToggle,
-}: ViewContributeQuestionModalProps) {
+}: ViewSystemQuestionModalProps) {
     const [loadingData, setLoadingData] = useState(true);
-    const [questionData, setQuestionData] = useState<ContributedQuestionDetail | null>(null);
-    
-    // Track if data has been fetched to prevent duplicate calls
+    const [questionData, setQuestionData] = useState<SystemQuestionDetail | null>(null);
+
     const hasFetchedRef = useRef(false);
 
     useEffect(() => {
@@ -41,17 +40,17 @@ export function ViewContributeQuestionModal({
             hasFetchedRef.current = true;
             fetchData();
         }
-        
-        // Reset when modal closes
+
         if (!open) {
             hasFetchedRef.current = false;
+            setQuestionData(null);
         }
     }, [open, questionId]);
 
     const fetchData = async () => {
         try {
             setLoadingData(true);
-            const questionDetail = await getContributedQuestionDetail(questionId);
+            const questionDetail = await getSystemQuestionDetail(questionId);
             setQuestionData(questionDetail);
         } catch (error) {
             console.error('Failed to fetch question data:', error);
@@ -69,23 +68,16 @@ export function ViewContributeQuestionModal({
         return 'inactive';
     };
 
-    const getLevelStatus = (level: number | null): "active" | "pending" | "error" | "inactive" | "draft" => {
-        if (level === 0 || level === 1) return 'active';
-        if (level === 2 || level === 3) return 'pending';
-        if (level === 4 || level === 5) return 'error';
-        return 'inactive';
-    };
-
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
                 <div className="flex items-start justify-between gap-4">
                     <DialogHeader className="flex-1">
                         <DialogTitle className="text-xl font-semibold text-white">
-                            Chi tiết câu hỏi đóng góp #{questionId}
+                            Chi tiết câu hỏi hệ thống #{questionId}
                         </DialogTitle>
                         <DialogDescription className="text-slate-400">
-                            Xem thông tin chi tiết câu hỏi phỏng vấn được đóng góp.
+                            Xem thông tin chi tiết câu hỏi phỏng vấn từ hệ thống.
                         </DialogDescription>
                     </DialogHeader>
                     {onSaveToggle && (
@@ -110,24 +102,14 @@ export function ViewContributeQuestionModal({
                     </div>
                 ) : questionData ? (
                     <div className="space-y-6">
-                        {/* Contributor Info */}
+                        {/* Summary */}
                         <div className="bg-slate-800/40 border border-slate-700 rounded-lg p-4">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">
-                                        Người đóng góp
+                                        Nguồn
                                     </label>
-                                    <p className="text-sm text-slate-200 font-medium">
-                                        {questionData.creatorName || 'N/A'}
-                                    </p>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">
-                                        Công ty
-                                    </label>
-                                    <p className="text-sm text-slate-200 font-medium">
-                                        {questionData.companyName || 'N/A'}
-                                    </p>
+                                    <StatusBadge status="draft">Hệ thống</StatusBadge>
                                 </div>
                                 <div>
                                     <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">
@@ -154,7 +136,7 @@ export function ViewContributeQuestionModal({
                         {questionData.sampleAnswer && (
                             <div className="space-y-2">
                                 <label className="block text-sm font-medium text-slate-200">
-                                    Câu trả lời
+                                    Câu trả lời mẫu
                                 </label>
                                 <div className="w-full min-h-40 rounded-lg px-4 py-3 bg-slate-800/40 border border-slate-700 text-slate-100 text-sm whitespace-pre-wrap">
                                     {questionData.sampleAnswer}
@@ -162,28 +144,17 @@ export function ViewContributeQuestionModal({
                             </div>
                         )}
 
-                        {/* Difficulty and Level */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <label className="block text-sm font-medium text-slate-200">
-                                    Độ khó
-                                </label>
-                                <div>
-                                    <StatusBadge status={getDifficultyStatus(questionData.difficulty)}>
-                                        {questionData.difficulty !== null ? DIFFICULTY_MAP[questionData.difficulty as 0 | 1 | 2] : 'N/A'}
-                                    </StatusBadge>
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="block text-sm font-medium text-slate-200">
-                                    Cấp độ
-                                </label>
-                                <div>
-                                    <StatusBadge status={getLevelStatus(questionData.level)}>
-                                        {questionData.level !== null ? LEVEL_MAP[questionData.level as 0 | 1 | 2 | 3 | 4 | 5] : 'N/A'}
-                                    </StatusBadge>
-                                </div>
+                        {/* Difficulty */}
+                        <div className="space-y-2">
+                            <label className="block text-sm font-medium text-slate-200">
+                                Độ khó
+                            </label>
+                            <div>
+                                <StatusBadge status={getDifficultyStatus(questionData.difficulty)}>
+                                    {questionData.difficulty !== null && questionData.difficulty !== undefined
+                                        ? DIFFICULTY_MAP[questionData.difficulty as 0 | 1 | 2]
+                                        : 'N/A'}
+                                </StatusBadge>
                             </div>
                         </div>
 
@@ -235,7 +206,7 @@ export function ViewContributeQuestionModal({
                             </div>
                         )}
 
-                        {/* Footer with Close Button */}
+                        {/* Footer */}
                         <div className="flex justify-between items-center pt-4 border-t border-slate-700">
                             <button
                                 onClick={onSaveToggle}
@@ -249,9 +220,7 @@ export function ViewContributeQuestionModal({
                                 {isSaved ? 'Đã lưu' : 'Lưu câu hỏi'}
                             </button>
                             <DialogClose asChild>
-                                <Button variant="outline">
-                                    Đóng
-                                </Button>
+                                <Button variant="outline">Đóng</Button>
                             </DialogClose>
                         </div>
                     </div>

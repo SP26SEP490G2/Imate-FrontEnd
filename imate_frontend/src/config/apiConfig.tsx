@@ -25,7 +25,10 @@ const APIConfig = {
   // Question endpoints (không dùng leading slash để axios nối đúng baseURL .../api)
   Question: {
     GetListHotQuestions: "get-list-hot-questions",
-    GetQuestionBankList: "get-question-bank-list",
+    GetQuestionBankList: "get-public-system-question-banks",
+    GetPublicContributedQuestionBankList: "get-public-contributed-question-banks",
+    GetSavedSystemQuestions: "/savedquestions-system",
+    GetSavedContributedQuestions: "/savedquestions-contributed",
     GetListQuestionCategories: "get-list-question-categories",
     GetAllSystemQuestionsForStaff: "/get-all-system-question-banks-for-staff",
     GetAllContributedQuestionsForStaff: "/get-all-contributed-question-banks-for-staff",
@@ -34,6 +37,7 @@ const APIConfig = {
     GetSystemQuestionDetail: "/get-system-question-by-id/{questionId}",
     GetContributedQuestionDetail: "/get-contributed-question-by-id/{questionId}",
     ContributeQuestion: "/contribute-question",
+    SaveQuestion: "/save-question",
   },
 
   // Category endpoints
