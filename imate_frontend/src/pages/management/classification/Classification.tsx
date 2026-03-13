@@ -835,12 +835,7 @@ export default function Classification() {
                               }}
                             />
                           ) : null}
-                          <AvatarFallback 
-                            className={cn(
-                              "text-sm font-bold text-white",
-                              getAvatarColor(comp.name) 
-                            )}
-                          >
+                          <AvatarFallback className="bg-slate-800 text-slate-300">
                             {getInitials(comp.name)}
                           </AvatarFallback>
                         </Avatar>
@@ -961,27 +956,4 @@ export function getInitials(name: string): string {
     return words[0].slice(0, 2).toUpperCase();
   }
   return (words[0][0] + words[1][0]).toUpperCase();
-}
-
-export function getAvatarColor(name: string): string {
-  const colors = [
-    "bg-red-600",
-    "bg-blue-600",
-    "bg-green-600",
-    "bg-yellow-600",
-    "bg-purple-600",
-    "bg-pink-600",
-    "bg-indigo-600",
-    "bg-teal-600",
-    "bg-orange-600",
-    "bg-cyan-600",
-  ];
-
-  // Hash đơn giản dựa trên tên
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const index = Math.abs(hash) % colors.length;
-  return colors[index];
 }
