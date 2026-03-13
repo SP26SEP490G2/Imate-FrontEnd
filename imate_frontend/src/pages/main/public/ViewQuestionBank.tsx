@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Plus } from 'lucide-react';
 import {
   getPublicContributedQuestionBankList,
+  getMyContributedQuestions,
   getQuestionBankList,
   getSavedContributedQuestions,
   getSavedSystemQuestions,
@@ -10,8 +11,11 @@ import {
 import type {
   CategoryItem,
   CompanyItem,
+  GetMyContributedQuestionsRequest,
   GetPublicContributedQuestionBankListRequest,
   GetQuestionBankListRequest,
+  MyContributedQuestionItem,
+  MyContributedQuestionListResponse,
   PositionItem,
   PublicContributedQuestionBankItem,
   PublicContributedQuestionBankListResponse,
@@ -29,13 +33,14 @@ import { ViewSystemQuestionModal } from '@/dialog/main/question/ViewSystemQuesti
 import { ViewContributeQuestionModal } from '@/dialog/main/question/ViewContributeQuestionModal';
 import { toast } from 'react-toastify';
 
-type TabType = 'system' | 'contributed' | 'saved';
+type TabType = 'system' | 'contributed' | 'myContributed' | 'saved';
 type SavedTabType = 'system' | 'contributed';
 
 const ViewQuestionBank: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('system');
   const [data, setData] = useState<QuestionBankListResponse | null>(null);
   const [contributedData, setContributedData] = useState<PublicContributedQuestionBankListResponse | null>(null);
+  const [myContributedData, setMyContributedData] = useState<MyContributedQuestionListResponse | null>(null);
   const [savedSystemData, setSavedSystemData] = useState<SavedSystemQuestionItem[]>([]);
   const [savedContributedData, setSavedContributedData] = useState<SavedContributedQuestionItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,6 +55,7 @@ const ViewQuestionBank: React.FC = () => {
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [viewModalId, setViewModalId] = useState<number>(0);
   const [viewModalType, setViewModalType] = useState<'system' | 'contributed'>('system');
+  const [viewModalEnableSave, setViewModalEnableSave] = useState(true);
   const [savedTab, setSavedTab] = useState<SavedTabType>('system');
 
   // Saved overrides (optimistic toggle on top of API-returned isSaved)
@@ -62,6 +68,7 @@ const ViewQuestionBank: React.FC = () => {
   const [categoryId, setCategoryId] = useState<number | undefined>(undefined);
   const [companyId, setCompanyId] = useState<number | undefined>(undefined);
   const [companyName, setCompanyName] = useState<string>('');
+  const [approvalStatus, setApprovalStatus] = useState<number | undefined>(undefined);
   const [level, setLevel] = useState<number | undefined>(undefined);
   const [difficulty, setDifficulty] = useState<number | undefined>(undefined);
   const [sortBy, setSortBy] = useState<string>('createdAt');
@@ -82,8 +89,10 @@ const ViewQuestionBank: React.FC = () => {
     const timer = setTimeout(() => {
       if (activeTab === 'system') {
         fetchQuestions();
-      } else {
+      } else if (activeTab === 'contributed') {
         fetchContributedQuestions();
+      } else {
+        fetchMyContributedQuestions();
       }
     }, searchTerm ? 500 : 0); // 500ms debounce for search term, immediate for others
 
@@ -181,6 +190,32 @@ const ViewQuestionBank: React.FC = () => {
     }
   };
 
+  const fetchMyContributedQuestions = async (overrideParams?: Partial<GetMyContributedQuestionsRequest>) => {
+    try {
+      setLoading(true);
+      const params = overrideParams || {
+        searchTerm: searchTerm || undefined,
+        skillId,
+        positionId,
+        categoryId,
+        level,
+        approvalStatus,
+        sortBy,
+        sortOrder,
+        pageNumber,
+        pageSize,
+      };
+      const result = await getMyContributedQuestions(params);
+      setMyContributedData(result);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to fetch my contributed questions:', err);
+      setError('Không thể tải danh sách câu hỏi bạn đã đóng góp. Vui lòng thử lại sau.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchSavedQuestions = async () => {
     try {
       setLoading(true);
@@ -206,6 +241,7 @@ const ViewQuestionBank: React.FC = () => {
     setCategoryId(undefined);
     setCompanyId(undefined);
     setCompanyName('');
+    setApprovalStatus(undefined);
     setLevel(undefined);
     setDifficulty(undefined);
     setSortBy('createdAt');
@@ -244,9 +280,10 @@ const ViewQuestionBank: React.FC = () => {
     }
   };
 
-  const handleView = (id: number, type: 'system' | 'contributed', currentSaved: boolean) => {
+  const handleView = (id: number, type: 'system' | 'contributed', currentSaved: boolean, enableSave = true) => {
     setViewModalId(id);
     setViewModalType(type);
+    setViewModalEnableSave(enableSave);
     setViewModalOpen(true);
     // Seed the override map so the modal has the correct initial value
     const questionKey = getQuestionKey(type, id);
@@ -321,6 +358,33 @@ const ViewQuestionBank: React.FC = () => {
     };
   };
 
+  const buildMyContributedCardData = (question: MyContributedQuestionItem) => {
+    const difficultyText = 'N/A';
+    const rating = 3;
+
+    return {
+      id: question.id,
+      title: question.content,
+      description: question.sampleAnswer || 'Chưa có câu trả lời mẫu.',
+      author: 'Bạn',
+      company: question.contributedDetail?.company?.name || 'N/A',
+      timeAgo: formatDate(question.updatedAt || question.createdAt || ''),
+      skills: question.skillsName || [],
+      position: question.positionsName?.join(', ') || 'N/A',
+      level: question.contributedDetail?.level || difficultyText,
+      rating,
+      status: question.approvalStatus || 'Pending',
+    };
+  };
+
+  const getApprovalStatusBadge = (status: string): "active" | "pending" | "error" | "inactive" | "draft" => {
+    const normalized = status?.toLowerCase();
+    if (normalized === 'approved') return 'active';
+    if (normalized === 'pending') return 'pending';
+    if (normalized === 'rejected') return 'error';
+    return 'inactive';
+  };
+
   const filterSavedSystemQuestions = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
     if (!normalizedSearch) {
@@ -385,6 +449,8 @@ const ViewQuestionBank: React.FC = () => {
     ? data
     : activeTab === 'contributed'
       ? contributedData
+      : activeTab === 'myContributed'
+        ? myContributedData
       : savedTab === 'system'
         ? savedSystemPage
         : savedContributedPage;
@@ -456,6 +522,19 @@ const ViewQuestionBank: React.FC = () => {
               >
                 Câu hỏi đã lưu
               </button>
+              <button
+                onClick={() => {
+                  setActiveTab('myContributed');
+                  setPageNumber(1);
+                }}
+                className={`pb-4 font-bold text-xs uppercase tracking-widest border-b-2 transition-colors ${
+                  activeTab === 'myContributed'
+                    ? 'text-indigo-400 border-indigo-500'
+                    : 'text-slate-400 border-transparent hover:text-white'
+                }`}
+              >
+                Câu hỏi tôi đã đóng góp
+              </button>
             </div>
           </section>
           {/* Breadcrumb & Header */}
@@ -468,6 +547,8 @@ const ViewQuestionBank: React.FC = () => {
                     ? 'Ngân Hàng Câu Hỏi Hệ Thống'
                     : activeTab === 'contributed'
                       ? 'Cộng Đồng Chia Sẻ Câu Hỏi'
+                      : activeTab === 'myContributed'
+                        ? 'Câu Hỏi Tôi Đã Đóng Góp'
                       : 'Kho Câu Hỏi Đã Lưu'}
                 </h1>
                 <p className="text-slate-400 max-w-2xl">
@@ -475,6 +556,8 @@ const ViewQuestionBank: React.FC = () => {
                     ? 'Khám phá kho tàng kiến thức với hàng ngàn câu hỏi phỏng vấn thực tế từ các tập đoàn công nghệ hàng đầu, được chọn lọc bởi đội ngũ Mentor dày dạn kinh nghiệm.'
                     : activeTab === 'contributed'
                       ? 'Nơi các ứng viên chia sẻ trải nghiệm phỏng vấn thực tế từ các công ty.'
+                      : activeTab === 'myContributed'
+                        ? 'Danh sách các câu hỏi bạn đã gửi đóng góp và trạng thái xét duyệt của từng câu hỏi.'
                       : 'Tổng hợp các câu hỏi bạn đã đánh dấu lưu, gom chung trong một không gian nhưng vẫn tách rõ hệ thống và đóng góp.'}
                 </p>
               </div>
@@ -572,22 +655,24 @@ const ViewQuestionBank: React.FC = () => {
               </select>
             </div>
 
-            <div className="w-full lg:w-48 space-y-2">
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Độ khó</label>
-              <select
-                value={difficulty || ''}
-                onChange={(e) => {
-                  setDifficulty(e.target.value ? Number(e.target.value) : undefined);
-                  setPageNumber(1);
-                }}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none"
-              >
-                <option value="">Mọi cấp độ</option>
-                <option value={DIFFICULTY_LEVEL.EASY}>Easy</option>
-                <option value={DIFFICULTY_LEVEL.MEDIUM}>Medium</option>
-                <option value={DIFFICULTY_LEVEL.HARD}>Hard</option>
-              </select>
-            </div>
+            {activeTab !== 'myContributed' && (
+              <div className="w-full lg:w-48 space-y-2">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Độ khó</label>
+                <select
+                  value={difficulty || ''}
+                  onChange={(e) => {
+                    setDifficulty(e.target.value ? Number(e.target.value) : undefined);
+                    setPageNumber(1);
+                  }}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none"
+                >
+                  <option value="">Mọi cấp độ</option>
+                  <option value={DIFFICULTY_LEVEL.EASY}>Easy</option>
+                  <option value={DIFFICULTY_LEVEL.MEDIUM}>Medium</option>
+                  <option value={DIFFICULTY_LEVEL.HARD}>Hard</option>
+                </select>
+              </div>
+            )}
 
             {activeTab === 'contributed' && (
               <>
@@ -641,6 +726,46 @@ const ViewQuestionBank: React.FC = () => {
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition-all outline-none text-white"
                     placeholder="Ví dụ: FPT"
                   />
+                </div>
+              </>
+            )}
+
+            {activeTab === 'myContributed' && (
+              <>
+                <div className="w-full lg:w-48 space-y-2">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Trạng thái duyệt</label>
+                  <select
+                    value={approvalStatus ?? ''}
+                    onChange={(e) => {
+                      setApprovalStatus(e.target.value ? Number(e.target.value) : undefined);
+                      setPageNumber(1);
+                    }}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none"
+                  >
+                    <option value="">Tất cả</option>
+                    <option value={0}>Pending</option>
+                    <option value={1}>Approved</option>
+                    <option value={2}>Rejected</option>
+                  </select>
+                </div>
+
+                <div className="w-full lg:w-48 space-y-2">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Level</label>
+                  <select
+                    value={level ?? ''}
+                    onChange={(e) => {
+                      setLevel(e.target.value ? Number(e.target.value) : undefined);
+                      setPageNumber(1);
+                    }}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none"
+                  >
+                    <option value="">Tất cả</option>
+                    {Object.entries(LEVEL_MAP).map(([key, label]) => (
+                      <option key={key} value={key}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </>
             )}
@@ -862,6 +987,94 @@ const ViewQuestionBank: React.FC = () => {
               ) : (
                 <div className="text-center bg-[#1e293b]/40 backdrop-blur-sm p-10 rounded-2xl border border-white/5 text-slate-400">
                   Không tìm thấy câu hỏi đóng góp nào.
+                </div>
+              )}
+            </div>
+          ) : activeTab === 'myContributed' ? (
+            <div className="space-y-6">
+              {loading ? (
+                <>
+                  {[1, 2, 3].map((index) => (
+                    <div
+                      key={index}
+                      className="bg-[#1e293b]/40 backdrop-blur-sm p-6 rounded-2xl border border-white/5 animate-pulse"
+                    >
+                      <div className="h-4 bg-slate-700 rounded w-48 mb-4"></div>
+                      <div className="h-6 bg-slate-700 rounded w-2/3 mb-3"></div>
+                      <div className="h-4 bg-slate-800 rounded w-full mb-2"></div>
+                      <div className="h-4 bg-slate-800 rounded w-4/5"></div>
+                    </div>
+                  ))}
+                </>
+              ) : error ? (
+                <div className="text-center bg-[#1e293b]/40 backdrop-blur-sm p-10 rounded-2xl border border-white/5">
+                  <p className="text-red-400 mb-4">{error}</p>
+                  <button
+                    onClick={() => fetchMyContributedQuestions()}
+                    className="px-6 py-2 bg-indigo-500 text-white rounded-xl hover:bg-indigo-600 transition-all font-medium"
+                  >
+                    Thử lại
+                  </button>
+                </div>
+              ) : myContributedData && myContributedData.items.length > 0 ? (
+                <>
+                  {myContributedData.items.map((question) => {
+                    const card = buildMyContributedCardData(question);
+                    return (
+                      <QuestionContributedCard
+                        key={`my-contributed-${card.id}`}
+                        id={card.id}
+                        title={card.title}
+                        description={card.description}
+                        author={card.author}
+                        company={card.company}
+                        timeAgo={card.timeAgo}
+                        skills={card.skills}
+                        position={card.position}
+                        level={card.level}
+                        rating={card.rating}
+                        statusLabel={card.status}
+                        statusType={getApprovalStatusBadge(card.status)}
+                        onView={() => handleView(question.id, 'contributed', false, false)}
+                      />
+                    );
+                  })}
+
+                  <div className="mt-10 flex items-center justify-center gap-2 flex-wrap">
+                    <button
+                      className="w-10 h-10 rounded-xl bg-[#1e293b]/40 border border-white/5 flex items-center justify-center text-slate-400 hover:bg-white/10 hover:text-white transition-all disabled:opacity-30"
+                      disabled={!activeData?.hasPreviousPage}
+                      onClick={() => activeData?.hasPreviousPage && setPageNumber((prev) => prev - 1)}
+                    >
+                      <span className="material-symbols-outlined">chevron_left</span>
+                    </button>
+
+                    {visiblePages.map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => setPageNumber(page)}
+                        className={`w-10 h-10 rounded-xl border flex items-center justify-center transition-all ${
+                          currentPage === page
+                            ? 'bg-indigo-500 text-white border-indigo-500 shadow-lg shadow-indigo-500/30 font-bold'
+                            : 'bg-[#1e293b]/40 border-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+
+                    <button
+                      className="w-10 h-10 rounded-xl bg-[#1e293b]/40 border border-white/5 flex items-center justify-center text-slate-400 hover:bg-white/10 hover:text-white transition-all disabled:opacity-30"
+                      disabled={!activeData?.hasNextPage}
+                      onClick={() => activeData?.hasNextPage && setPageNumber((prev) => prev + 1)}
+                    >
+                      <span className="material-symbols-outlined">chevron_right</span>
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center bg-[#1e293b]/40 backdrop-blur-sm p-10 rounded-2xl border border-white/5 text-slate-400">
+                  Bạn chưa đóng góp câu hỏi nào.
                 </div>
               )}
             </div>
@@ -1103,10 +1316,10 @@ const ViewQuestionBank: React.FC = () => {
           onOpenChange={setViewModalOpen}
           questionId={viewModalId}
           isSaved={isSavedFor('contributed', viewModalId, false)}
-          onSaveToggle={() => {
+          onSaveToggle={viewModalEnableSave ? () => {
             const currentSaved = isSavedFor('contributed', viewModalId, false);
             handleSave('contributed', viewModalId, currentSaved);
-          }}
+          } : undefined}
         />
       )}
     </div>
