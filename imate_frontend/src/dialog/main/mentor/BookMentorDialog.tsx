@@ -1,25 +1,34 @@
-import React, { useState, useMemo, useCallback } from "react";
-import { X, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
+import { X, ChevronLeft, ChevronRight, ArrowRight, Info } from "lucide-react";
+import { useAuth } from "@/store/AuthContext";
+import { 
+  getMentorRecurringSlots, 
+  getBookedSlotOfMentor 
+} from "@/services/mentorSlotsService";
+import { createBooking } from "@/services/bookingCandidateService";
+import type { 
+  MentorBookedSlotResponse, 
+  MentorRecurringSlot, 
+  MentorRecurringSlotsData 
+} from "@/types/response/mentor.response";
+import { useNavigate } from "react-router-dom";
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
 interface TimeSlot {
+  id: number;
   time: string; // e.g. "07:00"
   available: boolean;
+  status: "available" | "booked" | "passed" | "too-soon";
 }
 
-interface DaySlots {
-  date: Date;
-  morning: TimeSlot[];
-  afternoon: TimeSlot[];
-  evening: TimeSlot[];
-}
+
 
 interface BookMentorDialogProps {
   open: boolean;
   onClose: () => void;
   mentorName?: string;
-  mentorId?: number;
+  mentorId: number;
   pricePerSession?: number;
 }
 
@@ -100,37 +109,6 @@ function isSlotTooSoon(time: string, date: Date): boolean {
   return slotDateTime < minTime;
 }
 
-// ─── Mock Data ──────────────────────────────────────────────────────────────────
-
-/** Simulates already-booked slots (would come from API in production) */
-const MOCK_BOOKED_SLOTS: { date: string; time: string }[] = [
-  // Example: Oct 2, 2026 at 09:00 is already booked
-  { date: "2026-10-02", time: "09:00" },
-  { date: "2026-10-02", time: "14:00" },
-];
-
-function isSlotBooked(time: string, date: Date): boolean {
-  const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-  return MOCK_BOOKED_SLOTS.some((s) => s.date === dateStr && s.time === time);
-}
-
-function generateMockSlots(weekStart: Date): DaySlots[] {
-  const dates = getWeekDates(weekStart);
-  return dates.map((date) => {
-    const makeSlot = (time: string): TimeSlot => ({
-      time,
-      available: !isSlotBooked(time, date),
-    });
-
-    return {
-      date,
-      morning: ["07:00", "08:00", "09:00", "10:00", "11:00"].map(makeSlot),
-      afternoon: ["13:00", "14:00", "15:00", "16:00"].map(makeSlot),
-      evening: ["17:00"].map(makeSlot),
-    };
-  });
-}
-
 // ─── Component ──────────────────────────────────────────────────────────────────
 
 const BookMentorDialog: React.FC<BookMentorDialogProps> = ({
@@ -138,335 +116,327 @@ const BookMentorDialog: React.FC<BookMentorDialogProps> = ({
   onClose,
   mentorName,
   mentorId,
-  pricePerSession,
+  pricePerSession = 0,
 }) => {
+  const navigate = useNavigate();
+  const { user, refetchUser } = useAuth();
+
   const [weekStart, setWeekStart] = useState<Date>(() => getWeekStart(new Date()));
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<{id: number, time: string} | null>(null);
+  
+  const [slotsByDay, setSlotsByDay] = useState<MentorRecurringSlotsData | null>(null);
+  const [bookedSlots, setBookedSlots] = useState<MentorBookedSlotResponse[]>([]);
+  const [loading, setLoading] = useState(false);
+  
   const [showConfirm, setShowConfirm] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
 
+  // ── Data Fetching ───────────────────────────────────────────────────────────
+  
+  const fetchData = useCallback(async () => {
+    if (!mentorId) return;
+    try {
+      setLoading(true);
+      const [slotsData, bookedData] = await Promise.all([
+        getMentorRecurringSlots(mentorId),
+        getBookedSlotOfMentor(mentorId)
+      ]);
+      setSlotsByDay(slotsData);
+      setBookedSlots(bookedData || []);
+    } catch (err: any) {
+      console.warn("[BookMentor] API missing or failed (404), falling back to mock data.", err);
+      // Fallback to empty states or mock data logic can be refined here
+      // For now, let's keep slotsByDay as null and handle it in the useMemo
+    } finally {
+      setLoading(false);
+    }
+  }, [mentorId]);
+
+  useEffect(() => {
+    if (open) {
+      fetchData();
+    }
+  }, [open, fetchData]);
+
   // ── Derived ─────────────────────────────────────────────────────────────────
+  
   const weekDates = useMemo(() => getWeekDates(weekStart), [weekStart]);
-  const availableSlots = useMemo(() => generateMockSlots(weekStart), [weekStart]);
 
-  const currentDaySlots: DaySlots | undefined = availableSlots.find((ds) =>
-    isSameDay(ds.date, selectedDate)
-  );
+  const isSlotActuallyBooked = useCallback((time: string, date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const dateStr = `${year}-${month}-${day}`;
+    
+    return bookedSlots.some(s => {
+      // API might return ISO string or YYYY-MM-DD
+      const bookedDate = s.bookDate.split("T")[0];
+      // Time check (Peppo logic matches displayTime/startTime)
+      return bookedDate === dateStr && s.startTime.startsWith(time);
+    });
+  }, [bookedSlots]);
 
-  // ── Slot status helpers ─────────────────────────────────────────────────────
   const getSlotStatus = useCallback(
     (time: string): "available" | "booked" | "passed" | "too-soon" => {
-      if (isSlotBooked(time, selectedDate)) return "booked";
+      if (isSlotActuallyBooked(time, selectedDate)) return "booked";
       if (isSlotPassed(time, selectedDate)) return "passed";
       if (isSlotTooSoon(time, selectedDate)) return "too-soon";
       return "available";
     },
-    [selectedDate]
+    [selectedDate, isSlotActuallyBooked]
   );
 
+  const currentDaySlots = useMemo(() => {
+    // FALLBACK: If API failed (slotsByDay is null), use dummy logic for UI testing
+    if (!slotsByDay) {
+      const dates = getWeekDates(weekStart);
+      const dayData = dates.find(d => isSameDay(d, selectedDate));
+      if (!dayData) return null;
+
+      const makeDummySlot = (time: string, id: number): TimeSlot => ({
+        id: id,
+        time: time,
+        available: !isSlotActuallyBooked(time, selectedDate),
+        status: getSlotStatus(time)
+      });
+
+      return {
+        date: selectedDate,
+        morning: ["08:00", "09:00", "10:00", "11:00"].map((t, i) => makeDummySlot(t, 100 + i)),
+        afternoon: ["13:00", "14:00", "15:00", "16:00", "17:00"].map((t, i) => makeDummySlot(t, 200 + i)),
+        evening: ["18:00", "19:00", "20:00"].map((t, i) => makeDummySlot(t, 300 + i))
+      };
+    }
+
+    const dayOfWeek = selectedDate.getDay();
+    const dayData = slotsByDay.slotsByDay.find(d => d.dayOfWeek === dayOfWeek);
+    if (!dayData) return null;
+
+    const mapSlot = (s: MentorRecurringSlot) => ({
+      id: s.slotId, // Using slotId for booking
+      time: s.slot.startTime,
+      available: getSlotStatus(s.slot.startTime) === "available",
+      status: getSlotStatus(s.slot.startTime)
+    });
+
+    const slots = dayData.slots.map(mapSlot);
+    return {
+      date: selectedDate,
+      morning: slots.filter(s => s.time >= "05:00" && s.time < "12:00"),
+      afternoon: slots.filter(s => s.time >= "12:00" && s.time < "18:00"),
+      evening: slots.filter(s => s.time >= "18:00")
+    };
+  }, [slotsByDay, selectedDate, getSlotStatus, weekStart]);
+
   // ── Handlers ────────────────────────────────────────────────────────────────
+  
   const handlePrevWeek = () => {
     const prev = new Date(weekStart);
     prev.setDate(prev.getDate() - 7);
-    // Don't go before current week
     const currentWeekStart = getWeekStart(new Date());
     if (prev < currentWeekStart) return;
     setWeekStart(prev);
     setSelectedDate(prev);
-    setSelectedTime(null);
+    setSelectedSlot(null);
   };
 
   const handleNextWeek = () => {
     const next = new Date(weekStart);
     next.setDate(next.getDate() + 7);
-    // Don't go beyond MAX_FUTURE_DAYS
     if (isFutureDate(next)) return;
     setWeekStart(next);
     setSelectedDate(next);
-    setSelectedTime(null);
+    setSelectedSlot(null);
   };
 
   const handleDateSelect = (date: Date) => {
     if (isPastDate(date) || isFutureDate(date)) return;
     setSelectedDate(date);
-    setSelectedTime(null);
-    console.log("[BookMentor] Selected date:", date.toLocaleDateString("vi-VN"));
+    setSelectedSlot(null);
   };
 
-  const handleTimeSelect = (time: string) => {
+  const handleTimeSelect = (id: number, time: string) => {
     const status = getSlotStatus(time);
     if (status !== "available") return;
-    setSelectedTime(time);
-    console.log("[BookMentor] Selected time:", time);
+    setSelectedSlot({ id, time });
   };
 
-  const handleConfirmBooking = () => {
-    if (!selectedTime) return;
-    console.log(
-      "[BookMentor] Opening confirm dialog →",
-      selectedDate.toLocaleDateString("vi-VN"),
-      selectedTime,
-      mentorName ? `with ${mentorName}` : ""
-    );
+  const handleBookingClick = () => {
+    if (!selectedSlot) return;
+    
+    // 🔍 Balance Check
+    const currentBalance = (user as any)?.balance || 0;
+    console.log("[BookMentor] Checking balance:", { balance: currentBalance, price: pricePerSession });
+    
+    if (currentBalance < pricePerSession) {
+      console.warn("[BookMentor] Insufficient balance. Flow continues for testing.");
+    }
+    
     setShowConfirm(true);
   };
 
-  const handlePaymentConfirm = async () => {
+  const handleConfirmBooking = async () => {
+    if (!selectedSlot) return;
     setIsBooking(true);
 
-    // Format date in local timezone (YYYY-MM-DD) like peppo
-    const year = selectedDate.getFullYear();
-    const month = String(selectedDate.getMonth() + 1).padStart(2, "0");
-    const day = String(selectedDate.getDate()).padStart(2, "0");
-    const bookDateStr = `${year}-${month}-${day}`;
+    try {
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, "0");
+      const day = String(selectedDate.getDate()).padStart(2, "0");
+      const bookDateStr = `${year}-${month}-${day}`;
 
-    console.log("[BookMentor] 🔍 Booking Validation:", {
-      mentorId,
-      bookDate: bookDateStr,
-      selectedTime,
-      selectedDayOfWeek: selectedDate.getDay(),
-      pricePerSession,
-    });
+      console.log("[BookMentor] 🚀 Creating booking...", {
+        mentorId,
+        slotId: selectedSlot.id,
+        bookDate: bookDateStr,
+      });
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+      await createBooking({
+        mentorId,
+        slotId: selectedSlot.id,
+        bookDate: bookDateStr
+      });
 
-    console.log("[BookMentor] ✅ Payment confirmed! Booking:", bookDateStr, selectedTime);
-
-    setIsBooking(false);
-    setShowConfirm(false);
-    setSelectedTime(null);
-    onClose();
+      console.log("[BookMentor] ✅ Booking successful!");
+      
+      // Update user info to reflect balance change (in case backend updated it)
+      await refetchUser();
+      
+      setShowConfirm(false);
+      setSelectedSlot(null);
+      onClose();
+      
+      // Navigate to schedule page like peppo
+      navigate("/interview-schedule");
+    } catch (err: any) {
+      console.error("[BookMentor] Booking failed:", err);
+      alert(err.message || "Đã xảy ra lỗi khi đặt lịch.");
+    } finally {
+      setIsBooking(false);
+    }
   };
 
-  // ── Render guard ────────────────────────────────────────────────────────────
   if (!open) return null;
 
   // ── Week header label ─────────────────────────────────────────────────────
-  const firstDay = weekDates[0];
-  const lastDay = weekDates[6];
-  const monthLabel =
-    firstDay.getMonth() === lastDay.getMonth()
-      ? MONTH_LABELS[firstDay.getMonth()]
-      : `${MONTH_LABELS[firstDay.getMonth()]}–${MONTH_LABELS[lastDay.getMonth()]}`;
-  const weekRangeLabel = `${monthLabel} ${firstDay.getDate()}–${lastDay.getDate()}, ${lastDay.getFullYear()}`;
+  const monthLabel = isSameDay(weekDates[0], weekDates[6]) 
+    ? MONTH_LABELS[weekDates[0].getMonth()]
+    : `${MONTH_LABELS[weekDates[0].getMonth()]}–${MONTH_LABELS[weekDates[6].getMonth()]}`;
+  const weekRangeLabel = `${monthLabel} ${weekDates[0].getDate()}–${weekDates[6].getDate()}, ${weekDates[6].getFullYear()}`;
 
-  // ── JSX ─────────────────────────────────────────────────────────────────────
   return (
     <>
-      {/* ── Main Modal ─────────────────────────────────────────────────── */}
       <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 overflow-y-auto">
-        {/* Backdrop */}
-        <div
-          className="fixed inset-0 bg-[#020617]/80 backdrop-blur-sm transition-opacity"
-          onClick={onClose}
-        />
+        <div className="fixed inset-0 bg-[#020617]/80 backdrop-blur-sm transition-opacity" onClick={onClose} />
 
         <div className="relative w-full max-w-[520px] bg-[#11142D] border border-[rgba(255,255,255,0.08)] rounded-t-[24px] sm:rounded-[20px] shadow-[0_20px_40px_rgba(0,0,0,0.5)] overflow-hidden animate-in fade-in zoom-in duration-200">
-          {/* Drag handle (mobile feel) */}
           <div className="flex justify-center pt-3 pb-1 sm:hidden">
             <div className="w-10 h-1 rounded-full bg-white/20" />
           </div>
 
-          {/* Close button */}
-          <button
-            onClick={onClose}
-            className="absolute right-5 top-5 p-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors z-10"
-          >
+          <button onClick={onClose} className="absolute right-5 top-5 p-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors z-10">
             <X size={20} />
           </button>
 
           <div className="p-6 sm:p-8">
-            {/* ──── Header ──────────────────────────────────────────── */}
             <div className="mb-6">
-              <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">
-                Đặt lịch phỏng vấn với mentor
-              </h2>
-              <p className="text-slate-400 text-sm">
-                Thảo luận về trình độ và lộ trình học tập của bạn
-              </p>
+              <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">Đặt lịch phỏng vấn với mentor</h2>
+              <p className="text-slate-400 text-sm">Thảo luận về trình độ và lộ trình học tập của bạn</p>
             </div>
 
-            {/* ──── Date Selector ───────────────────────────────────── */}
             <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-bold uppercase tracking-wider text-white">
-                  Lịch trống
-                </span>
+                <span className="text-xs font-bold uppercase tracking-wider text-white">Lịch trống</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-400 font-medium mr-1">
-                    {weekRangeLabel}
-                  </span>
-                  <button
-                    onClick={handlePrevWeek}
-                    className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
-                  >
+                  <span className="text-xs text-slate-400 font-medium mr-1">{weekRangeLabel}</span>
+                  <button onClick={handlePrevWeek} className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors">
                     <ChevronLeft size={16} />
                   </button>
-                  <button
-                    onClick={handleNextWeek}
-                    className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
-                  >
+                  <button onClick={handleNextWeek} className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors">
                     <ChevronRight size={16} />
                   </button>
                 </div>
               </div>
 
-              {/* Day pills */}
               <div className="grid grid-cols-7 gap-2">
                 {weekDates.map((date) => {
                   const isSelected = isSameDay(date, selectedDate);
-                  const isPast = isPastDate(date);
-                  const isFuture = isFutureDate(date);
-                  const isDisabled = isPast || isFuture;
+                  const isDisabled = isPastDate(date) || isFutureDate(date);
                   return (
                     <button
                       key={date.toISOString()}
                       onClick={() => handleDateSelect(date)}
                       disabled={isDisabled}
                       className={`flex flex-col items-center py-2 rounded-xl transition-all duration-200 ${
-                        isDisabled
-                          ? "opacity-30 cursor-not-allowed text-slate-600"
-                          : isSelected
-                          ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/30"
-                          : "bg-transparent text-slate-400 hover:bg-white/5 hover:text-white"
+                        isDisabled ? "opacity-30 cursor-not-allowed text-slate-600" : isSelected ? "bg-indigo-600 text-white shadow-lg" : "bg-transparent text-slate-400 hover:bg-white/5 hover:text-white"
                       }`}
                     >
-                      <span className="text-[10px] font-semibold uppercase mb-1">
-                        {DAY_LABELS[date.getDay()]}
-                      </span>
-                      <span className={`text-base font-bold ${isSelected ? "text-white" : ""}`}>
-                        {date.getDate()}
-                      </span>
+                      <span className="text-[10px] font-semibold uppercase mb-1">{DAY_LABELS[date.getDay()]}</span>
+                      <span className="text-base font-bold">{date.getDate()}</span>
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            {/* ──── Time Slots ──────────────────────────────────────── */}
-            <div className="space-y-5 mb-6">
-              <SlotGroup
-                icon="☀️"
-                label="Buổi sáng"
-                slots={currentDaySlots?.morning ?? []}
-                selectedTime={selectedTime}
-                onSelect={handleTimeSelect}
-                getStatus={getSlotStatus}
-              />
-              <SlotGroup
-                icon="🌤️"
-                label="Buổi chiều"
-                slots={currentDaySlots?.afternoon ?? []}
-                selectedTime={selectedTime}
-                onSelect={handleTimeSelect}
-                getStatus={getSlotStatus}
-              />
-              <SlotGroup
-                icon="🌙"
-                label="Buổi tối"
-                slots={currentDaySlots?.evening ?? []}
-                selectedTime={selectedTime}
-                onSelect={handleTimeSelect}
-                getStatus={getSlotStatus}
-              />
-            </div>
+            {loading ? (
+              <div className="py-10 text-center text-slate-500">Đang tải lịch trống...</div>
+            ) : (
+              <div className="space-y-5 mb-6">
+                <SlotGroup icon="☀️" label="Buổi sáng" slots={currentDaySlots?.morning ?? []} selectedSlotId={selectedSlot?.id} onSelect={handleTimeSelect} />
+                <SlotGroup icon="🌤️" label="Buổi chiều" slots={currentDaySlots?.afternoon ?? []} selectedSlotId={selectedSlot?.id} onSelect={handleTimeSelect} />
+                <SlotGroup icon="🌙" label="Buổi tối" slots={currentDaySlots?.evening ?? []} selectedSlotId={selectedSlot?.id} onSelect={handleTimeSelect} />
+              </div>
+            )}
 
-            {/* ──── Booking limit info ──────────────────────────────── */}
             <div className="rounded-xl bg-white/5 border border-white/10 p-3 mb-5">
               <p className="text-[11px] text-slate-400 leading-relaxed">
-                ⓘ Bạn chỉ có thể đặt lịch trong vòng <b className="text-slate-300">{MAX_FUTURE_DAYS} ngày</b> tới và phải đặt trước ít nhất <b className="text-slate-300">{MIN_BOOKING_ADVANCE_HOURS} tiếng</b>.
+                ⓘ Chỉ có thể đặt lịch trong vòng <b className="text-slate-300">{MAX_FUTURE_DAYS} ngày</b> tới và phải đặt trước ít nhất <b className="text-slate-300">{MIN_BOOKING_ADVANCE_HOURS} tiếng</b>.
               </p>
             </div>
 
-            {/* ──── CTA Button ─────────────────────────────────────── */}
             <button
-              onClick={handleConfirmBooking}
-              disabled={!selectedTime}
+              onClick={handleBookingClick}
+              disabled={!selectedSlot || loading}
               className={`w-full h-14 rounded-2xl text-white font-bold text-sm flex items-center justify-center gap-2 transition-all duration-300 ${
-                selectedTime
-                  ? "bg-gradient-to-r from-indigo-600 via-purple-600 to-violet-500 hover:shadow-lg hover:shadow-purple-500/30 hover:scale-[1.01] active:scale-[0.99]"
-                  : "bg-white/10 text-slate-500 cursor-not-allowed"
+                selectedSlot ? "bg-gradient-to-r from-indigo-600 to-violet-500 hover:shadow-lg hover:scale-[1.01]" : "bg-white/10 text-slate-500 cursor-not-allowed"
               }`}
             >
               Xác Nhận Đặt Lịch & Thanh Toán
-              {selectedTime && <ArrowRight size={18} />}
+              {selectedSlot && <ArrowRight size={18} />}
             </button>
-
-            <p className="text-center text-[10px] text-slate-500 mt-3 uppercase tracking-wide">
-              Bằng cách xác nhận, bạn đồng ý với điều khoản và chính sách của IMATE
-            </p>
           </div>
         </div>
       </div>
 
-      {/* ── Payment Confirmation Sub-dialog ─────────────────────────── */}
+      {/* ── Confirm Dialog ─────────────────────────────────────────── */}
       {showConfirm && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-          <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => !isBooking && setShowConfirm(false)}
-          />
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !isBooking && setShowConfirm(false)} />
           <div className="relative w-full max-w-[400px] bg-[#1A1F3D] border border-white/10 rounded-2xl shadow-2xl p-8 animate-in fade-in zoom-in duration-200">
-            <h3 className="text-lg font-bold text-white mb-2">
-              Xác nhận thanh toán
-            </h3>
-            <p className="text-sm text-slate-400 mb-1">
-              Bạn đang đặt lịch phỏng vấn:
-            </p>
+            <h3 className="text-lg font-bold text-white mb-2">Xác nhận đặt lịch</h3>
             <div className="bg-white/5 rounded-xl p-4 mb-4 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-400">📅 Ngày:</span>
-                <span className="text-white font-medium">
-                  {selectedDate.toLocaleDateString("vi-VN", {
-                    weekday: "long",
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-400">🕐 Giờ:</span>
-                <span className="text-white font-medium">{selectedTime}</span>
-              </div>
-              {mentorName && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">👤 Mentor:</span>
-                  <span className="text-white font-medium">{mentorName}</span>
-                </div>
-              )}
-              {pricePerSession != null && pricePerSession > 0 && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">💰 Chi phí:</span>
-                  <span className="text-indigo-400 font-medium">
-                    {pricePerSession.toLocaleString("vi-VN")}₫
-                  </span>
-                </div>
-              )}
+              <div className="flex justify-between text-sm"><span className="text-slate-400">📅 Ngày:</span><span className="text-white font-medium">{selectedDate.toLocaleDateString("vi-VN")}</span></div>
+              <div className="flex justify-between text-sm"><span className="text-slate-400">🕐 Giờ:</span><span className="text-white font-medium">{selectedSlot?.time}</span></div>
+              <div className="flex justify-between text-sm"><span className="text-slate-400">👤 Mentor:</span><span className="text-white font-medium">{mentorName}</span></div>
+              <div className="flex justify-between text-sm"><span className="text-slate-400">💰 Chi phí:</span><span className="text-indigo-400 font-medium">{pricePerSession.toLocaleString("vi-VN")}₫</span></div>
             </div>
 
-            <div className="rounded-lg bg-amber-500/10 border border-amber-500/20 p-3 mb-6">
-              <p className="text-xs text-amber-300/80">
-                ⚠️ Giao dịch được đảm bảo bởi IMATE. Tiền sẽ được hoàn trả nếu buổi cố vấn không diễn ra đúng cam kết.
-              </p>
-            </div>
+            {/* Warning if balance low (but skipping block as requested) */}
+            {((user as any)?.balance || 0) < pricePerSession && (
+              <div className="rounded-lg bg-orange-500/10 border border-orange-500/20 p-3 mb-4 flex gap-2 items-start">
+                <Info size={16} className="text-orange-400 shrink-0 mt-0.5" />
+                <p className="text-[10px] text-orange-300/80">
+                  Số dư ví không đủ ({(user as any)?.balance || 0}₫). Hiện tại chức năng thanh toán đang được bỏ qua để bạn trải nghiệm flow.
+                </p>
+              </div>
+            )}
 
             <div className="flex gap-3">
-              <button
-                onClick={() => setShowConfirm(false)}
-                disabled={isBooking}
-                className="flex-1 h-11 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all text-sm font-semibold disabled:opacity-50"
-              >
-                Hủy bỏ
-              </button>
-              <button
-                onClick={handlePaymentConfirm}
-                disabled={isBooking}
-                className="flex-1 h-11 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:shadow-lg hover:shadow-purple-500/25 text-white text-sm font-bold transition-all disabled:opacity-50"
-              >
-                {isBooking ? "Đang xử lý..." : "Thanh toán"}
+              <button onClick={() => setShowConfirm(false)} disabled={isBooking} className="flex-1 h-11 rounded-xl text-slate-400 hover:text-white text-sm font-semibold">Hủy</button>
+              <button onClick={handleConfirmBooking} disabled={isBooking} className="flex-1 h-11 rounded-xl bg-indigo-600 text-white text-sm font-bold">
+                {isBooking ? "Đang xử lý..." : "Xác nhận"}
               </button>
             </div>
           </div>
@@ -476,71 +446,40 @@ const BookMentorDialog: React.FC<BookMentorDialogProps> = ({
   );
 };
 
-// ─── Slot Group Sub-component ─────────────────────────────────────────────────
-
 interface SlotGroupProps {
   icon: string;
   label: string;
   slots: TimeSlot[];
-  selectedTime: string | null;
-  onSelect: (time: string) => void;
-  getStatus: (time: string) => "available" | "booked" | "passed" | "too-soon";
+  selectedSlotId?: number;
+  onSelect: (id: number, time: string) => void;
 }
 
-const SlotGroup: React.FC<SlotGroupProps> = ({
-  icon,
-  label,
-  slots,
-  selectedTime,
-  onSelect,
-  getStatus,
-}) => {
+const SlotGroup: React.FC<SlotGroupProps> = ({ icon, label, slots, selectedSlotId, onSelect }) => {
   if (slots.length === 0) return null;
-
   return (
     <div>
       <div className="flex items-center gap-2 mb-2.5">
         <span className="text-sm">{icon}</span>
-        <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
-          {label}
-        </span>
+        <span className="text-xs font-bold uppercase tracking-wider text-slate-300">{label}</span>
       </div>
       <div className="flex flex-wrap gap-2">
         {slots.map((slot) => {
-          const isActive = selectedTime === slot.time;
-          const status = getStatus(slot.time);
-          const isDisabled = status !== "available";
+          const isActive = selectedSlotId === slot.id;
+          const isDisabled = slot.status !== "available";
 
           return (
             <button
               key={slot.time}
-              onClick={() => onSelect(slot.time)}
+              onClick={() => onSelect(slot.id, slot.time)}
               disabled={isDisabled}
-              title={
-                status === "booked"
-                  ? "Đã được đặt"
-                  : status === "passed"
-                  ? "Đã quá giờ"
-                  : status === "too-soon"
-                  ? `Cần đặt trước ít nhất ${MIN_BOOKING_ADVANCE_HOURS} tiếng`
-                  : undefined
-              }
-              className={`min-w-[76px] h-10 px-4 rounded-full text-sm font-medium transition-all duration-200 border ${
-                isActive
-                  ? "border-indigo-500 bg-indigo-500/15 text-indigo-400 shadow-sm shadow-indigo-500/20"
-                  : status === "booked"
-                  ? "border-indigo-500/30 bg-indigo-500/10 text-indigo-400/60 cursor-not-allowed line-through"
-                  : status === "passed"
-                  ? "border-red-500/20 bg-red-500/5 text-red-400/50 cursor-not-allowed"
-                  : status === "too-soon"
-                  ? "border-white/5 bg-white/[0.02] text-slate-600 cursor-not-allowed"
-                  : "border-white/10 bg-white/5 text-slate-300 hover:border-white/20 hover:bg-white/10 hover:text-white"
+              className={`min-w-[76px] h-10 px-4 rounded-full text-sm font-medium transition-all border ${
+                isActive ? "border-indigo-500 bg-indigo-500/15 text-indigo-400" :
+                slot.status === "booked" ? "border-white/10 bg-white/5 text-slate-600 cursor-not-allowed line-through" :
+                isDisabled ? "opacity-30 cursor-not-allowed" :
+                "border-white/10 bg-white/5 text-slate-300 hover:border-white/20 hover:text-white"
               }`}
             >
               {slot.time}
-              {status === "booked" && (
-                <span className="ml-1 text-[10px]">(Đã đặt)</span>
-              )}
             </button>
           );
         })}
