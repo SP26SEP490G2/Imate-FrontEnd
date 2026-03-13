@@ -13,6 +13,7 @@ interface QuestionContributedCardProps {
   position: string;
   level: string;
   rating: number; // 1-5
+  isSaved?: boolean;
   onView?: () => void;
   onSave?: () => void;
 }
@@ -27,6 +28,7 @@ const QuestionContributedCard: React.FC<QuestionContributedCardProps> = ({
   position,
   level,
   rating,
+  isSaved = false,
   onView,
   onSave,
 }) => {
@@ -108,10 +110,12 @@ const QuestionContributedCard: React.FC<QuestionContributedCardProps> = ({
           {/* Save Button */}
           <button
             onClick={onSave}
-            className="flex items-center gap-1 text-slate-500 hover:text-white transition-colors text-xs"
+            className={`flex items-center gap-1 transition-colors text-xs ${
+              isSaved ? 'text-yellow-400 hover:text-yellow-300' : 'text-slate-500 hover:text-yellow-400'
+            }`}
           >
-            <Bookmark className="w-4 h-4" />
-            Lưu
+            <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
+            {isSaved ? 'Đã lưu' : 'Lưu'}
           </button>
         </div>
 
