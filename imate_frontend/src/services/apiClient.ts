@@ -153,6 +153,8 @@ apiClient.interceptors.response.use(
         errorMessage = 
           data.Message ||      // Từ middleware ExceptionHandlingMiddleware
           data.message ||      // Từ controller BadRequest(new { message })
+          data.detail ||       // Từ ProblemDetails
+          data.Detail ||       // ProblemDetails (PascalCase)
           data.error ||        // Format khác
           data.Error ||        // Case-sensitive
           error.message;       // Fallback về axios message
