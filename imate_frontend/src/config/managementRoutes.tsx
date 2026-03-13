@@ -57,7 +57,7 @@ export const managementRoutes = [
     element: <SubscriptionManagement />,
     allowedRoles: [ROLES.ADMIN],
   },
-    {
+  {
     label: "Truy vết hệ thống",
     icon: Logs,
     path: "admin/audit-logs",
@@ -72,6 +72,7 @@ export const recruiterManagementRoutes = [
     icon: Briefcase,
     path: "job-applications",
     element: <JobPostingList />,
+    activePaths: ["/job-postings/"]
   },
   {
     label: "Tạo đơn đăng tuyển",

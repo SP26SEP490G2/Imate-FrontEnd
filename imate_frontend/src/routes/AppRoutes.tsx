@@ -50,6 +50,7 @@ import AdminAuditLog from "@/pages/admin/AdminAuditLog";
 import Classification from "@/pages/management/classification/Classification";
 import UserManagement from "@/pages/admin/UserManagement";
 import SubscriptionManagement from "@/pages/admin/SubscriptionManagement";
+import AppliedCandidateList from "@/pages/recruiter/AppliedCandidateList";
 
 /**
  * Route Configuration Type
@@ -75,36 +76,37 @@ interface RouteConfig {
  */
 const routeConfigs: RouteConfig[] = [
   // ===== AUTH ROUTES =====
-  { path: "/sign-in",          element: <SignIn />,           layout: LAYOUT.NONE },
-  { path: "/sign-up",          element: <SignUp />,           layout: LAYOUT.NONE },
-  { path: "/verify-email",     element: <VerifyEmail />,      layout: LAYOUT.NONE },
-  { path: "/forgot-password",  element: <ForgotPassword />,   layout: LAYOUT.NONE },
-  { path: "/reset-password",   element: <ResetPassword />,    layout: LAYOUT.NONE },
+  { path: "/sign-in", element: <SignIn />, layout: LAYOUT.NONE },
+  { path: "/sign-up", element: <SignUp />, layout: LAYOUT.NONE },
+  { path: "/verify-email", element: <VerifyEmail />, layout: LAYOUT.NONE },
+  { path: "/forgot-password", element: <ForgotPassword />, layout: LAYOUT.NONE },
+  { path: "/reset-password", element: <ResetPassword />, layout: LAYOUT.NONE },
 
   // ===== MAIN LAYOUT ROUTES =====
-  { path: "/home",                  element: <HomePage />,               layout: LAYOUT.MAIN },
-  { path: "/view-question-bank",  element: <ViewQuestionBank />,     layout: LAYOUT.MAIN },
-  { path: "/view-subscription",     element: <ViewSubscriptionPage />,   layout: LAYOUT.MAIN },
-  { path: "/pricing",               element: <ViewSubscriptionPage />,   layout: LAYOUT.MAIN },
-  { path: "/view-mentor",           element: <MentorList />,             layout: LAYOUT.MAIN },
-  { path: "/view-mentor/:id",       element: <MentorDetail />,           layout: LAYOUT.MAIN },
+  { path: "/home", element: <HomePage />, layout: LAYOUT.MAIN },
+  { path: "/view-question-bank", element: <ViewQuestionBank />, layout: LAYOUT.MAIN },
+  { path: "/view-subscription", element: <ViewSubscriptionPage />, layout: LAYOUT.MAIN },
+  { path: "/pricing", element: <ViewSubscriptionPage />, layout: LAYOUT.MAIN },
+  { path: "/view-mentor", element: <MentorList />, layout: LAYOUT.MAIN },
+  { path: "/view-mentor/:id", element: <MentorDetail />, layout: LAYOUT.MAIN },
 
   // ===== MAIN LAYOUT ROUTES =====
-  { path: "/profile",                        element: <ViewProfile />,                layout: LAYOUT.MAIN, requireAuth: true },
-  { path: "/submit-mentor-application",      element: <SubmitMentorApplication />,    layout: LAYOUT.MAIN, requireAuth: true },
-  { path: "/pending-application",            element: <PendingApplication />,         layout: LAYOUT.MAIN, requireAuth: true },
-  { path: "/submit-recruiter-application",   element: <SubmitRecruiterApplication />, layout: LAYOUT.MAIN, requireAuth: true },
-  { path: "/recruiter-pending-application",  element: <RecruiterPendingApplication />,layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/profile", element: <ViewProfile />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/submit-mentor-application", element: <SubmitMentorApplication />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/pending-application", element: <PendingApplication />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/submit-recruiter-application", element: <SubmitRecruiterApplication />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/recruiter-pending-application", element: <RecruiterPendingApplication />, layout: LAYOUT.MAIN, requireAuth: true },
 
   // ===== MANAGEMENT LAYOUT ROUTES =====
-  { path: "/management/view-questions",      element: <ViewQuestions />,   layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
-  { path: "/management/manage-application",  element: <ReviewMentorApplication />,   layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
-  { path: "/management/recruiter-dashboard/job-applications",  element: <JobPostingList />,   layout: LAYOUT.MANAGEMENT, roles: [ROLES.RECRUITER] },
-  { path: "/management/recruiter-dashboard/create-job-posting",  element: <CreateJobApplication />,   layout: LAYOUT.MANAGEMENT, roles: [ROLES.RECRUITER] },
-  { path: "/management/admin/audit-logs",  element: <AdminAuditLog />,   layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN] },
+  { path: "/management/view-questions", element: <ViewQuestions />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
+  { path: "/management/manage-application", element: <ReviewMentorApplication />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
+  { path: "/management/recruiter-dashboard/job-applications", element: <JobPostingList />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.RECRUITER] },
+  { path: "/management/recruiter-dashboard/create-job-posting", element: <CreateJobApplication />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.RECRUITER] },
+  { path: "/management/recruiter-dashboard/job-postings/:jobId/candidates", element: <AppliedCandidateList />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.RECRUITER] },
+  { path: "/management/admin/audit-logs", element: <AdminAuditLog />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN] },
 
-  { path: "/management/applications",  element: <ReviewMentorApplication />,   layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
-  { path: "/management/classification",        element: <Classification />,         layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
+  { path: "/management/applications", element: <ReviewMentorApplication />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
+  { path: "/management/classification", element: <Classification />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
   { path: "/management/applications/mentor/:id", element: <MentorDetailForStaff />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
   { path: "/management/applications/recruiter/:id", element: <RecruiterDetailForStaff />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
 
@@ -162,7 +164,7 @@ const buildRoutes = (configs: RouteConfig[]): RouteObject[] => {
   if (managementRoutes.length > 0) {
     result.push({
       path: "/management",
-      element: <RoleGuard requiredRoles={["Admin", "Staff","Recruiter"]}><ManagementLayout /></RoleGuard>,
+      element: <RoleGuard requiredRoles={["Admin", "Staff", "Recruiter"]}><ManagementLayout /></RoleGuard>,
       children: managementRoutes.map(config => ({
         path: config.path.replace("/management/", ""),
         element: wrapWithGuards(config.element, config.requireAuth, config.roles),

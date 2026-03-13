@@ -43,7 +43,7 @@ const APIConfig = {
   // Category endpoints
   Category: {
     GetAllCategories: "/get-categories",
-    AddCategory:"/categories",
+    AddCategory: "/categories",
     UpdateCategory: "/categories/{categoryId}",
     GetAffectedQuestions: "/categories/{categoryId}/affected-questions",
   },
@@ -78,6 +78,7 @@ const APIConfig = {
     CreateJobPost: "/create-job-posts",
     UpdateJobApplication: "/update-job-applications",
     CloseJobApplication: "/close-job-applications",
+    GetAppliedCandidate: (jobId: number) => `${jobId}/applied-candidates`
   },
 
   // Staff review endpoints (baseURL thường đã có /api)
@@ -88,7 +89,7 @@ const APIConfig = {
     GetPendingRecruiters: "/staff-review/recruiters/pending",
     ReviewRecruiter: "/staff-review/recruiters",
   },
-  
+
   // Subscription endpoints
   Subscription: {
     GetSubscriptionPackages: "/subscription-packages",

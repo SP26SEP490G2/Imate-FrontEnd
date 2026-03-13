@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Plus, Pencil, Search, Users, Ban } from "lucide-react";
+import { Plus, Pencil, Search, Users, Ban, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
@@ -250,8 +250,9 @@ const JobPostingList: React.FC = () => {
                                                     <Button
                                                         size="sm"
                                                         variant="secondary"
-                                                        className="text-green-400 hover:text-green-300"
+                                                        className="text-green-400 hover:text-green-300 cursor-pointer"
                                                         icon={<Users size={14} />}
+                                                        onClick={() => navigate(`/management/recruiter-dashboard/job-postings/${job.id}/candidates`)}
                                                     />
                                                 </TooltipTrigger>
                                                 <TooltipContent>Ứng viên</TooltipContent>
@@ -261,12 +262,14 @@ const JobPostingList: React.FC = () => {
                                                 <TooltipTrigger asChild>
                                                     <Button
                                                         size="sm"
-                                                        variant="secondary"
-                                                        className="text-red-400 hover:text-red-300 cursor-pointer"
-                                                        icon={<Ban size={14} />}
+                                                        variant="outline"
+                                                        className="w-8 h-8 p-0 text-red-500 border-red-500 hover:bg-red-500 hover:text-white flex-shrink-0"
+                                                        title="Đóng bài"
                                                         onClick={() => setJobToClose(job)}
                                                         disabled={job.status === "Closed"}
-                                                    />
+                                                    >
+                                                        <Ban size={16} />
+                                                    </Button>
                                                 </TooltipTrigger>
                                                 <TooltipContent>Đóng bài</TooltipContent>
                                             </Tooltip>
@@ -298,11 +301,11 @@ const JobPostingList: React.FC = () => {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel disabled={isClosing}>Bỏ qua</AlertDialogCancel>
-                        <AlertDialogAction 
+                        <AlertDialogAction
                             onClick={(e) => {
                                 e.preventDefault();
                                 handleCloseJob();
-                            }} 
+                            }}
                             disabled={isClosing}
                             className="bg-red-600 hover:bg-red-700 text-white"
                         >
