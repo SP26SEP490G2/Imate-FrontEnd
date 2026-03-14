@@ -1096,7 +1096,7 @@ const ViewQuestionBank: React.FC = () => {
                           savedTab === 'system' ? 'bg-indigo-500 text-white' : 'text-slate-400 hover:text-white'
                         }`}
                       >
-                        Hệ thống đã lưu ({savedSystemData.length})
+                        Câu hỏi hệ thống ({savedSystemData.length})
                       </button>
                       <button
                         onClick={() => {
@@ -1107,7 +1107,7 @@ const ViewQuestionBank: React.FC = () => {
                           savedTab === 'contributed' ? 'bg-indigo-500 text-white' : 'text-slate-400 hover:text-white'
                         }`}
                       >
-                        Đóng góp đã lưu ({savedContributedData.length})
+                        Câu hỏi đóng góp ({savedContributedData.length})
                       </button>
                     </div>
                     <p className="text-sm text-slate-400">

@@ -37,6 +37,7 @@ const APIConfig = {
     GetSystemQuestionDetail: "/get-system-question-by-id/{questionId}",
     GetContributedQuestionDetail: "/get-contributed-question-by-id/{questionId}",
     ChangeContributedQuestionStatusStaff: "/change-contributed-question-status-staff/{questionId}",
+    ExportSystemQuestions: "/export-system-questions",
     ContributeQuestion: "/contribute-question",
     SaveQuestion: "/save-question",
   },
@@ -91,6 +92,14 @@ const APIConfig = {
     GetSubscriptionPackages: "/subscription-packages",
     GetSubscriptionOverview: "/subscription-packages/overview",
     UpdateSubscriptionPackagePrice: "/subscription-packages",
+  },
+
+  // Comment endpoints
+  Comment: {
+    Create: "/create-comment",
+    Update: "/update-comment/{commentId}",
+    Delete: "/delete-comment/{commentId}",
+    Vote: "/vote-comment/{commentId}",
   },
 } as const;
 
