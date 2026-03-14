@@ -29,6 +29,7 @@ import type {
   ContributeQuestionRequest,
   SavedSystemQuestionItem,
   SavedContributedQuestionItem,
+  CommentItem,
 } from "@/types/common/question";
 
 /**
@@ -324,4 +325,84 @@ export const contributeQuestion = async (
     request
   );
   return response.data;
+};
+
+export const createComment = async (
+  questionId: number,
+  content: string
+): Promise<number> => {
+  const response = await apiClient.post<number>(APIConfig.Comment.Create, {
+    questionId,
+    content,
+  });
+  return response.data;
+};
+
+export const updateComment = async (
+  commentId: number,
+  content: string
+): Promise<void> => {
+  await apiClient.put(
+    APIConfig.Comment.Update.replace("{commentId}", String(commentId)),
+    { content }
+  );
+};
+
+export const deleteComment = async (commentId: number): Promise<void> => {
+  await apiClient.delete(
+    APIConfig.Comment.Delete.replace("{commentId}", String(commentId))
+  );
+};
+
+export const voteComment = async (
+  commentId: number,
+  isUpvote: boolean
+): Promise<void> => {
+  await apiClient.post(
+    APIConfig.Comment.Vote.replace("{commentId}", String(commentId)),
+    { isUpvote }
+  );
+};
+
+export const sortCommentsByTotalVotesDesc = (comments: CommentItem[] = []): CommentItem[] => {
+  return [...comments].sort((a, b) => {
+    if (b.totalVotes !== a.totalVotes) {
+      return b.totalVotes - a.totalVotes;
+    }
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+};
+
+const parseFilenameFromContentDisposition = (contentDisposition?: string): string => {
+  if (!contentDisposition) {
+    return `System_Questions_Export_${Date.now()}.xlsx`;
+  }
+
+  const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+  if (utf8Match?.[1]) {
+    return decodeURIComponent(utf8Match[1]);
+  }
+
+  const basicMatch = contentDisposition.match(/filename="?([^";]+)"?/i);
+  if (basicMatch?.[1]) {
+    return basicMatch[1];
+  }
+
+  return `System_Questions_Export_${Date.now()}.xlsx`;
+};
+
+export const exportSystemQuestionsForStaff = async (params: GetSystemQuestionParams): Promise<{ blob: Blob; fileName: string }> => {
+  const response = await apiClient.get(APIConfig.Question.ExportSystemQuestions, {
+    params,
+    responseType: "blob",
+    headers: {
+      Accept: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    },
+  });
+
+  const fileName = parseFilenameFromContentDisposition(response.headers["content-disposition"]);
+  return {
+    blob: response.data,
+    fileName,
+  };
 };

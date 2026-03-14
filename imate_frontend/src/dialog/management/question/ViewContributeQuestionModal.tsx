@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -9,7 +9,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { getContributedQuestionDetail } from '@/services/questionService';
+import { getContributedQuestionDetail, sortCommentsByTotalVotesDesc } from '@/services/questionService';
 import type { ContributedQuestionDetail } from '@/types/common/question';
 import { DIFFICULTY_MAP, DIFFICULTY_LEVEL } from '@/constants/common';
 import { toast } from 'react-toastify';
@@ -30,6 +30,17 @@ export function ViewContributeQuestionModal({
     
     // Track if data has been fetched to prevent duplicate calls
     const hasFetchedRef = useRef(false);
+
+    const sortedComments = useMemo(() => {
+        return sortCommentsByTotalVotesDesc(questionData?.comments || []);
+    }, [questionData?.comments]);
+
+    const formatCommentDate = (value?: string): string => {
+        if (!value) return '';
+        const parsed = new Date(value);
+        if (Number.isNaN(parsed.getTime())) return '';
+        return parsed.toLocaleString('vi-VN');
+    };
 
     useEffect(() => {
         if (open && questionId && !hasFetchedRef.current) {
@@ -202,6 +213,56 @@ export function ViewContributeQuestionModal({
                                 <label htmlFor="isActive" className="text-sm font-medium text-slate-200">
                                     Kích hoạt câu hỏi
                                 </label>
+                            </div>
+
+                            {/* Comments - Read only for staff */}
+                            <div className="space-y-3 pt-2">
+                                <div className="flex items-center justify-between">
+                                    <label className="block text-sm font-medium text-slate-200">
+                                        Bình luận
+                                    </label>
+                                    <span className="text-xs text-slate-400">
+                                        {sortedComments.length} bình luận
+                                    </span>
+                                </div>
+
+                                <div className="space-y-3">
+                                    {sortedComments.length === 0 ? (
+                                        <div className="rounded-lg border border-dashed border-slate-700 p-4 text-sm text-slate-400 text-center">
+                                            Chưa có bình luận nào.
+                                        </div>
+                                    ) : (
+                                        sortedComments.map((comment) => (
+                                            <div
+                                                key={comment.id}
+                                                className="rounded-lg border border-slate-700 bg-slate-800/30 p-3 space-y-3"
+                                            >
+                                                <div className="flex items-start justify-between gap-3">
+                                                    <div>
+                                                        <p className="text-sm font-medium text-slate-200">
+                                                            {comment.userName || 'Ẩn danh'}
+                                                        </p>
+                                                        <p className="text-xs text-slate-400">
+                                                            {formatCommentDate(comment.createdAt)}
+                                                            {comment.updatedAt && comment.updatedAt !== comment.createdAt ? ' (đã chỉnh sửa)' : ''}
+                                                        </p>
+                                                    </div>
+                                                    <span className="text-sm font-semibold text-violet-400">
+                                                        {comment.totalVotes}
+                                                    </span>
+                                                </div>
+
+                                                <p className="text-sm text-slate-100 whitespace-pre-wrap">
+                                                    {comment.content}
+                                                </p>
+
+                                                <p className="text-[11px] text-slate-500">
+                                                    Up: {comment.upvoteCount} | Down: {comment.downvoteCount}
+                                                </p>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
                             </div>
                         </div>
 

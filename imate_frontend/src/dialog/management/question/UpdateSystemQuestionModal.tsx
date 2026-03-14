@@ -388,19 +388,23 @@ export function UpdateSystemQuestionModal({
                                 )}
                             </div>
 
-                            {/* Is Active */}
-                            <div className="flex items-center gap-3 p-4 rounded-lg bg-slate-800 border border-slate-700">
-                                <input
-                                    type="checkbox"
-                                    id="isActive"
-                                    checked={formData.isActive}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
-                                    disabled={loading}
-                                    className="w-5 h-5 rounded border-slate-600 bg-slate-700 text-indigo-500 focus:ring-2 focus:ring-primary/50 focus:ring-offset-0"
-                                />
-                                <label htmlFor="isActive" className="text-sm font-medium text-slate-200 cursor-pointer">
-                                    Kích hoạt câu hỏi
+                            {/* Status */}
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium text-slate-200">
+                                    Trạng thái <span className="text-red-400">*</span>
                                 </label>
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData((prev) => ({ ...prev, isActive: !prev.isActive }))}
+                                    disabled={loading}
+                                    className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
+                                        formData.isActive
+                                            ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400'
+                                            : 'border-slate-600 bg-slate-800 text-slate-300'
+                                    } ${loading ? 'cursor-not-allowed opacity-70' : ''}`}
+                                >
+                                    {formData.isActive ? 'Hoạt động' : 'Vô hiệu'}
+                                </button>
                             </div>
                         </div>
 

@@ -3,7 +3,8 @@ import {
   getAllSystemQuestionsForStaff,
   getAllContributedQuestionsForStaff,
   getAllPendingContributedQuestionsForStaff,
-  getListQuestionCategories
+  getListQuestionCategories,
+  exportSystemQuestionsForStaff
 } from '@/services/questionService';
 import { getListPosition } from '@/services/positionService';
 import { getAllSkill } from '@/services/skillService';
@@ -28,19 +29,20 @@ import {
   Eye,
   Pencil,
   Plus,
-  Download,
-  Upload
+  Download
 } from 'lucide-react';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { toast } from 'react-toastify';
 
 type TabType = 'system' | 'contributed' | 'pending';
 
 const ViewQuestions: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('system');
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Update modal state
@@ -295,6 +297,32 @@ const ViewQuestions: React.FC = () => {
     fetchPendingContributedQuestions();
   };
 
+  const handleExportSystemQuestions = async () => {
+    if (activeTab !== 'system') {
+      toast.info('Chỉ hỗ trợ export ở tab Câu hỏi hệ thống.');
+      return;
+    }
+
+    try {
+      setExporting(true);
+      const { blob, fileName } = await exportSystemQuestionsForStaff(systemFilters);
+      const url = window.URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = fileName;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Export câu hỏi thành công.');
+    } catch (exportError) {
+      console.error('Failed to export system questions:', exportError);
+      toast.error('Không thể export câu hỏi. Vui lòng thử lại sau.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const getDifficultyStatus = (difficulty: string): "active" | "pending" | "error" | "inactive" | "draft" => {
     const diffLower = difficulty?.toLowerCase();
     if (diffLower === 'easy') return 'active';
@@ -333,21 +361,29 @@ const ViewQuestions: React.FC = () => {
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                <button className="bg-[#1e293b]/40 backdrop-blur-sm border border-white/5 px-4 py-3 rounded-xl flex items-center gap-2 text-sm font-medium text-slate-300 hover:bg-white/10 hover:text-white transition-all">
-                  <Download className="w-4 h-4" />
-                  Export câu hỏi
-                </button>
-                <button className="bg-[#1e293b]/40 backdrop-blur-sm border border-white/5 px-4 py-3 rounded-xl flex items-center gap-2 text-sm font-medium text-slate-300 hover:bg-white/10 hover:text-white transition-all">
+                {activeTab === 'system' && (
+                  <button
+                    onClick={handleExportSystemQuestions}
+                    disabled={exporting}
+                    className="bg-[#1e293b]/40 backdrop-blur-sm border border-white/5 px-4 py-3 rounded-xl flex items-center gap-2 text-sm font-medium text-slate-300 hover:bg-white/10 hover:text-white transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    <Download className="w-4 h-4" />
+                    {exporting ? 'Đang export...' : 'Export câu hỏi'}
+                  </button>
+                )}
+                {/* <button className="bg-[#1e293b]/40 backdrop-blur-sm border border-white/5 px-4 py-3 rounded-xl flex items-center gap-2 text-sm font-medium text-slate-300 hover:bg-white/10 hover:text-white transition-all">
                   <Upload className="w-4 h-4" />
                   Import câu hỏi
-                </button>
-                <button
-                  onClick={() => activeTab === 'system' ? setCreateModalOpen(true) : setContributeModalOpen(true)}
-                  className="bg-linear-to-r from-indigo-500 to-purple-500 px-4 py-3 rounded-xl flex items-center gap-2 text-sm font-bold shadow-lg shadow-indigo-500/20 hover:opacity-90 transition-all text-white"
-                >
-                  <Plus className="w-4 h-4" />
-                  Thêm câu hỏi
-                </button>
+                </button> */}
+                {activeTab === 'system' && (
+                  <button
+                    onClick={() => setCreateModalOpen(true)}
+                    className="bg-linear-to-r from-indigo-500 to-purple-500 px-4 py-3 rounded-xl flex items-center gap-2 text-sm font-bold shadow-lg shadow-indigo-500/20 hover:opacity-90 transition-all text-white"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Thêm câu hỏi
+                  </button>
+                )}
               </div>
             </div>
           </header>

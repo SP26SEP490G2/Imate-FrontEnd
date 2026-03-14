@@ -181,6 +181,7 @@ export interface MyContributedQuestionItem {
   id: number;
   content: string;
   isActive: boolean;
+  isSaved?: boolean;
   approvalStatus: string;
   sampleAnswer?: string;
   contributedDetailId?: number;
@@ -412,4 +413,21 @@ export interface ContributedQuestionDetail {
   positionsName: string[];
   createdAt?: string;
   updatedAt?: string;
+  comments?: CommentItem[];
+}
+
+export interface CommentItem {
+  id: number;
+  userId: string | number;
+  userName: string;
+  userAvatarUrl: string;
+  userRole: string;
+  content: string;  
+  createdAt: string;
+  updatedAt: string;
+  upvoteCount: number;
+  downvoteCount: number;
+  totalVotes: number;
+  currentUserVoteIsUpvote?: boolean | null;
+  currentUserVoteType?: "upvote" | "downvote" | null;
 }
