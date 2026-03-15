@@ -1,13 +1,14 @@
-export interface Booking {
+export interface BookingDetailResponse {
   bookingId: number;
-  candidateName: string;
-  mentorName: string;
-  mentorAvatarUrl: string | null;
-  startTime: string;
-}
-
-export interface BookingStatusResponse {
-  success: boolean;
-  data: any;
-  message: string;
+  mentorId: number;
+  candidateId: number;
+  profileName: string;
+  profileAvatarUrl?: string;
+  jobTitle?: string;
+  startTime: string; // ISO DateTime
+  endTime: string;   // ISO DateTime
+  bookDate: string;  // YYYY-MM-DD
+  status: number;
+  meetingRoomId?: string;
+  price: number;
 }

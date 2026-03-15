@@ -23,12 +23,14 @@ import ViewSubscriptionPage from "@/pages/main/public/ViewSubscriptionPage";
 import MentorList from "@/pages/main/public/MentorList";
 import MentorDetail from "@/pages/main/public/MentorDetail";
 
+
 // Pages - Candidate
 import ViewProfile from "@/pages/candidate/ViewProfile";
 import ViewJobApplications from "@/pages/candidate/ViewJobApplications";
 
 import ViewJobApplicationDetail from "@/pages/candidate/ViewJobApplicationDetail";
 
+import InterviewSchedule from "@/pages/candidate/InterviewSchedule";
 // Pages - Mentor
 import SubmitMentorApplication from "@/pages/mentor/SubmitMentorApplication";
 import PendingApplication from "@/pages/mentor/PendingApplication";
@@ -101,6 +103,7 @@ const routeConfigs: RouteConfig[] = [
   { path: "/recruiter-pending-application", element: <RecruiterPendingApplication />, layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/view-job-applications", element: <ViewJobApplications />, layout: LAYOUT.MAIN },
   { path: "/view-job-applications/:id", element: <ViewJobApplicationDetail />, layout: LAYOUT.MAIN },
+  { path: "/interview-schedule", element: <InterviewSchedule />, layout: LAYOUT.MAIN, requireAuth: true },
 
   // ===== MANAGEMENT LAYOUT ROUTES =====
   { path: "/management/view-questions", element: <ViewQuestions />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
