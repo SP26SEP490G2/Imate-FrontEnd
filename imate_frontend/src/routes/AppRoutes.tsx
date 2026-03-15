@@ -27,6 +27,12 @@ import MentorDetail from "@/pages/main/public/MentorDetail";
 import ViewProfile from "@/pages/candidate/ViewProfile";
 import CVManagement from "@/pages/candidate/CVManagement";
 import AnalyseCV from "@/pages/candidate/AnalyseCV";
+import PracticeTest from "@/pages/candidate/PracticeTest";
+import TestHistory from "@/pages/candidate/TestHistory";
+import TestHistoryDetail from "@/pages/candidate/TestHistoryDetail";
+import InterviewFeedbackDetail from "@/pages/candidate/InterviewFeedbackDetail";
+import InterviewSetup from "@/pages/candidate/InterviewSetup";
+import InterviewChat from "@/pages/candidate/InterviewChat";
 
 // Pages - Mentor
 import SubmitMentorApplication from "@/pages/mentor/SubmitMentorApplication";
@@ -95,6 +101,12 @@ const routeConfigs: RouteConfig[] = [
   { path: "/profile",                        element: <ViewProfile />,                layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/cv-management",                   element: <CVManagement />,               layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/analyse-cv",                       element: <AnalyseCV />,                  layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/practice-test",                     element: <PracticeTest />,                layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/test-history",                       element: <TestHistory />,                 layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/test-history/:id",                   element: <TestHistoryDetail />,           layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/interview-history/:id",              element: <InterviewFeedbackDetail />,     layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/interview-setup",                     element: <InterviewSetup />,               layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/interview-chat/:sessionId",           element: <InterviewChat />,                layout: LAYOUT.NONE, requireAuth: true },
   { path: "/submit-mentor-application",      element: <SubmitMentorApplication />,    layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/pending-application",            element: <PendingApplication />,         layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/submit-recruiter-application",   element: <SubmitRecruiterApplication />, layout: LAYOUT.MAIN, requireAuth: true },
