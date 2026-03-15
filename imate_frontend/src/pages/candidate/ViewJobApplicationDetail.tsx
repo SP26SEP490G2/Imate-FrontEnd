@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import CandidateApplyJobCvDialog from "@/pages/dialog/CandidateApplyJobCvDialog";
 import { 
     ArrowLeft, 
     MapPin, 
@@ -59,6 +60,7 @@ const MOCK_JOB_DETAIL = {
 const ViewJobApplicationDetail: React.FC = () => {
     useParams<{ id: string }>();
     const navigate = useNavigate();
+    const [isApplyDialogOpen, setIsApplyDialogOpen] = useState(false);
 
     // In a real app, you would fetch data here using the id
     const job = MOCK_JOB_DETAIL;
@@ -107,7 +109,10 @@ const ViewJobApplicationDetail: React.FC = () => {
                                         </div>
                                     </div>
                                 </div>
-                                <Button className="w-full md:w-auto px-8 h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 font-bold shadow-lg shadow-indigo-600/20 text-base cursor-pointer">
+                                <Button 
+                                    onClick={() => setIsApplyDialogOpen(true)}
+                                    className="w-full md:w-auto px-8 h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 font-bold shadow-lg shadow-indigo-600/20 text-base cursor-pointer"
+                                >
                                     Ứng tuyển ngay
                                 </Button>
                             </div>
@@ -252,6 +257,12 @@ const ViewJobApplicationDetail: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            <CandidateApplyJobCvDialog 
+                open={isApplyDialogOpen}
+                onOpenChange={setIsApplyDialogOpen}
+                jobTitle={job.title}
+            />
         </div>
     );
 };
