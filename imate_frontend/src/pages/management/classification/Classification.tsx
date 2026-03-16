@@ -825,16 +825,12 @@ export default function Classification() {
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar>
-                          {comp.imageUrl ? (
-                            <AvatarImage 
-                              src={comp.imageUrl} 
-                              alt={comp.name} 
-                              className="object-cover"
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                              }}
-                            />
-                          ) : null}
+                          <AvatarImage
+                            src={comp.imageUrl || ""}
+                            alt={comp.name}
+                            className="h-full w-full object-cover"
+                          />
+
                           <AvatarFallback className="bg-slate-800 text-slate-300">
                             {getInitials(comp.name)}
                           </AvatarFallback>
