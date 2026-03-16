@@ -128,3 +128,4 @@ File này cung cấp hướng dẫn cho Claude Code (claude.ai/code) khi làm vi
   - `default` – Style mặc định của hệ thống
   
   **Không tự style button bằng Tailwind CSS thủ công.** Luôn sử dụng `<Button variant="..." size="...">` để giữ giao diện thống nhất toàn hệ thống.
+ ** Đọc file bussiness_Imate.md để hiểu rõ quy tắc nghiệp vụ.**

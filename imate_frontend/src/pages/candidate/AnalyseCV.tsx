@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import {
   ChevronRight,
   TrendingUp,
@@ -12,8 +12,7 @@ import {
 import { toast } from "react-toastify";
 
 import { Button } from "@/components/ui/button";
-import { analyseCv } from "@/services/geminiService";
-import { MOCK_CV_TEXT } from "./mockCvData";
+import { analyseCvById } from "@/services/cvService";
 import { MSG07 } from "@/constants/messages";
 import type { CvAnalysisResult } from "@/types/common/cvAnalysis";
 
@@ -132,17 +131,39 @@ function AnalyseSkeleton() {
 /*  Main Page Component                                               */
 /* ------------------------------------------------------------------ */
 export default function AnalyseCV() {
+  const { cvId } = useParams<{ cvId: string }>();
+
   const [result, setResult] = useState<CvAnalysisResult | null>(null);
+  const [cvName, setCvName] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const hasRun = useRef(false);
 
-  const runAnalysis = async () => {
+  const runAnalysis = async (force: boolean = false) => {
+    if (!cvId) {
+      setError("Không tìm thấy thông tin CV.");
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
-      const data = await analyseCv(MOCK_CV_TEXT);
-      setResult(data);
+      // Gọi backend POST /api/ai/analyse-cv
+      // Backend trả trực tiếp CvAnalysisResult: { score, candidateName, strengths, ... }
+      const data = await analyseCvById(cvId, force);
+
+      const analysisResult: CvAnalysisResult = {
+        score: data.score ?? 70,
+        candidateName: data.candidateName ?? "Ứng viên",
+        jobTitle: data.jobTitle ?? "N/A",
+        marketFit: data.marketFit ?? "Trung bình",
+        strengths: data.strengths ?? [],
+        improvements: data.improvements ?? [],
+        interviewQuestions: data.interviewQuestions ?? [],
+      };
+
+      setCvName(data.candidateName || "");
+      setResult(analysisResult);
     } catch (err: any) {
       const msg = err?.message || MSG07;
       setError(msg);
@@ -194,7 +215,7 @@ export default function AnalyseCV() {
           <p className="max-w-md text-sm text-slate-400">
             {error || MSG07}
           </p>
-          <Button variant="primary" size="md" icon={<RefreshCw className="h-4 w-4" />} onClick={runAnalysis}>
+          <Button variant="primary" size="md" icon={<RefreshCw className="h-4 w-4" />} onClick={() => runAnalysis()}>
             Thử lại
           </Button>
         </div>
@@ -218,11 +239,11 @@ export default function AnalyseCV() {
 
       {/* Title */}
       <h1 className="mb-8 text-2xl font-bold text-white md:text-3xl">
-        Báo cáo chi tiết AI CV
+        Báo cáo chi tiết AI CV {cvName && <span className="text-slate-400">— {cvName}</span>}
       </h1>
 
       {/* ===== Score + Info Section ===== */}
-      <div className="mb-8 rounded-2xl border border-slate-700/60 bg-gradient-to-br from-slate-800/80 to-slate-900/80 p-6 md:p-8">
+      <div className="mb-8 rounded-2xl border border-slate-700/60 bg-gradient-to-br from-slate-800/80 to-slate-900/80 p-6 md:p-8 relative">
         <div className="flex flex-col items-center gap-8 md:flex-row">
           {/* Circular Score */}
           <CircularScore score={result.score} size={130} />
@@ -255,6 +276,16 @@ export default function AnalyseCV() {
               </div>
             </div>
           </div>
+
+        {/* Re-analyze button */}
+        <button
+          onClick={() => runAnalysis(true)}
+          className="absolute top-4 right-4 flex items-center gap-1.5 rounded-lg border border-slate-600/50 bg-slate-700/50 px-3 py-1.5 text-xs font-medium text-slate-300 transition-all hover:border-purple-500/50 hover:bg-purple-500/10 hover:text-purple-300"
+          title="Phân tích lại CV với AI"
+        >
+          <RefreshCw className="h-3.5 w-3.5" />
+          Phân tích lại
+        </button>
         </div>
       </div>
 

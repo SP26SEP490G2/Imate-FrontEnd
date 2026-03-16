@@ -1,16 +1,20 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Upload, FileText, Calendar, Trash2 } from "lucide-react";
+import { Upload, FileText, Calendar, Trash2, XCircle, Loader2, Sparkles, Eye } from "lucide-react";
 import { toast } from "react-toastify";
 
 import { Button } from "@/components/ui/button";
 import { getListCV, deleteCV } from "@/services/cvService";
-import { MSG07, MSG15, MSG17 } from "@/constants/messages";
+import { MSG07, MSG15 } from "@/constants/messages";
 import type { CvItem } from "@/types/common/cv";
 import UploadCVModal from "./UploadCVModal";
 
 export default function CVManagement() {
+  const navigate = useNavigate();
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<CvItem | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const {
     data: cvList = [],
@@ -22,15 +26,19 @@ export default function CVManagement() {
     queryFn: getListCV,
   });
 
-  const handleDelete = async (cvId: string) => {
-    if (!window.confirm(MSG17)) return;
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
 
     try {
-      await deleteCV(cvId);
+      setDeleting(true);
+      await deleteCV(deleteTarget.cvId);
       toast.success(MSG15);
       refetch();
     } catch {
       toast.error(MSG07);
+    } finally {
+      setDeleting(false);
+      setDeleteTarget(null);
     }
   };
 
@@ -149,14 +157,37 @@ export default function CVManagement() {
                 </div>
               </div>
 
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                className="text-slate-500 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-400"
-                onClick={() => handleDelete(cv.cvId)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                {cv.fileUrl && (
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    className="text-slate-500 hover:text-blue-400"
+                    onClick={() => window.open(cv.fileUrl, "_blank", "noopener,noreferrer")}
+                    title="Xem CV"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  className="text-slate-500 hover:text-purple-400"
+                  onClick={() => navigate(`/analyse-cv/${cv.cvId}`)}
+                  title="Phân tích CV"
+                >
+                  <Sparkles className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  className="text-slate-500 hover:text-red-400"
+                  onClick={() => setDeleteTarget(cv)}
+                  title="Xóa CV"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           ))}
         </div>
@@ -164,6 +195,54 @@ export default function CVManagement() {
 
       {/* Upload Modal */}
       <UploadCVModal open={uploadModalOpen} onOpenChange={setUploadModalOpen} />
+
+      {/* Delete Confirmation Modal (UC-28) */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-sm rounded-2xl border border-slate-700/60 bg-slate-900 p-8 shadow-2xl text-center">
+            {/* Red X Icon */}
+            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-red-500/10">
+              <XCircle className="h-10 w-10 text-red-500" />
+            </div>
+
+            {/* Title */}
+            <h3 className="mb-2 text-xl font-bold text-white">
+              Bạn muốn xóa CV này?
+            </h3>
+
+            {/* Description */}
+            <p className="mb-8 text-sm text-slate-400">
+              Chọn <span className="font-semibold text-white">Đồng ý</span> nếu bạn muốn xóa CV này, nếu không, hãy chọn{" "}
+              <span className="font-semibold text-white">Hủy</span>
+            </p>
+
+            {/* Buttons */}
+            <div className="flex items-center justify-center gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleting}
+                className="min-w-[100px] rounded-lg border border-slate-600 bg-slate-800 px-6 py-2.5 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-700 hover:text-white disabled:opacity-50"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="min-w-[100px] flex items-center justify-center gap-2 rounded-lg bg-red-500 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-400 disabled:opacity-50"
+              >
+                {deleting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Đang xóa...
+                  </>
+                ) : (
+                  "Đồng ý"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -100,7 +100,7 @@ const routeConfigs: RouteConfig[] = [
   // ===== MAIN LAYOUT ROUTES =====
   { path: "/profile",                        element: <ViewProfile />,                layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/cv-management",                   element: <CVManagement />,               layout: LAYOUT.MAIN, requireAuth: true },
-  { path: "/analyse-cv",                       element: <AnalyseCV />,                  layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/analyse-cv/:cvId",                  element: <AnalyseCV />,                  layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/practice-test",                     element: <PracticeTest />,                layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/test-history",                       element: <TestHistory />,                 layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/test-history/:id",                   element: <TestHistoryDetail />,           layout: LAYOUT.MAIN, requireAuth: true },
