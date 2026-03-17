@@ -85,6 +85,10 @@ const APIConfig = {
     GetAppliedCandidate: (jobId: number) => `${jobId}/applied-candidates`
   },
 
+  Candidate: {
+    GetAllOpenedJob: "get-all-jobs"
+  },
+
   // Staff review endpoints (baseURL thường đã có /api)
   StaffReview: {
     GetPendingMentors: "/staff-review/mentors/pending",
