@@ -14,12 +14,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "react-toastify";
 
-import { updateCompany } from "@/services/companyService"; // ← import từ service
+import { updateCompany } from "@/services/companyService";
 import type { FormUpdateCompanyRequest } from "@/types/request/company.request";
 import type { Company } from "@/types/model/company.model";
+import { ImageUploadPreview } from "@/components/ui/image-upload-preview";
 
 interface UpdateCompanyDialogProps {
   open: boolean;
@@ -36,12 +36,16 @@ export function UpdateCompanyDialog({
 }: UpdateCompanyDialogProps) {
   const [name, setName] = React.useState(company.name);
   const [isActive, setIsActive] = React.useState(company.isActive);
+  const [newImageFile, setNewImageFile] = React.useState<File | null>(null);
   const [loading, setLoading] = React.useState(false);
 
-  // Đồng bộ state khi company thay đổi
+  // Đồng bộ state khi mở dialog
   React.useEffect(() => {
-    setName(company.name);
-    setIsActive(company.isActive);
+    if (open) {
+      setName(company.name);
+      setIsActive(company.isActive);
+      setNewImageFile(null);
+    }
   }, [company, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -56,7 +60,7 @@ export function UpdateCompanyDialog({
 
     const payload: FormUpdateCompanyRequest = {
       name: name.trim(),
-      newImageFile: null,
+      newImageFile: newImageFile,
       isActive: isActive,
     };
 
@@ -66,7 +70,9 @@ export function UpdateCompanyDialog({
       onOpenChange(false);
       onSuccess?.();
     } catch (err: any) {
-      const message = err.response?.data?.message || "Cập nhật công ty thất bại. Vui lòng thử lại.";
+      const message =
+        err.response?.data?.message ||
+        "Cập nhật công ty thất bại. Vui lòng thử lại.";
       toast.error(message);
     } finally {
       setLoading(false);
@@ -81,6 +87,7 @@ export function UpdateCompanyDialog({
             Cập nhật công ty
           </DialogTitle>
           <DialogDescription>
+            Chỉnh sửa thông tin công ty.
           </DialogDescription>
         </DialogHeader>
 
@@ -101,34 +108,23 @@ export function UpdateCompanyDialog({
             />
           </div>
 
-          {/* Logo hiện tại (không cho thay) */}
+          {/* Logo hiện tại */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium text-slate-200">Logo hiện tại</Label>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="relative h-20 w-20 rounded-md overflow-hidden bg-slate-700 border border-slate-600 cursor-not-allowed opacity-70">
-                    {company.imageUrl ? (
-                      <img
-                        src={company.imageUrl}
-                        alt={company.name}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="h-full w-full flex items-center justify-center text-xs text-slate-400">
-                        Chưa có logo
-                      </div>
-                    )}
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-xs font-medium">
-                      Không thể thay đổi
-                    </div>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  Chức năng thay đổi logo đang được phát triển
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Label className="text-sm font-medium text-slate-200">
+              Logo công ty (tùy chọn - tối đa 5MB)
+            </Label>
+
+            <ImageUploadPreview
+              imageUrl={company.imageUrl}
+              selectedFile={newImageFile}
+              onFileChange={setNewImageFile}
+              disabled={loading}
+              size="lg"
+              shape="square"
+              allowView={true}
+              allowDownload={true}
+              allowChange={true}
+            />
           </div>
 
           {/* Trạng thái hoạt động */}
@@ -136,10 +132,12 @@ export function UpdateCompanyDialog({
             <Label className="text-sm font-medium text-slate-200">
               Trạng thái hoạt động
             </Label>
+
             <div className="flex items-center gap-2">
               <span className="text-sm text-slate-400">
                 {isActive ? "Hoạt động" : "Vô hiệu"}
               </span>
+
               <Switch
                 checked={isActive}
                 onCheckedChange={setIsActive}
@@ -161,11 +159,7 @@ export function UpdateCompanyDialog({
               </Button>
             </DialogClose>
 
-            <Button
-              type="submit"
-              variant="primary"
-              disabled={loading}
-            >
+            <Button type="submit" variant="primary" disabled={loading}>
               {loading ? "Đang cập nhật..." : "Cập nhật"}
             </Button>
           </DialogFooter>

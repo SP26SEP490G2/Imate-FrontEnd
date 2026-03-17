@@ -15,8 +15,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "react-toastify";
 
-import { addCompany } from "@/services/companyService"; // ← import từ service bạn đã có
+import { addCompany } from "@/services/companyService";
 import type { FormAddCompanyRequest } from "@/types/request/company.request";
+import { ImageUploadPreview } from "@/components/ui/image-upload-preview";
 
 interface CreateCompanyDialogProps {
   open: boolean;
@@ -32,23 +33,15 @@ export function CreateCompanyDialog({
   const [name, setName] = React.useState("");
   const [imageFile, setImageFile] = React.useState<File | null>(null);
   const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Optional: kiểm tra loại file (image only)
-      if (!file.type.startsWith("image/")) {
-        toast.error("Vui lòng chọn file ảnh (jpg, png, ...)");
-        return;
-      }
-      setImageFile(file);
-    }
+  // Reset form khi bấm "Hủy" hoặc submit thành công
+  const resetForm = () => {
+    setName("");
+    setImageFile(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     setLoading(true);
 
     if (!name.trim()) {
@@ -57,29 +50,20 @@ export function CreateCompanyDialog({
       return;
     }
 
-    // Nếu muốn bắt buộc ảnh thì uncomment
-    // if (!imageFile) {
-    //   toast.error("Vui lòng chọn logo công ty");
-    //   setLoading(false);
-    //   return;
-    // }
-
     const payload: FormAddCompanyRequest = {
       name: name.trim(),
-      imageFile, // File | null
+      imageFile,
     };
 
     try {
       await addCompany(payload);
       toast.success("Thêm công ty thành công!");
-      setName("");
-      setImageFile(null);
+      resetForm(); // Reset sau thành công
       onOpenChange(false);
       onSuccess?.();
     } catch (err: any) {
       const message = err.response?.data?.message || "Thêm công ty thất bại. Vui lòng thử lại.";
       toast.error(message);
-      setError(message);
     } finally {
       setLoading(false);
     }
@@ -93,6 +77,7 @@ export function CreateCompanyDialog({
             Thêm công ty mới
           </DialogTitle>
           <DialogDescription>
+            Nhập thông tin để thêm công ty mới vào hệ thống.
           </DialogDescription>
         </DialogHeader>
 
@@ -113,33 +98,34 @@ export function CreateCompanyDialog({
             />
           </div>
 
-          {/* Logo */}
+          {/* Logo - dùng component mới */}
           <div className="space-y-2">
-            <Label htmlFor="logo" className="text-sm font-medium text-slate-200">
-              Logo công ty (tùy chọn)
+            <Label className="text-sm font-medium text-slate-200">
+              Logo công ty (tùy chọn - tối đa 5MB)
             </Label>
-            <Input
-              id="logo"
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              disabled={loading}
-              className="bg-slate-800 border-slate-700 text-slate-100 file:bg-slate-700 file:text-slate-100 file:border-0 file:rounded file:px-3 file:py-1.5 cursor-pointer"
-            />
-            {imageFile && (
-              <p className="text-xs text-slate-400 mt-1">
-                Đã chọn: {imageFile.name}
-              </p>
-            )}
+            <div className="flex justify-start">
+              <ImageUploadPreview
+                selectedFile={imageFile}
+                onFileChange={setImageFile}
+                disabled={loading}
+                size="lg" 
+                shape="square"
+                allowView={true}
+                allowDownload={true}
+                allowChange={true}
+              />
+            </div>
           </div>
 
           <DialogFooter>
+            {/* Nút Hủy - reset form */}
             <DialogClose asChild>
               <Button
                 type="button"
                 variant="outline"
                 disabled={loading}
                 className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                onClick={resetForm} // Reset khi bấm Hủy
               >
                 Hủy
               </Button>
