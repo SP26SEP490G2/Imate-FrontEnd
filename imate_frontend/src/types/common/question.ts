@@ -154,8 +154,56 @@ export interface GetPublicContributedQuestionBankListRequest extends GetQuestion
   companyName?: string;
 }
 
+export interface GetMyContributedQuestionsRequest {
+  approvalStatus?: number;
+  skillId?: number;
+  positionId?: number;
+  categoryId?: number;
+  level?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+  pageNumber?: number;
+  pageSize?: number;
+  searchTerm?: string;
+}
+
 export interface PublicContributedQuestionBankListResponse {
   items: PublicContributedQuestionBankItem[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
+
+export interface MyContributedQuestionItem {
+  id: number;
+  content: string;
+  isActive: boolean;
+  isSaved?: boolean;
+  approvalStatus: string;
+  sampleAnswer?: string;
+  contributedDetailId?: number;
+  contributedDetail?: {
+    id?: number;
+    interviewDate?: string;
+    level?: string;
+    company?: {
+      id?: number;
+      name?: string;
+      imageUrl?: string;
+    };
+  };
+  categoriesName: string[];
+  skillsName: string[];
+  positionsName: string[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface MyContributedQuestionListResponse {
+  items: MyContributedQuestionItem[];
   totalCount: number;
   pageNumber: number;
   pageSize: number;
@@ -244,12 +292,14 @@ export interface GetContributedQuestionParams {
   positionId?: number;
   categoryId?: number;
   companyId?: number;
+  level?: Level;
   difficulty?: DifficultyLevel;
   isActive?: boolean;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
   pageNumber?: number;
   pageSize?: number;
+  searchTerm?: string;
 }
 
 // Position and Skill Types
@@ -305,6 +355,12 @@ export interface UpdateQuestionResponse {
   questionId: number;
 }
 
+export interface ChangeContributedQuestionStatusResponse {
+  message: string;
+  questionId: number;
+  newStatus: boolean;
+}
+
 // Contribute Question Request (Candidate)
 export interface ContributeQuestionRequest {
   content: string;
@@ -357,4 +413,21 @@ export interface ContributedQuestionDetail {
   positionsName: string[];
   createdAt?: string;
   updatedAt?: string;
+  comments?: CommentItem[];
+}
+
+export interface CommentItem {
+  id: number;
+  userId: string | number;
+  userName: string;
+  userAvatarUrl: string;
+  userRole: string;
+  content: string;  
+  createdAt: string;
+  updatedAt: string;
+  upvoteCount: number;
+  downvoteCount: number;
+  totalVotes: number;
+  currentUserVoteIsUpvote?: boolean | null;
+  currentUserVoteType?: "upvote" | "downvote" | null;
 }

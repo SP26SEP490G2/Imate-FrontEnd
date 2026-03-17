@@ -9,6 +9,9 @@ import type {
   GetPublicContributedQuestionBankListRequest,
   GetPublicContributedQuestionBankListResponse,
   PublicContributedQuestionBankListResponse,
+  GetMyContributedQuestionsRequest,
+  MyContributedQuestionItem,
+  MyContributedQuestionListResponse,
   CategoryItem,
   GetListQuestionCategoriesResponse,
   StaffSystemQuestionItem,
@@ -20,11 +23,13 @@ import type {
   UpdateSystemQuestionRequest,
   CreateQuestionResponse,
   UpdateQuestionResponse,
+  ChangeContributedQuestionStatusResponse,
   SystemQuestionDetail,
   ContributedQuestionDetail,
   ContributeQuestionRequest,
   SavedSystemQuestionItem,
   SavedContributedQuestionItem,
+  CommentItem,
 } from "@/types/common/question";
 
 /**
@@ -65,6 +70,40 @@ export const getPublicContributedQuestionBankList = async (
     }
   );
   return response.data.data;
+};
+
+/**
+ * Get my contributed questions with filters and pagination
+ * @param request - Filter and pagination parameters
+ * @returns Promise<MyContributedQuestionListResponse>
+ */
+export const getMyContributedQuestions = async (
+  request: GetMyContributedQuestionsRequest
+): Promise<MyContributedQuestionListResponse> => {
+  const response = await apiClient.get<{ items: MyContributedQuestionItem[] }>(
+    APIConfig.Question.GetMyContributedQuestions,
+    {
+      params: request,
+    }
+  );
+
+  const paginationHeader = response.headers['x-pagination'];
+  const pagination = paginationHeader ? JSON.parse(paginationHeader) : {
+    totalCount: 0,
+    pageSize: request.pageSize || 10,
+    pageNumber: request.pageNumber || 1,
+    totalPages: 0,
+  };
+
+  return {
+    items: response.data.items || [],
+    totalCount: Number(pagination.totalCount || pagination.TotalCount || 0),
+    pageNumber: Number(pagination.pageNumber || pagination.PageNumber || 1),
+    pageSize: Number(pagination.pageSize || pagination.PageSize || 10),
+    totalPages: Number(pagination.totalPages || pagination.TotalPages || 0),
+    hasNextPage: Boolean(pagination.hasNextPage || pagination.HasNextPage || false),
+    hasPreviousPage: Boolean(pagination.hasPreviousPage || pagination.HasPreviousPage || false),
+  };
 };
 
 export const getSavedSystemQuestions = async (): Promise<SavedSystemQuestionItem[]> => {
@@ -153,6 +192,59 @@ export const getAllContributedQuestionsForStaff = async (
   };
 
 /**
+ * Get all pending contributed questions for staff with filters and pagination
+ * @param params - Filter and pagination parameters
+ * @returns Promise with question list and pagination info
+ */
+export const getAllPendingContributedQuestionsForStaff = async (
+  params: GetContributedQuestionParams
+): Promise<StaffQuestionListResponse<StaffContributedQuestionItem>> => {
+  const response = await apiClient.get<{ items: StaffContributedQuestionItem[] }>(
+    APIConfig.Question.GetAllPendingContributedQuestionsForStaff,
+    { params }
+  );
+
+  const paginationHeader = response.headers['x-pagination'];
+  const pagination = paginationHeader ? JSON.parse(paginationHeader) : {
+    totalCount: 0,
+    pageSize: params.pageSize || 10,
+    pageNumber: params.pageNumber || 1,
+    totalPages: 0
+  };
+
+  return {
+    items: response.data.items || [],
+    totalCount: Number(pagination.totalCount || pagination.TotalCount || 0),
+    pageNumber: Number(pagination.pageNumber || pagination.PageNumber || 1),
+    pageSize: Number(pagination.pageSize || pagination.PageSize || 10),
+    totalPages: Number(pagination.totalPages || pagination.TotalPages || 0),
+    hasNextPage: pagination.hasNextPage || pagination.HasNextPage || false,
+    hasPreviousPage: pagination.hasPreviousPage || pagination.HasPreviousPage || false
+  };
+};
+
+/**
+ * Change contributed question status by staff
+ * @param questionId - Question ID
+ * @param status - true: approve, false: reject
+ * @returns Promise with update result
+ */
+export const changeContributedQuestionStatusForStaff = async (
+  questionId: number,
+  status: boolean
+): Promise<ChangeContributedQuestionStatusResponse> => {
+  const response = await apiClient.put<ChangeContributedQuestionStatusResponse>(
+    APIConfig.Question.ChangeContributedQuestionStatusStaff.replace('{questionId}', String(questionId)),
+    null,
+    {
+      params: { status }
+    }
+  );
+
+  return response.data;
+};
+
+/**
  * Create a new system question for staff
  * @param request - Question data
  * @returns Promise with created question info
@@ -233,4 +325,84 @@ export const contributeQuestion = async (
     request
   );
   return response.data;
+};
+
+export const createComment = async (
+  questionId: number,
+  content: string
+): Promise<number> => {
+  const response = await apiClient.post<number>(APIConfig.Comment.Create, {
+    questionId,
+    content,
+  });
+  return response.data;
+};
+
+export const updateComment = async (
+  commentId: number,
+  content: string
+): Promise<void> => {
+  await apiClient.put(
+    APIConfig.Comment.Update.replace("{commentId}", String(commentId)),
+    { content }
+  );
+};
+
+export const deleteComment = async (commentId: number): Promise<void> => {
+  await apiClient.delete(
+    APIConfig.Comment.Delete.replace("{commentId}", String(commentId))
+  );
+};
+
+export const voteComment = async (
+  commentId: number,
+  isUpvote: boolean
+): Promise<void> => {
+  await apiClient.post(
+    APIConfig.Comment.Vote.replace("{commentId}", String(commentId)),
+    { isUpvote }
+  );
+};
+
+export const sortCommentsByTotalVotesDesc = (comments: CommentItem[] = []): CommentItem[] => {
+  return [...comments].sort((a, b) => {
+    if (b.totalVotes !== a.totalVotes) {
+      return b.totalVotes - a.totalVotes;
+    }
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+};
+
+const parseFilenameFromContentDisposition = (contentDisposition?: string): string => {
+  if (!contentDisposition) {
+    return `System_Questions_Export_${Date.now()}.xlsx`;
+  }
+
+  const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+  if (utf8Match?.[1]) {
+    return decodeURIComponent(utf8Match[1]);
+  }
+
+  const basicMatch = contentDisposition.match(/filename="?([^";]+)"?/i);
+  if (basicMatch?.[1]) {
+    return basicMatch[1];
+  }
+
+  return `System_Questions_Export_${Date.now()}.xlsx`;
+};
+
+export const exportSystemQuestionsForStaff = async (params: GetSystemQuestionParams): Promise<{ blob: Blob; fileName: string }> => {
+  const response = await apiClient.get(APIConfig.Question.ExportSystemQuestions, {
+    params,
+    responseType: "blob",
+    headers: {
+      Accept: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    },
+  });
+
+  const fileName = parseFilenameFromContentDisposition(response.headers["content-disposition"]);
+  return {
+    blob: response.data,
+    fileName,
+  };
 };

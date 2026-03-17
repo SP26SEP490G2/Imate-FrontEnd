@@ -25,15 +25,19 @@ const APIConfig = {
     GetListHotQuestions: "get-list-hot-questions",
     GetQuestionBankList: "get-public-system-question-banks",
     GetPublicContributedQuestionBankList: "get-public-contributed-question-banks",
+    GetMyContributedQuestions: "/get-my-contributed-questions",
     GetSavedSystemQuestions: "/savedquestions-system",
     GetSavedContributedQuestions: "/savedquestions-contributed",
     GetListQuestionCategories: "get-list-question-categories",
     GetAllSystemQuestionsForStaff: "/get-all-system-question-banks-for-staff",
     GetAllContributedQuestionsForStaff: "/get-all-contributed-question-banks-for-staff",
+    GetAllPendingContributedQuestionsForStaff: "/get-all-pending-contributed-questions-for-staff",
     CreateSystemQuestionForStaff: "/create-system-question-for-staff",
     UpdateSystemQuestionForStaff: "/update-system-question-for-staff/{questionId}",
     GetSystemQuestionDetail: "/get-system-question-by-id/{questionId}",
     GetContributedQuestionDetail: "/get-contributed-question-by-id/{questionId}",
+    ChangeContributedQuestionStatusStaff: "/change-contributed-question-status-staff/{questionId}",
+    ExportSystemQuestions: "/export-system-questions",
     ContributeQuestion: "/contribute-question",
     SaveQuestion: "/save-question",
   },
@@ -128,6 +132,13 @@ const APIConfig = {
     TranscribeWhisper: "/ai-interview/transcribe-whisper-base64",
     CorrectTranscript: "/ai-interview/correct-transcript",
     ParseHtml: "/ai-interview/scraping/parse-html",
+  },
+  // Comment endpoints
+  Comment: {
+    Create: "/create-comment",
+    Update: "/update-comment/{commentId}",
+    Delete: "/delete-comment/{commentId}",
+    Vote: "/vote-comment/{commentId}",
   },
 } as const;
 
