@@ -11,6 +11,8 @@ import {
 import { getOverviewAccount, getAccountList, updateAccountState } from "@/services/accountService";
 import type { OverviewChartAccountResponse, AccountResponse } from "@/types/response/account.response";
 import { MSG09, MSG10 } from "@/constants/messages";
+import { ROLES } from "@/constants/role";
+import { ACCOUNT_STATUS, ACCOUNT_STATUS_STRING, ROLE_LABELS, ROLE_BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/constants/common";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -99,8 +101,13 @@ export default function UserManagement() {
     const newChecked = confirmDialog.newChecked;
     if (!user) return;
     setConfirmDialog({ open: false, user: null, newChecked: false });
-    const newStatusStr = newChecked ? "Active" : "Suspended";
-    const newStatusNum = newChecked ? 0 : 1;
+
+    // Backend AccountStatus enum: Active=0, Suspended=1, PendingVerification=2
+    // Backend endpoint expects string: "Active" or "Suspended"
+    const newStatusStr = newChecked ? ACCOUNT_STATUS_STRING.ACTIVE : ACCOUNT_STATUS_STRING.SUSPENDED;
+    const newStatusNum = newChecked ? ACCOUNT_STATUS.ACTIVE : ACCOUNT_STATUS.SUSPENDED;
+
+    // Save previous state for rollback
     const previousUsers = [...users];
     setUsers(prev =>
       prev.map(u =>
@@ -232,6 +239,17 @@ export default function UserManagement() {
                 <option value="Staff">Nhân viên</option>
               </select>
             </div>
+            <Select value={roleFilter} onValueChange={setRoleFilter}>
+              <SelectTrigger className="w-[160px] bg-slate-900 border-slate-800 text-sm">
+                <SelectValue placeholder="Vai trò" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
+                <SelectItem value="all">Vai trò: Tất cả</SelectItem>
+                <SelectItem value={ROLES.CANDIDATE}>Ứng viên</SelectItem>
+                <SelectItem value={ROLES.MENTOR}>Mentor</SelectItem>
+                <SelectItem value={ROLES.STAFF}>Nhân viên</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -300,12 +318,9 @@ export default function UserManagement() {
                             variant="outline" 
                             className={cn(
                               "font-medium border-none",
-                              role.includes("Candidate") ? "bg-[#1e1b4b] text-indigo-400" :
-                              role.includes("Mentor") ? "bg-[#2e1065] text-purple-400" :
-                              "bg-[#2e1c0c] text-amber-400"
+                              ROLE_BADGE_COLORS[role] ?? DEFAULT_BADGE_COLOR
                             )}>
-                            {role.includes("Candidate") ? "ỨNG VIÊN" :
-                             role.includes("Mentor") ? "MENTOR" : "NHÂN VIÊN"}
+                            {ROLE_LABELS[role] ?? role}
                           </Badge>
                         ))}
                       </div>
@@ -319,7 +334,7 @@ export default function UserManagement() {
                     </TableCell>
                     <TableCell>
                       <Switch 
-                        checked={user.status === 0}
+                        checked={user.status === ACCOUNT_STATUS.ACTIVE} // Active=0 in backend enum
                         onCheckedChange={(c) => handleStatusToggle(user, c)}
                         className="data-[state=checked]:bg-purple-600 data-[state=unchecked]:bg-slate-700" 
                       />

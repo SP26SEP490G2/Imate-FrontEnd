@@ -30,6 +30,14 @@ import ViewJobApplications from "@/pages/candidate/ViewJobApplications";
 
 import ViewJobApplicationDetail from "@/pages/candidate/ViewJobApplicationDetail";
 
+import CVManagement from "@/pages/candidate/CVManagement";
+import AnalyseCV from "@/pages/candidate/AnalyseCV";
+import PracticeTest from "@/pages/candidate/PracticeTest";
+import TestHistory from "@/pages/candidate/TestHistory";
+import TestHistoryDetail from "@/pages/candidate/TestHistoryDetail";
+import InterviewFeedbackDetail from "@/pages/candidate/InterviewFeedbackDetail";
+import InterviewSetup from "@/pages/candidate/InterviewSetup";
+import InterviewChat from "@/pages/candidate/InterviewChat";
 import InterviewSchedule from "@/pages/candidate/InterviewSchedule";
 // Pages - Mentor
 import SubmitMentorApplication from "@/pages/mentor/SubmitMentorApplication";
@@ -104,6 +112,14 @@ const routeConfigs: RouteConfig[] = [
   { path: "/view-job-applications", element: <ViewJobApplications />, layout: LAYOUT.MAIN },
   { path: "/view-job-applications/:id", element: <ViewJobApplicationDetail />, layout: LAYOUT.MAIN },
   { path: "/interview-schedule", element: <InterviewSchedule />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/cv-management", element: <CVManagement />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/analyse-cv/:cvId", element: <AnalyseCV />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/practice-test", element: <PracticeTest />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/test-history", element: <TestHistory />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/test-history/:id", element: <TestHistoryDetail />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/interview-history/:id", element: <InterviewFeedbackDetail />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/interview-setup", element: <InterviewSetup />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/interview-chat/:sessionId", element: <InterviewChat />, layout: LAYOUT.NONE, requireAuth: true },
 
   // ===== MANAGEMENT LAYOUT ROUTES =====
   { path: "/management/view-questions", element: <ViewQuestions />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
