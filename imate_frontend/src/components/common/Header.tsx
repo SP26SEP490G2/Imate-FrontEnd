@@ -10,9 +10,11 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/store/AuthContext";
 import { Button } from "@/components/ui/button";
 import { HorizontalNavigationBar } from "@/components/ui/navigation-menu";
-import { MENTOR_MENU_ITEMS } from "@/constants/menu";
+import { CANDIDATE_MENU_ITEMS, MENTOR_MENU_ITEMS } from "@/constants/menu";
 import { cn } from "@/lib/utils";
 import UserMenu from "@/components/custom/UserMenu";
+import type { MenuItem } from '@/types/common/menu';
+import { ROLES } from '@/constants/role';
 
 function Header() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -30,12 +32,15 @@ function Header() {
     { label: "Bảng giá", href: "/view-subscription" },
   ];
 
-  const menuItems =
-    !isAuthenticated
-      ? guestMenu
-      : user?.role === "Mentor"
-        ? MENTOR_MENU_ITEMS
-        : guestMenu;
+  let menuItems: MenuItem[] = guestMenu
+
+  if (isAuthenticated) {
+    if (user?.role === ROLES.MENTOR) {
+      menuItems = MENTOR_MENU_ITEMS
+    } else if (user?.role === ROLES.CANDIDATE) {
+      menuItems = CANDIDATE_MENU_ITEMS
+    }
+  }
 
   return (
     <header className="glass-header sticky top-0 z-50 w-full backdrop-blur-lg bg-slate-900/60 border-b border-white/10">

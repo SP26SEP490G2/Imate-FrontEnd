@@ -6,6 +6,7 @@ export const MENTOR_MENU_ITEMS: MenuItem[] = [
   { label: "Thu nhập", href: "/mentor/income" },
   { label: "Lịch sử phỏng vấn", href: "/mentor/interview-history" },
   { label: "Câu hỏi từ cộng đồng", href: "/contributed-question-bank" },
+  { label: "Gửi đơn", href: "/view-application" }
 ];
 
 export const CANDIDATE_MENU_ITEMS: MenuItem[] = [
@@ -21,7 +22,7 @@ export const CANDIDATE_MENU_ITEMS: MenuItem[] = [
   { label: "Luyện tập với AI", href: "/practice-with-AI" },
   { label: "Mentor", href: "/view-mentor" },
   { label: "Gói dịch vụ", href: "/view-subscription" },
-  { label: "Gửi đơn", href: "/view-application" },
+  { label: "Gửi đơn", href: "/view-application" }
 ];
 
 export const USER_PROFILE_MENU: MenuItem[] = [
