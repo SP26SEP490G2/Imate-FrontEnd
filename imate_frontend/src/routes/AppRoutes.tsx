@@ -51,6 +51,7 @@ import AdminAuditLog from "@/pages/admin/AdminAuditLog";
 import Classification from "@/pages/management/classification/Classification";
 import UserManagement from "@/pages/admin/UserManagement";
 import SubscriptionManagement from "@/pages/admin/SubscriptionManagement";
+import ViewApplication from "@/pages/main/public/ViewApplication";
 
 /**
  * Route Configuration Type
@@ -91,12 +92,13 @@ const routeConfigs: RouteConfig[] = [
   { path: "/view-mentor/:id", element: <MentorDetail />, layout: LAYOUT.MAIN },
 
   // ===== MAIN LAYOUT ROUTES =====
-  { path: "/profile", element: <ViewProfile />, layout: LAYOUT.MAIN, requireAuth: true },
-  { path: "/submit-mentor-application", element: <SubmitMentorApplication />, layout: LAYOUT.MAIN, requireAuth: true },
-  { path: "/pending-application", element: <PendingApplication />, layout: LAYOUT.MAIN, requireAuth: true },
-  { path: "/submit-recruiter-application", element: <SubmitRecruiterApplication />, layout: LAYOUT.MAIN, requireAuth: true },
-  { path: "/recruiter-pending-application", element: <RecruiterPendingApplication />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/profile",                        element: <ViewProfile />,                layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/submit-mentor-application",      element: <SubmitMentorApplication />,    layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/pending-application",            element: <PendingApplication />,         layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/submit-recruiter-application",   element: <SubmitRecruiterApplication />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/recruiter-pending-application",  element: <RecruiterPendingApplication />,layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/interview-schedule", element: <InterviewSchedule />, layout: LAYOUT.MAIN, requireAuth: true },
+    { path: "/view-application",  element: <ViewApplication />,layout: LAYOUT.MAIN, requireAuth: true},
 
   // ===== MANAGEMENT LAYOUT ROUTES =====
   { path: "/management/view-questions", element: <ViewQuestions />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
