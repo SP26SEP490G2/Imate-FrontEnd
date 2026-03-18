@@ -80,13 +80,16 @@ const APIConfig = {
     GetRecruiterJobApplication: "recruiter-job-applications",
     UpdateRecruiterProfile: "/recruiter-profile",
     CreateJobPost: "/create-job-posts",
-    UpdateJobApplication: "/update-job-applications",
-    CloseJobApplication: "/close-job-applications",
-    GetAppliedCandidate: (jobId: number) => `${jobId}/applied-candidates`
+    UpdateJob: "/update-job",
+    CloseJob: "/close-job",
+    GetAppliedCandidate: (jobId: number) => `${jobId}/applied-candidates`,
+    UpdateJobApplication: "/update-job-application",
   },
 
   Candidate: {
-    GetAllOpenedJob: "get-all-jobs"
+    GetAllOpenedJob: "get-all-jobs",
+    GetJobDetail: (jobId: number) => `get-job-detail/${jobId}`
+
   },
 
   // Staff review endpoints (baseURL thường đã có /api)

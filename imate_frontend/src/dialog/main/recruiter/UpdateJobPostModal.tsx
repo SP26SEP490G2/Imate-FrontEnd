@@ -3,7 +3,7 @@ import { X, Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { getAllPositions, getAllSkills } from "@/services/commonService";
 import type { PositionItem, SkillItem } from "@/types/common/question";
 import { Badge } from "@/components/ui/badge";
-import { UpdateJobApplication } from "@/services/recruiterService";
+import { UpdateJob } from "@/services/recruiterService";
 import { toast } from "react-toastify";
 import type { JobItem } from "@/types/common/recruiter";
 import { MSG54, MSG55 } from "@/constants/messages";
@@ -143,7 +143,7 @@ const UpdateJobPostModal: React.FC<UpdateJobPostModalProps> = ({ open, onClose, 
       };
       setIsSubmitting(true);
 
-      await UpdateJobApplication(payload);
+      await UpdateJob(payload);
       setIsSubmitting(false);
 
       toast.success(MSG54);

@@ -14,9 +14,10 @@ import {
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Input } from "@/components/ui/input";
 
-import { GetAppliedCandidate } from "@/services/recruiterService";
-import type { AppliedCandidateResponse } from "@/types/common/recruiter";
+import { GetAppliedCandidate, UpdateJobApplication } from "@/services/recruiterService";
+import type { AppliedCandidateResponse, AppliedCandidateItem } from "@/types/common/recruiter";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 const AppliedCandidateList: React.FC = () => {
     const { jobId } = useParams<{ jobId: string }>();
@@ -30,6 +31,13 @@ const AppliedCandidateList: React.FC = () => {
 
     const [pageNumber, setPageNumber] = useState(1);
     const [pageSize, setPageSize] = useState(10);
+
+    // Modal state
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [feedback, setFeedback] = useState("");
+    const [selectedCandidate, setSelectedCandidate] = useState<AppliedCandidateItem | null>(null);
+    const [selectedStatus, setSelectedStatus] = useState("");
 
     const fetchCandidates = async () => {
         if (!jobId) return;
@@ -55,6 +63,34 @@ const AppliedCandidateList: React.FC = () => {
             toast.error("Đã có lỗi xảy ra khi tải danh sách ứng viên");
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleOpenModal = (candidate: AppliedCandidateItem, status: string) => {
+        setSelectedCandidate(candidate);
+        setSelectedStatus(status);
+        setFeedback("");
+        setIsModalOpen(true);
+    };
+
+    const handleConfirmUpdate = async () => {
+        if (!selectedCandidate) return;
+
+        try {
+            setIsSubmitting(true);
+            await UpdateJobApplication({
+                id: selectedCandidate.applicationId,
+                status: selectedStatus,
+                recruiterFeedback: feedback
+            });
+            toast.success(`Cập nhật trạng thái thành công`);
+            setIsModalOpen(false);
+            fetchCandidates();
+        } catch (err: any) {
+            console.error("Error updating application:", err);
+            toast.error(err?.response?.data?.message || "Đã có lỗi xảy ra khi cập nhật trạng thái");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -133,8 +169,7 @@ const AppliedCandidateList: React.FC = () => {
                                 className="bg-slate-800 border border-slate-700 rounded-md px-4 py-2 text-slate-200 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer min-w-[160px]"
                             >
                                 <option value="">Tất cả</option>
-                                <option value="Pending">Pending</option>
-                                <option value="Reviewing">Reviewing</option>
+                                <option value="Waiting">Waiting</option>
                                 <option value="Approved">Approved</option>
                                 <option value="Rejected">Rejected</option>
                             </select>
@@ -201,16 +236,18 @@ const AppliedCandidateList: React.FC = () => {
                                             <Button
                                                 size="sm"
                                                 variant="outline"
-                                                className="w-8 h-8 p-0 text-green-500 border-green-500 hover:bg-green-500 hover:text-white flex-shrink-0"
+                                                className="w-8 h-8 p-0 text-green-500 border-green-500 hover:bg-green-500 hover:text-white flex-shrink-0 cursor-pointer"
                                                 title="Phê duyệt"
+                                                onClick={() => handleOpenModal(candidate, "Approved")}
                                             >
                                                 <Check size={16} />
                                             </Button>
                                             <Button
                                                 size="sm"
                                                 variant="outline"
-                                                className="w-8 h-8 p-0 text-red-500 border-red-500 hover:bg-red-500 hover:text-white flex-shrink-0"
+                                                className="w-8 h-8 p-0 text-red-500 border-red-500 hover:bg-red-500 hover:text-white flex-shrink-0 cursor-pointer"
                                                 title="Từ chối"
+                                                onClick={() => handleOpenModal(candidate, "Rejected")}
                                             >
                                                 <X size={16} />
                                             </Button>
@@ -222,6 +259,65 @@ const AppliedCandidateList: React.FC = () => {
                     </Table>
                 )}
             </div>
+
+            {/* Feedback Modal */}
+            {isModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={() => !isSubmitting && setIsModalOpen(false)} />
+                    <div className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-6 animate-in fade-in zoom-in duration-200">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-xl font-bold text-white">
+                                {selectedStatus === "Approved" ? "Phê duyệt hồ sơ" : "Từ chối hồ sơ"}
+                            </h3>
+                            <button
+                                onClick={() => setIsModalOpen(false)}
+                                className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <p className="text-slate-400 text-sm mb-4">
+                            Bạn đang thực hiện {selectedStatus === "Approved" ? "phê duyệt" : "từ chối"} hồ sơ của <span className="text-white font-semibold">{selectedCandidate?.candidateFullName}</span>. Vui lòng để lại phản hồi cho ứng viên.
+                        </p>
+
+                        <div className="space-y-2 mb-6">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Phản hồi của bạn</label>
+                            <textarea
+                                className="w-full h-32 px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder:text-slate-600 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none"
+                                placeholder="VD: Hồ sơ của bạn rất ấn tượng..."
+                                value={feedback}
+                                onChange={(e) => setFeedback(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="flex justify-end gap-3">
+                            <Button
+                                variant="secondary"
+                                onClick={() => setIsModalOpen(false)}
+                                disabled={isSubmitting}
+                                className="cursor-pointer"
+                            >
+                                Hủy bỏ
+                            </Button>
+                            <Button
+                                onClick={handleConfirmUpdate}
+                                disabled={isSubmitting}
+                                className={`cursor-pointer font-bold ${selectedStatus === "Approved" ? "bg-green-600 hover:bg-green-700 text-white" : "bg-red-600 hover:bg-red-700 text-white"}`}
+                            >
+                                {isSubmitting ? (
+                                    <>
+                                        <Loader2 size={16} className="animate-spin mr-2" />
+                                        Đang xử lý...
+                                    </>
+                                ) : (
+                                    selectedStatus === "Approved" ? "Phê duyệt" : "Từ chối"
+                                )}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

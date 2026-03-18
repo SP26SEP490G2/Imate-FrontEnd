@@ -52,6 +52,28 @@ export const CreateJobPost = async (data: any) => {
   }
 };
 
+export const UpdateJob = async (data: any) => {
+  try {
+    const res = await apiClient.put(APIConfig.Recruiter.UpdateJob, data);
+
+    return res.data;
+  } catch (error) {
+    console.log("Error updating job: ", error);
+    throw error;
+  }
+};
+
+export const CloseJob = async (data: any) => {
+  try {
+    const res = await apiClient.put(APIConfig.Recruiter.CloseJob, data);
+
+    return res.data;
+  } catch (error) {
+    console.log("Error closing job: ", error);
+    throw error;
+  }
+};
+
 export const UpdateJobApplication = async (data: any) => {
   try {
     const res = await apiClient.put(APIConfig.Recruiter.UpdateJobApplication, data);
@@ -62,18 +84,6 @@ export const UpdateJobApplication = async (data: any) => {
     throw error;
   }
 };
-
-export const CloseJobApplication = async (data: any) => {
-  try {
-    const res = await apiClient.put(APIConfig.Recruiter.CloseJobApplication, data);
-
-    return res.data;
-  } catch (error) {
-    console.log("Error closing job application: ", error);
-    throw error;
-  }
-};
-
 
 export const GetAppliedCandidate = async (jobId: number,
   params?: GetAppliedCandidateRequest
@@ -107,7 +117,7 @@ export const getCandidateJobList = async (
 
   const response = await apiClient.get(
     APIConfig.Candidate.GetAllOpenedJob,
-    { 
+    {
       params: queryParams,
       paramsSerializer: (p) => {
         const searchParams = new URLSearchParams();
@@ -125,3 +135,13 @@ export const getCandidateJobList = async (
   );
   return response.data.data as CandidateJobListResponse;
 }
+
+export const getJobDetails = async (jobId: number) => {
+  try {
+    const res = await apiClient.get(APIConfig.Candidate.GetJobDetail(jobId));
+    return res.data;
+  } catch (error) {
+    console.log("Error closing job application: ", error);
+    throw error;
+  }
+};

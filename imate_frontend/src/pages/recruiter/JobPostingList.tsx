@@ -20,7 +20,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { Input } from "@/components/ui/input";
 
 import type { JobItem, JobResponse } from "@/types/common/recruiter";
-import { getRecruiterJobApplications, CloseJobApplication } from "@/services/recruiterService";
+import { getRecruiterJobApplications, CloseJob } from "@/services/recruiterService";
 import UpdateJobPostModal from "@/dialog/main/recruiter/UpdateJobPostModal";
 import { toast } from "sonner";
 import {
@@ -60,7 +60,7 @@ const JobPostingList: React.FC = () => {
         if (!jobToClose) return;
         try {
             setIsClosing(true);
-            await CloseJobApplication(jobToClose.id);
+            await CloseJob(jobToClose.id);
             toast.success("Đóng bài đăng thành công");
             setJobToClose(null);
             fetchJobs();

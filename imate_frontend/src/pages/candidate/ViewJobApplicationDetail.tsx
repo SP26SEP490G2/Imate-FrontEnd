@@ -1,69 +1,70 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import CandidateApplyJobCvDialog from "@/pages/dialog/CandidateApplyJobCvDialog";
-import { 
-    ArrowLeft, 
-    MapPin, 
-    Briefcase, 
-    DollarSign, 
-    Calendar, 
-    Globe, 
-    Phone, 
+import {
+    ArrowLeft,
+    MapPin,
+    Briefcase,
+    DollarSign,
+    Calendar,
+    Globe,
+    Phone,
     MapPinned,
     ExternalLink,
     CheckCircle2,
-    Users
+    Users,
+    Loader2
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { getJobDetails } from "@/services/recruiterService";
+import type { CandidateJobItem } from "@/types/common/recruiter";
 
-// Mock Data (Ideally this would be fetched based on ID)
-const MOCK_JOB_DETAIL = {
-    id: 1,
-    title: "Senior Software Engineer",
-    jobDescription: `
-        ### Giới thiệu công việc
-        Chúng tôi đang tìm kiếm một Kỹ sư phần mềm cao cấp tài năng để tham gia vào đội ngũ phát triển năng động của mình. Bạn sẽ đóng vai trò quan trọng trong việc thiết kế, xây dựng và duy trì các hệ thống back-end quy mô lớn, xử lý hàng triệu yêu cầu mỗi ngày.
-
-        ### Trách nhiệm chính
-        - Thiết kế và triển khai các API hiệu suất cao, có khả năng mở rộng.
-        - Tối ưu hóa hệ thống để đạt hiệu quả tối đa về tài nguyên và tốc độ.
-        - Hợp tác với các nhóm front-end và mobile để tích hợp các tính năng mới.
-        - Thực hiện code review và hướng dẫn các kỹ sư trẻ.
-        - Tham gia vào quá trình lập kế hoạch kiến trúc và đưa ra các quyết định kỹ thuật quan trọng.
-
-        ### Yêu cầu ứng viên
-        - Ít nhất 5 năm kinh nghiệm phát triển phần mềm chuyên nghiệp.
-        - Thành thạo một trong các ngôn ngữ: TypeScript (Node.js), Go, hoặc Java.
-        - Có kinh nghiệm làm việc với cơ sở dữ liệu SQL và NoSQL (PostgreSQL, MongoDB).
-        - Hiểu sâu về kiến trúc Microservices và Containerization (Docker, K8s).
-        - Kỹ năng giải quyết vấn đề tốt và khả năng làm việc độc lập cũng như theo nhóm.
-    `,
-    employmentType: "Full-time",
-    location: "District 1, Ho Chi Minh City",
-    minSalary: 2500,
-    maxSalary: 4500,
-    applicationDeadline: "2026-12-30",
-    skills: ["React", "TypeScript", "Node.js", "AWS", "Nginx", "Docker", "Kubernetes"],
-    positions: ["Frontend", "Backend", "Fullstack", "DevOps"],
-    company: {
-        name: "TechNova Solutions",
-        logo: "https://api.dicebear.com/7.x/initials/svg?seed=TN",
-        website: "https://technova.io",
-        size: "50-150 employees",
-        phone: "+84 28 1234 5678",
-        address: "72 Le Thanh Ton, District 1, HCMC",
-        description: "TechNova Solutions là công ty công nghệ hàng đầu chuyên cung cấp các giải pháp phần mềm sáng tạo cho doanh nghiệp toàn cầu."
-    }
-};
 
 const ViewJobApplicationDetail: React.FC = () => {
-    useParams<{ id: string }>();
+    const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const [isApplyDialogOpen, setIsApplyDialogOpen] = useState(false);
+    const [job, setJob] = useState<CandidateJobItem | null>(null);
+    const [loading, setLoading] = useState(true);
 
-    // In a real app, you would fetch data here using the id
-    const job = MOCK_JOB_DETAIL;
+    useEffect(() => {
+        const fetchJobDetail = async () => {
+            if (!id) return;
+            try {
+                setLoading(true);
+                const response = await getJobDetails(Number(id));
+                // response structure is expected to be { data: CandidateJobItem }
+                if (response?.data) {
+                    setJob(response.data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch job details:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchJobDetail();
+    }, [id]);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-[#050816] flex flex-col items-center justify-center text-white">
+                <Loader2 className="w-12 h-12 text-purple-500 animate-spin mb-4" />
+                <p className="text-slate-400 animate-pulse">Đang tải thông tin công việc...</p>
+            </div>
+        );
+    }
+
+    if (!job) {
+        return (
+            <div className="min-h-screen bg-[#050816] flex flex-col items-center justify-center text-white p-6">
+                <h2 className="text-2xl font-bold mb-4">Không tìm thấy công việc</h2>
+                <Button onClick={() => navigate("/view-job-applications")}>Quay lại danh sách</Button>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-[#050816] text-white p-6 md:p-10 relative overflow-hidden">
@@ -73,8 +74,8 @@ const ViewJobApplicationDetail: React.FC = () => {
 
             <div className="max-w-[1200px] mx-auto relative z-10">
                 {/* Back Button */}
-                <Button 
-                    variant="ghost" 
+                <Button
+                    variant="ghost"
                     onClick={() => navigate("/view-job-applications")}
                     className="mb-8 p-0 hover:bg-transparent text-slate-400 hover:text-white flex items-center gap-2 group transition-colors cursor-pointer"
                 >
@@ -109,7 +110,7 @@ const ViewJobApplicationDetail: React.FC = () => {
                                         </div>
                                     </div>
                                 </div>
-                                <Button 
+                                <Button
                                     onClick={() => setIsApplyDialogOpen(true)}
                                     className="w-full md:w-auto px-8 h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 font-bold shadow-lg shadow-indigo-600/20 text-base cursor-pointer"
                                 >
@@ -161,9 +162,9 @@ const ViewJobApplicationDetail: React.FC = () => {
                                 <div>
                                     <h3 className="text-sm font-medium text-slate-500 uppercase tracking-wider mb-3">Yêu cầu kỹ năng</h3>
                                     <div className="flex flex-wrap gap-2">
-                                        {job.skills.map((skill, idx) => (
+                                        {job.jobSkills.map((skill, idx) => (
                                             <Badge key={idx} variant="secondary" className="bg-[#0F1333] text-slate-300 border-white/5 py-1.5 px-4 rounded-xl hover:bg-purple-500/10 hover:text-purple-400 transition-all cursor-default">
-                                                {skill}
+                                                {skill.skillName}
                                             </Badge>
                                         ))}
                                     </div>
@@ -171,9 +172,9 @@ const ViewJobApplicationDetail: React.FC = () => {
                                 <div>
                                     <h3 className="text-sm font-medium text-slate-500 uppercase tracking-wider mb-3">Vị trí tương ứng</h3>
                                     <div className="flex flex-wrap gap-2">
-                                        {job.positions.map((pos, idx) => (
+                                        {job.jobPositions.map((pos, idx) => (
                                             <Badge key={idx} className="bg-indigo-500/10 text-indigo-400 border-none py-1.5 px-4 rounded-xl">
-                                                {pos}
+                                                {pos.positionName}
                                             </Badge>
                                         ))}
                                     </div>
@@ -187,17 +188,17 @@ const ViewJobApplicationDetail: React.FC = () => {
                         <div className="bg-[#11142D] border border-white/10 rounded-2xl p-6 shadow-2xl backdrop-blur-sm sticky top-10">
                             <div className="text-center mb-6">
                                 <div className="w-24 h-24 rounded-2xl bg-white p-2 mx-auto mb-4 overflow-hidden shadow-inner flex items-center justify-center">
-                                    <img src={job.company.logo} alt={job.company.name} className="w-full h-full object-contain" />
+                                    <img src={job.companyRecruiter.companyLogo} alt={job.companyRecruiter.companyName} className="w-full h-full object-contain" />
                                 </div>
                                 <h2 className="text-xl font-bold text-white mb-1 group-hover:text-purple-400 transition-colors">
-                                    {job.company.name}
+                                    {job.companyRecruiter.companyName}
                                 </h2>
-                                <a 
-                                    href={job.company.website} 
-                                    target="_blank" 
+                                <a
+                                    href={job.companyRecruiter.website}
+                                    target="_blank"
                                     className="text-purple-400 text-sm hover:underline inline-flex items-center gap-1"
                                 >
-                                    {job.company.website.replace('https://', '')} <ExternalLink size={12} />
+                                    {job.companyRecruiter.website.replace('https://', '').replace('http://', '')} <ExternalLink size={12} />
                                 </a>
                             </div>
 
@@ -208,7 +209,7 @@ const ViewJobApplicationDetail: React.FC = () => {
                                     </div>
                                     <div>
                                         <p className="text-xs text-slate-500 uppercase font-bold">Quy mô</p>
-                                        <p className="text-sm text-slate-200">{job.company.size}</p>
+                                        <p className="text-sm text-slate-200">{job.companyRecruiter.companySize} nhân viên</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-4">
@@ -217,7 +218,7 @@ const ViewJobApplicationDetail: React.FC = () => {
                                     </div>
                                     <div>
                                         <p className="text-xs text-slate-500 uppercase font-bold">Điện thoại</p>
-                                        <p className="text-sm text-slate-200">{job.company.phone}</p>
+                                        <p className="text-sm text-slate-200">{job.companyRecruiter.phone}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-4">
@@ -226,7 +227,7 @@ const ViewJobApplicationDetail: React.FC = () => {
                                     </div>
                                     <div>
                                         <p className="text-xs text-slate-500 uppercase font-bold">Địa chỉ</p>
-                                        <p className="text-sm text-slate-200">{job.company.address}</p>
+                                        <p className="text-sm text-slate-200">{job.companyRecruiter.address}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-4">
@@ -243,13 +244,13 @@ const ViewJobApplicationDetail: React.FC = () => {
                             </div>
 
                             <p className="mt-8 text-sm text-slate-400 leading-relaxed italic border-t border-white/5 pt-6">
-                                "{job.company.description}"
+                                "{job.companyRecruiter.industry}"
                             </p>
 
-                            <Button 
-                                variant="outline" 
+                            <Button
+                                variant="outline"
                                 className="w-full mt-8 border-white/10 hover:bg-white/5 text-slate-300 gap-2 h-11 cursor-pointer"
-                                onClick={() => window.open(job.company.website, '_blank')}
+                                onClick={() => window.open(job.companyRecruiter.website, '_blank')}
                             >
                                 <Globe size={16} /> Xem trang công ty
                             </Button>
@@ -258,7 +259,7 @@ const ViewJobApplicationDetail: React.FC = () => {
                 </div>
             </div>
 
-            <CandidateApplyJobCvDialog 
+            <CandidateApplyJobCvDialog
                 open={isApplyDialogOpen}
                 onOpenChange={setIsApplyDialogOpen}
                 jobTitle={job.title}
