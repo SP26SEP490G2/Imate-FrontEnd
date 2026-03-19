@@ -1,4 +1,4 @@
-import { FolderOpen, LibraryBig, CircleUser, CreditCard, FileUser, Sparkles, LogOut, Wallet, Package, FileQuestion, History, Calendar } from "lucide-react";
+import { FolderOpen, LibraryBig, CircleUser, CreditCard, FileUser, Sparkles, LogOut, Wallet, Package, FileQuestion, History, Calendar, Briefcase } from "lucide-react";
 import type { MenuItem } from "@/types/common/menu";
 
 export const MENTOR_MENU_ITEMS: MenuItem[] = [
@@ -22,7 +22,8 @@ export const CANDIDATE_MENU_ITEMS: MenuItem[] = [
   { label: "Luyện tập với AI", href: "/practice-with-AI" },
   { label: "Mentor", href: "/view-mentor" },
   { label: "Gói dịch vụ", href: "/view-subscription" },
-  { label: "Gửi đơn", href: "/view-application" }
+  { label: "Gửi đơn", href: "/view-application" },
+  { label: "Cơ hội việc làm", href: "/view-job-applications" }
 ];
 
 export const USER_PROFILE_MENU: MenuItem[] = [
@@ -67,6 +68,11 @@ export const USER_PROFILE_MENU: MenuItem[] = [
     icon: Package,
   },
   {
+    label: "Danh sách ứng tuyển",
+    href: "/view-applied-job",
+    icon: Briefcase,
+  },
+  {
     label: "Đăng xuất",
     icon: LogOut,
   },
@@ -97,6 +103,24 @@ export const MENTOR_PROFILE_MENU: MenuItem[] = [
     label: "Gửi đơn",
     href: "/mentor/view-application",
     icon: FolderOpen,
+  },
+  {
+    label: "Nạp tiền",
+    href: "/wallet",
+    icon: CreditCard,
+  },
+  {
+    label: "Đăng xuất",
+    icon: LogOut,
+  },
+];
+
+
+export const RECRUITER_PROFILE_MENU: MenuItem[] = [
+  {
+    label: "Hồ sơ cá nhân",
+    href: "/profile",
+    icon: CircleUser,
   },
   {
     label: "Nạp tiền",

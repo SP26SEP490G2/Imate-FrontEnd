@@ -263,6 +263,7 @@ const ViewJobApplicationDetail: React.FC = () => {
                 open={isApplyDialogOpen}
                 onOpenChange={setIsApplyDialogOpen}
                 jobTitle={job.title}
+                jobId={job.id}
             />
         </div>
     );

@@ -65,6 +65,7 @@ import UserManagement from "@/pages/admin/UserManagement";
 import SubscriptionManagement from "@/pages/admin/SubscriptionManagement";
 import AppliedCandidateList from "@/pages/recruiter/AppliedCandidateList";
 import ViewApplication from "@/pages/main/public/ViewApplication";
+import ViewAppliedJob from "@/pages/candidate/ViewAppliedJob";
 
 /**
  * Route Configuration Type
@@ -121,8 +122,8 @@ const routeConfigs: RouteConfig[] = [
   { path: "/interview-history/:id", element: <InterviewFeedbackDetail />, layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/interview-setup", element: <InterviewSetup />, layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/interview-chat/:sessionId", element: <InterviewChat />, layout: LAYOUT.NONE, requireAuth: true },
-  { path: "/view-application",  element: <ViewApplication />,layout: LAYOUT.MAIN, requireAuth: true},
-
+  { path: "/view-application", element: <ViewApplication />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/view-applied-job", element: <ViewAppliedJob />, layout: LAYOUT.MAIN, requireAuth: true },
   // ===== MANAGEMENT LAYOUT ROUTES =====
   { path: "/management/view-questions", element: <ViewQuestions />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
   { path: "/management/manage-application", element: <ReviewMentorApplication />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },

@@ -145,3 +145,13 @@ export const getJobDetails = async (jobId: number) => {
     throw error;
   }
 };
+
+export const createJobApplication = async (data: any) => {
+  try {
+    const res = await apiClient.post(APIConfig.Candidate.CreateJobApplication, data);
+    return res.data;
+  } catch (error) {
+    console.log("Error creating job application: ", error);
+    throw error;
+  }
+};
