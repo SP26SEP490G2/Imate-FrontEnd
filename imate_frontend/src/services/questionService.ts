@@ -32,6 +32,43 @@ import type {
   CommentItem,
 } from "@/types/common/question";
 
+const parsePagination = (
+  paginationHeader: string | undefined,
+  fallback: {
+    totalCount?: number;
+    pageSize?: number;
+    pageNumber?: number;
+    totalPages?: number;
+    hasNextPage?: boolean;
+    hasPreviousPage?: boolean;
+  }
+) => {
+  const parsed = paginationHeader
+    ? JSON.parse(paginationHeader)
+    : null;
+
+  return {
+    totalCount: Number(
+      parsed?.totalCount ?? parsed?.TotalCount ?? fallback.totalCount ?? 0
+    ),
+    pageNumber: Number(
+      parsed?.pageNumber ?? parsed?.PageNumber ?? fallback.pageNumber ?? 1
+    ),
+    pageSize: Number(
+      parsed?.pageSize ?? parsed?.PageSize ?? fallback.pageSize ?? 10
+    ),
+    totalPages: Number(
+      parsed?.totalPages ?? parsed?.TotalPages ?? fallback.totalPages ?? 0
+    ),
+    hasNextPage: Boolean(
+      parsed?.hasNextPage ?? parsed?.HasNextPage ?? fallback.hasNextPage ?? false
+    ),
+    hasPreviousPage: Boolean(
+      parsed?.hasPreviousPage ?? parsed?.HasPreviousPage ?? fallback.hasPreviousPage ?? false
+    ),
+  };
+};
+
 /**
  * Get list of hot questions for home page
  * @returns Promise<ListHotQuestionResponse[]>
@@ -133,28 +170,28 @@ export const getListQuestionCategories = async (): Promise<CategoryItem[]> => {
 export const getAllSystemQuestionsForStaff = async (
   params: GetSystemQuestionParams
 ): Promise<StaffQuestionListResponse<StaffSystemQuestionItem>> => {
-  const response = await apiClient.get<{ items: StaffSystemQuestionItem[] }>(
+  const response = await apiClient.get<any>(
     APIConfig.Question.GetAllSystemQuestionsForStaff,
     { params }
   );
 
-  // Extract pagination from headers
-  const paginationHeader = response.headers['x-pagination'];
-  const pagination = paginationHeader ? JSON.parse(paginationHeader) : {
-    totalCount: 0,
-    pageSize: params.pageSize || 10,
-    pageNumber: params.pageNumber || 1,
-    totalPages: 0
-  };
+  const pagination = parsePagination(response.headers['x-pagination'], {
+    totalCount: response.data?.totalCount ?? response.data?.TotalCount,
+    pageNumber: response.data?.pageNumber ?? response.data?.PageNumber,
+    pageSize: response.data?.pageSize ?? response.data?.PageSize,
+    totalPages: response.data?.totalPages ?? response.data?.TotalPages,
+    hasNextPage: response.data?.hasNextPage ?? response.data?.HasNextPage,
+    hasPreviousPage: response.data?.hasPreviousPage ?? response.data?.HasPreviousPage,
+  });
 
   return {
     items: response.data.items || [],
-   totalCount: Number(pagination.totalCount || pagination.TotalCount || 0),
-  pageNumber: Number(pagination.pageNumber || pagination.PageNumber || 1),
-  pageSize: Number(pagination.pageSize || pagination.PageSize || 10),
-  totalPages: Number(pagination.totalPages || pagination.TotalPages || 0),
-    hasNextPage: pagination.hasNextPage || pagination.HasNextPage || false,
-    hasPreviousPage: pagination.hasPreviousPage || pagination.HasPreviousPage || false
+    totalCount: pagination.totalCount,
+    pageNumber: pagination.pageNumber,
+    pageSize: pagination.pageSize,
+    totalPages: pagination.totalPages,
+    hasNextPage: pagination.hasNextPage,
+    hasPreviousPage: pagination.hasPreviousPage
   };
 };
 
@@ -166,28 +203,28 @@ export const getAllSystemQuestionsForStaff = async (
 export const getAllContributedQuestionsForStaff = async (
   params: GetContributedQuestionParams
 ): Promise<StaffQuestionListResponse<StaffContributedQuestionItem>> => {
-  const response = await apiClient.get<{ items: StaffContributedQuestionItem[] }>(
+  const response = await apiClient.get<any>(
     APIConfig.Question.GetAllContributedQuestionsForStaff,
     { params }
   );
 
-  // Extract pagination from headers
-  const paginationHeader = response.headers['x-pagination'];
-  const pagination = paginationHeader ? JSON.parse(paginationHeader) : {
-    totalCount: 0,
-    pageSize: params.pageSize || 10,
-    pageNumber: params.pageNumber || 1,
-    totalPages: 0
-  };
+  const pagination = parsePagination(response.headers['x-pagination'], {
+    totalCount: response.data?.totalCount ?? response.data?.TotalCount,
+    pageNumber: response.data?.pageNumber ?? response.data?.PageNumber,
+    pageSize: response.data?.pageSize ?? response.data?.PageSize,
+    totalPages: response.data?.totalPages ?? response.data?.TotalPages,
+    hasNextPage: response.data?.hasNextPage ?? response.data?.HasNextPage,
+    hasPreviousPage: response.data?.hasPreviousPage ?? response.data?.HasPreviousPage,
+  });
 
   return {
     items: response.data.items || [],
-   totalCount: Number(pagination.totalCount || pagination.TotalCount || 0),
-  pageNumber: Number(pagination.pageNumber || pagination.PageNumber || 1),
-  pageSize: Number(pagination.pageSize || pagination.PageSize || 10),
-  totalPages: Number(pagination.totalPages || pagination.TotalPages || 0),
-    hasNextPage: pagination.hasNextPage || pagination.HasNextPage || false,
-    hasPreviousPage: pagination.hasPreviousPage || pagination.HasPreviousPage || false
+    totalCount: pagination.totalCount,
+    pageNumber: pagination.pageNumber,
+    pageSize: pagination.pageSize,
+    totalPages: pagination.totalPages,
+    hasNextPage: pagination.hasNextPage,
+    hasPreviousPage: pagination.hasPreviousPage
   };
   };
 
@@ -199,27 +236,28 @@ export const getAllContributedQuestionsForStaff = async (
 export const getAllPendingContributedQuestionsForStaff = async (
   params: GetContributedQuestionParams
 ): Promise<StaffQuestionListResponse<StaffContributedQuestionItem>> => {
-  const response = await apiClient.get<{ items: StaffContributedQuestionItem[] }>(
+  const response = await apiClient.get<any>(
     APIConfig.Question.GetAllPendingContributedQuestionsForStaff,
     { params }
   );
 
-  const paginationHeader = response.headers['x-pagination'];
-  const pagination = paginationHeader ? JSON.parse(paginationHeader) : {
-    totalCount: 0,
-    pageSize: params.pageSize || 10,
-    pageNumber: params.pageNumber || 1,
-    totalPages: 0
-  };
+  const pagination = parsePagination(response.headers['x-pagination'], {
+    totalCount: response.data?.totalCount ?? response.data?.TotalCount,
+    pageNumber: response.data?.pageNumber ?? response.data?.PageNumber,
+    pageSize: response.data?.pageSize ?? response.data?.PageSize,
+    totalPages: response.data?.totalPages ?? response.data?.TotalPages,
+    hasNextPage: response.data?.hasNextPage ?? response.data?.HasNextPage,
+    hasPreviousPage: response.data?.hasPreviousPage ?? response.data?.HasPreviousPage,
+  });
 
   return {
     items: response.data.items || [],
-    totalCount: Number(pagination.totalCount || pagination.TotalCount || 0),
-    pageNumber: Number(pagination.pageNumber || pagination.PageNumber || 1),
-    pageSize: Number(pagination.pageSize || pagination.PageSize || 10),
-    totalPages: Number(pagination.totalPages || pagination.TotalPages || 0),
-    hasNextPage: pagination.hasNextPage || pagination.HasNextPage || false,
-    hasPreviousPage: pagination.hasPreviousPage || pagination.HasPreviousPage || false
+    totalCount: pagination.totalCount,
+    pageNumber: pagination.pageNumber,
+    pageSize: pagination.pageSize,
+    totalPages: pagination.totalPages,
+    hasNextPage: pagination.hasNextPage,
+    hasPreviousPage: pagination.hasPreviousPage
   };
 };
 

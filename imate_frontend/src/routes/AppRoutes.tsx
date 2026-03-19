@@ -66,6 +66,7 @@ import SubscriptionManagement from "@/pages/admin/SubscriptionManagement";
 import AppliedCandidateList from "@/pages/recruiter/AppliedCandidateList";
 import ViewApplication from "@/pages/main/public/ViewApplication";
 import ViewAppliedJob from "@/pages/candidate/ViewAppliedJob";
+import TransactionManagement from "@/pages/management/payment/TransactionManagement";
 
 /**
  * Route Configuration Type
@@ -139,6 +140,7 @@ const routeConfigs: RouteConfig[] = [
 
   { path: "/management/users", element: <UserManagement />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN] },
   { path: "/management/subscriptions", element: <SubscriptionManagement />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN] },
+  { path: "/management/transactions", element: <TransactionManagement />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
 ];
 
 /**
