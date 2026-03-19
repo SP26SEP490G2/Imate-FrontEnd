@@ -89,7 +89,7 @@ function Table({
 
               totalCount === 0
                 ? (
-                  <span>No results</span>
+                  <span>Không có kết quả</span>
                 )
                 : (
                   <>

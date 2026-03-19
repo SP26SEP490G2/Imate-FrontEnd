@@ -60,6 +60,7 @@ import Classification from "@/pages/management/classification/Classification";
 import UserManagement from "@/pages/admin/UserManagement";
 import SubscriptionManagement from "@/pages/admin/SubscriptionManagement";
 import ViewApplication from "@/pages/main/public/ViewApplication";
+import TransactionManagement from "@/pages/management/payment/TransactionManagement";
 
 /**
  * Route Configuration Type
@@ -130,6 +131,7 @@ const routeConfigs: RouteConfig[] = [
 
   { path: "/management/users", element: <UserManagement />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN] },
   { path: "/management/subscriptions", element: <SubscriptionManagement />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN] },
+  { path: "/management/transactions", element: <TransactionManagement />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
 ];
 
 /**

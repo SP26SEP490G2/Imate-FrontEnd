@@ -33,11 +33,18 @@ import {
 } from 'lucide-react';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
+import { AppTabs } from '@/components/ui/tabs';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { toast } from 'react-toastify';
 
 type TabType = 'system' | 'contributed' | 'pending';
+
+const QUESTION_TABS = [
+  { label: 'Câu hỏi hệ thống', value: 'system' },
+  { label: 'Câu hỏi đóng góp', value: 'contributed' },
+  { label: 'Câu hỏi đóng góp chờ duyệt', value: 'pending' },
+];
 
 const ViewQuestions: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('system');
@@ -177,7 +184,7 @@ const ViewQuestions: React.FC = () => {
         totalCount: result.totalCount,
         pageNumber: result.pageNumber,
         pageSize: result.pageSize,
-        totalPages: result.totalPages
+        totalPages: result.totalPages || 1
       });
     } catch (error) {
       console.error('Failed to fetch system questions:', error);
@@ -198,7 +205,7 @@ const ViewQuestions: React.FC = () => {
         totalCount: result.totalCount,
         pageNumber: result.pageNumber,
         pageSize: result.pageSize,
-        totalPages: result.totalPages
+        totalPages: result.totalPages || 1
       });
     } catch (error) {
       console.error('Failed to fetch contributed questions:', error);
@@ -218,7 +225,7 @@ const ViewQuestions: React.FC = () => {
         totalCount: result.totalCount,
         pageNumber: result.pageNumber,
         pageSize: result.pageSize,
-        totalPages: result.totalPages
+        totalPages: result.totalPages || 1
       });
     } catch (error) {
       console.error('Failed to fetch pending contributed questions:', error);
@@ -344,190 +351,159 @@ const ViewQuestions: React.FC = () => {
       : pendingContributedPagination;
 
   return (
-    <div className="font-sans bg-[#020617] min-h-screen">
-      {/* Main Content */}
-      <main className="pb-20 px-6">
-        <div className="max-w-7xl mx-auto">
-          {/* Header Section */}
-          <header className="mb-10">
+    <div className="p-6 space-y-6 min-h-full">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-4xl font-bold text-white mb-2">
+            Quản lý câu hỏi
+          </h1>
+          <p className="text-slate-400">
+            Quản lý và cập nhật ngân hàng câu hỏi hệ thống.
+          </p>
+        </div>
 
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-4xl font-bold text-white mb-2">
-                Quản lý câu hỏi
-                </h1>
-                <p className="text-slate-400 max-w-2xl">
-                  Quản lý và cập nhật ngân hàng câu hỏi hệ thống.
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                {activeTab === 'system' && (
-                  <button
-                    onClick={handleExportSystemQuestions}
-                    disabled={exporting}
-                    className="bg-[#1e293b]/40 backdrop-blur-sm border border-white/5 px-4 py-3 rounded-xl flex items-center gap-2 text-sm font-medium text-slate-300 hover:bg-white/10 hover:text-white transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    <Download className="w-4 h-4" />
-                    {exporting ? 'Đang export...' : 'Export câu hỏi'}
-                  </button>
-                )}
-                {/* <button className="bg-[#1e293b]/40 backdrop-blur-sm border border-white/5 px-4 py-3 rounded-xl flex items-center gap-2 text-sm font-medium text-slate-300 hover:bg-white/10 hover:text-white transition-all">
-                  <Upload className="w-4 h-4" />
-                  Import câu hỏi
-                </button> */}
-                {activeTab === 'system' && (
-                  <button
-                    onClick={() => setCreateModalOpen(true)}
-                    className="bg-linear-to-r from-indigo-500 to-purple-500 px-4 py-3 rounded-xl flex items-center gap-2 text-sm font-bold shadow-lg shadow-indigo-500/20 hover:opacity-90 transition-all text-white"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Thêm câu hỏi
-                  </button>
-                )}
-              </div>
-            </div>
-          </header>
+        <div className="flex items-center gap-3">
+          {activeTab === 'system' && (
+            <Button
+              variant="outline"
+              onClick={handleExportSystemQuestions}
+              disabled={exporting}
+              icon={<Download className="w-4 h-4" />}
+              className="border-slate-700 text-slate-200 hover:bg-slate-800"
+            >
+              {exporting ? 'Đang export...' : 'Export câu hỏi'}
+            </Button>
+          )}
 
-          {/* Filter & Tab Section */}
-          <section className="space-y-6 mb-8">
-            {/* Tabs */}
-            <div className="flex border-b border-white/10 gap-8">
-              <button
-                onClick={() => setActiveTab('system')}
-                className={`pb-4 font-bold text-xs uppercase tracking-widest border-b-2 transition-colors ${activeTab === 'system'
-                  ? 'text-indigo-400 border-indigo-500'
-                  : 'text-slate-400 border-transparent hover:text-white'
-                  }`}
+          {activeTab === 'system' && (
+            <Button
+              variant="primary"
+              icon={<Plus className="w-4 h-4" />}
+              onClick={() => setCreateModalOpen(true)}
+            >
+              Thêm câu hỏi
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <AppTabs
+        tabs={QUESTION_TABS}
+        value={activeTab}
+        onChange={(value) => setActiveTab(value as TabType)}
+      />
+
+      <div className="space-y-6">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
+            <h2 className="text-xl font-semibold text-white">
+              {activeTab === 'system'
+                ? 'Danh sách câu hỏi hệ thống'
+                : activeTab === 'contributed'
+                ? 'Danh sách câu hỏi đóng góp'
+                : 'Danh sách câu hỏi chờ duyệt'}
+            </h2>
+          </div>
+
+          <div className="flex items-center gap-4 text-sm text-slate-400 flex-wrap">
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-slate-400 whitespace-nowrap">Vị trí:</span>
+              <select
+                value={currentFilters.positionId || ''}
+                onChange={(e) => {
+                  const value = e.target.value ? parseInt(e.target.value) : undefined;
+                  if (activeTab === 'system') {
+                    handleSystemFilterChange('positionId', value);
+                  } else if (activeTab === 'contributed') {
+                    handleContributedFilterChange('positionId', value);
+                  } else {
+                    handlePendingContributedFilterChange('positionId', value);
+                  }
+                }}
+                className="bg-slate-800 border border-slate-700 rounded-md px-4 py-2 text-slate-200 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer min-w-40"
               >
-                Câu hỏi hệ thống
-              </button>
-              <button
-                onClick={() => setActiveTab('contributed')}
-                className={`pb-4 font-bold text-xs uppercase tracking-widest border-b-2 transition-colors ${activeTab === 'contributed'
-                  ? 'text-indigo-400 border-indigo-500'
-                  : 'text-slate-400 border-transparent hover:text-white'
-                  }`}
-              >
-                Câu hỏi đóng góp
-              </button>
-              <button
-                onClick={() => setActiveTab('pending')}
-                className={`pb-4 font-bold text-xs uppercase tracking-widest border-b-2 transition-colors ${activeTab === 'pending'
-                  ? 'text-indigo-400 border-indigo-500'
-                  : 'text-slate-400 border-transparent hover:text-white'
-                  }`}
-              >
-                Câu hỏi đóng góp chờ duyệt
-              </button>
+                <option value="">Tất cả</option>
+                {positions.map((pos) => (
+                  <option key={pos.id} value={pos.id}>{pos.name}</option>
+                ))}
+              </select>
             </div>
 
-            {/* Filters Row */}
-            <div className="bg-[#1e293b]/40 backdrop-blur-sm p-6 rounded-2xl border border-white/5">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {/* Position Filter */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Vị trí</label>
-                  <select
-                    value={currentFilters.positionId || ''}
-                    onChange={(e) => {
-                      const value = e.target.value ? parseInt(e.target.value) : undefined;
-                      if (activeTab === 'system') {
-                        handleSystemFilterChange('positionId', value);
-                      } else if (activeTab === 'contributed') {
-                        handleContributedFilterChange('positionId', value);
-                      } else {
-                        handlePendingContributedFilterChange('positionId', value);
-                      }
-                    }}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none transition-all"
-                  >
-                    <option value="">Tất cả</option>
-                    {positions.map(pos => (
-                      <option key={pos.id} value={pos.id}>{pos.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Skill Filter */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Kỹ năng</label>
-                  <select
-                    value={currentFilters.skillId || ''}
-                    onChange={(e) => {
-                      const value = e.target.value ? parseInt(e.target.value) : undefined;
-                      if (activeTab === 'system') {
-                        handleSystemFilterChange('skillId', value);
-                      } else if (activeTab === 'contributed') {
-                        handleContributedFilterChange('skillId', value);
-                      } else {
-                        handlePendingContributedFilterChange('skillId', value);
-                      }
-                    }}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none transition-all"
-                  >
-                    <option value="">Tất cả kỹ năng</option>
-                    {skills.map(skill => (
-                      <option key={skill.id} value={skill.id}>{skill.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Level/Difficulty Filter */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Cấp độ</label>
-                  <select
-                    value={
-                      activeTab === 'pending'
-                        ? (pendingContributedFilters.level !== undefined ? String(pendingContributedFilters.level) : '')
-                        : (currentFilters.difficulty !== undefined ? String(currentFilters.difficulty) : '')
-                    }
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      const numValue = value ? parseInt(value) as DifficultyLevel : undefined;
-                      if (activeTab === 'system') {
-                        handleSystemFilterChange('difficulty', numValue);
-                      } else if (activeTab === 'contributed') {
-                        handleContributedFilterChange('difficulty', numValue);
-                      } else {
-                        handlePendingContributedFilterChange('level', numValue);
-                      }
-                    }}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none transition-all"
-                  >
-                    <option value="">Tất cả</option>
-                    {DIFFICULTY_OPTIONS.map(option => (
-                      <option key={option.value} value={option.value}>{option.label}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Sort Filter */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Sắp xếp</label>
-                  <select
-                    value={currentFilters.sortOrder || 'desc'}
-                    onChange={(e) => {
-                      const value = e.target.value as 'asc' | 'desc';
-                      if (activeTab === 'system') {
-                        handleSystemFilterChange('sortOrder', value);
-                      } else if (activeTab === 'contributed') {
-                        handleContributedFilterChange('sortOrder', value);
-                      } else {
-                        handlePendingContributedFilterChange('sortOrder', value);
-                      }
-                    }}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none transition-all"
-                  >
-                    <option value="desc">Mới nhất</option>
-                    <option value="asc">Cũ nhất</option>
-                  </select>
-                </div>
-              </div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-slate-400 whitespace-nowrap">Kỹ năng:</span>
+              <select
+                value={currentFilters.skillId || ''}
+                onChange={(e) => {
+                  const value = e.target.value ? parseInt(e.target.value) : undefined;
+                  if (activeTab === 'system') {
+                    handleSystemFilterChange('skillId', value);
+                  } else if (activeTab === 'contributed') {
+                    handleContributedFilterChange('skillId', value);
+                  } else {
+                    handlePendingContributedFilterChange('skillId', value);
+                  }
+                }}
+                className="bg-slate-800 border border-slate-700 rounded-md px-4 py-2 text-slate-200 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer min-w-44"
+              >
+                <option value="">Tất cả kỹ năng</option>
+                {skills.map((skill) => (
+                  <option key={skill.id} value={skill.id}>{skill.name}</option>
+                ))}
+              </select>
             </div>
-          </section>
 
-          {/* Data Table Section */}
-          <Table
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-slate-400 whitespace-nowrap">Cấp độ:</span>
+              <select
+                value={
+                  activeTab === 'pending'
+                    ? (pendingContributedFilters.level !== undefined ? String(pendingContributedFilters.level) : '')
+                    : (currentFilters.difficulty !== undefined ? String(currentFilters.difficulty) : '')
+                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  const numValue = value ? parseInt(value) as DifficultyLevel : undefined;
+                  if (activeTab === 'system') {
+                    handleSystemFilterChange('difficulty', numValue);
+                  } else if (activeTab === 'contributed') {
+                    handleContributedFilterChange('difficulty', numValue);
+                  } else {
+                    handlePendingContributedFilterChange('level', numValue);
+                  }
+                }}
+                className="bg-slate-800 border border-slate-700 rounded-md px-4 py-2 text-slate-200 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer min-w-36"
+              >
+                <option value="">Tất cả</option>
+                {DIFFICULTY_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-slate-400 whitespace-nowrap">Sắp xếp:</span>
+              <select
+                value={currentFilters.sortOrder || 'desc'}
+                onChange={(e) => {
+                  const value = e.target.value as 'asc' | 'desc';
+                  if (activeTab === 'system') {
+                    handleSystemFilterChange('sortOrder', value);
+                  } else if (activeTab === 'contributed') {
+                    handleContributedFilterChange('sortOrder', value);
+                  } else {
+                    handlePendingContributedFilterChange('sortOrder', value);
+                  }
+                }}
+                className="bg-slate-800 border border-slate-700 rounded-md px-4 py-2 text-slate-200 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer min-w-36"
+              >
+                <option value="desc">Mới nhất</option>
+                <option value="asc">Cũ nhất</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <Table
             page={currentPagination.pageNumber}
             totalPages={currentPagination.totalPages}
             pageSize={currentPagination.pageSize}
@@ -545,16 +521,16 @@ const ViewQuestions: React.FC = () => {
           >
             <TableHeader>
               <TableRow>
-                <TableHead className="px-8 py-5">STT</TableHead>
-                <TableHead className="px-8 py-5">Câu hỏi</TableHead>
-                <TableHead className="px-6 py-5">Vị trí</TableHead>
-                <TableHead className="px-6 py-5">Kỹ năng</TableHead>
-                <TableHead className="px-6 py-5">Cấp độ</TableHead>
+                <TableHead>STT</TableHead>
+                <TableHead>Câu hỏi</TableHead>
+                <TableHead>Vị trí</TableHead>
+                <TableHead>Kỹ năng</TableHead>
+                <TableHead>Cấp độ</TableHead>
                 {activeTab !== 'system' && (
-                  <TableHead className="px-6 py-5">Người đăng</TableHead>
+                  <TableHead>Người đăng</TableHead>
                 )}
-                <TableHead className="px-6 py-5">Trạng thái</TableHead>
-                <TableHead className="px-8 py-5 text-center">Hành động</TableHead>
+                <TableHead>Trạng thái</TableHead>
+                <TableHead className="text-center">Hành động</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -797,8 +773,7 @@ const ViewQuestions: React.FC = () => {
                 )}
             </TableBody>
           </Table>
-        </div>
-      </main>
+      </div>
 
       {/* Update Question Modal */}
       {selectedQuestionId && (

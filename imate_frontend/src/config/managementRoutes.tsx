@@ -1,8 +1,8 @@
 import {
   FileText,
-  BarChart3,
   Users,
   CreditCard,
+  HandCoins,
   Briefcase,
   PlusCircle,
   Layers,
@@ -20,6 +20,7 @@ import CreateJobApplication from "@/pages/recruiter/CreateJobApplication";
 import Classification from "@/pages/management/classification/Classification";
 import ViewQuestions from "@/pages/management/question/ViewQuestions";
 import AdminAuditLog from "@/pages/admin/AdminAuditLog";
+import TransactionManagement from "@/pages/management/payment/TransactionManagement";
 
 export const managementRoutes = [
   {
@@ -56,6 +57,13 @@ export const managementRoutes = [
     path: "subscriptions",
     element: <SubscriptionManagement />,
     allowedRoles: [ROLES.ADMIN],
+  },
+  {
+    label: "Quản lý giao dịch",
+    icon: HandCoins,
+    path: "transactions",
+    element: <TransactionManagement />,
+    allowedRoles: [ROLES.STAFF, ROLES.ADMIN],
   },
     {
     label: "Truy vết hệ thống",
