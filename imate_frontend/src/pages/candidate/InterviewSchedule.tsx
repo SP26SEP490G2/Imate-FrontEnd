@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { format, addDays, subDays, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, parseISO } from "date-fns";
 import { vi } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Video, Ban } from "lucide-react";
@@ -23,6 +24,7 @@ type ViewMode = "Ngày" | "Tuần" | "Tháng";
 
 const InterviewSchedule = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -100,13 +102,8 @@ const InterviewSchedule = () => {
   };
 
   // Xử lý action
-  const handleJoinMeeting = (roomId?: string) => {
-    if (!roomId) {
-      toast.info("Cuộc gọi chưa được tạo cho phòng này.");
-      return;
-    }
-    // TODO: Direct to meeting room URL or video call component
-    toast.success(`Đang tham gia phòng: ${roomId}`);
+  const handleJoinMeeting = (bookingId: number) => {
+    navigate(`/video-call/${bookingId}`);
   };
 
   const handleCancelClick = (bookingId: number) => {
