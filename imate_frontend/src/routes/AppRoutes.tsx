@@ -35,6 +35,7 @@ import InterviewFeedbackDetail from "@/pages/candidate/InterviewFeedbackDetail";
 import InterviewSetup from "@/pages/candidate/InterviewSetup";
 import InterviewChat from "@/pages/candidate/InterviewChat";
 import InterviewSchedule from "@/pages/candidate/InterviewSchedule";
+import VideoCallPage from "@/pages/videocall/VideoCallPage";
 // Pages - Mentor
 import SubmitMentorApplication from "@/pages/mentor/SubmitMentorApplication";
 import PendingApplication from "@/pages/mentor/PendingApplication";
@@ -115,6 +116,7 @@ const routeConfigs: RouteConfig[] = [
   { path: "/submit-recruiter-application",   element: <SubmitRecruiterApplication />, layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/recruiter-pending-application",  element: <RecruiterPendingApplication />,layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/interview-schedule", element: <InterviewSchedule />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/video-call/:bookingId", element: <VideoCallPage />, layout: LAYOUT.NONE, requireAuth: true },
   { path: "/view-application",  element: <ViewApplication />,layout: LAYOUT.MAIN, requireAuth: true},
 
   // ===== MANAGEMENT LAYOUT ROUTES =====
