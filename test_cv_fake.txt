@@ -1,0 +1,85 @@
+===================================
+            CURRICULUM VITAE
+===================================
+
+HỌ VÀ TÊN: Trần Minh Đức
+NGÀY SINH: 15/08/1998
+SỐ ĐIỆN THOẠI: 0912 345 678
+EMAIL: tranminhduc.dev@gmail.com
+GITHUB: github.com/ductrann
+LINKEDIN: linkedin.com/in/tranminhduc
+
+-----------------------------------
+MỤC TIÊU NGHỀ NGHIỆP
+-----------------------------------
+Trở thành Backend Developer chuyên sâu về hệ thống phân tán và microservices. Mong muốn làm việc trong môi trường công nghệ cao, được áp dụng và phát triển kỹ năng về Cloud Computing và DevOps.
+
+-----------------------------------
+HỌC VẤN
+-----------------------------------
+Đại học FPT Hà Nội (2016 - 2020)
+- Ngành: Kỹ thuật Phần mềm (Software Engineering)
+- GPA: 3.4/4.0
+- Giải Ba cuộc thi lập trình FPT Hackathon 2019
+
+-----------------------------------
+KINH NGHIỆM LÀM VIỆC
+-----------------------------------
+
+1. Backend Developer | Công ty TNHH Công nghệ ABC (06/2022 - Hiện tại)
+   - Phát triển và bảo trì hệ thống API RESTful phục vụ 50,000+ người dùng
+   - Thiết kế kiến trúc microservices cho hệ thống quản lý đơn hàng
+   - Tối ưu truy vấn SQL Server, giảm thời gian phản hồi API từ 2s xuống 200ms
+   - Triển khai CI/CD pipeline với Azure DevOps
+   - Công nghệ: C#, .NET 8, SQL Server, Redis, Docker, Azure
+
+2. Junior Developer | Công ty CP Giải pháp Số XYZ (01/2021 - 05/2022)
+   - Phát triển module quản lý nhân sự trong hệ thống ERP
+   - Xây dựng API tích hợp với hệ thống thanh toán VNPAY
+   - Viết Unit Test đạt code coverage 85%
+   - Công nghệ: C#, ASP.NET Core, Entity Framework, PostgreSQL
+
+3. Thực tập sinh | FPT Software (06/2020 - 12/2020)
+   - Tham gia dự án phát triển ứng dụng quản lý kho cho khách hàng Nhật Bản
+   - Học và áp dụng quy trình Agile/Scrum
+   - Công nghệ: Java, Spring Boot, MySQL
+
+-----------------------------------
+DỰ ÁN CÁ NHÂN
+-----------------------------------
+
+1. E-Commerce Platform (2023)
+   - Mô tả: Hệ thống thương mại điện tử với kiến trúc microservices
+   - Chức năng: Quản lý sản phẩm, giỏ hàng, thanh toán, thông báo real-time
+   - Công nghệ: .NET 8, RabbitMQ, Redis, Docker, Kubernetes
+   - Link: github.com/ductrann/ecommerce-platform
+
+2. Task Management API (2022)
+   - Mô tả: RESTful API quản lý công việc với authentication JWT
+   - Công nghệ: ASP.NET Core, SQL Server, Swagger, xUnit
+   - Link: github.com/ductrann/task-api
+
+-----------------------------------
+KỸ NĂNG
+-----------------------------------
+Ngôn ngữ lập trình: C#, Java, TypeScript, SQL
+Framework: .NET 8, ASP.NET Core, Entity Framework Core, Spring Boot
+Database: SQL Server, PostgreSQL, MongoDB, Redis
+DevOps & Cloud: Docker, Kubernetes, Azure (App Service, AKS, Azure SQL), CI/CD
+Tools: Git, Jira, Postman, Visual Studio, Rider
+Phương pháp: Agile/Scrum, TDD, SOLID principles, Design Patterns
+Ngôn ngữ: Tiếng Anh (TOEIC 750), Tiếng Nhật (N4)
+
+-----------------------------------
+CHỨNG CHỈ
+-----------------------------------
+- Microsoft Certified: Azure Developer Associate (AZ-204) - 2023
+- TOEIC 750 - 2021
+- JLPT N4 - 2020
+
+-----------------------------------
+SỞ THÍCH
+-----------------------------------
+- Đọc sách công nghệ, tham gia cộng đồng .NET Vietnam
+- Chạy bộ, bơi lội
+- Viết blog chia sẻ kiến thức lập trình

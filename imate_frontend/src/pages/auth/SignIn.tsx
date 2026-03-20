@@ -67,7 +67,7 @@ function SignIn() {
         }
         break;
       case "Candidate":
-        navigate("/candidate-dashboard");
+        navigate("/home");
         break;
       default:
         navigate("/dashboard");

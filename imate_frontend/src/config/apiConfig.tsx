@@ -95,6 +95,45 @@ const APIConfig = {
     UpdateSubscriptionPackagePrice: "/subscription-packages",
   },
 
+  // CV endpoints
+  CV: {
+    Upload: "/cv/upload",
+    GetList: "/cv/list",
+    Delete: "/cv/{cvId}",
+  },
+
+  // AI endpoints
+  AI: {
+    AnalyseCv: "/ai/analyse-cv",
+    GeneratePracticeTest: "/ai/practice-test/generate",
+  },
+
+  // Practice Test History endpoints (UC-31, UC-32)
+  PracticeTest: {
+    Submit: "/practice-test/submit",
+    GetHistory: "/practice-test/history",
+    GetDetail: "/practice-test/history/{id}",
+  },
+
+  // Interview AI endpoints (UC-33, UC-34, UC-35)
+  InterviewAI: {
+    // UC-33: Xem kết quả
+    GetHistory: "/ai-interview/history",
+    GetResult: "/ai-interview/result/{sessionId}",
+    // UC-34: Thiết lập phỏng vấn
+    CheckCost: "/ai-interview/check-interview-cost",
+    Setup: "/ai-interview/setup",
+    CreateSession: "/ai-interview/create-session",
+    // UC-35: Phỏng vấn trực tiếp
+    WelcomeMessage: "/ai-interview/welcome-message/{sessionId}",
+    GenerateQuestion: "/ai-interview/generate-question",
+    SubmitAnswer: "/ai-interview/submit-answer",
+    EndInterview: "/ai-interview/end-interview/{sessionId}",
+    // Hỗ trợ giọng nói & JD
+    TranscribeWhisper: "/ai-interview/transcribe-whisper-base64",
+    CorrectTranscript: "/ai-interview/correct-transcript",
+    ParseHtml: "/ai-interview/scraping/parse-html",
+  },
   // Comment endpoints
   Comment: {
     Create: "/create-comment",
