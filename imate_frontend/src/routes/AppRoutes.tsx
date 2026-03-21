@@ -39,6 +39,7 @@ import InterviewFeedbackDetail from "@/pages/candidate/InterviewFeedbackDetail";
 import InterviewSetup from "@/pages/candidate/InterviewSetup";
 import InterviewChat from "@/pages/candidate/InterviewChat";
 import InterviewSchedule from "@/pages/candidate/InterviewSchedule";
+import VideoCallPage from "@/pages/videocall/VideoCallPage";
 // Pages - Mentor
 import SubmitMentorApplication from "@/pages/mentor/SubmitMentorApplication";
 import PendingApplication from "@/pages/mentor/PendingApplication";
@@ -125,6 +126,8 @@ const routeConfigs: RouteConfig[] = [
   { path: "/interview-chat/:sessionId", element: <InterviewChat />, layout: LAYOUT.NONE, requireAuth: true },
   { path: "/view-application", element: <ViewApplication />, layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/view-applied-job", element: <ViewAppliedJob />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/video-call/:bookingId", element: <VideoCallPage />, layout: LAYOUT.NONE, requireAuth: true },
+
   // ===== MANAGEMENT LAYOUT ROUTES =====
   { path: "/management/view-questions", element: <ViewQuestions />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
   { path: "/management/manage-application", element: <ReviewMentorApplication />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },

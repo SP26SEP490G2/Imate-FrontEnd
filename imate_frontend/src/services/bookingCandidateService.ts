@@ -1,3 +1,4 @@
+import APIConfig from "@/config/apiConfig";
 import apiClient from "./apiClient";
 import type { BookingDetailResponse } from "@/types/response/booking.response";
 
@@ -51,6 +52,20 @@ export const getMentorBookings = async () => {
     return res.data;
   } catch (error) {
     console.error("Error fetching mentor bookings: ", error);
+    throw error;
+  }
+};
+
+/**
+ * [PUT] Hủy booking
+ */
+export const cancelBooking = async (bookingId: number) => {
+  try {
+    const url = APIConfig.Mentor.CancelBooking.replace("{bookingId}", bookingId.toString());
+    const res = await apiClient.put(url);
+    return res.data;
+  } catch (error) {
+    console.error("Error cancelling booking: ", error);
     throw error;
   }
 };

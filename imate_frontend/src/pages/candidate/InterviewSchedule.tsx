@@ -1,11 +1,22 @@
 import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { format, addDays, subDays, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, parseISO } from "date-fns";
 import { vi } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Video, Ban } from "lucide-react";
 import { useAuth } from "@/store/AuthContext";
-import { getCandidateBookings, getMentorBookings } from "@/services/bookingCandidateService";
+import { getCandidateBookings, getMentorBookings, cancelBooking } from "@/services/bookingCandidateService";
 import type { BookingDetailResponse } from "@/types/response/booking.response";
 import { toast } from "react-toastify";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const MOCK_AVATAR = "https://i.pravatar.cc/150?img=11";
 
@@ -13,6 +24,7 @@ type ViewMode = "Ngày" | "Tuần" | "Tháng";
 
 const InterviewSchedule = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -21,6 +33,10 @@ const InterviewSchedule = () => {
   const [bookings, setBookings] = useState<BookingDetailResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const [bookingToCancel, setBookingToCancel] = useState<number | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   useEffect(() => {
     fetchBookings();
@@ -86,17 +102,32 @@ const InterviewSchedule = () => {
   };
 
   // Xử lý action
-  const handleJoinMeeting = (roomId?: string) => {
-    if (!roomId) {
-      toast.info("Cuộc gọi chưa được tạo cho phòng này.");
-      return;
-    }
-    // TODO: Direct to meeting room URL or video call component
-    toast.success(`Đang tham gia phòng: ${roomId}`);
+  const handleJoinMeeting = (bookingId: number) => {
+    navigate(`/video-call/${bookingId}`);
   };
 
-  const handleCancel = (_bookingId: number) => {
-    toast.info("Tính năng hủy lịch đang được phát triển."); // Placeholder
+  const handleCancelClick = (bookingId: number) => {
+    setBookingToCancel(bookingId);
+    setIsCancelDialogOpen(true);
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!bookingToCancel) return;
+    
+    setIsCancelling(true);
+    try {
+      await cancelBooking(bookingToCancel);
+      toast.success("Hủy lịch phỏng vấn thành công!");
+      fetchBookings(); // Refresh list
+    } catch (err: any) {
+      console.error("Error cancelling booking:", err);
+      const errorMsg = err.response?.data?.message || "Không thể hủy lịch phỏng vấn. Vui lòng thử lại!";
+      toast.error(errorMsg);
+    } finally {
+      setIsCancelling(false);
+      setIsCancelDialogOpen(false);
+      setBookingToCancel(null);
+    }
   };
 
   return (
@@ -235,7 +266,7 @@ const InterviewSchedule = () => {
                      {/* Right: Actions */}
                      <div className="flex flex-wrap gap-2 md:justify-end mt-4 md:mt-0 pt-4 md:pt-0 border-t md:border-t-0 border-gray-800">
                        <button 
-                         onClick={() => handleCancel(booking.bookingId)}
+                         onClick={() => handleCancelClick(booking.bookingId)}
                          className="px-4 py-2 text-sm font-medium text-gray-300 bg-transparent hover:bg-gray-800 border border-gray-700 rounded-xl transition-all"
                        >
                          Hủy lịch
@@ -260,6 +291,29 @@ const InterviewSchedule = () => {
           </div>
         )}
       </div>
+
+      <AlertDialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
+        <AlertDialogContent className="bg-[#1A1A2E] border-gray-800 text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hủy lịch phỏng vấn?</AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-400">
+              Bạn có chắc chắn muốn hủy lịch phỏng vấn này không? Hành động này không thể hoàn tác.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 hover:text-white">
+              Bỏ qua
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirmCancel}
+              disabled={isCancelling}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white"
+            >
+              {isCancelling ? "Đang xử lý..." : "Đồng ý"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
