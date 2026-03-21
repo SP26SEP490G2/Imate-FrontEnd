@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import {
     Search,
     MapPin,
@@ -14,93 +14,16 @@ import {
     ChevronLeft,
     ChevronRight,
     ChevronsLeft,
-    ChevronsRight
+    ChevronsRight,
+    Loader2
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { getCandidateAppliedJobs } from "@/services/recruiterService";
+import type { AppliedJobCandidateResponse } from "@/types/common/candidate";
 
-// --- Mock Data ---
-type ApplicationStatus = "Pending" | "Reviewed" | "Interviewing" | "Accepted" | "Rejected";
-
-interface MockAppliedJob {
-    id: number;
-    title: string;
-    companyName: string;
-    companyLogo: string;
-    location: string;
-    employmentType: string;
-    minSalary: number;
-    maxSalary: number;
-    appliedDate: string;
-    status: ApplicationStatus;
-    feedback?: string;
-}
-
-const MOCK_APPLIED_JOBS: MockAppliedJob[] = [
-    {
-        id: 1,
-        title: "Senior Frontend Developer (React/Next.js)",
-        companyName: "TechCorp Vietnam",
-        companyLogo: "https://api.dicebear.com/7.x/initials/svg?seed=TechCorp",
-        location: "Hà Nội",
-        employmentType: "Full-time",
-        minSalary: 1500,
-        maxSalary: 2500,
-        appliedDate: "2024-03-15T08:30:00Z",
-        status: "Reviewed",
-    },
-    {
-        id: 2,
-        title: "Backend Engineer (Node.js/NestJS)",
-        companyName: "VNG Corporation",
-        companyLogo: "https://api.dicebear.com/7.x/initials/svg?seed=VNG",
-        location: "Hồ Chí Minh",
-        employmentType: "Full-time",
-        minSalary: 1200,
-        maxSalary: 2000,
-        appliedDate: "2024-03-18T14:15:00Z",
-        status: "Pending",
-    },
-    {
-        id: 3,
-        title: "UX/UI Designer",
-        companyName: "FPT Software",
-        companyLogo: "https://api.dicebear.com/7.x/initials/svg?seed=FPT",
-        location: "Đà Nẵng",
-        employmentType: "Contract",
-        minSalary: 1000,
-        maxSalary: 1500,
-        appliedDate: "2024-03-10T09:45:00Z",
-        status: "Interviewing",
-    },
-    {
-        id: 4,
-        title: "Fullstack Developer (MERN)",
-        companyName: "Tiki",
-        companyLogo: "https://api.dicebear.com/7.x/initials/svg?seed=Tiki",
-        location: "Hồ Chí Minh",
-        employmentType: "Full-time",
-        minSalary: 1800,
-        maxSalary: 3000,
-        appliedDate: "2024-02-28T16:20:00Z",
-        status: "Rejected",
-        feedback: "Kỹ năng chưa phù hợp với yêu cầu thực tế của dự án.",
-    },
-    {
-        id: 5,
-        title: "DevOps Engineer",
-        companyName: "Viettel",
-        companyLogo: "https://api.dicebear.com/7.x/initials/svg?seed=Viettel",
-        location: "Hà Nội",
-        employmentType: "Full-time",
-        minSalary: 2000,
-        maxSalary: 3500,
-        appliedDate: "2024-03-05T11:00:00Z",
-        status: "Accepted",
-        feedback: "Chào mừng bạn gia nhập đội DevOps của chúng tôi!",
-    }
-];
+type ApplicationStatus = "Waiting" | "Approved" | "Rejected";
 
 const ViewAppliedJob: React.FC = () => {
     // Filter States
@@ -109,52 +32,60 @@ const ViewAppliedJob: React.FC = () => {
 
     // Local state for immediate input feedback before applying
     const [tempSearchTerm, setTempSearchTerm] = useState("");
-    
+
     // Pagination States
-    const [currentPage, setCurrentPage] = useState(1);
-    const [jobsPerPage, setJobsPerPage] = useState(10);
+    const [pageNumber, setPageNumber] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+
+    // Data States
+    const [data, setData] = useState<AppliedJobCandidateResponse | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    const fetchJobs = async () => {
+        setLoading(true);
+        try {
+            const params = {
+                pageNumber,
+                pageSize,
+                ...(searchTerm && { searchTerm }),
+                ...(statusFilter !== "All" && { status: statusFilter })
+            };
+            const response = await getCandidateAppliedJobs(params);
+            setData({
+                pageNumber: response.pageNumber,
+                totalPages: response.totalPages,
+                totalCount: response.totalCount,
+                items: response.items,
+            });
+        } catch (error) {
+            console.error("Error fetching applied jobs:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchJobs();
+    }, [pageNumber, pageSize, searchTerm, statusFilter]);
 
     const handleApplyFilters = () => {
         setSearchTerm(tempSearchTerm);
-        setCurrentPage(1);
+        setPageNumber(1);
     };
 
     const handleResetFilters = () => {
         setTempSearchTerm("");
         setSearchTerm("");
         setStatusFilter("All");
-        setCurrentPage(1);
+        setPageNumber(1);
     };
 
-    // Filter Logic
-    const filteredJobs = useMemo(() => {
-        return MOCK_APPLIED_JOBS.filter(job => {
-            const matchSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                job.companyName.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchStatus = statusFilter === "All" || job.status === statusFilter;
-            return matchSearch && matchStatus;
-        }).sort((a, b) => new Date(b.appliedDate).getTime() - new Date(a.appliedDate).getTime());
-    }, [searchTerm, statusFilter]);
-
-    // Pagination Logic
-    const totalCount = filteredJobs.length;
-    const totalPages = Math.ceil(totalCount / jobsPerPage) || 1;
-
-    const paginatedJobs = useMemo(() => {
-        const startIndex = (currentPage - 1) * jobsPerPage;
-        return filteredJobs.slice(startIndex, startIndex + jobsPerPage);
-    }, [filteredJobs, currentPage, jobsPerPage]);
-
     // Helper for Status UI
-    const getStatusConfig = (status: ApplicationStatus) => {
+    const getStatusConfig = (status: string) => {
         switch (status) {
-            case "Pending":
+            case "Waiting":
                 return { label: "Chờ duyệt", color: "text-amber-400", bg: "bg-amber-400/10", border: "border-amber-400/20", icon: Clock };
-            case "Reviewed":
-                return { label: "Đã xem", color: "text-blue-400", bg: "bg-blue-400/10", border: "border-blue-400/20", icon: Eye };
-            case "Interviewing":
-                return { label: "Phỏng vấn", color: "text-purple-400", bg: "bg-purple-400/10", border: "border-purple-400/20", icon: Briefcase };
-            case "Accepted":
+            case "Approved":
                 return { label: "Trúng tuyển", color: "text-emerald-400", bg: "bg-emerald-400/10", border: "border-emerald-400/20", icon: CheckCircle2 };
             case "Rejected":
                 return { label: "Từ chối", color: "text-red-400", bg: "bg-red-400/10", border: "border-red-400/20", icon: XCircle };
@@ -165,10 +96,8 @@ const ViewAppliedJob: React.FC = () => {
 
     const allStatuses: { value: ApplicationStatus | "All", label: string }[] = [
         { value: "All", label: "Tất cả trạng thái" },
-        { value: "Pending", label: "Chờ duyệt" },
-        { value: "Reviewed", label: "Đã xem" },
-        { value: "Interviewing", label: "Đang phỏng vấn" },
-        { value: "Accepted", label: "Trúng tuyển" },
+        { value: "Waiting", label: "Chờ duyệt" },
+        { value: "Approved", label: "Trúng tuyển" },
         { value: "Rejected", label: "Từ chối" }
     ];
 
@@ -257,7 +186,12 @@ const ViewAppliedJob: React.FC = () => {
 
                     {/* Job listing area */}
                     <div className="flex-1">
-                        {filteredJobs.length === 0 ? (
+                        {loading ? (
+                            <div className="bg-[#11142D] border border-white/10 rounded-2xl p-20 text-center flex flex-col items-center justify-center">
+                                <Loader2 size={48} className="text-purple-500 animate-spin mb-4" />
+                                <h3 className="text-xl font-bold mb-2">Đang tải dữ liệu...</h3>
+                            </div>
+                        ) : !data || data.items.length === 0 ? (
                             <div className="bg-[#11142D] border border-white/10 rounded-2xl p-20 text-center">
                                 <Briefcase size={60} className="mx-auto text-slate-700 mb-4" />
                                 <h3 className="text-xl font-bold mb-2">Không tìm thấy hồ sơ ứng tuyển</h3>
@@ -274,12 +208,12 @@ const ViewAppliedJob: React.FC = () => {
                             <>
                                 <div className="flex justify-between items-center mb-6 px-1">
                                     <p className="text-sm text-slate-400">
-                                        Đã tìm thấy <span className="text-white font-medium">{filteredJobs.length}</span> hồ sơ ứng tuyển
+                                        Đã tìm thấy <span className="text-white font-medium">{data.totalCount}</span> hồ sơ ứng tuyển
                                     </p>
                                 </div>
 
                                 <div className="space-y-4 mb-10">
-                                    {paginatedJobs.map((job) => {
+                                    {data.items.map((job) => {
                                         const StatusIcon = getStatusConfig(job.status).icon;
                                         return (
                                             <div key={job.id} className="bg-[#11142D] border border-white/10 rounded-2xl p-6 hover:border-purple-500/40 transition-all duration-300 shadow-xl relative overflow-hidden group">
@@ -364,15 +298,15 @@ const ViewAppliedJob: React.FC = () => {
                                     <div className="text-sm text-slate-400">
                                         Hiển thị{" "}
                                         <span className="font-semibold text-slate-200">
-                                            {totalCount === 0 ? 0 : (currentPage - 1) * jobsPerPage + 1}
+                                            {data.totalCount === 0 ? 0 : (pageNumber - 1) * pageSize + 1}
                                         </span>
                                         {" - "}
                                         <span className="font-semibold text-slate-200">
-                                            {Math.min(currentPage * jobsPerPage, totalCount)}
+                                            {Math.min(pageNumber * pageSize, data.totalCount)}
                                         </span>
                                         {" của "}
                                         <span className="font-semibold text-slate-200">
-                                            {totalCount}
+                                            {data.totalCount}
                                         </span>{" "}
                                         kết quả
                                     </div>
@@ -382,10 +316,10 @@ const ViewAppliedJob: React.FC = () => {
                                         <div className="flex items-center gap-2">
                                             <span className="text-xs text-slate-500 uppercase tracking-wider font-medium">Số lượng:</span>
                                             <select
-                                                value={jobsPerPage}
+                                                value={pageSize}
                                                 onChange={(e) => {
-                                                    setJobsPerPage(Number(e.target.value));
-                                                    setCurrentPage(1);
+                                                    setPageSize(Number(e.target.value));
+                                                    setPageNumber(1);
                                                 }}
                                                 className="bg-[#0F1333] border border-white/10 text-sm rounded-lg px-3 py-1.5 text-slate-300 focus:outline-none focus:ring-2 focus:ring-purple-500/50 cursor-pointer"
                                             >
@@ -401,8 +335,8 @@ const ViewAppliedJob: React.FC = () => {
                                             <Button
                                                 size="sm"
                                                 variant="ghost"
-                                                disabled={currentPage === 1}
-                                                onClick={() => setCurrentPage(1)}
+                                                disabled={pageNumber === 1}
+                                                onClick={() => setPageNumber(1)}
                                                 className="h-9 w-9 p-0 rounded-xl hover:bg-purple-600/20 disabled:text-slate-600 disabled:hover:bg-transparent cursor-pointer"
                                             >
                                                 <ChevronsLeft size={18} />
@@ -411,8 +345,8 @@ const ViewAppliedJob: React.FC = () => {
                                             <Button
                                                 size="sm"
                                                 variant="ghost"
-                                                disabled={currentPage === 1}
-                                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                                disabled={pageNumber === 1}
+                                                onClick={() => setPageNumber(prev => Math.max(1, prev - 1))}
                                                 className="h-9 w-9 p-0 rounded-xl hover:bg-purple-600/20 disabled:text-slate-600 disabled:hover:bg-transparent cursor-pointer"
                                             >
                                                 <ChevronLeft size={18} />
@@ -422,20 +356,20 @@ const ViewAppliedJob: React.FC = () => {
                                             <div className="flex items-center gap-1.5 px-2">
                                                 {(() => {
                                                     const pages = [];
-                                                    let startPage = Math.max(1, currentPage - 2);
-                                                    let endPage = Math.min(totalPages, currentPage + 2);
+                                                    let startPage = Math.max(1, pageNumber - 2);
+                                                    let endPage = Math.min(data.totalPages, pageNumber + 2);
 
-                                                    if (currentPage <= 3) endPage = Math.min(5, totalPages);
-                                                    if (currentPage >= totalPages - 2) startPage = Math.max(1, totalPages - 4);
+                                                    if (pageNumber <= 3) endPage = Math.min(5, data.totalPages);
+                                                    if (pageNumber >= data.totalPages - 2) startPage = Math.max(1, data.totalPages - 4);
 
                                                     for (let i = startPage; i <= endPage; i++) {
                                                         pages.push(
                                                             <Button
                                                                 key={i}
                                                                 size="sm"
-                                                                variant={i === currentPage ? "default" : "ghost"}
-                                                                onClick={() => setCurrentPage(i)}
-                                                                className={`h-9 min-w-[36px] rounded-xl font-bold transition-all duration-300 ${i === currentPage
+                                                                variant={i === pageNumber ? "default" : "ghost"}
+                                                                onClick={() => setPageNumber(i)}
+                                                                className={`h-9 min-w-[36px] rounded-xl font-bold transition-all duration-300 ${i === pageNumber
                                                                     ? "bg-gradient-to-r from-indigo-600 to-purple-600 shadow-lg shadow-purple-600/20 text-white"
                                                                     : "hover:bg-purple-600/20 text-slate-400"
                                                                     } cursor-pointer`}
@@ -451,8 +385,8 @@ const ViewAppliedJob: React.FC = () => {
                                             <Button
                                                 size="sm"
                                                 variant="ghost"
-                                                disabled={currentPage === totalPages || totalPages === 0}
-                                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                                disabled={pageNumber === data.totalPages || data.totalPages === 0}
+                                                onClick={() => setPageNumber(prev => Math.min(data.totalPages, prev + 1))}
                                                 className="h-9 w-9 p-0 rounded-xl hover:bg-purple-600/20 disabled:text-slate-600 disabled:hover:bg-transparent cursor-pointer"
                                             >
                                                 <ChevronRight size={18} />
@@ -461,8 +395,8 @@ const ViewAppliedJob: React.FC = () => {
                                             <Button
                                                 size="sm"
                                                 variant="ghost"
-                                                disabled={currentPage === totalPages || totalPages === 0}
-                                                onClick={() => setCurrentPage(totalPages)}
+                                                disabled={pageNumber === data.totalPages || data.totalPages === 0}
+                                                onClick={() => setPageNumber(data.totalPages)}
                                                 className="h-9 w-9 p-0 rounded-xl hover:bg-purple-600/20 disabled:text-slate-600 disabled:hover:bg-transparent cursor-pointer"
                                             >
                                                 <ChevronsRight size={18} />

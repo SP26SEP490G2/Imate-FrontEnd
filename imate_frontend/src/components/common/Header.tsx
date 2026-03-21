@@ -163,10 +163,10 @@ function Header() {
 
           {!isAuthenticated ? (
             <div className="flex items-center gap-3">
-              <a className="text-sm font-semibold text-slate-300 hover:text-white transition-colors px-3" href="#">
+              <a className="text-sm font-semibold text-slate-300 hover:text-white transition-colors px-3" href="/sign-in">
                 Đăng nhập
               </a>
-              <a className="text-sm font-bold text-[#020617] bg-white hover:bg-slate-100 px-5 py-2.5 rounded-full transition-all" href="#">
+              <a className="text-sm font-bold text-[#020617] bg-white hover:bg-slate-100 px-5 py-2.5 rounded-full transition-all" href="/sign-up">
                 Đăng ký
               </a>
               <a className="text-sm font-bold text-white px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full shadow-lg shadow-indigo-500/20 hover:scale-105 transition-transform" href="#">

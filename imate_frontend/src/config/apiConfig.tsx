@@ -90,6 +90,7 @@ const APIConfig = {
     GetAllOpenedJob: "get-all-jobs",
     GetJobDetail: (jobId: number) => `get-job-detail/${jobId}`,
     CreateJobApplication: "/apply-job",
+    GetAppliedJob: "get-applied-jobs",
   },
 
   // Staff review endpoints (baseURL thường đã có /api)

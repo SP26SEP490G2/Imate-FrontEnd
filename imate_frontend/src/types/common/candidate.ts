@@ -18,3 +18,10 @@ export interface AppliedJobCandidateResponse {
     totalPages: number;
     pageNumber: number;
 }
+
+export interface GetAppliedCandidateJobs {
+    searchTerm?: string;
+    status?: string;
+    pageNumber?: number;
+    pageSize?: number;
+}

@@ -4,6 +4,7 @@ import type { SubmitRecruiterProfileRequest } from "@/types/request/recruiter.re
 import type { User } from "@/types/common/auth";
 import type { AppliedCandidateResponse, CandidateJobListResponse, GetAppliedCandidateRequest, GetCandidateJobListRequest, JobResponse } from "@/types/common/recruiter";
 import type { GetJobApplicationsRequest } from "@/types/common/recruiter";
+import type { GetAppliedCandidateJobs, AppliedJobCandidateResponse } from "@/types/common/candidate";
 /**
  * Nộp / cập nhật hồ sơ Recruiter (bước 2 sau khi đăng ký role Recruiter).
  * Backend sẽ tạo hoặc cập nhật bản ghi Recruiter cho account hiện tại.
@@ -155,3 +156,22 @@ export const createJobApplication = async (data: any) => {
     throw error;
   }
 };
+
+
+
+export const getCandidateAppliedJobs = async (
+  params?: GetAppliedCandidateJobs
+): Promise<AppliedJobCandidateResponse> => {
+  const queryParams = {
+    PageNumber: params?.pageNumber,
+    PageSize: params?.pageSize,
+    SearchTerm: params?.searchTerm,
+    Status: params?.status,
+  };
+
+  const response = await apiClient.get(
+    APIConfig.Candidate.GetAppliedJob,
+    { params: queryParams }
+  );
+  return response.data.data as AppliedJobCandidateResponse;
+}
