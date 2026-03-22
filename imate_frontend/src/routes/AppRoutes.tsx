@@ -26,6 +26,10 @@ import MentorDetail from "@/pages/main/public/MentorDetail";
 
 // Pages - Candidate
 import ViewProfile from "@/pages/candidate/ViewProfile";
+import ViewJobApplications from "@/pages/candidate/ViewJobApplications";
+
+import ViewJobApplicationDetail from "@/pages/candidate/ViewJobApplicationDetail";
+
 import CVManagement from "@/pages/candidate/CVManagement";
 import AnalyseCV from "@/pages/candidate/AnalyseCV";
 import PracticeTest from "@/pages/candidate/PracticeTest";
@@ -60,7 +64,9 @@ import AdminAuditLog from "@/pages/admin/AdminAuditLog";
 import Classification from "@/pages/management/classification/Classification";
 import UserManagement from "@/pages/admin/UserManagement";
 import SubscriptionManagement from "@/pages/admin/SubscriptionManagement";
+import AppliedCandidateList from "@/pages/recruiter/AppliedCandidateList";
 import ViewApplication from "@/pages/main/public/ViewApplication";
+import ViewAppliedJob from "@/pages/candidate/ViewAppliedJob";
 import TransactionManagement from "@/pages/management/payment/TransactionManagement";
 
 /**
@@ -102,28 +108,32 @@ const routeConfigs: RouteConfig[] = [
   { path: "/view-mentor/:id", element: <MentorDetail />, layout: LAYOUT.MAIN },
 
   // ===== MAIN LAYOUT ROUTES =====
-  { path: "/profile",                        element: <ViewProfile />,                layout: LAYOUT.MAIN, requireAuth: true },
-  { path: "/cv-management",                   element: <CVManagement />,               layout: LAYOUT.MAIN, requireAuth: true },
-  { path: "/analyse-cv/:cvId",                  element: <AnalyseCV />,                  layout: LAYOUT.MAIN, requireAuth: true },
-  { path: "/practice-test",                     element: <PracticeTest />,                layout: LAYOUT.MAIN, requireAuth: true },
-  { path: "/test-history",                       element: <TestHistory />,                 layout: LAYOUT.MAIN, requireAuth: true },
-  { path: "/test-history/:id",                   element: <TestHistoryDetail />,           layout: LAYOUT.MAIN, requireAuth: true },
-  { path: "/interview-history/:id",              element: <InterviewFeedbackDetail />,     layout: LAYOUT.MAIN, requireAuth: true },
-  { path: "/interview-setup",                     element: <InterviewSetup />,               layout: LAYOUT.MAIN, requireAuth: true },
-  { path: "/interview-chat/:sessionId",           element: <InterviewChat />,                layout: LAYOUT.NONE, requireAuth: true },
-  { path: "/submit-mentor-application",      element: <SubmitMentorApplication />,    layout: LAYOUT.MAIN, requireAuth: true },
-  { path: "/pending-application",            element: <PendingApplication />,         layout: LAYOUT.MAIN, requireAuth: true },
-  { path: "/submit-recruiter-application",   element: <SubmitRecruiterApplication />, layout: LAYOUT.MAIN, requireAuth: true },
-  { path: "/recruiter-pending-application",  element: <RecruiterPendingApplication />,layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/profile", element: <ViewProfile />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/submit-mentor-application", element: <SubmitMentorApplication />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/pending-application", element: <PendingApplication />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/submit-recruiter-application", element: <SubmitRecruiterApplication />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/recruiter-pending-application", element: <RecruiterPendingApplication />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/view-job-applications", element: <ViewJobApplications />, layout: LAYOUT.MAIN },
+  { path: "/view-job-applications/:id", element: <ViewJobApplicationDetail />, layout: LAYOUT.MAIN },
   { path: "/interview-schedule", element: <InterviewSchedule />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/cv-management", element: <CVManagement />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/analyse-cv/:cvId", element: <AnalyseCV />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/practice-test", element: <PracticeTest />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/test-history", element: <TestHistory />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/test-history/:id", element: <TestHistoryDetail />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/interview-history/:id", element: <InterviewFeedbackDetail />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/interview-setup", element: <InterviewSetup />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/interview-chat/:sessionId", element: <InterviewChat />, layout: LAYOUT.NONE, requireAuth: true },
+  { path: "/view-application", element: <ViewApplication />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/view-applied-job", element: <ViewAppliedJob />, layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/video-call/:bookingId", element: <VideoCallPage />, layout: LAYOUT.NONE, requireAuth: true },
-  { path: "/view-application",  element: <ViewApplication />,layout: LAYOUT.MAIN, requireAuth: true},
 
   // ===== MANAGEMENT LAYOUT ROUTES =====
   { path: "/management/view-questions", element: <ViewQuestions />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
   { path: "/management/manage-application", element: <ReviewMentorApplication />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
   { path: "/management/recruiter-dashboard/job-applications", element: <JobPostingList />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.RECRUITER] },
   { path: "/management/recruiter-dashboard/create-job-posting", element: <CreateJobApplication />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.RECRUITER] },
+  { path: "/management/recruiter-dashboard/job-postings/:jobId/candidates", element: <AppliedCandidateList />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.RECRUITER] },
   { path: "/management/admin/audit-logs", element: <AdminAuditLog />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN] },
 
   { path: "/management/applications", element: <ReviewMentorApplication />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },

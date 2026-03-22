@@ -2,6 +2,8 @@
  * API Configuration - Contains all API endpoint URIs
  */
 
+import { CreateJobPost } from "@/services/recruiterService";
+
 const APIConfig = {
   // Auth endpoints
   Auth: {
@@ -46,7 +48,7 @@ const APIConfig = {
   // Category endpoints
   Category: {
     GetAllCategories: "/get-categories",
-    AddCategory:"/categories",
+    AddCategory: "/categories",
     UpdateCategory: "/categories/{categoryId}",
     GetAffectedQuestions: "/categories/{categoryId}/affected-questions",
   },
@@ -76,7 +78,20 @@ const APIConfig = {
   Recruiter: {
     SubmitRecruiterProfile: "/recruiters/submit-profile",
     GetJobApplicationList: "job-applications",
-    GetRecruiterJobApplication: "recruiter-job-applications"
+    GetRecruiterJobApplication: "recruiter-job-applications",
+    UpdateRecruiterProfile: "/recruiter-profile",
+    CreateJobPost: "/create-job-posts",
+    UpdateJob: "/update-job",
+    CloseJob: "/close-job",
+    GetAppliedCandidate: (jobId: number) => `${jobId}/applied-candidates`,
+    UpdateJobApplication: "/update-job-application",
+  },
+
+  Candidate: {
+    GetAllOpenedJob: "get-all-jobs",
+    GetJobDetail: (jobId: number) => `get-job-detail/${jobId}`,
+    CreateJobApplication: "/apply-job",
+    GetAppliedJob: "get-applied-jobs",
   },
 
   // Staff review endpoints (baseURL thường đã có /api)
@@ -87,7 +102,7 @@ const APIConfig = {
     GetPendingRecruiters: "/staff-review/recruiters/pending",
     ReviewRecruiter: "/staff-review/recruiters",
   },
-  
+
   // Subscription endpoints
   Subscription: {
     GetSubscriptionPackages: "/subscription-packages",

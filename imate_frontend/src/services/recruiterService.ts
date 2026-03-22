@@ -2,8 +2,9 @@ import apiClient from "./apiClient";
 import APIConfig from "@/config/apiConfig";
 import type { SubmitRecruiterProfileRequest } from "@/types/request/recruiter.request";
 import type { User } from "@/types/common/auth";
-import type { JobResponse } from "@/types/common/recruiter";
+import type { AppliedCandidateResponse, CandidateJobListResponse, GetAppliedCandidateRequest, GetCandidateJobListRequest, JobResponse } from "@/types/common/recruiter";
 import type { GetJobApplicationsRequest } from "@/types/common/recruiter";
+import type { GetAppliedCandidateJobs, AppliedJobCandidateResponse } from "@/types/common/candidate";
 /**
  * Nộp / cập nhật hồ sơ Recruiter (bước 2 sau khi đăng ký role Recruiter).
  * Backend sẽ tạo hoặc cập nhật bản ghi Recruiter cho account hiện tại.
@@ -15,7 +16,7 @@ export const submitRecruiterProfile = async (payload: SubmitRecruiterProfileRequ
 
 export const updateRecruiterProfile = async (data: User) => {
   try {
-    const res = await apiClient.put("/recruiter-profile", data);
+    const res = await apiClient.put(APIConfig.Recruiter.UpdateRecruiterProfile, data);
 
     return res.data;
   } catch (error) {
@@ -45,16 +46,38 @@ export const getRecruiterJobApplications = async (
 
 export const CreateJobPost = async (data: any) => {
   try {
-    return await apiClient.post("/create-job-posts", data);
+    return await apiClient.post(APIConfig.Recruiter.CreateJobPost, data);
   } catch (error) {
     console.log("Error creating job post: ", error);
     throw error;
   }
 };
 
+export const UpdateJob = async (data: any) => {
+  try {
+    const res = await apiClient.put(APIConfig.Recruiter.UpdateJob, data);
+
+    return res.data;
+  } catch (error) {
+    console.log("Error updating job: ", error);
+    throw error;
+  }
+};
+
+export const CloseJob = async (data: any) => {
+  try {
+    const res = await apiClient.put(APIConfig.Recruiter.CloseJob, data);
+
+    return res.data;
+  } catch (error) {
+    console.log("Error closing job: ", error);
+    throw error;
+  }
+};
+
 export const UpdateJobApplication = async (data: any) => {
   try {
-    const res = await apiClient.put("/update-job-applications", data);
+    const res = await apiClient.put(APIConfig.Recruiter.UpdateJobApplication, data);
 
     return res.data;
   } catch (error) {
@@ -63,13 +86,92 @@ export const UpdateJobApplication = async (data: any) => {
   }
 };
 
-export const CloseJobApplication = async (data: any) => {
-  try {
-    const res = await apiClient.put("/Close-job-applications", data);
+export const GetAppliedCandidate = async (jobId: number,
+  params?: GetAppliedCandidateRequest
+): Promise<AppliedCandidateResponse> => {
+  const queryParams = {
+    PageNumber: params?.pageNumber,
+    PageSize: params?.pageSize,
+    SearchTerm: params?.searchTerm,
+    Status: params?.status,
+  };
 
+  const response = await apiClient.get(
+    APIConfig.Recruiter.GetAppliedCandidate(jobId),
+    { params: queryParams }
+  );
+  return response.data.data as AppliedCandidateResponse;
+}
+
+export const getCandidateJobList = async (
+  params?: GetCandidateJobListRequest
+): Promise<CandidateJobListResponse> => {
+  const queryParams = {
+    PageNumber: params?.pageNumber,
+    PageSize: params?.pageSize,
+    SearchTerm: params?.searchTerm,
+    Location: params?.location,
+    EmploymentType: params?.employmentType,
+    SkillIds: params?.jobSkillIds,
+    PositionIds: params?.jobPositionIds,
+  };
+
+  const response = await apiClient.get(
+    APIConfig.Candidate.GetAllOpenedJob,
+    {
+      params: queryParams,
+      paramsSerializer: (p) => {
+        const searchParams = new URLSearchParams();
+        Object.entries(p).forEach(([key, value]) => {
+          if (value === undefined || value === null) return;
+          if (Array.isArray(value)) {
+            value.forEach(v => searchParams.append(key, String(v)));
+          } else {
+            searchParams.append(key, String(value));
+          }
+        });
+        return searchParams.toString();
+      }
+    }
+  );
+  return response.data.data as CandidateJobListResponse;
+}
+
+export const getJobDetails = async (jobId: number) => {
+  try {
+    const res = await apiClient.get(APIConfig.Candidate.GetJobDetail(jobId));
     return res.data;
   } catch (error) {
     console.log("Error closing job application: ", error);
     throw error;
   }
 };
+
+export const createJobApplication = async (data: any) => {
+  try {
+    const res = await apiClient.post(APIConfig.Candidate.CreateJobApplication, data);
+    return res.data;
+  } catch (error) {
+    console.log("Error creating job application: ", error);
+    throw error;
+  }
+};
+
+
+
+export const getCandidateAppliedJobs = async (
+  params?: GetAppliedCandidateJobs
+): Promise<AppliedJobCandidateResponse> => {
+  const queryParams = {
+    PageNumber: params?.pageNumber,
+    PageSize: params?.pageSize,
+    SearchTerm: params?.searchTerm,
+    Status: params?.status,
+  };
+
+  const response = await apiClient.get(
+    APIConfig.Candidate.GetAppliedJob,
+    { params: queryParams }
+  );
+  return response.data.data as AppliedJobCandidateResponse;
+}

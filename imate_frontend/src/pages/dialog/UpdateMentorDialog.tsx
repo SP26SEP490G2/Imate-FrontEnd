@@ -275,7 +275,7 @@ const UpdateMentorDialog: React.FC<UpdateMentorDialogProps> = ({ type, onSubmit,
                     </button>
                   </PopoverTrigger>
 
-                  <PopoverContent align="start" onWheel={(e) => e.stopPropagation()} className="hide-scrollbar z-[100] w-[var(--radix-popover-trigger-width)] border border-white/10 bg-[#11142D] p-0 shadow-xl" sideOffset={5}>
+                  <PopoverContent align="start" onWheel={(e: React.WheelEvent) => e.stopPropagation()} className="hide-scrollbar z-[100] w-[var(--radix-popover-trigger-width)] border border-white/10 bg-[#11142D] p-0 shadow-xl" sideOffset={5}>
                     <div className="sticky top-0 z-10 rounded-t-md border-b border-white/10 bg-[#11142D] p-3">
                       <Input placeholder="Tìm kiếm tên hoặc mã ngân hàng..." value={searchText} onChange={(e) => setSearchText(e.target.value)} className="border-white/10 bg-[#0F1333] text-white placeholder:text-[#A0A3BD]" />
                     </div>

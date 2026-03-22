@@ -3,9 +3,10 @@ import { X, Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { getAllPositions, getAllSkills } from "@/services/commonService";
 import type { PositionItem, SkillItem } from "@/types/common/question";
 import { Badge } from "@/components/ui/badge";
-import { UpdateJobApplication } from "@/services/recruiterService";
+import { UpdateJob } from "@/services/recruiterService";
 import { toast } from "react-toastify";
 import type { JobItem } from "@/types/common/recruiter";
+import { MSG54, MSG55 } from "@/constants/messages";
 
 interface UpdateJobPostModalProps {
   open: boolean;
@@ -142,16 +143,16 @@ const UpdateJobPostModal: React.FC<UpdateJobPostModalProps> = ({ open, onClose, 
       };
       setIsSubmitting(true);
 
-      await UpdateJobApplication(payload);
+      await UpdateJob(payload);
       setIsSubmitting(false);
 
-      toast.success("Cập nhật tin tuyển dụng thành công!");
+      toast.success(MSG54);
       onSuccess();
       onClose();
 
     } catch (error) {
       console.error(error);
-      toast.error("Cập nhật thất bại. Vui lòng thử lại.");
+      toast.error(MSG55);
       setIsSubmitting(false);
     }
   };
