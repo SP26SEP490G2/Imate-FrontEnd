@@ -69,3 +69,20 @@ export const cancelBooking = async (bookingId: number) => {
     throw error;
   }
 };
+
+/**
+ * [POST] Đánh giá mentor sau buổi học
+ */
+export const rateMentor = async (bookingId: number, ratingScore: number, reviewText: string) => {
+  try {
+    const res = await apiClient.post(`/bookings/${bookingId}/rate`, {
+      ratingScore,
+      reviewText,
+    });
+    return res.data;
+  } catch (error) {
+    console.error("Error rating mentor: ", error);
+    throw error;
+  }
+};
+

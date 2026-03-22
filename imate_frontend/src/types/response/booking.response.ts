@@ -11,4 +11,7 @@ export interface BookingDetailResponse {
   status: number;
   meetingRoomId?: string;
   price: number;
+  ratingScore?: number;
+  reviewText?: string;
+  ratingCreatedAt?: string;
 }
