@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import {
   ChevronRight,
   Loader2,
@@ -135,7 +136,9 @@ function InterviewStatusBadge({ status }: { status: string }) {
 
 export default function TestHistory() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("test");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab") || "test";
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [history, setHistory] = useState<TestHistoryItem[]>([]);
   const [interviewHistory, setInterviewHistory] = useState<InterviewHistoryItem[]>([]);
   const [mentorHistory, setMentorHistory] = useState<BookingDetailResponse[]>([]);
@@ -146,6 +149,18 @@ export default function TestHistory() {
   // Review Modal State
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<BookingDetailResponse | null>(null);
+
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    setSearchParams({ tab: tabId });
+  };
+
+  useEffect(() => {
+    const tabFromUrl = searchParams.get("tab");
+    if (tabFromUrl && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams]);
 
   const fetchMentorHistory = async () => {
     try {
@@ -240,7 +255,7 @@ export default function TestHistory() {
         {TABS.map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => handleTabChange(tab.id)}
             className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${
               activeTab === tab.id
                 ? "bg-slate-700 text-white shadow-sm"

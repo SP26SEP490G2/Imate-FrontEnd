@@ -42,6 +42,11 @@ export const USER_PROFILE_MENU: MenuItem[] = [
     icon: Calendar,
   },
   {
+    label: "Lịch sử Mentor",
+    href: "/test-history?tab=mentor",
+    icon: History,
+  },
+  {
     label: "Ví Imate",
     href: "/wallet",
     icon: Wallet,
