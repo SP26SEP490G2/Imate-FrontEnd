@@ -28,3 +28,21 @@ export const APPLICATION_STATUS_OPTIONS = [
   { value: ApplicationStatus.Approved, label: "Đã duyệt" },
   { value: ApplicationStatus.Rejected, label: "Bị từ chối" },
 ] as const;
+
+export const TransactionStatus = {
+  Pending: "Pending",
+  Completed: "Completed",
+  Failed: "Failed",
+  Cancelled: "Cancelled",
+  Escrow: "Escrow",
+} as const;
+
+export type TransactionStatusType = keyof typeof TransactionStatus;
+
+export const TRANSACTION_STATUS_OPTIONS = [
+  { value: TransactionStatus.Pending, label: "Chờ xử lý" },
+  { value: TransactionStatus.Completed, label: "Hoàn thành" },
+  { value: TransactionStatus.Failed, label: "Thất bại" },
+  { value: TransactionStatus.Cancelled, label: "Đã hủy" },
+  { value: TransactionStatus.Escrow, label: "Đang giữ hộ" },
+] as const;

@@ -68,6 +68,7 @@ import AppliedCandidateList from "@/pages/recruiter/AppliedCandidateList";
 import ViewApplication from "@/pages/main/public/ViewApplication";
 import ViewAppliedJob from "@/pages/candidate/ViewAppliedJob";
 import TransactionManagement from "@/pages/management/payment/TransactionManagement";
+import Wallet from "@/pages/management/payment/Wallet";
 
 /**
  * Route Configuration Type
@@ -127,6 +128,8 @@ const routeConfigs: RouteConfig[] = [
   { path: "/view-application", element: <ViewApplication />, layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/view-applied-job", element: <ViewAppliedJob />, layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/video-call/:bookingId", element: <VideoCallPage />, layout: LAYOUT.NONE, requireAuth: true },
+  { path: "/view-application",  element: <ViewApplication />,layout: LAYOUT.MAIN, requireAuth: true},
+  { path: "/wallet",  element: <Wallet />,layout: LAYOUT.MAIN, requireAuth: true},
 
   // ===== MANAGEMENT LAYOUT ROUTES =====
   { path: "/management/view-questions", element: <ViewQuestions />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
