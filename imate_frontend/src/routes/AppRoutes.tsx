@@ -26,9 +26,8 @@ import MentorDetail from "@/pages/main/public/MentorDetail";
 
 // Pages - Candidate
 import ViewProfile from "@/pages/candidate/ViewProfile";
-import ViewJobApplications from "@/pages/candidate/ViewJobApplications";
 
-import ViewJobApplicationDetail from "@/pages/candidate/ViewJobApplicationDetail";
+
 
 import CVManagement from "@/pages/candidate/CVManagement";
 import AnalyseCV from "@/pages/candidate/AnalyseCV";
@@ -43,6 +42,8 @@ import VideoCallPage from "@/pages/videocall/VideoCallPage";
 // Pages - Mentor
 import SubmitMentorApplication from "@/pages/mentor/SubmitMentorApplication";
 import PendingApplication from "@/pages/mentor/PendingApplication";
+// Mentor calendar management
+import AvailabilityCalendar from "@/pages/mentor/AvailabilityCalendar";
 
 // Pages - Recruiter
 import SubmitRecruiterApplication from "@/pages/recruiter/SubmitRecruiterApplication";
@@ -66,7 +67,7 @@ import UserManagement from "@/pages/admin/UserManagement";
 import SubscriptionManagement from "@/pages/admin/SubscriptionManagement";
 import AppliedCandidateList from "@/pages/recruiter/AppliedCandidateList";
 import ViewApplication from "@/pages/main/public/ViewApplication";
-import ViewAppliedJob from "@/pages/candidate/ViewAppliedJob";
+
 import TransactionManagement from "@/pages/management/payment/TransactionManagement";
 import Wallet from "@/pages/management/payment/Wallet";
 
@@ -109,24 +110,25 @@ const routeConfigs: RouteConfig[] = [
   { path: "/view-mentor/:id", element: <MentorDetail />, layout: LAYOUT.MAIN },
 
   // ===== MAIN LAYOUT ROUTES =====
-  { path: "/profile",                        element: <ViewProfile />,                layout: LAYOUT.MAIN, requireAuth: true },
-  { path: "/cv-management",                   element: <CVManagement />,               layout: LAYOUT.MAIN, requireAuth: true },
-  { path: "/analyse-cv/:cvId",                  element: <AnalyseCV />,                  layout: LAYOUT.MAIN, requireAuth: true },
-  { path: "/practice-test",                     element: <PracticeTest />,                layout: LAYOUT.MAIN, requireAuth: true },
-  { path: "/test-history",                       element: <TestHistory />,                 layout: LAYOUT.MAIN, requireAuth: true },
-  { path: "/test-history/:id",                   element: <TestHistoryDetail />,           layout: LAYOUT.MAIN, requireAuth: true },
-  { path: "/interview-history/:id",              element: <InterviewFeedbackDetail />,     layout: LAYOUT.MAIN, requireAuth: true },
-  { path: "/interview-setup",                     element: <InterviewSetup />,               layout: LAYOUT.MAIN, requireAuth: true },
-  { path: "/interview-chat/:sessionId",           element: <InterviewChat />,                layout: LAYOUT.NONE, requireAuth: true },
-  { path: "/submit-mentor-application",      element: <SubmitMentorApplication />,    layout: LAYOUT.MAIN, requireAuth: true },
-  { path: "/pending-application",            element: <PendingApplication />,         layout: LAYOUT.MAIN, requireAuth: true },
-  { path: "/submit-recruiter-application",   element: <SubmitRecruiterApplication />, layout: LAYOUT.MAIN, requireAuth: true },
-  { path: "/recruiter-pending-application",  element: <RecruiterPendingApplication />,layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/profile", element: <ViewProfile />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/cv-management", element: <CVManagement />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/analyse-cv/:cvId", element: <AnalyseCV />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/practice-test", element: <PracticeTest />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/test-history", element: <TestHistory />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/test-history/:id", element: <TestHistoryDetail />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/interview-history/:id", element: <InterviewFeedbackDetail />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/interview-setup", element: <InterviewSetup />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/interview-chat/:sessionId", element: <InterviewChat />, layout: LAYOUT.NONE, requireAuth: true },
+  { path: "/submit-mentor-application", element: <SubmitMentorApplication />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/pending-application", element: <PendingApplication />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/submit-recruiter-application", element: <SubmitRecruiterApplication />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/recruiter-pending-application", element: <RecruiterPendingApplication />, layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/interview-schedule", element: <InterviewSchedule />, layout: LAYOUT.MAIN, requireAuth: true, roles: [ROLES.CANDIDATE] },
   { path: "/mentor/interview-schedule", element: <InterviewSchedule />, layout: LAYOUT.MAIN, requireAuth: true, roles: [ROLES.MENTOR] },
+  { path: "/mentor/manage-slots", element: <AvailabilityCalendar />, layout: LAYOUT.MAIN, requireAuth: true, roles: [ROLES.MENTOR] },
   { path: "/video-call/:bookingId", element: <VideoCallPage />, layout: LAYOUT.NONE, requireAuth: true },
-  { path: "/view-application",  element: <ViewApplication />,layout: LAYOUT.MAIN, requireAuth: true},
-  { path: "/wallet",  element: <Wallet />,layout: LAYOUT.MAIN, requireAuth: true},
+  { path: "/view-application", element: <ViewApplication />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/wallet", element: <Wallet />, layout: LAYOUT.MAIN, requireAuth: true },
 
   // ===== MANAGEMENT LAYOUT ROUTES =====
   { path: "/management/view-questions", element: <ViewQuestions />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },

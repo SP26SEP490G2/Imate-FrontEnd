@@ -3,6 +3,7 @@ import type { MenuItem } from "@/types/common/menu";
 
 export const MENTOR_MENU_ITEMS: MenuItem[] = [
   { label: "Lịch làm việc", href: "/mentor/interview-schedule" },
+  { label: "Quản lý lịch lặp lại", href: "/mentor/manage-slots" },
   { label: "Thu nhập", href: "/mentor/income" },
   { label: "Lịch sử phỏng vấn", href: "/mentor/interview-history" },
   { label: "Câu hỏi từ cộng đồng", href: "/contributed-question-bank" },
@@ -97,6 +98,11 @@ export const MENTOR_PROFILE_MENU: MenuItem[] = [
   {
     label: "Lịch phỏng vấn",
     href: "/mentor/interview-schedule",
+    icon: Calendar,
+  },
+  {
+    label: "Quản lý lịch lặp lại",
+    href: "/mentor/manage-slots",
     icon: Calendar,
   },
   {
