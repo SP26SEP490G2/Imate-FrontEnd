@@ -9,6 +9,7 @@ import ManagementLayout from "@/layout/ManagementLayout";
 // Guards
 import { AuthGuard } from "@/helpers/auth.guard";
 import { RoleGuard } from "@/helpers/role.guard";
+import { StatusGuard } from "@/helpers/status.guard";
 
 // Pages - Auth
 import SignIn from "@/pages/auth/SignIn";
@@ -55,6 +56,7 @@ import MentorDetailForStaff from "@/pages/staff/MentorDetailForStaff";
 import RecruiterDetailForStaff from "@/pages/staff/RecruiterDetailForStaff";
 
 // Config
+import { ACCOUNT_STATUS } from "@/constants/accountStatus";
 import { ROLES } from "@/constants/role";
 import { LAYOUT } from "@/constants/common";
 import ViewQuestions from "@/pages/management/question/ViewQuestions";
@@ -80,6 +82,7 @@ interface RouteConfig {
   layout?: "main" | "management" | "none";
   requireAuth?: boolean;
   roles?: string[];
+  accountStatus?: string;
 }
 
 /**
@@ -110,7 +113,7 @@ const routeConfigs: RouteConfig[] = [
   { path: "/view-mentor/:id", element: <MentorDetail />, layout: LAYOUT.MAIN },
 
   // ===== MAIN LAYOUT ROUTES =====
-  { path: "/profile", element: <ViewProfile />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/profile", element: <ViewProfile />, layout: LAYOUT.MAIN, requireAuth: true, accountStatus: ACCOUNT_STATUS.Active },
   { path: "/cv-management", element: <CVManagement />, layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/analyse-cv/:cvId", element: <AnalyseCV />, layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/practice-test", element: <PracticeTest />, layout: LAYOUT.MAIN, requireAuth: true },
@@ -124,18 +127,18 @@ const routeConfigs: RouteConfig[] = [
   { path: "/submit-recruiter-application", element: <SubmitRecruiterApplication />, layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/recruiter-pending-application", element: <RecruiterPendingApplication />, layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/interview-schedule", element: <InterviewSchedule />, layout: LAYOUT.MAIN, requireAuth: true, roles: [ROLES.CANDIDATE] },
-  { path: "/mentor/interview-schedule", element: <InterviewSchedule />, layout: LAYOUT.MAIN, requireAuth: true, roles: [ROLES.MENTOR] },
-  { path: "/mentor/manage-slots", element: <AvailabilityCalendar />, layout: LAYOUT.MAIN, requireAuth: true, roles: [ROLES.MENTOR] },
-  { path: "/video-call/:bookingId", element: <VideoCallPage />, layout: LAYOUT.NONE, requireAuth: true },
+  { path: "/mentor/interview-schedule", element: <InterviewSchedule />, layout: LAYOUT.MAIN, requireAuth: true, roles: [ROLES.MENTOR], accountStatus: ACCOUNT_STATUS.Active },
+  { path: "/mentor/manage-slots", element: <AvailabilityCalendar />, layout: LAYOUT.MAIN, requireAuth: true, roles: [ROLES.MENTOR], accountStatus: ACCOUNT_STATUS.Active },
+  { path: "/video-call/:bookingId", element: <VideoCallPage />, layout: LAYOUT.NONE, requireAuth: true, accountStatus: ACCOUNT_STATUS.Active },
   { path: "/view-application", element: <ViewApplication />, layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/wallet", element: <Wallet />, layout: LAYOUT.MAIN, requireAuth: true },
 
   // ===== MANAGEMENT LAYOUT ROUTES =====
   { path: "/management/view-questions", element: <ViewQuestions />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
   { path: "/management/manage-application", element: <ReviewMentorApplication />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
-  { path: "/management/recruiter-dashboard/job-applications", element: <JobPostingList />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.RECRUITER] },
-  { path: "/management/recruiter-dashboard/create-job-posting", element: <CreateJobApplication />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.RECRUITER] },
-  { path: "/management/recruiter-dashboard/job-postings/:jobId/candidates", element: <AppliedCandidateList />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.RECRUITER] },
+  { path: "/management/recruiter-dashboard/job-applications", element: <JobPostingList />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.RECRUITER], accountStatus: ACCOUNT_STATUS.Active },
+  { path: "/management/recruiter-dashboard/create-job-posting", element: <CreateJobApplication />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.RECRUITER], accountStatus: ACCOUNT_STATUS.Active },
+  { path: "/management/recruiter-dashboard/job-postings/:jobId/candidates", element: <AppliedCandidateList />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.RECRUITER], accountStatus: ACCOUNT_STATUS.Active },
   { path: "/management/admin/audit-logs", element: <AdminAuditLog />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN] },
 
   { path: "/management/applications", element: <ReviewMentorApplication />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
@@ -151,8 +154,12 @@ const routeConfigs: RouteConfig[] = [
 /**
  * Helper: Wrap element với guards (Auth/Role)
  */
-const wrapWithGuards = (element: React.ReactNode, requireAuth?: boolean, roles?: string[]): React.ReactNode => {
+const wrapWithGuards = (element: React.ReactNode, requireAuth?: boolean, roles?: string[], accountStatus?: string): React.ReactNode => {
   let wrapped = element;
+
+  if (accountStatus) {
+    wrapped = <StatusGuard requiredStatus={accountStatus}>{wrapped}</StatusGuard>;
+  }
 
   if (roles && roles.length > 0) {
     wrapped = <RoleGuard requiredRoles={roles}>{wrapped}</RoleGuard>;
@@ -178,7 +185,7 @@ const buildRoutes = (configs: RouteConfig[]): RouteObject[] => {
   noLayoutRoutes.forEach(config => {
     result.push({
       path: config.path,
-      element: wrapWithGuards(config.element, config.requireAuth, config.roles),
+      element: wrapWithGuards(config.element, config.requireAuth, config.roles, config.accountStatus),
     });
   });
 
@@ -189,7 +196,7 @@ const buildRoutes = (configs: RouteConfig[]): RouteObject[] => {
       element: <MainLayout />,
       children: mainRoutes.map(config => ({
         path: config.path.startsWith("/") ? config.path.substring(1) : config.path,
-        element: wrapWithGuards(config.element, config.requireAuth, config.roles),
+        element: wrapWithGuards(config.element, config.requireAuth, config.roles, config.accountStatus),
       })),
     });
   }
@@ -201,7 +208,7 @@ const buildRoutes = (configs: RouteConfig[]): RouteObject[] => {
       element: <RoleGuard requiredRoles={["Admin", "Staff", "Recruiter"]}><ManagementLayout /></RoleGuard>,
       children: managementRoutes.map(config => ({
         path: config.path.replace("/management/", ""),
-        element: wrapWithGuards(config.element, config.requireAuth, config.roles),
+        element: wrapWithGuards(config.element, config.requireAuth, config.roles, config.accountStatus),
       })),
     });
   }

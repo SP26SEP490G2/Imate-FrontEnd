@@ -276,27 +276,29 @@ function Header() {
               </Button>
 
               {/* Avatar */}
-              <div
-                ref={userMenuRef}
-                className="flex items-center gap-2 cursor-pointer"
-                onClick={() => setIsOpenUserMenu(!isOpenUserMenu)}
-              >
-                <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center text-white font-semibold">
-                  {user?.fullName?.charAt(0)}
+              <div className="relative">
+                <div
+                  ref={userMenuRef}
+                  className="flex items-center gap-2 cursor-pointer"
+                  onClick={() => setIsOpenUserMenu(!isOpenUserMenu)}
+                >
+                  <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center text-white font-semibold">
+                    {user?.fullName?.charAt(0)}
+                  </div>
+
+                  <span className="text-sm text-white">
+                    {user?.fullName}
+                  </span>
+
+                  <ChevronDown className="w-4 h-4 text-slate-300" />
                 </div>
 
-                <span className="text-sm text-white">
-                  {user?.fullName}
-                </span>
-
-                <ChevronDown className="w-4 h-4 text-slate-300" />
+                <UserMenu
+                  isOpenUserMenu={isOpenUserMenu}
+                  onClose={() => setIsOpenUserMenu(false)}
+                  anchorRef={userMenuRef}
+                />
               </div>
-
-              <UserMenu
-                isOpenUserMenu={isOpenUserMenu}
-                onClose={() => setIsOpenUserMenu(false)}
-                anchorRef={userMenuRef}
-              />
             </div>
           )}
         </div>
