@@ -106,6 +106,15 @@ const InterviewSchedule = () => {
     navigate(`/video-call/${bookingId}`);
   };
 
+  const isJoinable = (startTime: string) => {
+    const start = new Date(startTime);
+    const now = new Date();
+    // Tạm thời cho phép tham gia bất cứ lúc nào trước khi kết thúc (giả sử 1 tiếng sau start)
+    const oneHourAfter = new Date(start.getTime() + 60 * 60 * 1000);
+    
+    return now <= oneHourAfter;
+  };
+
   const handleCancelClick = (bookingId: number) => {
     setBookingToCancel(bookingId);
     setIsCancelDialogOpen(true);
@@ -277,8 +286,13 @@ const InterviewSchedule = () => {
                          Xem chi tiết
                        </button>
                        <button 
-                         onClick={() => handleJoinMeeting(booking.meetingRoomId)}
-                         className="px-5 py-2 text-sm font-bold text-white bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-400 hover:to-indigo-500 rounded-xl shadow-[0_0_15px_rgba(79,70,229,0.3)] hover:shadow-[0_0_20px_rgba(79,70,229,0.5)] transition-all transform hover:-translate-y-0.5"
+                         onClick={() => handleJoinMeeting(booking.bookingId)}
+                         disabled={!isJoinable(booking.startTime)}
+                         className={`px-5 py-2 text-sm font-bold text-white rounded-xl shadow-[0_0_15px_rgba(79,70,229,0.3)] transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
+                           isJoinable(booking.startTime) 
+                             ? "bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-400 hover:to-indigo-500 hover:shadow-[0_0_20px_rgba(79,70,229,0.5)]" 
+                             : "bg-gray-600 cursor-not-allowed shadow-none"
+                         }`}
                        >
                          Tham gia phỏng vấn
                        </button>

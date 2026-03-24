@@ -33,7 +33,7 @@ const VideoCallPage: React.FC = () => {
   });
 
   const goBack = () => {
-    if (user?.role === "Mentor") navigate("/interview-schedule");
+    if (user?.role === "Mentor") navigate("/mentor/interview-schedule");
     else if (user?.role === "Candidate") navigate("/interview-schedule");
     else navigate("/");
   };

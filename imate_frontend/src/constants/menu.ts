@@ -2,7 +2,7 @@ import { FolderOpen, LibraryBig, CircleUser, CreditCard, FileUser, Sparkles, Log
 import type { MenuItem } from "@/types/common/menu";
 
 export const MENTOR_MENU_ITEMS: MenuItem[] = [
-  { label: "Lịch làm việc", href: "/interview-schedule" },
+  { label: "Lịch làm việc", href: "/mentor/interview-schedule" },
   { label: "Thu nhập", href: "/mentor/income" },
   { label: "Lịch sử phỏng vấn", href: "/mentor/interview-history" },
   { label: "Câu hỏi từ cộng đồng", href: "/contributed-question-bank" },
@@ -96,7 +96,7 @@ export const MENTOR_PROFILE_MENU: MenuItem[] = [
   },
   {
     label: "Lịch phỏng vấn",
-    href: "/interview-schedule",
+    href: "/mentor/interview-schedule",
     icon: Calendar,
   },
   {
