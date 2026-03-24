@@ -121,6 +121,7 @@ const getRoleLabel = (r: UserRole) => {
       await refetchUser();
 
       const auth = getAuth();
+      /*
       try {
         await signInWithEmailAndPassword(auth, formData.email, formData.password);
         const oobCode = await generateActionCode(formData.email, "VERIFY_EMAIL");
@@ -128,6 +129,7 @@ const getRoleLabel = (r: UserRole) => {
       } catch (emailError: any) {
         console.error("Failed to send verification email:", emailError);
       }
+      */
 
       // Sử dụng role đã chọn trong thông báo
       const roleLabel = getRoleLabel(role);
