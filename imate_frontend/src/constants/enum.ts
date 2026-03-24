@@ -46,3 +46,27 @@ export const TRANSACTION_STATUS_OPTIONS = [
   { value: TransactionStatus.Cancelled, label: "Đã hủy" },
   { value: TransactionStatus.Escrow, label: "Đang giữ hộ" },
 ] as const;
+
+export const TransactionType = {
+  Deposit: "Deposit",
+  Withdrawal: "Withdrawal",
+  Subscription: "Subscription",
+  Refund: "Refund",
+  Penalty: "Penalty",
+  BookingFee: "BookingFee",
+  BookingPayout: "BookingPayout",
+  InterviewFee: "InterviewFee",
+} as const;
+
+export type TransactionTypeEnum = keyof typeof TransactionType;
+
+export const TRANSACTION_TYPE_OPTIONS = [
+  { value: TransactionType.Deposit, label: "Nạp tiền" },
+  { value: TransactionType.Withdrawal, label: "Rút tiền" },
+  { value: TransactionType.Subscription, label: "Gói dịch vụ" },
+  { value: TransactionType.Refund, label: "Hoàn tiền" },
+  { value: TransactionType.Penalty, label: "Phí phạt" },
+  { value: TransactionType.BookingFee, label: "Phí đặt lịch" },
+  { value: TransactionType.BookingPayout, label: "Phí Mentor" },
+  { value: TransactionType.InterviewFee, label: "Phí phỏng vấn" },
+];

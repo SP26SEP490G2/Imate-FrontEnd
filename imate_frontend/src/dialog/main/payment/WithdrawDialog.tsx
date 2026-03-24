@@ -6,6 +6,7 @@ import {
   DialogTitle,
   DialogFooter,
   DialogClose,
+  DialogDescription,
 } from "@/components/ui/dialog";
 
 import { Button } from "@/components/ui/button";
@@ -20,21 +21,22 @@ import { useAuth } from "@/store/AuthContext";
 interface WithdrawDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
 }
 
 export function WithdrawDialog({
   open,
   onOpenChange,
+  onSuccess
 }: WithdrawDialogProps) {
   const { user } = useAuth();
-
+  
   const [amount, setAmount] = React.useState<number | "">("");
   const [bankCode, setBankCode] = React.useState("");
   const [bankAccountHolder, setBankAccountHolder] = React.useState("");
   const [bankAccountNumber, setBankAccountNumber] = React.useState("");
 
   const [loading, setLoading] = React.useState(false);
-
   const isCandidate = user?.role === "Candidate";
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -70,6 +72,7 @@ export function WithdrawDialog({
       setBankCode("");
       setBankAccountHolder("");
       setBankAccountNumber("");
+      onSuccess?.();     
     } catch (err: any) {
       const message =
         err.response?.data?.message || "Tạo yêu cầu rút tiền thất bại";
@@ -86,6 +89,9 @@ export function WithdrawDialog({
           <DialogTitle className="text-lg font-semibold">
             Rút imCoin
           </DialogTitle>
+          <DialogDescription>
+            Yêu cầu rút tiền sẽ được xử lý trong vòng 48 giờ.
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -123,7 +129,7 @@ export function WithdrawDialog({
           {isCandidate && (
             <div className="space-y-3">
               <label className="text-sm text-slate-300">
-                Thông tin ngân hàng
+                Thông tin ngân hàng <span className="text-red-400">*</span>
               </label>
 
               <Input

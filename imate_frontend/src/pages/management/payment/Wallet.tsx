@@ -11,8 +11,9 @@ import type { WalletSummaryResponse } from "@/types/response/wallet.response";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { StatusBadge, type Status } from "@/components/ui/status-badge";
-import { TRANSACTION_STATUS_OPTIONS, TransactionStatus, type TransactionStatusType } from "@/constants/enum";
+import { TRANSACTION_STATUS_OPTIONS, TRANSACTION_TYPE_OPTIONS, TransactionStatus, type TransactionStatusType } from "@/constants/enum";
 import { ROLES } from "@/constants/role";
+import { toast } from "react-toastify";
 
 function Wallet() {
   const { user, refetchUser } = useAuth();
@@ -21,7 +22,6 @@ function Wallet() {
 
   const [openDeposit, setOpenDeposit] = useState(false);
   const [openWithdraw, setOpenWithdraw] = useState(false);
-  const [status, setStatus] = useState<"success" | "cancel" | null>(null);
   const [countdown, setCountdown] = useState(5);
 
   // Wallet Summary
@@ -38,6 +38,7 @@ function Wallet() {
   const [totalCount, setTotalCount] = useState(0);
 
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const [typeFilter, setTypeFilter] = useState<string>("");
 
   const params: any = { pageNumber: page, pageSize };
     if (statusFilter) {
@@ -51,61 +52,46 @@ function Wallet() {
   const statusBadgeMap: Record<TransactionStatusType, Status> = {
       [TransactionStatus.Pending]: "pending",
       [TransactionStatus.Completed]: "active",
-      [TransactionStatus.Failed]: "error",
-      [TransactionStatus.Cancelled]: "inactive",
+      [TransactionStatus.Failed]: "inactive",
+      [TransactionStatus.Cancelled]: "error",
       [TransactionStatus.Escrow]: "draft"
     };
 
-  // Payment result
   useEffect(() => {
   const params = new URLSearchParams(location.search);
-  const paymentStatus = params.get("status");       // "PAID" hoặc "CANCELLED"
-  const cancel = params.get("cancel");              // "true" nếu hủy
-  const orderCode = params.get("orderCode");        // Đây là transactionId bạn set lúc tạo
+  const paymentStatus = params.get("status"); 
+  const cancel = params.get("cancel");
+  const orderCode = params.get("orderCode");
 
-  // Case 1: Thanh toán thành công
   if (paymentStatus === "PAID") {
-    setStatus("success");
+    toast.success("Thanh toán thành công");
     refetchUser();
-    navigate("/wallet", { replace: true }); // Xóa query params
+
+    navigate("/wallet", { replace: true });
+
+    setTimeout(() => {
+      fetchAll();
+    }, 300);
     return;
   }
 
-  // Case 2: Hủy thanh toán (từ PayOS redirect cancelUrl)
   if (cancel === "true" || paymentStatus === "CANCELLED") {
-    // Lấy transactionId từ orderCode (vì PayOS trả orderCode chính là ID transaction)
-    const transactionIdFromOrder = orderCode ? Number(orderCode) : null;
-
-    if (transactionIdFromOrder) {
-      setStatus("cancel");
-
-      // Gọi API hủy transaction
-      const cancelTxn = async () => {
-        try {
-          await cancelTransaction(transactionIdFromOrder);
-          console.log(`Transaction ${transactionIdFromOrder} đã được hủy thành công`);
-          refetchUser(); // Refresh số dư + lịch sử
-        } catch (err) {
-          console.error("Lỗi khi hủy transaction:", err);
-          // Optional: toast lỗi
-        }
-      };
-
-      cancelTxn();
-    } else {
-      // Nếu không có orderCode → vẫn hiện màn hình hủy nhưng không gọi API
-      setStatus("cancel");
-      console.warn("Không tìm thấy orderCode/transactionId trong query params khi cancel");
+    if (orderCode) {
+      cancelTransaction(Number(orderCode));
     }
 
-    // Xóa query params để tránh lặp khi reload
+    toast.error("Thanh toán đã bị hủy");
+
     navigate("/wallet", { replace: true });
+
+    setTimeout(() => {
+      fetchAll();
+    }, 300);
   }
-}, [location, refetchUser, navigate]);
+}, [location]);
 
   // Countdown redirect
   useEffect(() => {
-    if (!status) return;
     if (countdown === 0) {
       navigate("/wallet", { replace: true });
       window.location.reload();
@@ -134,13 +120,17 @@ function Wallet() {
     setError(null);
     try {
       const params: any = {
-      pageNumber: page,
-      pageSize: pageSize,
-    };
+        pageNumber: page,
+        pageSize: pageSize,
+      };
 
-    if (statusFilter !== "") {
-      params.status = statusFilter;
-    }
+      if (statusFilter !== "") {
+        params.status = statusFilter;
+      }
+
+      if (typeFilter !== "") {
+        params.type = typeFilter;
+      }
       const response = await getTransactions(params);
       setTransactions(response.data?.items || []);
       setTotalPages(response.data?.totalPages || 1);
@@ -153,50 +143,16 @@ function Wallet() {
     }
   };
 
+  const fetchAll = async () => {
+    fetchWalletSummary();
+    fetchTransactions();
+  };
+
   useEffect(() => {
-    if (!status) {
       fetchWalletSummary();
       fetchTransactions();
-    }
-  }, [page, status, statusFilter]);
+  }, [page, statusFilter, typeFilter]);
 
-  if (status) {
-    return (
-      <div className="flex items-center justify-center pt-20">
-        <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center shadow-xl">
-          <div className="mb-6">
-            {status === "success" ? (
-              <div className="w-16 h-16 mx-auto rounded-full bg-green-500/20 flex items-center justify-center">
-                <span className="text-green-400 text-3xl">✓</span>
-              </div>
-            ) : (
-              <div className="w-16 h-16 mx-auto rounded-full bg-red-500/20 flex items-center justify-center">
-                <span className="text-red-400 text-3xl">✕</span>
-              </div>
-            )}
-          </div>
-          <h2 className="text-2xl font-bold mb-2">
-            {status === "success" ? "Thanh toán thành công" : "Thanh toán đã bị hủy"}
-          </h2>
-          <p className="text-slate-400 mb-6">
-            {status === "success" ? "Số dư ví của bạn đã được cập nhật." : "Giao dịch đã bị hủy."}
-          </p>
-          <p className="text-sm text-slate-500 mb-6">
-            Tự động quay về Ví sau <span className="text-indigo-400 font-semibold">{countdown}s</span>
-          </p>
-          <Button
-            onClick={() => {
-              window.location.href = "/wallet";
-            }}
-          >
-            Quay về Ví ngay
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  // ── MAIN LAYOUT ──
   return (
     <div className="container mx-auto max-w-7xl pt-10 pb-12 space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -332,13 +288,33 @@ function Wallet() {
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-white">Lịch sử giao dịch</h2>
 
+              <div className="flex items-center gap-2">
+                {/* Filter Type */}
+                <p className="text-slate-400 text-sm">Loại:</p>
+              <select
+                value={typeFilter}
+                onChange={(e) => {
+                  setTypeFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="bg-slate-800 border border-slate-700 text-white text-sm rounded-lg px-3 py-2 w-36"
+              >
+                <option value="">Tất cả</option>
+                {TRANSACTION_TYPE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              {/* Filter Status */}
+              <p className="text-slate-400 text-sm">Trạng thái:</p>
               <select
                 value={statusFilter}
                 onChange={(e) => {
                   setStatusFilter(e.target.value);
                   setPage(1);
                 }}
-                className="bg-slate-800 border border-slate-700 text-white text-sm rounded-lg px-3 py-2"
+                className="bg-slate-800 border border-slate-700 text-white text-sm rounded-lg px-3 py-2 w-36"
               >
                 <option value="">Tất cả</option>
                 {TRANSACTION_STATUS_OPTIONS.map((opt) => (
@@ -347,6 +323,7 @@ function Wallet() {
                   </option>
                 ))}
               </select>
+            </div>
             </div>
 
             {loading ? (
@@ -383,7 +360,12 @@ function Wallet() {
                       {transactions.map((tx) => (
                         <TableRow key={tx.transactionId}>
                           <TableCell>{new Date(tx.date).toLocaleString("vi-VN")}</TableCell>
-                          <TableCell className="font-medium">{tx.transactionType}</TableCell>
+                          <TableCell className="font-medium">
+                            {
+                              TRANSACTION_TYPE_OPTIONS.find(opt => opt.value === tx.transactionType)?.label 
+                              || tx.transactionType
+                            }
+                          </TableCell>
                           <TableCell
                             className={cn(
                               tx.amount > 0 ? "text-green-400" : "text-red-400",
@@ -412,8 +394,8 @@ function Wallet() {
         </div>
       </div>
 
-      <DepositDialog open={openDeposit} onOpenChange={setOpenDeposit} />
-      <WithdrawDialog open={openWithdraw} onOpenChange={setOpenWithdraw} />
+      <DepositDialog open={openDeposit} onOpenChange={setOpenDeposit} onSuccess={fetchAll}/>
+      <WithdrawDialog open={openWithdraw} onOpenChange={setOpenWithdraw} onSuccess={fetchAll} />
     </div>
   );
 }

@@ -21,12 +21,14 @@ import { useAuth } from "@/store/AuthContext";
 interface DepositDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  currentBalance?: number; // để hiển thị số dư
+  currentBalance?: number;
+  onSuccess?: () => void;
 }
 
 export function DepositDialog({
   open,
   onOpenChange,
+  onSuccess
 }: DepositDialogProps) {
   const { user} = useAuth();
   const [amount, setAmount] = React.useState<number | "">("");
@@ -55,7 +57,7 @@ export function DepositDialog({
 
       toast.success("Đang chuyển đến trang thanh toán...");
 
-      // 👉 redirect sang PayOS
+      onSuccess?.();
       window.location.href = checkoutUrl;
 
     } catch (err: any) {

@@ -118,7 +118,7 @@ export default function TransactionManagement() {
 
   const activeType = useMemo(() => {
     if (tab === "withdrawal") return "Withdrawal";
-    if (tab === "booking") return "PointBookingPayout";
+    if (tab === "booking") return "BookingPayout";
     return undefined;
   }, [tab]);
 
