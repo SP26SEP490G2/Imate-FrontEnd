@@ -90,17 +90,6 @@ function Wallet() {
   }
 }, [location]);
 
-  // Countdown redirect
-  useEffect(() => {
-    if (countdown === 0) {
-      navigate("/wallet", { replace: true });
-      window.location.reload();
-      return;
-    }
-    const timer = setTimeout(() => setCountdown((prev) => prev - 1), 1000);
-    return () => clearTimeout(timer);
-  }, [countdown, status, navigate]);
-
   // Fetch wallet summary
   const fetchWalletSummary = async () => {
     setSummaryLoading(true);
@@ -169,7 +158,7 @@ function Wallet() {
 
             <p className="text-sm text-gray-400 mb-1">Số dư hiện tại</p>
             <p className="text-4xl font-extrabold text-yellow-400 tracking-tight leading-none mb-6">
-              {user?.balance?.toLocaleString() ?? "0"}
+              {walletSummary?.currentBalance?.toLocaleString() ?? "0"}
               <span className="text-xl font-bold text-yellow-300/90 ml-2">imCoin</span>
             </p>
 
