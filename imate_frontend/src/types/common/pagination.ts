@@ -23,6 +23,9 @@ export interface CommonParams {
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
   positionId?: number;
+  positionName?: string;
+  skillName?: string;
+  companyName?: string;
 }
 
 export interface PaginatedApiResponse<T> {
