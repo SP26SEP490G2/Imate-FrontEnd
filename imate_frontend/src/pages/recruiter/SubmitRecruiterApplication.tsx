@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth } from "@/store/AuthContext";
-import { submitRecruiterProfile } from "@/services/recruiterService";
+import { submitRecruiterProfile, uploadCompanyLogo } from "@/services/recruiterService";
 import type { SubmitRecruiterProfileRequest } from "@/types/request/recruiter.request";
-import { Briefcase } from "lucide-react";
+import { Briefcase, Camera, Upload } from "lucide-react";
 
 export default function SubmitRecruiterApplication() {
   const navigate = useNavigate();
@@ -24,6 +24,30 @@ export default function SubmitRecruiterApplication() {
     if (error) setError(null);
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate size (2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("File quá lớn. Vui lòng chọn file dưới 2MB.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const url = await uploadCompanyLogo(file);
+      setFormData((prev) => ({ ...prev, companyLogo: url }));
+      toast.success("Tải logo lên thành công.");
+    } catch (err: any) {
+      const msg = err.message || "Không thể tải logo lên. Vui lòng thử lại.";
+      toast.error(msg);
+      console.error("Logo upload error:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.companyName?.trim() || !formData.companyAddress?.trim() || !formData.phone?.trim()) {
@@ -39,6 +63,7 @@ export default function SubmitRecruiterApplication() {
         phone: formData.phone.trim(),
       };
       if (formData.companyWebsite?.trim()) payload.companyWebsite = formData.companyWebsite.trim();
+      if (formData.companyLogo) payload.companyLogo = formData.companyLogo;
 
       await submitRecruiterProfile(payload);
       await refetchUser();
@@ -88,6 +113,23 @@ export default function SubmitRecruiterApplication() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="flex flex-col items-center mb-6">
+            <div className="relative group">
+              <div className="w-24 h-24 rounded-2xl bg-slate-800 border-2 border-dashed border-white/10 flex items-center justify-center overflow-hidden transition group-hover:border-indigo-500/50">
+                {formData.companyLogo ? (
+                  <img src={formData.companyLogo} alt="Company Logo" className="w-full h-full object-cover" />
+                ) : (
+                  <Upload className="h-8 w-8 text-slate-500 group-hover:text-indigo-400 transition" />
+                )}
+              </div>
+              <label className="absolute -bottom-2 -right-2 p-2 bg-indigo-600 rounded-lg cursor-pointer hover:bg-indigo-500 transition shadow-lg">
+                <Camera className="h-4 w-4 text-white" />
+                <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} />
+              </label>
+            </div>
+            <p className="text-xs text-slate-500 mt-3">Logo công ty (Khuyên dùng 512x512, &lt; 2MB)</p>
+          </div>
+
           <div>
             <label className={labelClass}>Tên công ty *</label>
             <input

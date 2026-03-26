@@ -2,8 +2,6 @@
  * API Configuration - Contains all API endpoint URIs
  */
 
-import { CreateJobPost } from "@/services/recruiterService";
-
 const APIConfig = {
   // Auth endpoints
   Auth: {
@@ -80,6 +78,7 @@ const APIConfig = {
     GetJobApplicationList: "job-applications",
     GetRecruiterJobApplication: "recruiter-job-applications",
     UpdateRecruiterProfile: "/recruiter-profile",
+    UploadLogo: "/recruiters/upload-logo",
     CreateJobPost: "/create-job-posts",
     UpdateJob: "/update-job",
     CloseJob: "/close-job",

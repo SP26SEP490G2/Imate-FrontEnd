@@ -7,5 +7,6 @@ export interface SubmitRecruiterProfileRequest {
   companyName: string;
   companyAddress: string;
   companyWebsite?: string;
+  companyLogo?: string;
   phone: string;
 }
