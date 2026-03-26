@@ -8,6 +8,7 @@ import {
   Layers,
   Logs,
   FileQuestion,
+  Settings,
 } from "lucide-react";
 
 import { ROLES } from "@/constants/role";
@@ -21,6 +22,7 @@ import Classification from "@/pages/management/classification/Classification";
 import ViewQuestions from "@/pages/management/question/ViewQuestions";
 import AdminAuditLog from "@/pages/admin/AdminAuditLog";
 import TransactionManagement from "@/pages/management/payment/TransactionManagement";
+import SystemConfigManagement from "@/pages/management/config/SystemConfigManagement";
 
 export const managementRoutes = [
   {
@@ -64,6 +66,13 @@ export const managementRoutes = [
     path: "transactions",
     element: <TransactionManagement />,
     allowedRoles: [ROLES.STAFF, ROLES.ADMIN],
+  },
+  {
+    label: "Cấu hình hệ thống",
+    icon: Settings,
+    path: "config",
+    element: <SystemConfigManagement />,
+    allowedRoles: [ROLES.ADMIN],
   },
   {
     label: "Truy vết hệ thống",
