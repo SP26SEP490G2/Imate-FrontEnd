@@ -227,7 +227,8 @@ const ViewProfile = () => {
 
             {/* Nút Chỉnh sửa / Lưu */}
             {!isEditMode ? (
-              <Button className="w-full cursor-pointer bg-gradient-to-r from-[#6C63FF] to-[#8B5CF6] text-sm hover:brightness-110 md:w-auto md:text-base" onClick={() => setIsEditMode(true)}>
+              <Button className="w-full cursor-pointer bg-gradient-to-r from-[#6C63FF] to-[#8B5CF6] text-sm hover:brightness-110 md:w-auto md:text-base gap-2" onClick={() => setIsEditMode(true)}>
+                <Edit className="h-4 w-4" />
                 Chỉnh sửa hồ sơ
               </Button>
             ) : (
@@ -287,7 +288,7 @@ const ViewProfile = () => {
                       <Tooltip>
                         <TooltipTrigger asChild className="cursor-pointer">
                           <span className="inline-flex">
-                            <Button className="h-7 w-7 cursor-pointer bg-green-500 hover:bg-green-500/50" disabled>
+                            <Button className="h-7 w-7 p-0 cursor-pointer bg-green-500 hover:bg-green-500/50 flex items-center justify-center" disabled>
                               <Edit className="h-4 w-4" />
                             </Button>
                           </span>

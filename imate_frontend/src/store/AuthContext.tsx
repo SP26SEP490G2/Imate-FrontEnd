@@ -1,7 +1,7 @@
 import { auth } from "@/lib/firebaseConfig";
 import apiClient from "@/services/apiClient";
 import { registerWithGoogle, verifyTokenAndLogin } from "@/services/authService";
-import type { AuthContextType, AuthResponse, LoginEmailData, User } from "@/types/common/auth";
+import type { AuthContextType, AuthResponse, LoginEmailData, User, UserRole } from "@/types/common/auth";
 import { GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup, signOut, type UserCredential } from "firebase/auth";
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
 
@@ -139,7 +139,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const loginWithGoogle = async (): Promise<User> => {
+  const loginWithGoogle = async (role?: UserRole): Promise<User> => {
     setIsLoading(true);
     setError(null);
 
@@ -165,7 +165,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // ... logic xử lý thành công (giữ nguyên code cũ)
         if (!result.user) throw new Error("...");
         const idToken = await result.user.getIdToken();
-        const response = await registerWithGoogle({ idToken });
+        const response = await registerWithGoogle({ idToken, role });
         const user = await handleLoginSuccess(response);
         // Đảm bảo user đã được set trước khi set isLoading false
         await new Promise((resolve) => setTimeout(resolve, 0));
