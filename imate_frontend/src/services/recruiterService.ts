@@ -13,6 +13,17 @@ export const submitRecruiterProfile = async (payload: SubmitRecruiterProfileRequ
   await apiClient.post(APIConfig.Recruiter.SubmitRecruiterProfile, payload);
 };
 
+/**
+ * Upload logo công ty.
+ * Trả về folderUrl / fileUrl từ S3.
+ */
+export const uploadCompanyLogo = async (file: File): Promise<string> => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const response = await apiClient.post(APIConfig.Recruiter.UploadLogo, formData);
+  return response.data?.data ?? response.data;
+};
+
 
 export const updateRecruiterProfile = async (data: User) => {
   try {

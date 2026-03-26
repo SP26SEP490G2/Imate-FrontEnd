@@ -12,4 +12,8 @@ export interface SubmitMentorProfileRequest {
   bankAccountNumber: string;
   bankCode: string;
   pricePerSession?: number;
+  positionIds: number[];
+  skillIds: number[];
+  companyIds: number[];
+  yoe?: number;
 }
