@@ -1,7 +1,7 @@
 import apiClient from "./apiClient";
 import APIConfig from "@/config/apiConfig";
-import type { SubmitRecruiterProfileRequest } from "@/types/request/recruiter.request";
 import type { User } from "@/types/common/auth";
+import type { SubmitRecruiterProfileRequest, UpdateRecruiterProfileRequest } from "@/types/request/recruiter.request";
 import type { AppliedCandidateResponse, CandidateJobListResponse, GetAppliedCandidateRequest, GetCandidateJobListRequest, JobResponse } from "@/types/common/recruiter";
 import type { GetJobApplicationsRequest } from "@/types/common/recruiter";
 import type { GetAppliedCandidateJobs, AppliedJobCandidateResponse } from "@/types/common/candidate";
@@ -25,9 +25,22 @@ export const uploadCompanyLogo = async (file: File): Promise<string> => {
 };
 
 
-export const updateRecruiterProfile = async (data: User) => {
+export const updateRecruiterProfile = async ({ companyName, companyLogo, website, industry, companySize, address, phone }: UpdateRecruiterProfileRequest) => {
   try {
-    const res = await apiClient.put(APIConfig.Recruiter.UpdateRecruiterProfile, data);
+    const formData = new FormData();
+    formData.append("CompanyName", companyName || "");
+    
+    if (companyLogo instanceof File) {
+      formData.append("CompanyLogo", companyLogo);
+    }
+    
+    if (website) formData.append("Website", website);
+    formData.append("Industry", industry || "");
+    formData.append("CompanySize", companySize || "");
+    formData.append("Address", address || "");
+    formData.append("Phone", phone || "");
+
+    const res = await apiClient.put(APIConfig.Recruiter.UpdateRecruiterProfile, formData);
 
     return res.data;
   } catch (error) {
