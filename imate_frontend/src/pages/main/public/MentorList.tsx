@@ -244,7 +244,7 @@ const MentorList: React.FC = () => {
                           <p className="text-xs text-slate-500 mb-4">{mentor.totalRatingCount ?? 0} đánh giá</p>
                         </Link>
                         <Link
-                          to={mentor.accountId ? `/mentor/${mentor.accountId}/book` : '/sign-in'}
+                          to={mentor.accountId ? `/view-mentor/${mentor.accountId}?book=true` : '/sign-in'}
                           className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold text-center hover:opacity-90 transition-all shadow-lg shadow-indigo-500/20"
                         >
                           Đặt lịch
