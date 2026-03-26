@@ -72,6 +72,7 @@ import ViewApplication from "@/pages/main/public/ViewApplication";
 
 import TransactionManagement from "@/pages/management/payment/TransactionManagement";
 import Wallet from "@/pages/management/payment/Wallet";
+import SystemConfigManagement from "@/pages/management/config/SystemConfigManagement";
 
 /**
  * Route Configuration Type
@@ -149,6 +150,7 @@ const routeConfigs: RouteConfig[] = [
   { path: "/management/users", element: <UserManagement />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN] },
   { path: "/management/subscriptions", element: <SubscriptionManagement />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN] },
   { path: "/management/transactions", element: <TransactionManagement />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
+  { path: "/management/config", element: <SystemConfigManagement />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN] },
 ];
 
 /**
