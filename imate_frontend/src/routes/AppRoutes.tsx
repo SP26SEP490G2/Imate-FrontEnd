@@ -39,6 +39,9 @@ import InterviewFeedbackDetail from "@/pages/candidate/InterviewFeedbackDetail";
 import InterviewSetup from "@/pages/candidate/InterviewSetup";
 import InterviewChat from "@/pages/candidate/InterviewChat";
 import InterviewSchedule from "@/pages/candidate/InterviewSchedule";
+import ViewJobApplications from "@/pages/candidate/ViewJobApplications";
+import ViewJobApplicationDetail from "@/pages/candidate/ViewJobApplicationDetail";
+import ViewAppliedJob from "@/pages/candidate/ViewAppliedJob";
 import VideoCallPage from "@/pages/videocall/VideoCallPage";
 // Pages - Mentor
 import SubmitMentorApplication from "@/pages/mentor/SubmitMentorApplication";
@@ -132,6 +135,9 @@ const routeConfigs: RouteConfig[] = [
   { path: "/mentor/manage-slots", element: <AvailabilityCalendar />, layout: LAYOUT.MAIN, requireAuth: true, roles: [ROLES.MENTOR], accountStatus: ACCOUNT_STATUS.Active },
   { path: "/video-call/:bookingId", element: <VideoCallPage />, layout: LAYOUT.NONE, requireAuth: true, accountStatus: ACCOUNT_STATUS.Active },
   { path: "/view-application", element: <ViewApplication />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/view-job-applications", element: <ViewJobApplications />, layout: LAYOUT.MAIN, requireAuth: true, roles: [ROLES.CANDIDATE] },
+  { path: "/view-job-applications/:id", element: <ViewJobApplicationDetail />, layout: LAYOUT.MAIN, requireAuth: true, roles: [ROLES.CANDIDATE] },
+  { path: "/view-applied-job", element: <ViewAppliedJob />, layout: LAYOUT.MAIN, requireAuth: true, roles: [ROLES.CANDIDATE] },
   { path: "/wallet", element: <Wallet />, layout: LAYOUT.MAIN, requireAuth: true },
 
   // ===== MANAGEMENT LAYOUT ROUTES =====
@@ -151,6 +157,8 @@ const routeConfigs: RouteConfig[] = [
   { path: "/management/subscriptions", element: <SubscriptionManagement />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN] },
   { path: "/management/transactions", element: <TransactionManagement />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
   { path: "/management/config", element: <SystemConfigManagement />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN] },
+
+
 ];
 
 /**
