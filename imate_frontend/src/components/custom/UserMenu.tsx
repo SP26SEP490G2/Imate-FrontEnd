@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Card } from "../ui/card";
-import { MENTOR_PROFILE_MENU, USER_PROFILE_MENU } from "@/constants/menu";
+import { MENTOR_PROFILE_MENU, RECRUITER_PROFILE_MENU, USER_PROFILE_MENU } from "@/constants/menu";
 import { ROLES } from "@/constants/role";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/store/AuthContext";
@@ -92,7 +92,9 @@ const UserMenu: React.FC<UserMenuProps> = ({ isOpenUserMenu, onClose, anchorRef 
 
           {(user?.role === ROLES.MENTOR
             ? MENTOR_PROFILE_MENU
-            : USER_PROFILE_MENU
+            : user?.role === ROLES.RECRUITER
+              ? RECRUITER_PROFILE_MENU
+              : USER_PROFILE_MENU
           ).map((item, index) => {
             const Icon = item.icon;
             const isLogout = item.label === "Đăng xuất";

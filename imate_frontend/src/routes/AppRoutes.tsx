@@ -45,6 +45,7 @@ import PendingApplication from "@/pages/mentor/PendingApplication";
 // Mentor calendar management
 import AvailabilityCalendar from "@/pages/mentor/AvailabilityCalendar";
 import MentorInterviewSchedule from "@/pages/mentor/MentorInterviewSchedule";
+import MentorRatings from "@/pages/mentor/MentorRatings";
 
 // Pages - Recruiter
 import SubmitRecruiterApplication from "@/pages/recruiter/SubmitRecruiterApplication";
@@ -128,6 +129,7 @@ const routeConfigs: RouteConfig[] = [
   { path: "/interview-schedule", element: <InterviewSchedule />, layout: LAYOUT.MAIN, requireAuth: true, roles: [ROLES.CANDIDATE] },
   { path: "/mentor/interview-schedule", element: <MentorInterviewSchedule />, layout: LAYOUT.MAIN, requireAuth: true, roles: [ROLES.MENTOR] },
   { path: "/mentor/manage-slots", element: <AvailabilityCalendar />, layout: LAYOUT.MAIN, requireAuth: true, roles: [ROLES.MENTOR] },
+  { path: "/mentor/ratings", element: <MentorRatings />, layout: LAYOUT.MAIN, requireAuth: true, roles: [ROLES.MENTOR] },
   { path: "/video-call/:bookingId", element: <VideoCallPage />, layout: LAYOUT.NONE, requireAuth: true },
   { path: "/view-application", element: <ViewApplication />, layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/wallet", element: <Wallet />, layout: LAYOUT.MAIN, requireAuth: true },

@@ -1,9 +1,10 @@
-import { FolderOpen, LibraryBig, CircleUser, CreditCard, FileUser, Sparkles, LogOut, Wallet, Package, FileQuestion, History, Calendar, Briefcase } from "lucide-react";
+import { FolderOpen, LibraryBig, CircleUser, CreditCard, FileUser, Sparkles, LogOut, Wallet, Package, FileQuestion, History, Calendar, Briefcase, Star } from "lucide-react";
 import type { MenuItem } from "@/types/common/menu";
 
 export const MENTOR_MENU_ITEMS: MenuItem[] = [
   { label: "Lịch làm việc", href: "/mentor/interview-schedule" },
   { label: "Quản lý lịch lặp lại", href: "/mentor/manage-slots" },
+  { label: "Đánh giá từ ứng viên", href: "/mentor/ratings" },
   { label: "Thu nhập", href: "/mentor/income" },
   { label: "Lịch sử phỏng vấn", href: "/mentor/interview-history" },
   { label: "Câu hỏi từ cộng đồng", href: "/contributed-question-bank" },
@@ -104,6 +105,11 @@ export const MENTOR_PROFILE_MENU: MenuItem[] = [
     label: "Quản lý lịch lặp lại",
     href: "/mentor/manage-slots",
     icon: Calendar,
+  },
+  {
+    label: "Đánh giá từ ứng viên",
+    href: "/mentor/ratings",
+    icon: Star,
   },
   {
     label: "Câu hỏi đã đăng",
