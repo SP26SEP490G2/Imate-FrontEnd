@@ -103,8 +103,8 @@ const [errors, setErrors] = useState<Record<string, string>>({});
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className="h-7 w-7 bg-gray-400 hover:bg-gray-500 cursor-pointer">
-                    <Edit className="h-4 w-4" />
+                <Button className="h-7 w-7 p-0 bg-[#8B5CF6] hover:bg-[#7C3AED] cursor-pointer flex items-center justify-center">
+                    <Edit className="h-4 w-4 text-white" />
                 </Button>
             </DialogTrigger>
 

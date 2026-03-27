@@ -183,12 +183,12 @@ const UpdateMentorDialog: React.FC<UpdateMentorDialogProps> = ({ type, onSubmit,
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {type === "price" ? (
-          <Button className="h-7 w-7 cursor-pointer bg-green-500 hover:bg-green-500/50">
-            <Edit className="h-4 w-4" />
+          <Button className="h-7 w-7 p-0 cursor-pointer bg-green-500 hover:bg-green-500/50 flex items-center justify-center">
+            <Edit className="h-4 w-4 text-white" />
           </Button>
         ) : (
-          <Button className="h-7 w-7 cursor-pointer bg-gray-400 hover:bg-gray-500">
-            <Edit className="h-4 w-4" />
+          <Button className="h-7 w-7 p-0 cursor-pointer bg-[#8B5CF6] hover:bg-[#7C3AED] flex items-center justify-center">
+            <Edit className="h-4 w-4 text-white" />
           </Button>
         )}
       </DialogTrigger>
