@@ -19,6 +19,7 @@ const APIConfig = {
     GetListPreviewMentors: "get-list-preview-mentors",
     SubmitMentorProfile: "profile/mentor",
     CancelBooking: "/bookings/{bookingId}/cancel",
+    GetMyCandidateRatings: "mentor/my-candidate-ratings",
   },
 
   // Question endpoints (không dùng leading slash để axios nối đúng baseURL .../api)
