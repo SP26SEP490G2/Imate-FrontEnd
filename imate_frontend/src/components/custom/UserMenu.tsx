@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Card } from "../ui/card";
 import { MENTOR_PROFILE_MENU, RECRUITER_PROFILE_MENU, USER_PROFILE_MENU } from "@/constants/menu";
+import { ROLES } from "@/constants/role";
 import type { MenuItem } from "@/types/common/menu";
-import { Separator } from "../ui/separator";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/store/AuthContext";
 import { cn } from "@/lib/utils";
@@ -72,12 +72,36 @@ const UserMenu: React.FC<UserMenuProps> = ({ isOpenUserMenu, onClose, anchorRef 
           ref={menuRef}
         >
           <Card className="w-72 overflow-hidden rounded-xl border border-white/10 bg-slate-900/90 backdrop-blur-xl shadow-xl">
+            {/* User info */}
+            <div className="flex items-center gap-3 border-b border-white/10 p-4">
+              <div
+                className={cn(
+                  "flex h-10 w-10 items-center justify-center overflow-hidden rounded-full font-semibold",
+                  getAvatarColor(user?.fullName || "User")
+                )}
+              >
+                {loaded ? (
+                  <img src={user?.avatarUrl} className="h-full w-full object-cover" />
+                ) : (
+                  <span className="font-semibold text-white">
+                    {getInitials(user?.fullName || "User")}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex flex-col">
+                <h3 className="text-sm font-semibold text-white">
+                  {user?.fullName}
+                </h3>
+                <p className="text-xs text-slate-400">{user?.email}</p>
+              </div>
+            </div>
+
             {/* Menu */}
             <div className="flex flex-col py-2">
-
-              {(user?.role === "Mentor"
+              {(user?.role === ROLES.MENTOR
                 ? MENTOR_PROFILE_MENU
-                : user?.role === "Recruiter"
+                : user?.role === ROLES.RECRUITER
                   ? RECRUITER_PROFILE_MENU
                   : USER_PROFILE_MENU
               ).map((item: MenuItem, index: number) => {

@@ -56,7 +56,18 @@ export default function SubmitMentorApplication() {
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+    let { name, value } = e.target;
+
+    // Enforce digits only for phone and bank account
+    if (name === "phone" || name === "bankAccountNumber") {
+      value = value.replace(/\D/g, "");
+    }
+
+    // Force uppercase for bank account holder name
+    if (name === "bankAccountHolderName") {
+      value = value.toUpperCase();
+    }
+
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (name === "bankName") setFormData((prev) => ({ ...prev, bankCode: value }));
     if (error) setError(null);

@@ -19,7 +19,13 @@ export default function SubmitRecruiterApplication() {
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
+    let { name, value } = e.target;
+    
+    // Enforce digits only for phone
+    if (name === "phone") {
+      value = value.replace(/\D/g, "");
+    }
+    
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (error) setError(null);
   };
