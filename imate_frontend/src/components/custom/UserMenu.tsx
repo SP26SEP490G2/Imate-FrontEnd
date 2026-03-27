@@ -1,11 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Card } from "../ui/card";
-import { MENTOR_PROFILE_MENU, USER_PROFILE_MENU } from "@/constants/menu";
+import { MENTOR_PROFILE_MENU, RECRUITER_PROFILE_MENU, USER_PROFILE_MENU } from "@/constants/menu";
+import type { MenuItem } from "@/types/common/menu";
 import { Separator } from "../ui/separator";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/store/AuthContext";
 import { cn } from "@/lib/utils";
 import { getInitials, getAvatarColor } from "@/helpers/common";
+
+import { motion, AnimatePresence } from "framer-motion";
 
 interface UserMenuProps {
   isOpenUserMenu: boolean;
@@ -57,71 +60,57 @@ const UserMenu: React.FC<UserMenuProps> = ({ isOpenUserMenu, onClose, anchorRef 
     img.onerror = () => setLoaded(false);
   }, [user?.avatarUrl]);
 
-  if (!isOpenUserMenu) return null;
   return (
-    <div className="absolute top-14 right-0 z-50" ref={menuRef}>
-      <Card className="w-72 overflow-hidden rounded-xl border border-white/10 bg-slate-900/90 backdrop-blur-xl shadow-xl">
+    <AnimatePresence>
+      {isOpenUserMenu && (
+        <motion.div
+          initial={{ opacity: 0, y: -10, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -10, scale: 0.95 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+          className="absolute top-14 right-0 z-50 origin-top-right"
+          ref={menuRef}
+        >
+          <Card className="w-72 overflow-hidden rounded-xl border border-white/10 bg-slate-900/90 backdrop-blur-xl shadow-xl">
+            {/* Menu */}
+            <div className="flex flex-col py-2">
 
-        {/* User info */}
-        <div className="flex items-center gap-3 border-b border-white/10 p-4">
-          <div
-            className={cn(
-              "flex h-10 w-10 items-center justify-center overflow-hidden rounded-full font-semibold",
-              getAvatarColor(user?.fullName || "User")
-            )}
-          >
-            {loaded ? (
-              <img src={user?.avatarUrl} className="h-full w-full object-cover" />
-            ) : (
-              <span className="font-semibold text-white">
-                {getInitials(user?.fullName || "User")}
-              </span>
-            )}
-          </div>
+              {(user?.role === "Mentor"
+                ? MENTOR_PROFILE_MENU
+                : user?.role === "Recruiter"
+                  ? RECRUITER_PROFILE_MENU
+                  : USER_PROFILE_MENU
+              ).map((item: MenuItem, index: number) => {
+                const Icon = item.icon;
+                const isLogout = item.label === "Đăng xuất";
 
-          <div className="flex flex-col">
-            <h3 className="text-sm font-semibold text-white">
-              {user?.fullName}
-            </h3>
-            <p className="text-xs text-slate-400">{user?.email}</p>
-          </div>
-        </div>
-
-        {/* Menu */}
-        <div className="flex flex-col py-2">
-
-          {(user?.role === "Mentor"
-            ? MENTOR_PROFILE_MENU
-            : USER_PROFILE_MENU
-          ).map((item, index) => {
-            const Icon = item.icon;
-            const isLogout = item.label === "Đăng xuất";
-
-            return isLogout ? (
-              <button
-                key={index}
-                onClick={handleLogout}
-                className="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-white/5"
-              >
-                {Icon && <Icon className="h-4 w-4 text-red-400" />}
-                <span className="text-sm text-red-400">{item.label}</span>
-              </button>
-            ) : (
-              <Link
-                key={index}
-                to={item.href || "#"}
-                className="flex items-center gap-3 px-4 py-3 transition hover:bg-white/5"
-              >
-                {Icon && <Icon className="h-4 w-4 text-slate-300" />}
-                <span className="text-sm text-slate-200">
-                  {item.label}
-                </span>
-              </Link>
-            );
-          })}
-        </div>
-      </Card>
-    </div>
+                return isLogout ? (
+                  <button
+                    key={index}
+                    onClick={handleLogout}
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-white/5"
+                  >
+                    {Icon && <Icon className="h-4 w-4 text-red-400" />}
+                    <span className="text-sm text-red-400">{item.label}</span>
+                  </button>
+                ) : (
+                  <Link
+                    key={index}
+                    to={item.href || "#"}
+                    className="flex items-center gap-3 px-4 py-3 transition hover:bg-white/5"
+                  >
+                    {Icon && <Icon className="h-4 w-4 text-slate-300" />}
+                    <span className="text-sm text-slate-200">
+                      {item.label}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </Card>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 

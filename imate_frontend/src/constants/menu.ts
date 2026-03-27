@@ -134,9 +134,9 @@ export const RECRUITER_PROFILE_MENU: MenuItem[] = [
     icon: CircleUser,
   },
   {
-    label: "Nạp tiền",
-    href: "/wallet",
-    icon: CreditCard,
+    label: "Management",
+    href: "/management/recruiter-dashboard/job-applications",
+    icon: Briefcase,
   },
   {
     label: "Đăng xuất",

@@ -9,7 +9,7 @@ import { useAuth } from "@/store/AuthContext";
 import { managementRoutes } from "@/config/managementRoutes";
 function SignUp() {
   var navigate = useNavigate();
-  const { refetchUser } = useAuth();
+  const { loginWithGoogle, refetchUser } = useAuth();
   // Khởi tạo role với giá trị "Candidate" (Ứng viên)
   const [role, setRole] = useState<UserRole>("Candidate");
   const [viewPassword, setViewPassword] = useState(false);
@@ -159,6 +159,21 @@ const getRoleLabel = (r: UserRole) => {
   };
 
   // --- LOGIC ĐĂNG KÝ/ĐĂNG NHẬP VỚI GOOGLE ---
+  const handleGoogleLogin = async () => {
+    try {
+      setIsLoading(true);
+      const user = await loginWithGoogle(role);
+
+      toast.success(`Đăng ký thành công vai trò ${getRoleLabel(role)}!`);
+      handleNavigation(user);
+    } catch (err: any) {
+      if (err?.message === "POPUP_CLOSED") return;
+      console.error("Lỗi khi đăng ký với Google: ", err);
+      toast.error(err?.message || "Đã xảy ra lỗi khi đăng ký với Google. Vui lòng thử lại.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
 
   return (
@@ -306,6 +321,26 @@ const getRoleLabel = (r: UserRole) => {
         </div>
 
         <form onSubmit={handleEmailPasswordSubmit} className="space-y-6">
+
+          {/* GOOGLE BUTTON */}
+          <button
+            type="button"
+            onClick={handleGoogleLogin}
+            disabled={isLoading}
+            className="w-full h-14 bg-white text-slate-900 font-semibold rounded-full transition hover:bg-slate-100 flex items-center justify-center gap-3 disabled:opacity-50 cursor-pointer"
+          >
+            <span>{role === "Candidate" ? "Đăng ký ứng viên" : role === "Mentor" ? "Đăng ký Mentor" : "Đăng ký Recruiter"} bằng Google</span>
+          </button>
+
+          {/* DIVIDER */}
+          <div className="flex items-center gap-4 py-2">
+            <div className="h-px flex-1 bg-white/10"></div>
+            <span className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em]">
+              Hoặc đăng ký bằng Email
+            </span>
+            <div className="h-px flex-1 bg-white/10"></div>
+          </div>
+
           {/* FORM FIELDS FOR ALL ROLES */}
           <div className="space-y-2">
             <label className="text-sm text-slate-300">Họ và tên</label>
