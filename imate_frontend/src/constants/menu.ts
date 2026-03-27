@@ -1,4 +1,4 @@
-import { FolderOpen, LibraryBig, CircleUser, CreditCard, FileUser, Sparkles, LogOut, Wallet, Package, FileQuestion, History, Calendar, Briefcase, Star } from "lucide-react";
+import { FolderOpen, LibraryBig, CircleUser, CreditCard, FileUser, Sparkles, LogOut, Wallet, Package, FileQuestion, History, Calendar, Briefcase, Star, DollarSign } from "lucide-react";
 import type { MenuItem } from "@/types/common/menu";
 
 export const MENTOR_MENU_ITEMS: MenuItem[] = [
@@ -105,6 +105,11 @@ export const MENTOR_PROFILE_MENU: MenuItem[] = [
     label: "Quản lý lịch lặp lại",
     href: "/mentor/manage-slots",
     icon: Calendar,
+  },
+  {
+    label: "Quản lý giá",
+    href: "/mentor/pricing",
+    icon: DollarSign,
   },
   {
     label: "Đánh giá từ ứng viên",

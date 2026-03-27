@@ -20,6 +20,16 @@ export const getMentorRatings = async (): Promise<CandidateRatingsResponse> => {
   }
 };
 
+export const updateMentorPrice = async (price: number) => {
+  try {
+    const res = await apiClient.put(APIConfig.Mentor.UpdatePrice, { pricePerSession: price });
+    return res.data;
+  } catch (error) {
+    console.error("Error updating mentor price: ", error);
+    throw error;
+  }
+};
+
 /** @deprecated Dùng SubmitMentorProfileRequest từ @/types/request/mentor.request */
 export type SubmitMentorProfilePayload = SubmitMentorProfileRequest;
 

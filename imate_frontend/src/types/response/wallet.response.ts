@@ -8,6 +8,7 @@ export interface WalletSummaryResponse {
   pricePerSession?: number | null; // Giá 1 session của mentor
   currentEscrowBookings?: number | null; // Số booking đang escrow
   requiredBalanceForOneBooking?: number | null; // Số tiền đảm bảo cần cho 1 booking
+  guaranteeDepositRate?: number | null; // Tỷ lệ tiền đảm bảo (%)
 }
 
 export interface WithdrawalDetail {
