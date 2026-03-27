@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Card } from "../ui/card";
 import { MENTOR_PROFILE_MENU, USER_PROFILE_MENU } from "@/constants/menu";
-import { Separator } from "../ui/separator";
+import { ROLES } from "@/constants/role";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/store/AuthContext";
 import { cn } from "@/lib/utils";
@@ -90,7 +90,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ isOpenUserMenu, onClose, anchorRef 
         {/* Menu */}
         <div className="flex flex-col py-2">
 
-          {(user?.role === "Mentor"
+          {(user?.role === ROLES.MENTOR
             ? MENTOR_PROFILE_MENU
             : USER_PROFILE_MENU
           ).map((item, index) => {

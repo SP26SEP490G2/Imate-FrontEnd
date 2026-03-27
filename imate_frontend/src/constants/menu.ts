@@ -96,7 +96,7 @@ export const MENTOR_PROFILE_MENU: MenuItem[] = [
     icon: History,
   },
   {
-    label: "Lịch phỏng vấn",
+    label: "Lịch làm việc",
     href: "/mentor/interview-schedule",
     icon: Calendar,
   },
