@@ -11,7 +11,7 @@ export const getListApplications = async (
     PageNumber?: number;
     PageSize?: number;
     SearchTerm?: string;
-  },
+  } = {},
   id?: number
 ) => {
   const queryParams = new URLSearchParams();
