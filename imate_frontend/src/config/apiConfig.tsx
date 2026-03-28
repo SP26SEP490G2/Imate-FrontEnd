@@ -140,6 +140,10 @@ const APIConfig = {
     Delete: "/delete-comment/{commentId}",
     Vote: "/vote-comment/{commentId}",
   },
+  // Speech TTS endpoints
+  Speech: {
+    Synthesize: "/speech/synthesize",
+  },
 } as const;
 
 export default APIConfig;

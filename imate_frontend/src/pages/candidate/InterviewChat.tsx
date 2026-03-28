@@ -6,6 +6,7 @@ import {
   MicOff,
   Loader2,
   Bot,
+  Volume2,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -16,6 +17,7 @@ import {
   endInterview,
   transcribeWhisperBase64,
   correctTranscript,
+  synthesizeSpeech,
   type GenerateQuestionResponse,
 } from "@/services/interviewService";
 import { MSG28 } from "@/constants/messages";
@@ -69,6 +71,10 @@ export default function InterviewChat() {
   // End confirmation
   const [showEndConfirm, setShowEndConfirm] = useState(false);
 
+  // TTS state
+  const [playingMessageId, setPlayingMessageId] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
   // Refs
   const chatEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -94,12 +100,47 @@ export default function InterviewChat() {
     return `${m}:${s}`;
   };
 
+  // TTS: phát giọng nói cho tin nhắn AI
+  const playTTS = useCallback(async (messageId: string, text: string) => {
+    try {
+      // Dừng audio đang phát (nếu có)
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      setPlayingMessageId(messageId);
+
+      const result = await synthesizeSpeech(text);
+      if (!result.audioBase64) {
+        throw new Error("No audio data");
+      }
+
+      // Sử dụng mimeType từ API response (Gemini có thể trả audio/wav, audio/L16, etc.)
+      const mime = result.mimeType || "audio/wav";
+      const audio = new Audio(`data:${mime};base64,${result.audioBase64}`);
+      audioRef.current = audio;
+      audio.onended = () => {
+        setPlayingMessageId(null);
+        audioRef.current = null;
+      };
+      audio.onerror = () => {
+        setPlayingMessageId(null);
+        audioRef.current = null;
+      };
+      await audio.play();
+    } catch {
+      setPlayingMessageId(null);
+      // TTS lỗi thì im lặng, không chặn flow
+    }
+  }, []);
+
   // Add message helper
   const addMessage = useCallback(
     (role: "ai" | "user", text: string, responseId?: number) => {
+      const msgId = `${Date.now()}-${Math.random()}`;
       setMessages((prev) => [
         ...prev,
-        { id: `${Date.now()}-${Math.random()}`, role, text, responseId },
+        { id: msgId, role, text, responseId },
       ]);
     },
     []
@@ -417,6 +458,27 @@ export default function InterviewChat() {
                         {line}
                       </p>
                     ))}
+                    {/* Nút nghe giọng nói (chỉ hiển thị cho AI) */}
+                    {msg.role === "ai" && (
+                      <button
+                        onClick={() => playTTS(msg.id, msg.text)}
+                        disabled={playingMessageId === msg.id}
+                        className="mt-2 flex items-center gap-1.5 text-xs text-purple-400/70 transition-colors hover:text-purple-300 disabled:animate-pulse disabled:text-purple-400"
+                        title="Nghe AI đọc"
+                      >
+                        {playingMessageId === msg.id ? (
+                          <>
+                            <Volume2 className="h-3.5 w-3.5 animate-pulse" />
+                            Đang phát...
+                          </>
+                        ) : (
+                          <>
+                            <Volume2 className="h-3.5 w-3.5" />
+                            Nghe
+                          </>
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}

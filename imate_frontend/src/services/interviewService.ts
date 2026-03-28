@@ -344,3 +344,32 @@ export const correctTranscript = async (
   return data.correctedText as string;
 };
 
+/* ------------------------------------------------------------------ */
+/*  API Functions — Speech TTS                                         */
+/* ------------------------------------------------------------------ */
+
+export interface SynthesizeSpeechResponse {
+  text: string;
+  audioUrl: string;
+  audioBase64: string | null;
+  mimeType: string | null;
+  voice: string;
+  language: string;
+}
+
+/**
+ * Chuyển text AI thành giọng nói (TTS) qua Gemini
+ */
+export const synthesizeSpeech = async (
+  text: string,
+  language?: string
+): Promise<SynthesizeSpeechResponse> => {
+  const response = await apiClient.post(APIConfig.Speech.Synthesize, {
+    text,
+    language: language ?? "vi-VN",
+    returnBase64: true,
+  });
+  const data = response.data?.data ?? response.data;
+  return data as SynthesizeSpeechResponse;
+};
+
