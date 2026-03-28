@@ -85,9 +85,22 @@ export default function SubmitMentorApplication() {
 
   const validateStep = (step: number) => {
     if (step === 1) {
-      if (!formData.bio?.trim() || !formData.phone?.trim()) {
-        setError("Vui lòng điền đầy đủ thông tin giới thiệu và số điện thoại.");
+      if (!formData.bio || formData.bio.length < 10) {
+        setError("Giới thiệu bản thân phải có ít nhất 10 ký tự.");
         return false;
+      }
+      if (!formData.phone || !/^[0-9]{10}$/.test(formData.phone)) {
+        setError("Số điện thoại không hợp lệ (phải có 10 chữ số).");
+        return false;
+      }
+      if (formData.birthDate) {
+        const selectedDate = new Date(formData.birthDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (selectedDate > today) {
+          setError("Ngày sinh không được ở trong tương lai.");
+          return false;
+        }
       }
     } else if (step === 2) {
       if (formData.positionIds.length === 0 || formData.skillIds.length === 0) {
@@ -243,7 +256,14 @@ export default function SubmitMentorApplication() {
                 </div>
                 <div>
                   <label className={labelClass}>Ngày sinh</label>
-                  <input type="date" name="birthDate" value={formData.birthDate} onChange={handleChange} className={inputClass} />
+                  <input
+                    type="date"
+                    name="birthDate"
+                    value={formData.birthDate}
+                    onChange={handleChange}
+                    className={inputClass}
+                    max={new Date().toISOString().split("T")[0]}
+                  />
                 </div>
               </div>
             </div>
