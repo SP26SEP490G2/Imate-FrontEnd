@@ -1,7 +1,7 @@
 export interface ApplicationResponse {
   id: number;
   applicationType: string;
-  dateSent: string;
+  createdAt: string;
   title: string;
   content: string;
   status: string;
@@ -104,8 +104,8 @@ export interface ApplicationStaff {
   avatarUrl: string | null;
   email: string;
   fullName: string;
-  status: number;
-  applicationType: number;
+  status: string;
+  applicationType: string;
   createdAt: string;
   updatedAt: string | null;
   title: string;
@@ -150,7 +150,7 @@ export interface ApplicationListStaffResponse {
 // }
 export interface ApplicationPendingSummary {
   data: {
-    type: number;
+    type: string;
     totalNeedProcess: number;
   }[];
   message: string;

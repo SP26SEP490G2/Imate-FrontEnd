@@ -52,7 +52,7 @@ export function ImageUploadPreview({
   allowChange = true,
   allowRemove = true,
   label = "TẢI LÊN",
-  subLabel = "Chọn ảnh hoặc video",
+  subLabel = "",
 }: ImageUploadPreviewProps) {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -243,11 +243,6 @@ export function ImageUploadPreview({
           const url = URL.createObjectURL(file);
           const isVideo = file.type.startsWith("video/");
 
-          // Cleanup URL khi component unmount hoặc file thay đổi
-          React.useEffect(() => {
-            return () => URL.revokeObjectURL(url);
-          }, [url]);
-
           return (
             <div key={index} className="relative group">
               <div
@@ -326,7 +321,7 @@ export function ImageUploadPreview({
       </div>
 
       <p className="text-xs text-slate-500">
-        Đã chọn {currentFiles.length}/{maxFiles} file • Tối đa {maxFiles} file, mỗi file ≤ 10MB
+        Đã chọn {currentFiles.length}/{maxFiles} file • Tối đa {maxFiles} file, mỗi file ≤ 5MB
       </p>
 
       <input
