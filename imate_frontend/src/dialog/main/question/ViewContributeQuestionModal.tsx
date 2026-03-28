@@ -178,8 +178,15 @@ export function ViewContributeQuestionModal({
             setIsCreatingComment(true);
             const commentId = await createComment(questionId, content);
 
+            if (commentId === null || commentId <= 0) {
+                await fetchData();
+                setNewCommentContent('');
+                toast.success('Bình luận đã được tạo.');
+                return;
+            }
+
             const newComment: CommentItem = {
-                id: Number(commentId),
+                id: commentId,
                 userId: currentUser?.id ?? '',
                 userName: currentUser?.name || currentUser?.fullName || currentUser?.userName || 'Bạn',
                 userAvatarUrl: currentUser?.avatar || currentUser?.avatarUrl || '',
