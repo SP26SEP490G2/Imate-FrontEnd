@@ -97,11 +97,12 @@ const CandidateApplyJobCvDialog: React.FC<CandidateApplyJobCvDialogProps> = ({
         try {
             setIsApplying(true);
             let applyCvId: number;
-            
+
             if (mode === "upload" && uploadedFile) {
                 // Call uploadCV if a new file is provided
                 const newCv = await uploadCV(uploadedFile);
-                applyCvId = newCv.id;
+                applyCvId = newCv.cvId;
+                console.log("CVID: ", applyCvId);
             } else {
                 applyCvId = Number(selectedCvId);
             }
@@ -320,17 +321,17 @@ const CandidateApplyJobCvDialog: React.FC<CandidateApplyJobCvDialogProps> = ({
                             <AlertCircle className="text-yellow-500" size={32} />
                         </div>
                         <DialogTitle className="text-2xl font-bold">Xác nhận ứng tuyển</DialogTitle>
-                        <p className="text-slate-400 text-sm">
-                            Bạn có chắc chắn muốn ứng tuyển vào vị trí <span className="text-purple-400 font-semibold">{jobTitle}</span> với CV này không?
+                        <p className="text-slate-400 text-sm break-words w-full">
+                            Bạn có chắc chắn muốn ứng tuyển vào vị trí <span className="text-purple-400 font-semibold break-words">{jobTitle}</span> với CV này không?
                         </p>
                     </DialogHeader>
 
-                    <div className="bg-[#0F1333] border border-white/5 rounded-2xl p-4 flex items-center gap-4 mt-2">
+                    <div className="bg-[#0F1333] border border-white/5 rounded-2xl p-4 flex items-center gap-4 mt-2 w-full overflow-hidden">
                         <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center border border-white/5">
                             <FileText size={20} className="text-purple-400" />
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-slate-100 truncate">
+                            <p className="text-sm font-bold text-slate-100 truncate" title={mode === "select" ? cvList.find(cv => cv.cvId === selectedCvId)?.fileName : uploadedFile?.name}>
                                 {mode === "select"
                                     ? cvList.find(cv => cv.cvId === selectedCvId)?.fileName
                                     : uploadedFile?.name}
