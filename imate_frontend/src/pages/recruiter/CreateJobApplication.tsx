@@ -20,6 +20,7 @@ const CreateJobApplication: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedPositions, setSelectedPositions] = useState<PositionItem[]>([]);
   const [selectedSkills, setSelectedSkills] = useState<SkillItem[]>([]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [availablePositions, setAvailablePositions] = useState<PositionItem[]>([]);
   const [availableSkills, setAvailableSkills] = useState<SkillItem[]>([]);
@@ -57,6 +58,14 @@ const CreateJobApplication: React.FC = () => {
       ...form,
       [e.target.name]: e.target.value,
     });
+    // Clear error for the field being edited
+    if (errors[e.target.name]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[e.target.name];
+        return newErrors;
+      });
+    }
   };
 
   const togglePosition = (pos: PositionItem) => {
@@ -66,6 +75,14 @@ const CreateJobApplication: React.FC = () => {
       setSelectedPositions([...selectedPositions, pos]);
     }
     setPositionSearch("");
+    // Clear position error if a position is added
+    if (errors.positions) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.positions;
+        return newErrors;
+      });
+    }
   };
 
   const toggleSkill = (skill: SkillItem) => {
@@ -75,10 +92,63 @@ const CreateJobApplication: React.FC = () => {
       setSelectedSkills([...selectedSkills, skill]);
     }
     setSkillSearch("");
+    // Clear skill error if a skill is added
+    if (errors.skills) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.skills;
+        return newErrors;
+      });
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!form.title.trim()) newErrors.title = "Vui lòng nhập tiêu đề công việc";
+    if (selectedPositions.length === 0) newErrors.positions = "Vui lòng chọn ít nhất một vị trí";
+    if (!form.location.trim()) newErrors.location = "Vui lòng nhập địa điểm làm việc";
+    if (selectedSkills.length === 0) newErrors.skills = "Vui lòng chọn ít nhất một kỹ năng";
+    
+    if (!form.minSalary) {
+      newErrors.minSalary = "Vui lòng nhập lương tối thiểu";
+    } else if (Number(form.minSalary) < 0) {
+      newErrors.minSalary = "Lương không thể âm";
+    }
+
+    if (!form.maxSalary) {
+      newErrors.maxSalary = "Vui lòng nhập lương tối đa";
+    } else if (Number(form.maxSalary) < 0) {
+      newErrors.maxSalary = "Lương không thể âm";
+    }
+
+    if (form.minSalary && form.maxSalary && Number(form.minSalary) > Number(form.maxSalary)) {
+      newErrors.maxSalary = "Lương tối đa phải lớn hơn lương tối thiểu";
+    }
+
+    if (!form.applicationDeadline) newErrors.applicationDeadline = "Vui lòng chọn hạn chót ứng tuyển";
+    
+    // Check if deadline is in the past
+    if (form.applicationDeadline) {
+      const today = new Date().toISOString().split("T")[0];
+      if (form.applicationDeadline < today) {
+        newErrors.applicationDeadline = "Hạn chót không thể ở quá khứ";
+      }
+    }
+
+    if (!form.description.trim()) newErrors.description = "Vui lòng nhập mô tả công việc";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      toast.error("Vui lòng kiểm tra lại thông tin nhập liệu");
+      return;
+    }
 
     try {
       const payload = {
@@ -110,6 +180,7 @@ const CreateJobApplication: React.FC = () => {
 
       setPositionSearch("");
       setSkillSearch("");
+      setErrors({});
 
     } catch (error) {
       console.error(error);
@@ -145,7 +216,7 @@ const CreateJobApplication: React.FC = () => {
           </h1>
 
           <p className="text-[#A0A3BD] mt-3 text-[16px]">
-            Publish a new opportunity and connect with talented developers.
+            Đăng tin tuyển dụng mới và kết nối với các ứng viên tài năng.
           </p>
         </div>
 
@@ -157,26 +228,27 @@ const CreateJobApplication: React.FC = () => {
             {/* Job Title */}
             <div className="space-y-2">
               <label className="text-[#A0A3BD] text-sm">
-                Job Title
+                Tiêu đề công việc
               </label>
 
               <input
                 name="title"
                 value={form.title}
                 onChange={handleChange}
-                placeholder="Senior Backend Developer"
-                className="w-full h-[48px] px-4 rounded-[12px] bg-[#0F1333] border border-[rgba(255,255,255,0.1)] focus:border-[#8B5CF6] outline-none placeholder-[#6B6F8E]"
+                placeholder="Ví dụ: Nhà phát triển Backend cấp cao"
+                className={`w-full h-[48px] px-4 rounded-[12px] bg-[#0F1333] border ${errors.title ? "border-red-500" : "border-[rgba(255,255,255,0.1)]"} focus:border-[#8B5CF6] outline-none placeholder-[#6B6F8E]`}
               />
+              {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
             </div>
 
             {/* Job Position (Multi-select) */}
             <div className="space-y-2 relative">
               <label className="text-[#A0A3BD] text-sm">
-                Job Positions
+                Vị trí công việc
               </label>
 
               <div
-                className="min-h-[48px] flex flex-wrap gap-2 p-2 rounded-[12px] bg-[#0F1333] border border-[rgba(255,255,255,0.1)] cursor-text"
+                className={`min-h-[48px] flex flex-wrap gap-2 p-2 rounded-[12px] bg-[#0F1333] border ${errors.positions ? "border-red-500" : "border-[rgba(255,255,255,0.1)]"} cursor-text`}
                 onClick={() => setShowPositionDropdown(!showPositionDropdown)}
               >
                 {selectedPositions.map((pos) => (
@@ -198,7 +270,7 @@ const CreateJobApplication: React.FC = () => {
                   </Badge>
                 ))}
                 <input
-                  placeholder={selectedPositions.length === 0 ? "Select positions..." : ""}
+                  placeholder={selectedPositions.length === 0 ? "Chọn vị trí..." : ""}
                   className="flex-1 bg-transparent outline-none text-sm placeholder-[#6B6F8E] min-w-[120px]"
                   value={positionSearch}
                   onChange={(e) => {
@@ -209,6 +281,7 @@ const CreateJobApplication: React.FC = () => {
                 />
                 <ChevronsUpDown size={18} className="text-[#6B6F8E] self-center ml-auto" />
               </div>
+              {errors.positions && <p className="text-red-500 text-xs mt-1">{errors.positions}</p>}
 
               {showPositionDropdown && (
                 <div className="absolute z-50 w-full mt-1 bg-[#11142D] border border-[rgba(255,255,255,0.1)] rounded-[12px] shadow-xl max-h-[200px] overflow-y-auto custom-scrollbar">
@@ -226,7 +299,7 @@ const CreateJobApplication: React.FC = () => {
                       </div>
                     ))
                   ) : (
-                    <div className="p-4 text-center text-sm text-[#6B6F8E]">No positions found</div>
+                    <div className="p-4 text-center text-sm text-[#6B6F8E]">Không tìm thấy vị trí nào</div>
                   )}
                 </div>
               )}
@@ -237,7 +310,7 @@ const CreateJobApplication: React.FC = () => {
 
               <div className="space-y-2">
                 <label className="text-[#A0A3BD] text-sm">
-                  Employment Type
+                  Hình thức làm việc
                 </label>
 
                 <select
@@ -255,16 +328,17 @@ const CreateJobApplication: React.FC = () => {
 
               <div className="space-y-2">
                 <label className="text-[#A0A3BD] text-sm">
-                  Job Location
+                  Địa điểm làm việc
                 </label>
 
                 <input
                   name="location"
                   value={form.location}
                   onChange={handleChange}
-                  placeholder="Remote / Ho Chi Minh City"
-                  className="w-full h-[48px] px-4 rounded-[12px] bg-[#0F1333] border border-[rgba(255,255,255,0.1)] focus:border-[#8B5CF6] outline-none placeholder-[#6B6F8E]"
+                  placeholder="Từ xa / Thành phố Hồ Chí Minh"
+                  className={`w-full h-[48px] px-4 rounded-[12px] bg-[#0F1333] border ${errors.location ? "border-red-500" : "border-[rgba(255,255,255,0.1)]"} focus:border-[#8B5CF6] outline-none placeholder-[#6B6F8E]`}
                 />
+                {errors.location && <p className="text-red-500 text-xs mt-1">{errors.location}</p>}
               </div>
 
             </div>
@@ -272,11 +346,11 @@ const CreateJobApplication: React.FC = () => {
             {/* Job Skills (Multi-select) */}
             <div className="space-y-2 relative">
               <label className="text-[#A0A3BD] text-sm">
-                Job Skills
+                Kỹ năng công việc
               </label>
 
               <div
-                className="min-h-[48px] flex flex-wrap gap-2 p-2 rounded-[12px] bg-[#0F1333] border border-[rgba(255,255,255,0.1)] cursor-text"
+                className={`min-h-[48px] flex flex-wrap gap-2 p-2 rounded-[12px] bg-[#0F1333] border ${errors.skills ? "border-red-500" : "border-[rgba(255,255,255,0.1)]"} cursor-text`}
                 onClick={() => setShowSkillDropdown(!showSkillDropdown)}
               >
                 {selectedSkills.map((skill) => (
@@ -298,7 +372,7 @@ const CreateJobApplication: React.FC = () => {
                   </Badge>
                 ))}
                 <input
-                  placeholder={selectedSkills.length === 0 ? "Type skill..." : ""}
+                  placeholder={selectedSkills.length === 0 ? "Nhập kỹ năng..." : ""}
                   className="flex-1 bg-transparent outline-none text-sm placeholder-[#6B6F8E] min-w-[120px]"
                   value={skillSearch}
                   onChange={(e) => {
@@ -309,6 +383,7 @@ const CreateJobApplication: React.FC = () => {
                 />
                 <ChevronsUpDown size={18} className="text-[#6B6F8E] self-center ml-auto" />
               </div>
+              {errors.skills && <p className="text-red-500 text-xs mt-1">{errors.skills}</p>}
 
               {showSkillDropdown && (
                 <div className="absolute z-50 w-full mt-1 bg-[#11142D] border border-[rgba(255,255,255,0.1)] rounded-[12px] shadow-xl max-h-[200px] overflow-y-auto custom-scrollbar">
@@ -326,7 +401,7 @@ const CreateJobApplication: React.FC = () => {
                       </div>
                     ))
                   ) : (
-                    <div className="p-4 text-center text-sm text-[#6B6F8E]">No skills found</div>
+                    <div className="p-4 text-center text-sm text-[#6B6F8E]">Không tìm thấy kỹ năng nào</div>
                   )}
                 </div>
               )}
@@ -337,7 +412,7 @@ const CreateJobApplication: React.FC = () => {
 
               <div className="space-y-2">
                 <label className="text-[#A0A3BD] text-sm">
-                  Minimum Salary
+                  Mức lương tối thiểu
                 </label>
 
                 <input
@@ -346,13 +421,14 @@ const CreateJobApplication: React.FC = () => {
                   value={form.minSalary}
                   onChange={handleChange}
                   placeholder="1000"
-                  className="w-full h-[48px] px-4 rounded-[12px] bg-[#0F1333] border border-[rgba(255,255,255,0.1)] focus:border-[#8B5CF6] outline-none placeholder-[#6B6F8E]"
+                  className={`w-full h-[48px] px-4 rounded-[12px] bg-[#0F1333] border ${errors.minSalary ? "border-red-500" : "border-[rgba(255,255,255,0.1)]"} focus:border-[#8B5CF6] outline-none placeholder-[#6B6F8E]`}
                 />
+                {errors.minSalary && <p className="text-red-500 text-xs mt-1">{errors.minSalary}</p>}
               </div>
 
               <div className="space-y-2">
                 <label className="text-[#A0A3BD] text-sm">
-                  Maximum Salary
+                  Mức lương tối đa
                 </label>
 
                 <input
@@ -361,8 +437,9 @@ const CreateJobApplication: React.FC = () => {
                   value={form.maxSalary}
                   onChange={handleChange}
                   placeholder="4000"
-                  className="w-full h-[48px] px-4 rounded-[12px] bg-[#0F1333] border border-[rgba(255,255,255,0.1)] focus:border-[#8B5CF6] outline-none placeholder-[#6B6F8E]"
+                  className={`w-full h-[48px] px-4 rounded-[12px] bg-[#0F1333] border ${errors.maxSalary ? "border-red-500" : "border-[rgba(255,255,255,0.1)]"} focus:border-[#8B5CF6] outline-none placeholder-[#6B6F8E]`}
                 />
+                {errors.maxSalary && <p className="text-red-500 text-xs mt-1">{errors.maxSalary}</p>}
               </div>
 
             </div>
@@ -370,7 +447,7 @@ const CreateJobApplication: React.FC = () => {
             {/* Deadline */}
             <div className="space-y-2">
               <label className="text-[#A0A3BD] text-sm">
-                Application Deadline
+                Hạn chót ứng tuyển
               </label>
 
               <input
@@ -378,14 +455,16 @@ const CreateJobApplication: React.FC = () => {
                 type="date"
                 value={form.applicationDeadline}
                 onChange={handleChange}
-                className="w-full h-[48px] px-4 rounded-[12px] bg-[#0F1333] border border-[rgba(255,255,255,0.1)] focus:border-[#8B5CF6] outline-none"
+                min={new Date().toISOString().split("T")[0]}
+                className={`w-full h-[48px] px-4 rounded-[12px] bg-[#0F1333] border ${errors.applicationDeadline ? "border-red-500" : "border-[rgba(255,255,255,0.1)]"} focus:border-[#8B5CF6] outline-none`}
               />
+              {errors.applicationDeadline && <p className="text-red-500 text-xs mt-1">{errors.applicationDeadline}</p>}
             </div>
 
             {/* Description */}
             <div className="space-y-2">
               <label className="text-[#A0A3BD] text-sm">
-                Job Description
+                Mô tả công việc
               </label>
 
               <textarea
@@ -393,26 +472,27 @@ const CreateJobApplication: React.FC = () => {
                 rows={5}
                 value={form.description}
                 onChange={handleChange}
-                placeholder="Describe responsibilities, requirements, and technologies..."
-                className="w-full p-4 rounded-[12px] bg-[#0F1333] border border-[rgba(255,255,255,0.1)] focus:border-[#8B5CF6] outline-none placeholder-[#6B6F8E] resize-none"
+                placeholder="Mô tả trách nhiệm, yêu cầu và công nghệ..."
+                className={`w-full p-4 rounded-[12px] bg-[#0F1333] border ${errors.description ? "border-red-500" : "border-[rgba(255,255,255,0.1)]"} focus:border-[#8B5CF6] outline-none placeholder-[#6B6F8E] resize-none`}
               />
+              {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description}</p>}
               <div className="mt-2 p-4 rounded-[12px] bg-[#0F1333]/40 border border-[rgba(255,255,255,0.06)] backdrop-blur-sm transition-all hover:bg-[#0F1333]/60">
                 <p className="font-semibold text-[#A0A3BD] mb-2 flex items-center gap-2 text-sm uppercase tracking-wider">
                   <Info size={14} className="text-[#8B5CF6]" /> Hướng dẫn định dạng:
                 </p>
                 <ul className="space-y-2 text-xs text-[#71717A]">
-                    <li className="flex items-start gap-2">
-                        <span className="text-[#8B5CF6]/60 mt-0.5">•</span>
-                        <span>Dùng <code className="bg-white/5 px-1.5 py-0.5 rounded text-[#8B5CF6] border border-white/5">### Tiêu đề</code> để tạo tiêu đề các mục (VD: ### Quyền lợi)</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                        <span className="text-[#8B5CF6]/60 mt-0.5">•</span>
-                        <span>Dùng <code className="bg-white/5 px-1.5 py-0.5 rounded text-[#8B5CF6] border border-white/5">- Nội dung</code> để tạo dòng có dấu tích xanh (VD: - Chế độ bảo hiểm)</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                        <span className="text-[#8B5CF6]/60 mt-0.5">•</span>
-                        <span>Nhấn <span className="text-slate-400 font-medium italic">Enter</span> để xuống dòng bình thường.</span>
-                    </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#8B5CF6]/60 mt-0.5">•</span>
+                    <span>Dùng <code className="bg-white/5 px-1.5 py-0.5 rounded text-[#8B5CF6] border border-white/5">### Tiêu đề</code> để tạo tiêu đề các mục (VD: ### Quyền lợi)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#8B5CF6]/60 mt-0.5">•</span>
+                    <span>Dùng <code className="bg-white/5 px-1.5 py-0.5 rounded text-[#8B5CF6] border border-white/5">- Nội dung</code> để tạo dòng có dấu tích xanh (VD: - Chế độ bảo hiểm)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#8B5CF6]/60 mt-0.5">•</span>
+                    <span>Nhấn <span className="text-slate-400 font-medium italic">Enter</span> để xuống dòng bình thường.</span>
+                  </li>
                 </ul>
               </div>
             </div>
@@ -424,7 +504,7 @@ const CreateJobApplication: React.FC = () => {
                 type="button"
                 className="h-[48px] px-6 rounded-[12px] text-[#A0A3BD] hover:text-white transition"
               >
-                Cancel
+                Hủy
               </button>
 
               <button
@@ -432,7 +512,7 @@ const CreateJobApplication: React.FC = () => {
                 disabled={isSubmitting}
                 className="h-[48px] px-8 rounded-[12px] font-semibold bg-gradient-to-r from-[#6C63FF] to-[#8B5CF6]"
               >
-                {isSubmitting ? "Creating..." : "Create Job"}
+                {isSubmitting ? "Đang tạo..." : "Tạo tin tuyển dụng"}
               </button>
 
             </div>
