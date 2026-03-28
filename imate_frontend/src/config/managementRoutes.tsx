@@ -9,6 +9,7 @@ import {
   Logs,
   FileQuestion,
   Settings,
+  ClipboardCheck,
 } from "lucide-react";
 
 import { ROLES } from "@/constants/role";
@@ -24,6 +25,8 @@ import AdminAuditLog from "@/pages/admin/AdminAuditLog";
 import TransactionManagement from "@/pages/management/payment/TransactionManagement";
 import SystemConfigManagement from "@/pages/management/config/SystemConfigManagement";
 import RecruiterCompanyProfile from "@/pages/recruiter/RecruiterCompanyProfile";
+import StaffApplicationManagement from "@/pages/management/reportApplication/StaffApplicationManagement";
+
 export const managementRoutes = [
   {
     label: "Đơn ứng tuyển",
@@ -65,6 +68,13 @@ export const managementRoutes = [
     icon: HandCoins,
     path: "transactions",
     element: <TransactionManagement />,
+    allowedRoles: [ROLES.STAFF, ROLES.ADMIN],
+  },
+  {
+    label: "Quản lý đơn báo cáo",
+    icon: ClipboardCheck,
+    path: "manage-report-application",
+    element: <StaffApplicationManagement />,
     allowedRoles: [ROLES.STAFF, ROLES.ADMIN],
   },
   {

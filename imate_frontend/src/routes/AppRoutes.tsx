@@ -80,6 +80,8 @@ import TransactionManagement from "@/pages/management/payment/TransactionManagem
 import Wallet from "@/pages/management/payment/Wallet";
 import SystemConfigManagement from "@/pages/management/config/SystemConfigManagement";
 import RecruiterCompanyProfile from "@/pages/recruiter/RecruiterCompanyProfile";
+import StaffApplicationManagement from "@/pages/management/reportApplication/StaffApplicationManagement";
+
 /**
  * Route Configuration Type
  */
@@ -154,6 +156,7 @@ const routeConfigs: RouteConfig[] = [
   { path: "/management/admin/audit-logs", element: <AdminAuditLog />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN] },
   { path: "/management/recruiter-dashboard/company-profile", element: <RecruiterCompanyProfile />, layout: LAYOUT.MANAGEMENT, requireAuth: true, roles: [ROLES.RECRUITER], accountStatus: ACCOUNT_STATUS.Active },
 
+  { path: "/management/manage-report-application", element: <StaffApplicationManagement />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
 
   { path: "/management/applications", element: <ReviewMentorApplication />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
   { path: "/management/classification", element: <Classification />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
