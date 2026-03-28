@@ -16,7 +16,7 @@ export interface CvItem {
 
 /** Response khi upload CV thành công — raw backend shape */
 export interface UploadCvResponse {
-  id: number;
+  cvId: number;
   accountId: number;
   fileUrl: string;
   fileName: string;
