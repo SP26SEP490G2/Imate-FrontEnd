@@ -24,6 +24,7 @@ import ViewQuestions from "@/pages/management/question/ViewQuestions";
 import AdminAuditLog from "@/pages/admin/AdminAuditLog";
 import TransactionManagement from "@/pages/management/payment/TransactionManagement";
 import SystemConfigManagement from "@/pages/management/config/SystemConfigManagement";
+import RecruiterCompanyProfile from "@/pages/recruiter/RecruiterCompanyProfile";
 import StaffApplicationManagement from "@/pages/management/reportApplication/StaffApplicationManagement";
 
 export const managementRoutes = [
@@ -105,5 +106,11 @@ export const recruiterManagementRoutes = [
     icon: PlusCircle,
     path: "create-job-posting",
     element: <CreateJobApplication />,
+  },
+  {
+    label: "Hồ sơ công ty",
+    icon: Briefcase,
+    path: "company-profile",
+    element: <RecruiterCompanyProfile />,
   },
 ];

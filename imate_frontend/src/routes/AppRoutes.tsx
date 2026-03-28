@@ -79,6 +79,7 @@ import ViewApplication from "@/pages/main/public/ViewApplication";
 import TransactionManagement from "@/pages/management/payment/TransactionManagement";
 import Wallet from "@/pages/management/payment/Wallet";
 import SystemConfigManagement from "@/pages/management/config/SystemConfigManagement";
+import RecruiterCompanyProfile from "@/pages/recruiter/RecruiterCompanyProfile";
 import StaffApplicationManagement from "@/pages/management/reportApplication/StaffApplicationManagement";
 
 /**
@@ -153,6 +154,8 @@ const routeConfigs: RouteConfig[] = [
   { path: "/management/recruiter-dashboard/create-job-posting", element: <CreateJobApplication />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.RECRUITER], accountStatus: ACCOUNT_STATUS.Active },
   { path: "/management/recruiter-dashboard/job-postings/:jobId/candidates", element: <AppliedCandidateList />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.RECRUITER], accountStatus: ACCOUNT_STATUS.Active },
   { path: "/management/admin/audit-logs", element: <AdminAuditLog />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN] },
+  { path: "/management/recruiter-dashboard/company-profile", element: <RecruiterCompanyProfile />, layout: LAYOUT.MANAGEMENT, requireAuth: true, roles: [ROLES.RECRUITER], accountStatus: ACCOUNT_STATUS.Active },
+
   { path: "/management/manage-report-application", element: <StaffApplicationManagement />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },
 
   { path: "/management/applications", element: <ReviewMentorApplication />, layout: LAYOUT.MANAGEMENT, roles: [ROLES.ADMIN, ROLES.STAFF] },

@@ -165,3 +165,21 @@ export const MSG54 = "Cập nhật tin tuyển dụng thành công.";
 
 //MSG55: Update Job Failure
 export const MSG55 = "Cập nhật tin tuyển dụng thất bại. Vui lòng thử lại sau.";
+
+// MSG56: Invalid email format
+export const MSG56 = "Email không hợp lệ. Vui lòng kiểm tra lại.";
+
+// MSG57: Password strength requirements
+export const MSG57 = "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.";
+
+// MSG58: Password confirmation mismatch
+export const MSG58 = "Mật khẩu xác nhận không khớp.";
+
+// MSG59: Full name length requirement
+export const MSG59 = "Họ và tên phải có ít nhất 2 ký tự.";
+
+// MSG60: Input cannot contain leading or trailing spaces
+export const MSG60 = "Trường này không được chứa khoảng trắng ở đầu hoặc cuối.";
+
+// MSG61: Password cannot contain any spaces
+export const MSG61 = "Mật khẩu không được chứa khoảng trắng.";

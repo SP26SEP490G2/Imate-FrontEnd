@@ -5,6 +5,8 @@ export interface AuditLogListResponse {
   action: string;
   entityType: string;
   actionTime: string;
+  oldValue?: any;
+  newValue?: any;
 }
 
 export interface AuditLogDetailResponse {

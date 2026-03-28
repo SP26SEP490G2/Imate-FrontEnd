@@ -79,8 +79,9 @@ const [errors, setErrors] = useState<Record<string, string>>({});
 
             setErrors({});
 
+            const { companyLogo, ...restData } = data;
             await updateRecruiterProfile({
-                ...data,
+                ...restData,
                 ...formData,
             });
 
