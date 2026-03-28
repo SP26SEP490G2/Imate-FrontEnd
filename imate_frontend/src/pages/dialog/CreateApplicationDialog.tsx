@@ -1,5 +1,4 @@
 import * as React from "react";
-
 import {
   Dialog,
   DialogContent,
@@ -7,6 +6,7 @@ import {
   DialogTitle,
   DialogFooter,
   DialogClose,
+  DialogDescription,
 } from "@/components/ui/dialog";
 
 import { Button } from "@/components/ui/button";
@@ -31,14 +31,17 @@ import {
 } from "@/services/applicationService";
 
 import { useAuth } from "@/store/AuthContext";
+import { 
+  ApplicationType, 
+  APPLICATION_TYPE_OPTIONS, 
+  type ApplicationTypeEnum
+} from "@/constants/enum";
 
 interface CreateApplicationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
 }
-
-type ApplicationType = "technical" | "mentor" | "comment";
 
 export function CreateApplicationDialog({
   open,
@@ -47,17 +50,17 @@ export function CreateApplicationDialog({
 }: CreateApplicationDialogProps) {
   const { user } = useAuth();
 
-  const [type, setType] = React.useState<ApplicationType>("technical");
+  const [type, setType] = React.useState<ApplicationTypeEnum>(ApplicationType.TechnicalError);
   const [title, setTitle] = React.useState("");
   const [content, setContent] = React.useState("");
-  const [bookingId, setBookingId] = React.useState<string>(""); // chỉ dùng cho tố cáo mentor
-  const [commentId, setCommentId] = React.useState<string>(""); // chỉ dùng cho báo cáo comment (nếu có)
+  const [bookingId, setBookingId] = React.useState("");
+  const [commentId, setCommentId] = React.useState("");
 
   const [evidenceFiles, setEvidenceFiles] = React.useState<File[]>([]);
   const [loading, setLoading] = React.useState(false);
 
   const resetForm = () => {
-    setType("technical");
+    setType(ApplicationType.TechnicalError);
     setTitle("");
     setContent("");
     setBookingId("");
@@ -90,32 +93,37 @@ export function CreateApplicationDialog({
     const formData = new FormData();
     formData.append("title", title.trim());
     formData.append("content", content.trim());
-
-    evidenceFiles.forEach((file) => {
-      formData.append("evidenceFiles", file);
-    });
+    evidenceFiles.forEach((file) => formData.append("evidenceFiles", file));
 
     try {
       let response;
 
-      if (type === "technical") {
-        response = await addApplicationTechnical(formData, user.id);
-      } else if (type === "mentor") {
-        if (!bookingId.trim() || isNaN(Number(bookingId))) {
-          toast.error("Vui lòng nhập Booking ID hợp lệ");
+      switch (type) {
+        case ApplicationType.TechnicalError:
+          response = await addApplicationTechnical(formData, user.id);
+          break;
+        case ApplicationType.ReportMentor:
+          if (!bookingId || isNaN(Number(bookingId))) {
+            toast.error("Vui lòng nhập Booking ID hợp lệ");
+            setLoading(false);
+            return;
+          }
+          formData.append("bookingId", bookingId.trim());
+          response = await addApplicationMentor(formData, user.id);
+          break;
+        case ApplicationType.ReportComment:
+          if (!commentId || isNaN(Number(commentId))) {
+            toast.error("Vui lòng nhập Comment ID hợp lệ");
+            setLoading(false);
+            return;
+          }
+          formData.append("commentId", commentId.trim());
+          response = await addReportCommentApplication(formData, user.id);
+          break;
+        default:
+          toast.error("Loại đơn không hợp lệ");
+          setLoading(false);
           return;
-        }
-        formData.append("bookingId", bookingId.trim());
-        response = await addApplicationMentor(formData, user.id);
-      } else if (type === "comment") {
-        if (!commentId.trim() || isNaN(Number(commentId))) {
-          toast.error("Vui lòng nhập Comment ID hợp lệ");
-          return;
-        }
-        formData.append("commentId", commentId.trim());
-        // Giả sử bạn đã có reason (có thể thêm Select reason sau)
-        // formData.append("reason", "Spam"); // hoặc lấy từ state
-        response = await addReportCommentApplication(formData, user.id);
       }
 
       toast.success("Gửi đơn thành công!");
@@ -123,8 +131,7 @@ export function CreateApplicationDialog({
       onOpenChange(false);
       onSuccess?.();
     } catch (err: any) {
-      const message =
-        err.response?.data?.message || "Gửi đơn thất bại. Vui lòng thử lại.";
+      const message = err.response?.data?.message || err.message || "Gửi đơn thất bại. Vui lòng thử lại.";
       toast.error(message);
     } finally {
       setLoading(false);
@@ -132,7 +139,6 @@ export function CreateApplicationDialog({
   };
 
   const handleFilesChange = (files: File[]) => {
-    // Giới hạn số lượng file nếu cần, ví dụ 5 file
     if (files.length > 5) {
       toast.warn("Chỉ được tải lên tối đa 5 file");
       setEvidenceFiles(files.slice(0, 5));
@@ -143,75 +149,77 @@ export function CreateApplicationDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg bg-slate-900 border-slate-700 text-slate-100">
+      <DialogContent className="sm:max-w-xl bg-slate-900 border-slate-700 text-slate-100 max-h-[92vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-white flex items-center gap-2">
-            <span className="text-primary">Tạo đơn mới</span>
+          <DialogTitle className="text-2xl font-bold text-white">
+            Tạo đơn mới
           </DialogTitle>
+          <DialogDescription className="sr-only">Form tạo đơn mới</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* THÔNG TIN ĐƠN */}
-          <div className="space-y-5 rounded-lg bg-slate-800/50 p-5 border border-slate-700">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary">
-                <span className="text-sm font-bold">1</span>
-              </div>
-              <h3 className="text-lg font-semibold text-white">THÔNG TIN ĐƠN</h3>
+          <div className="space-y-5">
+            <div className="h-px bg-slate-700" />
+            {/* ── Thông tin đơn ── */}
+              <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">
+                Thông tin đơn <span className="text-red-400">*</span>
+              </h3>
+            <div className="space-y-2">
+              <Label className="text-slate-200">
+                Loại đơn <span className="text-red-400">*</span>
+              </Label>
+              <Select
+                value={type}
+                onValueChange={(v) => setType(v as ApplicationTypeEnum)}
+                disabled={loading}
+              >
+                <SelectTrigger className="bg-slate-800 border-slate-700">
+                  <SelectValue placeholder="Chọn loại đơn" />
+                </SelectTrigger>
+                <SelectContent>
+                  {APPLICATION_TYPE_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Field động */}
+            {type === ApplicationType.ReportMentor && (
               <div className="space-y-2">
                 <Label className="text-slate-200">
-                  Loại đơn <span className="text-red-400">*</span>
+                  Booking ID <span className="text-red-400">*</span>
                 </Label>
-                <Select
-                  value={type}
-                  onValueChange={(v) => setType(v as ApplicationType)}
+                <Input
+                  type="number"
+                  value={bookingId}
+                  onChange={(e) => setBookingId(e.target.value)}
+                  placeholder="Nhập Booking ID của phiên học"
+                  className="bg-slate-800 border-slate-700"
                   disabled={loading}
-                >
-                  <SelectTrigger className="bg-slate-800 border-slate-700">
-                    <SelectValue placeholder="Chọn loại đơn" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="technical">Báo lỗi kỹ thuật</SelectItem>
-                    <SelectItem value="mentor">Tố cáo mentor / phiên phỏng vấn</SelectItem>
-                    <SelectItem value="comment">Báo cáo bình luận</SelectItem>
-                  </SelectContent>
-                </Select>
+                />
               </div>
+            )}
 
-              {type === "mentor" && (
-                <div className="space-y-2">
-                  <Label className="text-slate-200">
-                    Booking ID <span className="text-red-400">*</span>
-                  </Label>
-                  <Input
-                    value={bookingId}
-                    onChange={(e) => setBookingId(e.target.value)}
-                    placeholder="Nhập ID phiên đặt lịch..."
-                    className="bg-slate-800 border-slate-700"
-                    disabled={loading}
-                  />
-                </div>
-              )}
+            {type === ApplicationType.ReportComment && (
+              <div className="space-y-2">
+                <Label className="text-slate-200">
+                  Comment ID <span className="text-red-400">*</span>
+                </Label>
+                <Input
+                  type="number"
+                  value={commentId}
+                  onChange={(e) => setCommentId(e.target.value)}
+                  placeholder="Nhập ID của bình luận cần báo cáo"
+                  className="bg-slate-800 border-slate-700"
+                  disabled={loading}
+                />
+              </div>
+            )}
 
-              {type === "comment" && (
-                <div className="space-y-2">
-                  <Label className="text-slate-200">
-                    Comment ID <span className="text-red-400">*</span>
-                  </Label>
-                  <Input
-                    value={commentId}
-                    onChange={(e) => setCommentId(e.target.value)}
-                    placeholder="Nhập ID bình luận..."
-                    className="bg-slate-800 border-slate-700"
-                    disabled={loading}
-                  />
-                </div>
-              )}
-            </div>
-
+            {/* Tiêu đề và Nội dung */}
             <div className="space-y-2">
               <Label className="text-slate-200">
                 Tiêu đề <span className="text-red-400">*</span>
@@ -219,7 +227,7 @@ export function CreateApplicationDialog({
               <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Nhập tiêu đề đơn..."
+                placeholder="Ví dụ: Lỗi không tải được video bài học"
                 className="bg-slate-800 border-slate-700"
                 disabled={loading}
               />
@@ -232,48 +240,38 @@ export function CreateApplicationDialog({
               <Textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="Nhập chi tiết nội dung khiếu nại / báo lỗi của bạn..."
-                className="bg-slate-800 border-slate-700 min-h-[120px]"
+                placeholder="Mô tả rõ ràng vấn đề bạn đang gặp phải..."
+                className="bg-slate-800 border-slate-700 min-h-[110px] resize-y"
                 disabled={loading}
               />
             </div>
           </div>
 
-          {/* BẰNG CHỨNG */}
-          <div className="space-y-5 rounded-lg bg-slate-800/50 p-5 border border-slate-700">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary">
-                <span className="text-sm font-bold">2</span>
-              </div>
-              <h3 className="text-lg font-semibold text-white">BẰNG CHỨNG</h3>
-              <span className="text-red-400 text-sm ml-1">(bắt buộc)</span>
-            </div>
+          {/* Bằng chứng */}
+          <div className="space-y-4">
+            <div className="h-px bg-slate-700" />
+            {/* ── Thông tin đơn ── */}
+              <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">
+                Bằng chứng đính kèm <span className="text-red-400">*</span>
+              </h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <ImageUploadPreview
-                selectedFile={evidenceFiles[0] || null}
-                onFileChange={(file) =>
-                  setEvidenceFiles(file ? [file, ...evidenceFiles.slice(1)] : evidenceFiles.slice(1))
-                }
-                multiple={true}
-                maxFiles={5}
-                currentFiles={evidenceFiles}
-                onFilesChange={handleFilesChange}
-                disabled={loading}
-                size="md"
-                shape="square"
-                label="TẢI LÊN ẢNH / VIDEO"
-                subLabel="Chọn ảnh, video minh chứng"
-                allowRemove={true}
-              />
-            </div>
-
-            <p className="text-xs text-slate-400">
-              Hỗ trợ: ảnh (jpg, png), video (mp4), tối đa 5 file, mỗi file ≤ 5MB
-            </p>
+            <ImageUploadPreview
+              multiple={true}
+              currentFiles={evidenceFiles}
+              onFilesChange={handleFilesChange}
+              disabled={loading}
+              size="lg"
+              shape="square"
+              maxFiles={5}
+              accept="image/*,video/mp4"
+              label="Tải lên ảnh, video minh chứng"
+              allowRemove={true}
+              allowDownload={false}
+            />
+            <div className="h-px bg-slate-700" />
           </div>
 
-          <DialogFooter className="gap-3 sm:gap-0">
+          <DialogFooter className="gap-3 pt-6">
             <DialogClose asChild>
               <Button
                 type="button"
@@ -289,10 +287,10 @@ export function CreateApplicationDialog({
             <Button
               type="submit"
               variant="primary"
-              disabled={loading}
-              className="min-w-[120px]"
+              disabled={loading || !title.trim() || !content.trim() || evidenceFiles.length === 0}
+              className="min-w-[130px]"
             >
-              {loading ? "Đang gửi..." : "Gửi đơn"}
+              {loading ? "Đang gửi đơn..." : "Gửi đơn"}
             </Button>
           </DialogFooter>
         </form>

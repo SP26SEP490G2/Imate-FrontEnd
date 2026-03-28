@@ -29,6 +29,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "react-toastify";
 import { getListCV, uploadCV } from "@/services/cvService";
 import { createJobApplication } from "@/services/recruiterService";
+import { MSG50, MSG51 } from "@/constants/messages";
 import type { CvItem } from "@/types/common/cv";
 
 interface CandidateApplyJobCvDialogProps {
@@ -111,13 +112,13 @@ const CandidateApplyJobCvDialog: React.FC<CandidateApplyJobCvDialogProps> = ({
                 CVId: applyCvId
             });
 
-            toast.success("Hồ sơ đã được gửi thành công!");
+            toast.success(MSG50);
             onOpenChange(false);
             setShowConfirmDialog(false);
         } catch (error: any) {
             console.error("Failed to apply:", error);
             // Handle backend error messages if available (e.g. from axios response)
-            const errorMsg = error.response?.data?.message || error.message || "Quá trình ứng tuyển thất bại. Vui lòng thử lại.";
+            const errorMsg = error.response?.data?.message || error.message || MSG51;
             toast.error(errorMsg);
         } finally {
             setIsApplying(false);

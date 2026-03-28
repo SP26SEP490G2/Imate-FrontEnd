@@ -9,6 +9,7 @@ import {
   Logs,
   FileQuestion,
   Settings,
+  ClipboardCheck,
 } from "lucide-react";
 
 import { ROLES } from "@/constants/role";
@@ -23,6 +24,8 @@ import ViewQuestions from "@/pages/management/question/ViewQuestions";
 import AdminAuditLog from "@/pages/admin/AdminAuditLog";
 import TransactionManagement from "@/pages/management/payment/TransactionManagement";
 import SystemConfigManagement from "@/pages/management/config/SystemConfigManagement";
+import RecruiterCompanyProfile from "@/pages/recruiter/RecruiterCompanyProfile";
+import StaffApplicationManagement from "@/pages/management/reportApplication/StaffApplicationManagement";
 
 export const managementRoutes = [
   {
@@ -68,6 +71,13 @@ export const managementRoutes = [
     allowedRoles: [ROLES.STAFF, ROLES.ADMIN],
   },
   {
+    label: "Quản lý đơn báo cáo",
+    icon: ClipboardCheck,
+    path: "manage-report-application",
+    element: <StaffApplicationManagement />,
+    allowedRoles: [ROLES.STAFF, ROLES.ADMIN],
+  },
+  {
     label: "Cấu hình hệ thống",
     icon: Settings,
     path: "config",
@@ -96,5 +106,11 @@ export const recruiterManagementRoutes = [
     icon: PlusCircle,
     path: "create-job-posting",
     element: <CreateJobApplication />,
+  },
+  {
+    label: "Hồ sơ công ty",
+    icon: Briefcase,
+    path: "company-profile",
+    element: <RecruiterCompanyProfile />,
   },
 ];

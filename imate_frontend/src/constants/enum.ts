@@ -29,6 +29,36 @@ export const APPLICATION_STATUS_OPTIONS = [
   { value: ApplicationStatus.Rejected, label: "Bị từ chối" },
 ] as const;
 
+export const ApplicationType = {
+  TechnicalError: "TechnicalError",
+  ReportMentor: "ReportMentor",
+  ReportRating: "ReportRating",
+  ReportComment: "ReportComment",
+  ReportContent: "ReportContent",
+} as const;
+
+export type ApplicationTypeEnum = keyof typeof ApplicationType;
+
+export const APPLICATION_TYPE_LABELS: Record<ApplicationTypeEnum, string> = {
+  [ApplicationType.TechnicalError]: "Đơn Lỗi Kỹ Thuật",
+  [ApplicationType.ReportMentor]: "Đơn Tố Cáo Mentor",
+  [ApplicationType.ReportRating]: "Đơn Tố Cáo Rating",
+  [ApplicationType.ReportComment]: "Đơn Tố Cáo Comment",
+  [ApplicationType.ReportContent]: "Đơn Tố Cáo Nội Dung",
+} as const;
+
+export const APPLICATION_TYPE_OPTIONS = [
+  { value: ApplicationType.TechnicalError, label: "Đơn Lỗi Kỹ Thuật" },
+  { value: ApplicationType.ReportMentor, label: "Đơn Tố Cáo Mentor" },
+  { value: ApplicationType.ReportRating, label: "Đơn Tố Cáo Rating" },
+  { value: ApplicationType.ReportContent, label: "Đơn Tố Cáo Nội Dung" },
+  { value: ApplicationType.ReportComment, label: "Đơn Tố Cáo Comment" },
+] as const;
+
+export const getApplicationTypeLabel = (type: string): string => {
+  return APPLICATION_TYPE_LABELS[type as ApplicationTypeEnum] || "Không xác định";
+};
+
 export const TransactionStatus = {
   Pending: "Pending",
   Completed: "Completed",

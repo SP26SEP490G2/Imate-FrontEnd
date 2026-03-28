@@ -4,25 +4,19 @@ import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/store/AuthContext";
-import type { User, UserRole } from "@/types/common/auth";
-import { updateUserRole } from "@/services/authService";
-// import RoleSelectionDialog from "@/components/custom/RoleSelectionDialog";
+import type { User } from "@/types/common/auth";
 import { toast } from "react-toastify";
-import apiClient from "@/services/apiClient";
 import { managementRoutes } from "@/config/managementRoutes";
 // import logo from "@/assets//images/logo.png";
 
 function SignIn() {
   const navigate = useNavigate();
   // MỚI: Lấy state và hàm từ AuthContext
-  const { login, loginWithGoogle, isLoading, error, clearError, refetchUser } = useAuth();
+  const { login, loginWithGoogle, isLoading, error, clearError } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [viewPassword, setViewPassword] = useState(false);
-  const [showRoleDialog, setShowRoleDialog] = useState(false);
-  const [pendingUser, setPendingUser] = useState<User | null>(null);
-  const [isUpdatingRole, setIsUpdatingRole] = useState(false);
 
   const toggleViewPassword = () => {
     setViewPassword(!viewPassword);
@@ -94,14 +88,6 @@ function SignIn() {
     try {
       const user = await loginWithGoogle();
 
-      // Kiểm tra xem đây có phải là account mới và role là Candidate (mặc định) không
-      // Nếu đúng, hiển thị dialog để user có thể chọn lại role nếu muốn
-      if (user?.isNewAccount && user.role === "Candidate") {
-        setPendingUser(user);
-        setShowRoleDialog(true);
-        return;
-      }
-
       // Nếu có role hợp lệ, hiển thị toast chào mừng và navigate
       toast.success(`Imate xin chào, ${user.fullName}!`);
       localStorage.setItem("user", JSON.stringify(user));
@@ -118,81 +104,7 @@ function SignIn() {
     }
   };
 
-  const handleRoleSelection = async (role: UserRole) => {
-    if (!pendingUser) return;
 
-    try {
-      setIsUpdatingRole(true);
-      // Gọi API để update role
-      await updateUserRole(role);
-
-      // Gọi API trực tiếp để lấy user mới (bao gồm accountStatus) thay vì đợi state update
-      // Lưu ý: JWT token vẫn chứa role cũ, nhưng API /profile sẽ query DB để lấy role mới
-      const profileResponse = await apiClient.get<User>("/profile");
-      let updatedUser = profileResponse.data;
-
-      console.log("[SignIn] User từ API /profile sau khi update role:", updatedUser);
-
-      // Normalize avatar nếu cần
-      if (updatedUser.avatarUrl && !updatedUser.avatar) {
-        updatedUser.avatar = updatedUser.avatarUrl;
-      }
-
-      // Đảm bảo role được set đúng từ response
-      // Nếu response chưa có role hoặc role không đúng, dùng role từ request
-      if (!updatedUser.role || updatedUser.role !== role) {
-        console.warn(`[SignIn] Role từ API (${updatedUser.role}) không khớp với role request (${role}), sử dụng role từ request`);
-        updatedUser = { ...updatedUser, role };
-      }
-
-      // Xóa isNewAccount sau khi user đã chọn role (account không còn là "new" nữa)
-      if (updatedUser.isNewAccount !== undefined) {
-        updatedUser = { ...updatedUser, isNewAccount: false };
-      }
-
-      console.log("[SignIn] User sau khi normalize:", updatedUser);
-
-      // Cập nhật localStorage ngay lập tức với user mới
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-      console.log("[SignIn] Đã cập nhật localStorage với user:", JSON.parse(localStorage.getItem("user") || "{}"));
-
-      // Cập nhật context bằng cách gọi refetchUser() nhưng đảm bảo localStorage đã được set trước
-      // Nếu API /profile trả về role cũ (do JWT token chưa refresh),
-      // chúng ta sẽ override lại với updatedUser từ localStorage
-      try {
-        await refetchUser();
-        // Sau khi refetch, kiểm tra lại localStorage và đảm bảo role đúng
-        const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-        if (storedUser.role !== role) {
-          console.warn("[SignIn] Role trong localStorage sau refetch không đúng, cập nhật lại");
-          localStorage.setItem("user", JSON.stringify(updatedUser));
-        }
-      } catch (e) {
-        console.error("[SignIn] Lỗi khi refetch user, nhưng vẫn tiếp tục với updatedUser:", e);
-      }
-
-      if (!updatedUser) {
-        throw new Error("Không thể lấy thông tin người dùng sau khi cập nhật role.");
-      }
-
-      console.log("[SignIn] Updated user after role change:", updatedUser);
-      console.log("[SignIn] Sẽ navigate với role:", updatedUser.role, "accountStatus:", updatedUser.accountStatus);
-
-      setShowRoleDialog(false);
-      setPendingUser(null);
-
-      // Hiển thị toast chào mừng
-      toast.success(`Imate xin chào, ${updatedUser.fullName}!`);
-
-      // Navigate đến trang phù hợp với role mới (sử dụng user mới từ API response)
-      handleNavigation(updatedUser);
-    } catch (err: any) {
-      console.error("Lỗi khi cập nhật role:", err);
-      toast.error(err.response?.data?.message || err.message || "Có lỗi xảy ra khi cập nhật vai trò.");
-    } finally {
-      setIsUpdatingRole(false);
-    }
-  };
 
   return (
   <div className="flex min-h-screen w-full bg-[#020617] text-white overflow-hidden">
@@ -349,11 +261,7 @@ function SignIn() {
       </div>
     </div>
 
-    {/* <RoleSelectionDialog
-      isOpen={showRoleDialog}
-      onSelectRole={handleRoleSelection}
-      isLoading={isUpdatingRole}
-    /> */}
+
   </div>
 );
 }

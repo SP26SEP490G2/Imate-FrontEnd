@@ -194,7 +194,11 @@ const ViewJobApplicationDetail: React.FC = () => {
                                     {job.companyRecruiter.companyName}
                                 </h2>
                                 <a
-                                    href={job.companyRecruiter.website}
+                                    href={
+                                        job.companyRecruiter.website?.startsWith("http")
+                                            ? job.companyRecruiter.website
+                                            : `https://${job.companyRecruiter.website}`
+                                    }
                                     target="_blank"
                                     className="text-purple-400 text-sm hover:underline inline-flex items-center gap-1"
                                 >
