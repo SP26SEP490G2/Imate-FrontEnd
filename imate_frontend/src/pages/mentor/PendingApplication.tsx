@@ -1,22 +1,39 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Clock, LogOut } from "lucide-react";
 import { useAuth } from "@/store/AuthContext";
 
 export default function PendingApplication() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
 
-  if (!user || user.role !== "Mentor") {
-    navigate("/", { replace: true });
-    return null;
-  }
-  if (user.accountStatus === "Active") {
-    navigate("/mentor/interview-schedule", { replace: true });
-    return null;
-  }
-  if (!user.bio && !user.phone) {
-    navigate("/submit-mentor-application", { replace: true });
-    return null;
+  useEffect(() => {
+    if (isLoading) return;
+    
+    if (!user || user.role !== "Mentor") {
+      navigate("/", { replace: true });
+      return;
+    }
+    if (user.accountStatus === "Active") {
+      navigate("/mentor/interview-schedule", { replace: true });
+      return;
+    }
+    if (user.verificationStatus === "Rejected") {
+      navigate("/submit-mentor-application", { replace: true });
+      return;
+    }
+    if (!user.bio && !user.phone) {
+      navigate("/submit-mentor-application", { replace: true });
+      return;
+    }
+  }, [user, isLoading, navigate]);
+
+  if (isLoading || !user) {
+    return (
+      <div className="flex min-h-[80vh] items-center justify-center bg-[#020617]">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-indigo-500"></div>
+      </div>
+    );
   }
 
   return (

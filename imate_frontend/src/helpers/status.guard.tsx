@@ -42,9 +42,15 @@ export const StatusGuard: React.FC<StatusGuardProps> = ({
     
     // Custom redirect logic for Mentor/Recruiter
     if (userData.role === "Recruiter") {
+      if (userData.verificationStatus === "Rejected") {
+        return <Navigate to="/submit-recruiter-application" replace />;
+      }
       return <Navigate to="/recruiter-pending-application" replace />;
     }
     if (userData.role === "Mentor") {
+      if (userData.verificationStatus === "Rejected") {
+        return <Navigate to="/submit-mentor-application" replace />;
+      }
       return <Navigate to="/pending-application" replace />;
     }
 
