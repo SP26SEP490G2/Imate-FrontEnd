@@ -6,7 +6,6 @@ import { useAuth } from "@/store/AuthContext";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -23,6 +22,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { CommonBreadcrumb } from "@/components/ui/breadcrumb";
 import { cn } from "@/lib/utils";
 import UpdateRecruiterDialog from "../dialog/UpdateRecruiterDialog";
+import "@/constants/messages";
+import { MSG09, MSG10 } from "@/constants/messages";
 
 const nameSchema = z.object({
   fullName: z.string().min(2, "Tên phải có ít nhất 2 ký tự"),
@@ -69,13 +70,16 @@ const ViewProfile = () => {
   }, [user, form]);
 
   useEffect(() => {
-    if (!user?.avatarUrl) return;
+    if (!avatarPreview) {
+      setLoaded(false);
+      return;
+    }
     const img = new Image();
-    img.src = user.avatarUrl;
+    img.src = avatarPreview;
 
     img.onload = () => setLoaded(true);
     img.onerror = () => setLoaded(false);
-  }, [user?.avatarUrl]);
+  }, [avatarPreview]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     // Thêm type
@@ -107,9 +111,9 @@ const ViewProfile = () => {
       await refetchUser();
       setIsEditMode(false);
       setAvatarFile(null);
-      toast.success("Cập nhật profile thành công!");
+      toast.success(MSG09);
     } catch (error) {
-      toast.error("Cập nhật profile thất bại");
+      toast.error(MSG10);
       console.log(error);
     } finally {
       setIsSubmitting(false);
@@ -160,14 +164,26 @@ const ViewProfile = () => {
         <CommonBreadcrumb />
         {/* === 1. PROFILE HEADER === */}
         <div className="mx-auto">
-          <input type="file" ref={fileInputRef} onChange={handleFileChange} style={{ display: "none" }} accept="image/png, image/jpeg, image/gif" />
+          <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
 
           <div className="flex flex-col items-center justify-between gap-6 rounded-[16px] border border-white/10 bg-[#11142D] p-6 shadow-[0_20px_40px_rgba(0,0,0,0.35)] md:flex-row">
             <div className="flex flex-col items-center gap-6 md:flex-row">
               {/* Avatar */}
               <div className="relative h-24 w-24 md:h-32 md:w-32">
-                <div className={cn("flex h-full w-full items-center justify-center overflow-hidden rounded-full ring-2 ring-[#8B5CF6]/40 font-semibold", getAvatarColor(user?.fullName || "User"))}>
+                <div
+                  className={cn(
+                    "relative flex h-full w-full items-center justify-center overflow-hidden rounded-full ring-2 ring-[#8B5CF6]/40 font-semibold transition-all",
+                    getAvatarColor(user?.fullName || "User"),
+                    isEditMode && "cursor-pointer hover:brightness-90 active:scale-95"
+                  )}
+                  onClick={isEditMode ? handleCameraClick : undefined}
+                >
                   {loaded ? <img src={avatarPreview} className="h-full w-full object-cover" /> : <span className="font-semibold text-white">{getInitials(user?.fullName || "User")}</span>}
+                  {isEditMode && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition-opacity hover:opacity-100">
+                      <Camera className="h-8 w-8 text-white/70" />
+                    </div>
+                  )}
                 </div>
                 {isEditMode && (
                   <Button className="absolute bottom-0 right-0 h-9 w-9 rounded-full bg-gradient-to-r from-[#6C63FF] to-[#8B5CF6] text-white shadow-lg transition hover:brightness-110" onClick={handleCameraClick}>
@@ -211,7 +227,8 @@ const ViewProfile = () => {
 
             {/* Nút Chỉnh sửa / Lưu */}
             {!isEditMode ? (
-              <Button className="w-full cursor-pointer bg-gradient-to-r from-[#6C63FF] to-[#8B5CF6] text-sm hover:brightness-110 md:w-auto md:text-base" onClick={() => setIsEditMode(true)}>
+              <Button className="w-full cursor-pointer bg-gradient-to-r from-[#6C63FF] to-[#8B5CF6] text-sm hover:brightness-110 md:w-auto md:text-base gap-2" onClick={() => setIsEditMode(true)}>
+                <Edit className="h-4 w-4" />
                 Chỉnh sửa hồ sơ
               </Button>
             ) : (
@@ -271,7 +288,7 @@ const ViewProfile = () => {
                       <Tooltip>
                         <TooltipTrigger asChild className="cursor-pointer">
                           <span className="inline-flex">
-                            <Button className="h-7 w-7 cursor-pointer bg-green-500 hover:bg-green-500/50" disabled>
+                            <Button className="h-7 w-7 p-0 cursor-pointer bg-green-500 hover:bg-green-500/50 flex items-center justify-center" disabled>
                               <Edit className="h-4 w-4" />
                             </Button>
                           </span>
@@ -475,106 +492,106 @@ const ViewProfile = () => {
         )}
 
         {/* === RECRUITER DETAILS SECTION === */}
-{isRecruiter && (
-  <div className="mx-auto mt-10 space-y-8">
+        {isRecruiter && (
+          <div className="mx-auto mt-10 space-y-8">
 
-    {/* Company Info */}
-    <Card className="rounded-[16px] border border-white/10 bg-[#11142D] shadow-[0_20px_40px_rgba(0,0,0,0.35)]">
-<CardHeader className="flex items-center justify-between">
-  <CardTitle className="flex items-center gap-2 text-white">
-    <Building size={18} />
-    Thông tin công ty
-  </CardTitle>
+            {/* Company Info */}
+            <Card className="rounded-[16px] border border-white/10 bg-[#11142D] shadow-[0_20px_40px_rgba(0,0,0,0.35)]">
+              <CardHeader className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <Building size={18} />
+                  Thông tin công ty
+                </CardTitle>
 
-  <UpdateRecruiterDialog
-    data={user}
-    onSubmit={() => refetchUser()}
-  />
-</CardHeader>
+                <UpdateRecruiterDialog
+                  data={user}
+                  onSubmit={() => refetchUser()}
+                />
+              </CardHeader>
 
-      <CardContent className="space-y-5">
+              <CardContent className="space-y-5">
 
-        {/* Company Logo + Name */}
-        {(user.companyLogo || user.companyName) && (
-          <div className="flex items-center gap-4">
-            {user.companyLogo && (
-              <img
-                src={user.companyLogo}
-                className="h-16 w-16 rounded-lg object-contain bg-white p-2"
-              />
-            )}
+                {/* Company Logo + Name */}
+                {(user.companyLogo || user.companyName) && (
+                  <div className="flex items-center gap-4">
+                    {user.companyLogo && (
+                      <img
+                        src={user.companyLogo}
+                        className="h-16 w-16 rounded-lg object-contain bg-white p-2"
+                      />
+                    )}
 
-            <div>
-              <p className="text-sm text-gray-400">Tên công ty</p>
-              <p className="text-white font-semibold">
-                {user.companyName || "Chưa cập nhật"}
-              </p>
-            </div>
+                    <div>
+                      <p className="text-sm text-gray-400">Tên công ty</p>
+                      <p className="text-white font-semibold">
+                        {user.companyName || "Chưa cập nhật"}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {/* RecruiterPhone */}
+                {user.phone && (
+                  <div className="flex items-center gap-3">
+                    <Phone size={18} className="text-gray-400" />
+                    <div>
+                      <p className="text-sm text-gray-400">Số điện thoại</p>
+                      <p className="text-sm text-[#A0A3BD]">{user.phone}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Website */}
+                {user.website && (
+                  <div className="flex items-center gap-3">
+                    <Globe size={18} className="text-gray-400" />
+                    <a
+                      href={user.website}
+                      target="_blank"
+                      className="text-[#A78BFA] text-sm hover:underline"
+                    >
+                      {user.website}
+                    </a>
+                  </div>
+                )}
+
+                {/* Industry */}
+                {user.industry && (
+                  <div className="flex items-center gap-3">
+                    <Briefcase size={18} className="text-gray-400" />
+                    <div>
+                      <p className="text-sm text-gray-400">Lĩnh vực</p>
+                      <p className="text-sm text-[#A0A3BD]">{user.industry}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Company Size */}
+                {user.companySize && (
+                  <div className="flex items-center gap-3">
+                    <Users size={18} className="text-gray-400" />
+                    <div>
+                      <p className="text-sm text-gray-400">Quy mô công ty</p>
+                      <p className="text-sm text-[#A0A3BD]">{user.companySize}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Address */}
+                {user.address && (
+                  <div className="flex items-center gap-3">
+                    <MapPin size={18} className="text-gray-400" />
+                    <div>
+                      <p className="text-sm text-gray-400">Địa chỉ</p>
+                      <p className="text-sm text-[#A0A3BD]">{user.address}</p>
+                    </div>
+                  </div>
+                )}
+
+              </CardContent>
+            </Card>
+
           </div>
         )}
-        {/* RecruiterPhone */}
-        {user.phone && (
-          <div className="flex items-center gap-3">
-            <Phone size={18} className="text-gray-400" />
-            <div>
-              <p className="text-sm text-gray-400">Số điện thoại</p>
-              <p className="text-sm text-[#A0A3BD]">{user.phone}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Website */}
-        {user.website && (
-          <div className="flex items-center gap-3">
-            <Globe size={18} className="text-gray-400" />
-            <a
-              href={user.website}
-              target="_blank"
-              className="text-[#A78BFA] text-sm hover:underline"
-            >
-              {user.website}
-            </a>
-          </div>
-        )}
-
-        {/* Industry */}
-        {user.industry && (
-          <div className="flex items-center gap-3">
-            <Briefcase size={18} className="text-gray-400" />
-            <div>
-              <p className="text-sm text-gray-400">Lĩnh vực</p>
-              <p className="text-sm text-[#A0A3BD]">{user.industry}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Company Size */}
-        {user.companySize && (
-          <div className="flex items-center gap-3">
-            <Users size={18} className="text-gray-400" />
-            <div>
-              <p className="text-sm text-gray-400">Quy mô công ty</p>
-              <p className="text-sm text-[#A0A3BD]">{user.companySize}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Address */}
-        {user.address && (
-          <div className="flex items-center gap-3">
-            <MapPin size={18} className="text-gray-400" />
-            <div>
-              <p className="text-sm text-gray-400">Địa chỉ</p>
-              <p className="text-sm text-[#A0A3BD]">{user.address}</p>
-            </div>
-          </div>
-        )}
-
-      </CardContent>
-    </Card>
-
-  </div>
-)}
 
         {/* === 3. CONTENT AREA (Settings Tab) === */}
         <div className={`mx-auto grid grid-cols-1 gap-8 ${!(isMentor || isAdmin || isStaff || isRecruiter) ? "mt-10 lg:grid-cols-3" : "mt-8 lg:grid-cols-1"}`}>

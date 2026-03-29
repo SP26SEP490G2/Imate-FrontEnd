@@ -183,12 +183,12 @@ const UpdateMentorDialog: React.FC<UpdateMentorDialogProps> = ({ type, onSubmit,
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {type === "price" ? (
-          <Button className="h-7 w-7 cursor-pointer bg-green-500 hover:bg-green-500/50">
-            <Edit className="h-4 w-4" />
+          <Button className="h-7 w-7 p-0 cursor-pointer bg-green-500 hover:bg-green-500/50 flex items-center justify-center">
+            <Edit className="h-4 w-4 text-white" />
           </Button>
         ) : (
-          <Button className="h-7 w-7 cursor-pointer bg-gray-400 hover:bg-gray-500">
-            <Edit className="h-4 w-4" />
+          <Button className="h-7 w-7 p-0 cursor-pointer bg-[#8B5CF6] hover:bg-[#7C3AED] flex items-center justify-center">
+            <Edit className="h-4 w-4 text-white" />
           </Button>
         )}
       </DialogTrigger>
@@ -275,7 +275,7 @@ const UpdateMentorDialog: React.FC<UpdateMentorDialogProps> = ({ type, onSubmit,
                     </button>
                   </PopoverTrigger>
 
-                  <PopoverContent align="start" onWheel={(e) => e.stopPropagation()} className="hide-scrollbar z-[100] w-[var(--radix-popover-trigger-width)] border border-white/10 bg-[#11142D] p-0 shadow-xl" sideOffset={5}>
+                  <PopoverContent align="start" onWheel={(e: React.WheelEvent) => e.stopPropagation()} className="hide-scrollbar z-[100] w-[var(--radix-popover-trigger-width)] border border-white/10 bg-[#11142D] p-0 shadow-xl" sideOffset={5}>
                     <div className="sticky top-0 z-10 rounded-t-md border-b border-white/10 bg-[#11142D] p-3">
                       <Input placeholder="Tìm kiếm tên hoặc mã ngân hàng..." value={searchText} onChange={(e) => setSearchText(e.target.value)} className="border-white/10 bg-[#0F1333] text-white placeholder:text-[#A0A3BD]" />
                     </div>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { getListPreviewMentors } from '../../../services/mentorService';
 import { getListHotQuestions } from '../../../services/questionService';
 import type { ListPreviewMentorResponse } from '../../../types/common/mentor';
@@ -16,8 +17,8 @@ const HomePage: React.FC = () => {
     const fetchMentors = async () => {
       try {
         setLoading(true);
-        const data = await getListPreviewMentors();
-        setMentors(data);
+        const res = await getListPreviewMentors({});
+        setMentors(res.data);
         setError(null);
       } catch (err) {
         console.error('Failed to fetch mentors:', err);
@@ -262,9 +263,12 @@ const HomePage: React.FC = () => {
                           {mentor.avgRatings?.toFixed(1) || '0.0'} ({mentor.totalRatingCount || 0} đánh giá)
                         </span>
                       </div>
-                      <button className="w-full py-3 bg-white text-[#0f172a] font-bold rounded-xl hover:bg-slate-100 transition-all">
+                      <Link
+                        to={`/view-mentor/${mentor.accountId}?book=true`}
+                        className="w-full py-3 bg-white text-[#0f172a] font-bold rounded-xl hover:bg-slate-100 transition-all flex items-center justify-center cursor-pointer"
+                      >
                         Đặt lịch
-                      </button>
+                      </Link>
                     </div>
                   </div>
                 ))

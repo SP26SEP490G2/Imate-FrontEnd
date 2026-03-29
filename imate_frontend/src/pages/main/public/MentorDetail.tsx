@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useLocation } from "react-router-dom";
 import BookMentorDialog from "@/dialog/main/mentor/BookMentorDialog";
 import { getMentorApplicationById } from "@/services/staffReviewService";
 import type { StaffMentorApplication } from "@/types/response/staffReview.response";
@@ -55,9 +55,19 @@ const MentorDetail: React.FC = () => {
     }
   }, [id]);
 
+  const { search } = useLocation();
+  const queryParams = new URLSearchParams(search);
+  const autoBook = queryParams.get("book") === "true";
+
   useEffect(() => {
     fetchMentor();
   }, [fetchMentor]);
+
+  useEffect(() => {
+    if (autoBook && mentor && !loading) {
+      setBookDialogOpen(true);
+    }
+  }, [autoBook, mentor, loading]);
 
   if (loading) {
     return (

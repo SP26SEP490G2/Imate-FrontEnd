@@ -5,6 +5,7 @@ export interface SubscriptionPackageItem {
   duration: string;
   benefits: string[];
   isRecommended: boolean;
+  rank: number;
 }
 
 export interface GetSubscriptionPackagesResponse {

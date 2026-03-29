@@ -3,10 +3,10 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 // 2. ICONS
-import { Eye, Search } from "lucide-react";
+import { Search } from "lucide-react";
 
 // 3. UTILITIES & SERVICES
-import { getAuditLogs, getAuditLogDetail, getAuditLogFilterOptions } from "@/services/auditLogService";
+import { getAuditLogs, getAuditLogFilterOptions } from "@/services/auditLogService";
 import { getInitials, getAvatarColor } from "@/helpers/common";
 import { cn } from "@/lib/utils";
 
@@ -16,10 +16,9 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AppTabs } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 // 5. TYPES
-import type { PaginatedAuditLogResponse, AuditLogDetailResponse } from "@/types/response/audit-log.response";
+import type { PaginatedAuditLogResponse } from "@/types/response/audit-log.response";
 import { getPaginationRange } from "@/helpers/getPaginationRange";
 
 const PAGE_SIZE = 10;
@@ -47,7 +46,7 @@ const AdminAuditLog: React.FC = () => {
 
   // DATA STATE
   const [data, setData] = useState<PaginatedAuditLogResponse | null>(null);
-  const [auditLogDetail, setAuditLogDetail] = useState<AuditLogDetailResponse | null>(null);
+  const [loadingData, setLoadingData] = useState<boolean>(false);
   const [filterOptions, setFilterOptions] = useState<{
     staffNames: string[];
     actions: string[];
@@ -57,13 +56,6 @@ const AdminAuditLog: React.FC = () => {
     actions: [],
     entityTypes: [],
   });
-
-  // UI STATE
-  const [openDialogDetail, setOpenDialogDetail] = useState(false);
-
-  // LOADING STATE
-  const [loadingData, setLoadingData] = useState<boolean>(false);
-  const [loadingDetail, setLoadingDetail] = useState<boolean>(false);
 
   // DERIVED STATE
   const totalPage = data?.totalPages || 0;
@@ -198,20 +190,36 @@ const AdminAuditLog: React.FC = () => {
     }
   };
 
-  // 4. VIEW DETAIL
-  const handleViewDetails = async (id: number) => {
-    try {
-      setLoadingDetail(true);
-      const detail = await getAuditLogDetail(id);
-      if (detail) {
-        setAuditLogDetail(detail);
-        setOpenDialogDetail(true);
+  const renderValue = (value: any) => {
+    if (value === null || value === undefined || value === "") 
+      return <span className="text-slate-500 italic">Không có dữ liệu</span>;
+
+    let parsedValue = value;
+    if (typeof value === "string") {
+      try {
+        parsedValue = JSON.parse(value);
+      } catch (e) {
+        // Not a JSON string
       }
-    } catch (error) {
-      console.log("Error fetching detail:", error);
-    } finally {
-      setLoadingDetail(false);
     }
+
+    if (typeof parsedValue === "object") {
+      return (
+        <div className="max-w-[300px] overflow-hidden">
+          <pre className="text-[10px] text-slate-400 font-mono bg-[#050816] p-3 rounded-lg border border-white/5 overflow-x-auto custom-scrollbar max-h-[150px] leading-relaxed">
+            {JSON.stringify(parsedValue, null, 2)}
+          </pre>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="max-w-[300px] overflow-hidden">
+        <span className="text-slate-300 font-mono text-[11px] bg-slate-900/50 px-2 py-1 rounded border border-white/5 break-words">
+          {String(value)}
+        </span>
+      </div>
+    );
   };
 
   const formatDate = (dateString: string) => {
@@ -342,9 +350,9 @@ const AdminAuditLog: React.FC = () => {
                   <TableHead>Người dùng</TableHead>
                   <TableHead>Hành động</TableHead>
                   <TableHead>Đối tượng</TableHead>
-                  <TableHead>Nội dung</TableHead>
+                  <TableHead>Giá trị cũ</TableHead>
+                  <TableHead>Giá trị mới</TableHead>
                   <TableHead>Thời gian</TableHead>
-                  <TableHead className="w-[140px] text-right">Chi tiết</TableHead>
                 </TableRow>
               </TableHeader>
 
@@ -381,25 +389,15 @@ const AdminAuditLog: React.FC = () => {
                       <span className="text-xs px-2 py-1 bg-slate-800 rounded-md text-slate-300 border border-slate-700">{item.entityType}</span>
                     </TableCell>
                     <TableCell>
-                      <p className="text-xs text-slate-400">
-                        {item.action} {item.entityType}
-                      </p>
+                      {renderValue(item.oldValue)}
+                    </TableCell>
+                    <TableCell>
+                      {renderValue(item.newValue)}
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col">
                         <span className="text-xs font-medium text-white">{formatDate(item.actionTime).split("\n")[0]}</span>
                         <span className="text-[10px] text-slate-500">{formatDate(item.actionTime).split("\n")[1]}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex gap-2 justify-end">
-                        <Button className="cursor-pointer"
-                          size="sm"
-                          variant="secondary"
-                          onClick={() => handleViewDetails(item.id)}
-                        >
-                          <Eye size={14} />
-                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -410,96 +408,6 @@ const AdminAuditLog: React.FC = () => {
         </div>
       </div>
 
-      {/* Modern Detail Dialog */}
-      <Dialog open={openDialogDetail} onOpenChange={setOpenDialogDetail}>
-        <DialogContent className="max-w-2xl bg-[#0B0F2A] border-white/10 text-white p-0 overflow-hidden rounded-2xl">
-          <div className="p-6 border-b border-white/5 bg-[#11142D]/50">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-indigo-500/20 text-indigo-400">
-                  <Eye className="h-5 w-5" />
-                </div>
-                Chi tiết truy vết
-              </DialogTitle>
-            </DialogHeader>
-          </div>
-
-          <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
-            {loadingDetail ? (
-              <div className="flex flex-col items-center justify-center py-20 space-y-4">
-                <div className="h-10 w-10 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
-                <span className="text-[#6B6F8E] font-medium">Đang truy xuất dữ liệu...</span>
-              </div>
-            ) : auditLogDetail ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Information Column */}
-                <div className="space-y-6">
-                  <div className="space-y-4">
-                    <h4 className="text-xs font-bold text-[#6B6F8E] uppercase tracking-widest">Thông tin thực hiện</h4>
-                    <div className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.03] border border-white/5">
-                      <Avatar className="h-12 w-12 ring-4 ring-indigo-500/10">
-                        <AvatarFallback className={cn("font-bold text-white", getAvatarColor(auditLogDetail.staffName))}>
-                          {getInitials(auditLogDetail.staffName)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-bold text-white">{auditLogDetail.staffName}</p>
-                        <p className="text-xs text-[#6B6F8E]">{auditLogDetail.staffEmail}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h4 className="text-xs font-bold text-[#6B6F8E] uppercase tracking-widest">Thời gian & Hành động</h4>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="p-3 rounded-xl bg-white/[0.03] border border-white/5">
-                        <p className="text-[10px] font-bold text-[#6B6F8E] uppercase mb-1">Thời gian</p>
-                        <p className="text-sm font-semibold">{formatDate(auditLogDetail.actionTime).replace('\n', ' ')}</p>
-                      </div>
-                      <div className="p-3 rounded-xl bg-white/[0.03] border border-white/5">
-                        <p className="text-[10px] font-bold text-[#6B6F8E] uppercase mb-1">Hành động</p>
-                        <p className="text-sm font-semibold text-indigo-400">{auditLogDetail.action}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Data Column */}
-                <div className="space-y-6">
-                  <div className="space-y-4">
-                    <h4 className="text-xs font-bold text-[#6B6F8E] uppercase tracking-widest">Dữ liệu thay đổi</h4>
-
-                    <div className="space-y-3">
-                      <div className="rounded-xl overflow-hidden border border-white/5">
-                        <div className="bg-white/[0.03] px-4 py-2 text-[10px] font-bold text-[#6B6F8E] uppercase">Giá trị mới</div>
-                        <pre className="p-4 text-[11px] bg-[#050816] font-mono text-green-400 overflow-x-auto">
-                          {auditLogDetail.newValue ? JSON.stringify(auditLogDetail.newValue, null, 2) : "Không có dữ liệu"}
-                        </pre>
-                      </div>
-
-                      <div className="rounded-xl overflow-hidden border border-white/5">
-                        <div className="bg-white/[0.03] px-4 py-2 text-[10px] font-bold text-[#6B6F8E] uppercase">Giá trị cũ</div>
-                        <pre className="p-4 text-[11px] bg-[#050816] font-mono text-red-400 overflow-x-auto">
-                          {auditLogDetail.oldValue ? JSON.stringify(auditLogDetail.oldValue, null, 2) : "Không có dữ liệu"}
-                        </pre>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : null}
-          </div>
-
-          <div className="p-6 bg-[#11142D]/50 border-t border-white/5 flex justify-end">
-            <Button
-              onClick={() => setOpenDialogDetail(false)}
-              className="bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl px-8"
-            >
-              Đóng
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

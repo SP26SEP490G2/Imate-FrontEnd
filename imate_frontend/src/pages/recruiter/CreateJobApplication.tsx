@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, Check, ChevronsUpDown, Loader2 } from "lucide-react";
+import { X, Check, ChevronsUpDown, Loader2, Info } from "lucide-react";
 import { getAllPositions, getAllSkills } from "@/services/commonService";
 import type { PositionItem, SkillItem } from "@/types/common/question";
 import { Badge } from "@/components/ui/badge";
@@ -394,8 +394,27 @@ const CreateJobApplication: React.FC = () => {
                 value={form.description}
                 onChange={handleChange}
                 placeholder="Describe responsibilities, requirements, and technologies..."
-                className="w-full p-4 rounded-[12px] bg-[#0F1333] border border-[rgba(255,255,255,0.1)] focus:border-[#8B5CF6] outline-none placeholder-[#6B6F8E]"
+                className="w-full p-4 rounded-[12px] bg-[#0F1333] border border-[rgba(255,255,255,0.1)] focus:border-[#8B5CF6] outline-none placeholder-[#6B6F8E] resize-none"
               />
+              <div className="mt-2 p-4 rounded-[12px] bg-[#0F1333]/40 border border-[rgba(255,255,255,0.06)] backdrop-blur-sm transition-all hover:bg-[#0F1333]/60">
+                <p className="font-semibold text-[#A0A3BD] mb-2 flex items-center gap-2 text-sm uppercase tracking-wider">
+                  <Info size={14} className="text-[#8B5CF6]" /> Hướng dẫn định dạng:
+                </p>
+                <ul className="space-y-2 text-xs text-[#71717A]">
+                    <li className="flex items-start gap-2">
+                        <span className="text-[#8B5CF6]/60 mt-0.5">•</span>
+                        <span>Dùng <code className="bg-white/5 px-1.5 py-0.5 rounded text-[#8B5CF6] border border-white/5">### Tiêu đề</code> để tạo tiêu đề các mục (VD: ### Quyền lợi)</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                        <span className="text-[#8B5CF6]/60 mt-0.5">•</span>
+                        <span>Dùng <code className="bg-white/5 px-1.5 py-0.5 rounded text-[#8B5CF6] border border-white/5">- Nội dung</code> để tạo dòng có dấu tích xanh (VD: - Chế độ bảo hiểm)</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                        <span className="text-[#8B5CF6]/60 mt-0.5">•</span>
+                        <span>Nhấn <span className="text-slate-400 font-medium italic">Enter</span> để xuống dòng bình thường.</span>
+                    </li>
+                </ul>
+              </div>
             </div>
 
             {/* Actions */}

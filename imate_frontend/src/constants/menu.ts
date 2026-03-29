@@ -1,11 +1,14 @@
-import { FolderOpen, LibraryBig, CircleUser, CreditCard, FileUser, Sparkles, LogOut, Wallet, Package, FileQuestion, History, Calendar } from "lucide-react";
+import { FolderOpen, LibraryBig, CircleUser, CreditCard, FileUser, Sparkles, LogOut, Wallet, Package, FileQuestion, History, Calendar, Briefcase, Star, DollarSign } from "lucide-react";
 import type { MenuItem } from "@/types/common/menu";
 
 export const MENTOR_MENU_ITEMS: MenuItem[] = [
-  { label: "Lịch làm việc", href: "/interview-schedule" },
+  { label: "Lịch làm việc", href: "/mentor/interview-schedule" },
+  { label: "Quản lý lịch lặp lại", href: "/mentor/manage-slots" },
+  { label: "Đánh giá từ ứng viên", href: "/mentor/ratings" },
   { label: "Thu nhập", href: "/mentor/income" },
   { label: "Lịch sử phỏng vấn", href: "/mentor/interview-history" },
   { label: "Câu hỏi từ cộng đồng", href: "/contributed-question-bank" },
+  { label: "Gửi đơn", href: "/view-application" }
 ];
 
 export const CANDIDATE_MENU_ITEMS: MenuItem[] = [
@@ -22,6 +25,7 @@ export const CANDIDATE_MENU_ITEMS: MenuItem[] = [
   { label: "Mentor", href: "/view-mentor" },
   { label: "Gói dịch vụ", href: "/view-subscription" },
   { label: "Gửi đơn", href: "/view-application" },
+  { label: "Cơ hội việc làm", href: "/view-job-applications" }
 ];
 
 export const USER_PROFILE_MENU: MenuItem[] = [
@@ -39,6 +43,11 @@ export const USER_PROFILE_MENU: MenuItem[] = [
     label: "Lịch phỏng vấn",
     href: "/interview-schedule",
     icon: Calendar,
+  },
+  {
+    label: "Lịch sử Mentor",
+    href: "/test-history?tab=mentor",
+    icon: History,
   },
   {
     label: "Ví Imate",
@@ -66,6 +75,11 @@ export const USER_PROFILE_MENU: MenuItem[] = [
     icon: Package,
   },
   {
+    label: "Danh sách ứng tuyển",
+    href: "/view-applied-job",
+    icon: Briefcase,
+  },
+  {
     label: "Đăng xuất",
     icon: LogOut,
   },
@@ -83,9 +97,24 @@ export const MENTOR_PROFILE_MENU: MenuItem[] = [
     icon: History,
   },
   {
-    label: "Lịch phỏng vấn",
-    href: "/interview-schedule",
+    label: "Lịch làm việc",
+    href: "/mentor/interview-schedule",
     icon: Calendar,
+  },
+  {
+    label: "Quản lý lịch lặp lại",
+    href: "/mentor/manage-slots",
+    icon: Calendar,
+  },
+  {
+    label: "Quản lý giá",
+    href: "/mentor/pricing",
+    icon: DollarSign,
+  },
+  {
+    label: "Đánh giá từ ứng viên",
+    href: "/mentor/ratings",
+    icon: Star,
   },
   {
     label: "Câu hỏi đã đăng",
@@ -101,6 +130,24 @@ export const MENTOR_PROFILE_MENU: MenuItem[] = [
     label: "Nạp tiền",
     href: "/wallet",
     icon: CreditCard,
+  },
+  {
+    label: "Đăng xuất",
+    icon: LogOut,
+  },
+];
+
+
+export const RECRUITER_PROFILE_MENU: MenuItem[] = [
+  {
+    label: "Hồ sơ cá nhân",
+    href: "/profile",
+    icon: CircleUser,
+  },
+  {
+    label: "Management",
+    href: "/management/recruiter-dashboard/job-applications",
+    icon: Briefcase,
   },
   {
     label: "Đăng xuất",

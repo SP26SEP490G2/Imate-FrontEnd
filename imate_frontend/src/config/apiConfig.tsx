@@ -18,6 +18,9 @@ const APIConfig = {
   Mentor: {
     GetListPreviewMentors: "get-list-preview-mentors",
     SubmitMentorProfile: "profile/mentor",
+    CancelBooking: "/bookings/{bookingId}/cancel",
+    GetMyCandidateRatings: "mentor/my-candidate-ratings",
+    UpdatePrice: "mentor/price",
   },
 
   // Question endpoints (không dùng leading slash để axios nối đúng baseURL .../api)
@@ -45,7 +48,7 @@ const APIConfig = {
   // Category endpoints
   Category: {
     GetAllCategories: "/get-categories",
-    AddCategory:"/categories",
+    AddCategory: "/categories",
     UpdateCategory: "/categories/{categoryId}",
     GetAffectedQuestions: "/categories/{categoryId}/affected-questions",
   },
@@ -75,7 +78,21 @@ const APIConfig = {
   Recruiter: {
     SubmitRecruiterProfile: "/recruiters/submit-profile",
     GetJobApplicationList: "job-applications",
-    GetRecruiterJobApplication: "recruiter-job-applications"
+    GetRecruiterJobApplication: "recruiter-job-applications",
+    UpdateRecruiterProfile: "/recruiter-profile",
+    UploadLogo: "/recruiters/upload-logo",
+    CreateJobPost: "/create-job-posts",
+    UpdateJob: "/update-job",
+    CloseJob: "/close-job",
+    GetAppliedCandidate: (jobId: number) => `${jobId}/applied-candidates`,
+    UpdateJobApplication: "/update-job-application",
+  },
+
+  Candidate: {
+    GetAllOpenedJob: "get-all-jobs",
+    GetJobDetail: (jobId: number) => `get-job-detail/${jobId}`,
+    CreateJobApplication: "/apply-job",
+    GetAppliedJob: "get-applied-jobs",
   },
 
   // Staff review endpoints (baseURL thường đã có /api)
@@ -86,7 +103,7 @@ const APIConfig = {
     GetPendingRecruiters: "/staff-review/recruiters/pending",
     ReviewRecruiter: "/staff-review/recruiters",
   },
-  
+
   // Subscription endpoints
   Subscription: {
     GetSubscriptionPackages: "/subscription-packages",

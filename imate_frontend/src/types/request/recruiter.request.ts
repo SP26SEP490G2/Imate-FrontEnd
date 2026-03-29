@@ -7,5 +7,17 @@ export interface SubmitRecruiterProfileRequest {
   companyName: string;
   companyAddress: string;
   companyWebsite?: string;
+  companyLogo?: string;
   phone: string;
+}
+
+export interface UpdateRecruiterProfileRequest {
+  companyName: string;
+  companyLogo?: File | null;
+  website?: string | null;
+  industry: string;
+  companySize: string;
+  address: string;
+  phone: string;
+  [key: string]: any;
 }

@@ -1,3 +1,4 @@
+import APIConfig from "@/config/apiConfig";
 import apiClient from "./apiClient";
 import type { BookingDetailResponse } from "@/types/response/booking.response";
 
@@ -54,3 +55,34 @@ export const getMentorBookings = async () => {
     throw error;
   }
 };
+
+/**
+ * [PUT] Hủy booking
+ */
+export const cancelBooking = async (bookingId: number) => {
+  try {
+    const url = APIConfig.Mentor.CancelBooking.replace("{bookingId}", bookingId.toString());
+    const res = await apiClient.put(url);
+    return res.data;
+  } catch (error) {
+    console.error("Error cancelling booking: ", error);
+    throw error;
+  }
+};
+
+/**
+ * [POST] Đánh giá mentor sau buổi học
+ */
+export const rateMentor = async (bookingId: number, ratingScore: number, reviewText: string) => {
+  try {
+    const res = await apiClient.post(`/bookings/${bookingId}/rate`, {
+      ratingScore,
+      reviewText,
+    });
+    return res.data;
+  } catch (error) {
+    console.error("Error rating mentor: ", error);
+    throw error;
+  }
+};
+

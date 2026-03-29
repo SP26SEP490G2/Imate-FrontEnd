@@ -9,9 +9,13 @@ import type {
  */
 export const getMentorRecurringSlots = async (mentorId: number) => {
   try {
-    const res = await apiClient.get<MentorRecurringSlotsData>(`/mentor-recurring-slot/mentor/${mentorId}`);
+    const res = await apiClient.get<{
+      success: boolean;
+      data: MentorRecurringSlotsData;
+      message: string;
+    }>(`/mentor-recurring-slot/mentor/${mentorId}`);
 
-    return res.data;
+    return res.data.data;
   } catch (error) {
     console.error("Error fetching mentor recurring slots: ", error);
     throw error;

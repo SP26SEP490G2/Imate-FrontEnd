@@ -73,7 +73,7 @@ export interface AuthContextType {
   isLoading: boolean;
   error: string | null; // MỚI: Thêm state cho lỗi
   login: (loginData: LoginEmailData) => Promise<User>; // THAY ĐỔI: Nhận object và trả về User
-  loginWithGoogle: () => Promise<User>; // THAY ĐỔI: Không cần tham số, trả về User
+  loginWithGoogle: (role?: UserRole) => Promise<User>; // THAY ĐỔI: Nhận tham số role, trả về User
   logout: () => void;
   clearError: () => void; // MỚI: Hàm để xóa lỗi
   refetchUser: () => Promise<void>;
