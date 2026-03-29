@@ -156,3 +156,42 @@ export interface ApplicationPendingSummary {
   message: string;
   success: boolean;
 }
+
+export interface ReportCommentUserInfo {
+  id: number;
+  fullName: string;
+  email: string | null;
+  avatarUrl: string | null;
+}
+
+export interface ReportCommentQuestionInfo {
+  id: number;
+  content: string | null;
+  createdByUser: ReportCommentUserInfo | null;
+}
+
+export interface ReportCommentDetailInfo {
+  id: number;
+  content: string;
+  createdAt: string;
+  updatedAt: string | null;
+  author: ReportCommentUserInfo;
+  question: ReportCommentQuestionInfo | null;
+}
+
+export interface ApplicationReportCommentDetailResponse {
+  id: number;
+  title: string;
+  content: string;
+  status: string;
+  applicationType: string;
+  evidenceUrls: string | null;
+  response: string | null;
+  createdAt: string;
+  updatedAt: string | null;
+  reporter: ReportCommentUserInfo;
+  reviewerId: number | null;
+  reviewerName: string | null;
+  commentId: number | null;
+  commentDetail: ReportCommentDetailInfo | null;
+}

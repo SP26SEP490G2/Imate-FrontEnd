@@ -34,7 +34,6 @@ export const ApplicationType = {
   ReportMentor: "ReportMentor",
   ReportRating: "ReportRating",
   ReportComment: "ReportComment",
-  ReportContent: "ReportContent",
 } as const;
 
 export type ApplicationTypeEnum = keyof typeof ApplicationType;
@@ -44,14 +43,12 @@ export const APPLICATION_TYPE_LABELS: Record<ApplicationTypeEnum, string> = {
   [ApplicationType.ReportMentor]: "Đơn Tố Cáo Mentor",
   [ApplicationType.ReportRating]: "Đơn Tố Cáo Rating",
   [ApplicationType.ReportComment]: "Đơn Tố Cáo Comment",
-  [ApplicationType.ReportContent]: "Đơn Tố Cáo Nội Dung",
 } as const;
 
 export const APPLICATION_TYPE_OPTIONS = [
   { value: ApplicationType.TechnicalError, label: "Đơn Lỗi Kỹ Thuật" },
   { value: ApplicationType.ReportMentor, label: "Đơn Tố Cáo Mentor" },
   { value: ApplicationType.ReportRating, label: "Đơn Tố Cáo Rating" },
-  { value: ApplicationType.ReportContent, label: "Đơn Tố Cáo Nội Dung" },
   { value: ApplicationType.ReportComment, label: "Đơn Tố Cáo Comment" },
 ] as const;
 
@@ -100,3 +97,48 @@ export const TRANSACTION_TYPE_OPTIONS = [
   { value: TransactionType.BookingPayout, label: "Phí Mentor" },
   { value: TransactionType.InterviewFee, label: "Phí phỏng vấn" },
 ];
+
+export const ReportReason = {
+  Spam: "Spam",
+  Harassment: "Harassment",
+  InappropriateContent: "InappropriateContent",
+  HateSpeech: "HateSpeech",
+  FalseInformation: "FalseInformation",
+  OffTopic: "OffTopic",
+  CopyrightViolation: "CopyrightViolation",
+  PersonalAttack: "PersonalAttack",
+  InappropriateLanguage: "InappropriateLanguage",
+  Other: "Other",
+} as const;
+
+export type ReportReasonEnum = keyof typeof ReportReason;
+
+export const REPORT_REASON_LABELS: Record<ReportReasonEnum, string> = {
+  [ReportReason.Spam]: "Spam hoặc quảng cáo",
+  [ReportReason.Harassment]: "Quấy rối, lăng mạ",
+  [ReportReason.InappropriateContent]: "Nội dung không phù hợp",
+  [ReportReason.HateSpeech]: "Ngôn từ thù địch",
+  [ReportReason.FalseInformation]: "Thông tin sai lệch",
+  [ReportReason.OffTopic]: "Lạc đề, không liên quan",
+  [ReportReason.CopyrightViolation]: "Vi phạm bản quyền",
+  [ReportReason.PersonalAttack]: "Công kích cá nhân",
+  [ReportReason.InappropriateLanguage]: "Ngôn ngữ không phù hợp",
+  [ReportReason.Other]: "Lý do khác",
+} as const;
+
+export const REPORT_REASON_OPTIONS = [
+  { value: ReportReason.Spam, label: "Spam hoặc quảng cáo" },
+  { value: ReportReason.Harassment, label: "Quấy rối, lăng mạ" },
+  { value: ReportReason.InappropriateContent, label: "Nội dung không phù hợp" },
+  { value: ReportReason.HateSpeech, label: "Ngôn từ thù địch" },
+  { value: ReportReason.FalseInformation, label: "Thông tin sai lệch" },
+  { value: ReportReason.OffTopic, label: "Lạc đề, không liên quan" },
+  { value: ReportReason.CopyrightViolation, label: "Vi phạm bản quyền" },
+  { value: ReportReason.PersonalAttack, label: "Công kích cá nhân" },
+  { value: ReportReason.InappropriateLanguage, label: "Ngôn ngữ không phù hợp" },
+  { value: ReportReason.Other, label: "Lý do khác" },
+] as const;
+
+export const getReportReasonLabel = (reason: ReportReasonEnum | string): string => {
+  return REPORT_REASON_LABELS[reason as ReportReasonEnum] || "Không xác định";
+};

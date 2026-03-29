@@ -123,7 +123,7 @@ export const MENTOR_PROFILE_MENU: MenuItem[] = [
   },
   {
     label: "Gửi đơn",
-    href: "/mentor/view-application",
+    href: "/view-application",
     icon: FolderOpen,
   },
   {

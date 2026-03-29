@@ -35,7 +35,7 @@ import type {
 } from "@/types/response/application.response";
 import type { Status } from "@/components/ui/status-badge";
 
-import { ViewApplicationDetailDialog } from "@/pages/dialog/ViewApplicationDetailDialog";
+import { ViewApplicationDetailDialog } from "@/dialog/main/reportApplication/ViewApplicationDetailDialog";
 
 // ─── Status badge mapping ────────────────────────────────────────────────────
 
@@ -71,12 +71,6 @@ const PENDING_TYPE_CONFIG: Record<string, {
     color: "text-violet-300",
     borderColor: "border-violet-500/30",
     bgColor: "bg-violet-500/10",
-  },
-  ReportContent: {
-    icon: <FileWarning className="w-5 h-5" />,
-    color: "text-emerald-300",
-    borderColor: "border-emerald-500/30",
-    bgColor: "bg-emerald-500/10",
   },
   ReportComment: {
     icon: <MessageSquareWarning className="w-5 h-5" />,
@@ -264,7 +258,6 @@ export default function StaffApplicationManagement() {
   const handleReviewSuccess = () => {
     fetchApplications();
     fetchSummary();
-    toast.success("Xử lý đơn thành công.");
   };
 
   const isReviewable = (app: ApplicationStaff) =>
@@ -287,7 +280,7 @@ export default function StaffApplicationManagement() {
 
       {/* Summary cards */}
       {summary.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {summary.map((item) => {
             const config = PENDING_TYPE_CONFIG[item.type];
             const label = APPLICATION_TYPE_OPTIONS.find(

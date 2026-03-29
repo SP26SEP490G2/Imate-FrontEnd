@@ -28,7 +28,7 @@ const MainLayout: React.FC = () => {
         if (user.accountStatus === "PendingVerification") {
           const hasMentorProfile = !!(user.bio || user.phone || user.yoe !== undefined || user.pricePerSession !== undefined || user.bankAccountNumber || user.bankCode);
 
-          if (hasMentorProfile) {
+          if (hasMentorProfile && user.verificationStatus !== "Rejected") {
             return <Navigate to="/pending-application" replace />;
           } else {
             return <Navigate to="/submit-mentor-application" replace />;

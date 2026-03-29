@@ -1,4 +1,4 @@
-import type { ApplicationListResponse, ApplicationPendingSummary } from "@/types/response/application.response";
+import type { ApplicationListResponse, ApplicationPendingSummary, ApplicationReportCommentDetailResponse } from "@/types/response/application.response";
 import apiClient from "./apiClient";
 
 // get list all applications with filters and pagination
@@ -138,6 +138,15 @@ export const getApplicationRatingDetails = async (applicationId: number) => {
     return response.data;
   } catch (error: any) {
     throw error.message;
+  }
+};
+
+export const getApplicationReportCommentDetails = async (applicationId: number) => {
+  try {
+    const response = await apiClient.get(`/application/${applicationId}/report-comment-details`);
+    return response.data as ApplicationReportCommentDetailResponse;
+  } catch (error: any) {
+    throw error;
   }
 };
 
