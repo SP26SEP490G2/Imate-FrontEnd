@@ -75,6 +75,7 @@ const ViewQuestionBank: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [pageNumber, setPageNumber] = useState(1);
   const pageSize = 10;
+  const isLoggedIn = Boolean(localStorage.getItem('authToken'));
 
   useEffect(() => {
     fetchLookupData();
@@ -117,6 +118,13 @@ const ViewQuestionBank: React.FC = () => {
       fetchSavedQuestions();
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    if (!isLoggedIn && (activeTab === 'saved' || activeTab === 'myContributed')) {
+      setActiveTab('system');
+      setPageNumber(1);
+    }
+  }, [activeTab, isLoggedIn]);
 
   const fetchLookupData = async () => {
     try {
@@ -283,7 +291,7 @@ const ViewQuestionBank: React.FC = () => {
   const handleView = (id: number, type: 'system' | 'contributed', currentSaved: boolean, enableSave = true) => {
     setViewModalId(id);
     setViewModalType(type);
-    setViewModalEnableSave(enableSave);
+    setViewModalEnableSave(enableSave && isLoggedIn);
     setViewModalOpen(true);
     // Seed the override map so the modal has the correct initial value
     const questionKey = getQuestionKey(type, id);
@@ -509,32 +517,36 @@ const ViewQuestionBank: React.FC = () => {
               >
                 Câu hỏi đóng góp
               </button>
-              <button
-                onClick={() => {
-                  setActiveTab('saved');
-                  setPageNumber(1);
-                }}
-                className={`pb-4 font-bold text-xs uppercase tracking-widest border-b-2 transition-colors ${
-                  activeTab === 'saved'
-                    ? 'text-indigo-400 border-indigo-500'
-                    : 'text-slate-400 border-transparent hover:text-white'
-                }`}
-              >
-                Câu hỏi đã lưu
-              </button>
-              <button
-                onClick={() => {
-                  setActiveTab('myContributed');
-                  setPageNumber(1);
-                }}
-                className={`pb-4 font-bold text-xs uppercase tracking-widest border-b-2 transition-colors ${
-                  activeTab === 'myContributed'
-                    ? 'text-indigo-400 border-indigo-500'
-                    : 'text-slate-400 border-transparent hover:text-white'
-                }`}
-              >
-                Câu hỏi tôi đã đóng góp
-              </button>
+              {isLoggedIn && (
+                <button
+                  onClick={() => {
+                    setActiveTab('saved');
+                    setPageNumber(1);
+                  }}
+                  className={`pb-4 font-bold text-xs uppercase tracking-widest border-b-2 transition-colors ${
+                    activeTab === 'saved'
+                      ? 'text-indigo-400 border-indigo-500'
+                      : 'text-slate-400 border-transparent hover:text-white'
+                  }`}
+                >
+                  Câu hỏi đã lưu
+                </button>
+              )}
+              {isLoggedIn && (
+                <button
+                  onClick={() => {
+                    setActiveTab('myContributed');
+                    setPageNumber(1);
+                  }}
+                  className={`pb-4 font-bold text-xs uppercase tracking-widest border-b-2 transition-colors ${
+                    activeTab === 'myContributed'
+                      ? 'text-indigo-400 border-indigo-500'
+                      : 'text-slate-400 border-transparent hover:text-white'
+                  }`}
+                >
+                  Câu hỏi tôi đã đóng góp
+                </button>
+              )}
             </div>
           </section>
           {/* Breadcrumb & Header */}
@@ -562,7 +574,7 @@ const ViewQuestionBank: React.FC = () => {
                 </p>
               </div>
               
-              {activeTab === 'contributed' && (
+              {activeTab === 'contributed' && isLoggedIn && (
                 <button 
                   onClick={() => setContributeModalOpen(true)}
                   className="bg-linear-to-r from-indigo-500 to-purple-500 text-white px-6 py-3 rounded-xl font-bold text-sm hover:opacity-90 transition-all flex items-center gap-2 shadow-lg shadow-indigo-500/20 self-start md:self-auto"
@@ -858,7 +870,7 @@ const ViewQuestionBank: React.FC = () => {
                         rating={card.rating}
                         isSaved={saved}
                         onView={() => handleView(question.id, 'system', saved)}
-                        onSave={() => handleSave('system', question.id, saved)}
+                        onSave={isLoggedIn ? () => handleSave('system', question.id, saved) : undefined}
                       />
                     );
                   })}
@@ -947,7 +959,7 @@ const ViewQuestionBank: React.FC = () => {
                         rating={card.rating}
                         isSaved={saved}
                         onView={() => handleView(question.id, 'contributed', saved)}
-                        onSave={() => handleSave('contributed', question.id, saved)}
+                        onSave={isLoggedIn ? () => handleSave('contributed', question.id, saved) : undefined}
                       />
                     );
                   })}
@@ -1038,7 +1050,7 @@ const ViewQuestionBank: React.FC = () => {
                         statusLabel={card.status}
                         statusType={getApprovalStatusBadge(card.status)}
                         onView={() => handleView(question.id, 'contributed', saved)}
-                        onSave={() => handleSave('contributed', question.id, saved)}
+                        onSave={isLoggedIn ? () => handleSave('contributed', question.id, saved) : undefined}
                       />
                     );
                   })}
@@ -1180,7 +1192,7 @@ const ViewQuestionBank: React.FC = () => {
                         rating={card.rating}
                         isSaved={saved}
                         onView={() => handleView(question.id, 'system', saved)}
-                        onSave={() => handleSave('system', question.id, saved)}
+                        onSave={isLoggedIn ? () => handleSave('system', question.id, saved) : undefined}
                       />
                     );
                   })}
@@ -1237,7 +1249,7 @@ const ViewQuestionBank: React.FC = () => {
                         rating={card.rating}
                         isSaved={saved}
                         onView={() => handleView(question.id, 'contributed', saved)}
-                        onSave={() => handleSave('contributed', question.id, saved)}
+                        onSave={isLoggedIn ? () => handleSave('contributed', question.id, saved) : undefined}
                       />
                     );
                   })}
