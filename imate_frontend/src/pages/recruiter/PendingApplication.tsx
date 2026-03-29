@@ -1,24 +1,32 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Clock, LogOut } from "lucide-react";
 import { useAuth } from "@/store/AuthContext";
 
 export default function PendingApplication() {
   const navigate = useNavigate();
-  const { user } = useAuth();
-
-  if (!user || user.role !== "Recruiter") {
-    navigate("/", { replace: true });
-    return null;
-  }
-  if (user.accountStatus === "Active") {
-    navigate("/recruiter/dashboard", { replace: true });
-    return null;
-  }
+  const { user, isLoading } = useAuth();
   
-  // Nếu status là null hoặc không phải PendingVerification thì có thể họ chưa submit hồ sơ
-  if (user.accountStatus !== "PendingVerification") {
-    navigate("/submit-recruiter-application", { replace: true });
-    return null;
+  useEffect(() => {
+    if (isLoading) return;
+
+    if (!user || user.role !== "Recruiter") {
+      navigate("/", { replace: true });
+    } else if (user.accountStatus === "Active") {
+      navigate("/recruiter/dashboard", { replace: true });
+    } else if (user.verificationStatus === "Rejected") {
+      navigate("/submit-recruiter-application", { replace: true });
+    } else if (user.accountStatus !== "PendingVerification" || !user.companyName) {
+      navigate("/submit-recruiter-application", { replace: true });
+    }
+  }, [user, isLoading, navigate]);
+
+  if (isLoading || !user || user.role !== "Recruiter" || user.accountStatus === "Active" || user.verificationStatus === "Rejected") {
+    return (
+      <div className="flex min-h-[80vh] items-center justify-center bg-[#020617]">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-indigo-500"></div>
+      </div>
+    );
   }
 
   return (
