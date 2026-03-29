@@ -84,6 +84,7 @@ export function ViewContributeQuestionModal({
     const [commentToDeleteId, setCommentToDeleteId] = useState<number | null>(null);
     const [votingCommentId, setVotingCommentId] = useState<number | null>(null);
     const [localVoteByCommentId, setLocalVoteByCommentId] = useState<Record<number, VoteType>>({});
+    const [pendingCommentIds, setPendingCommentIds] = useState<Record<number, true>>({});
     
     // Track if data has been fetched to prevent duplicate calls
     const hasFetchedRef = useRef(false);
@@ -120,6 +121,7 @@ export function ViewContributeQuestionModal({
             setNewCommentContent('');
             setCommentToDeleteId(null);
             setLocalVoteByCommentId({});
+            setPendingCommentIds({});
         }
     }, [open, questionId]);
 
@@ -174,49 +176,63 @@ export function ViewContributeQuestionModal({
             return;
         }
 
+        const temporaryCommentId = -Date.now();
+        const temporaryComment: CommentItem = {
+            id: temporaryCommentId,
+            userId: currentUser?.id ?? '',
+            userName: currentUser?.name || currentUser?.fullName || currentUser?.userName || 'Bạn',
+            userAvatarUrl: currentUser?.avatar || currentUser?.avatarUrl || '',
+            userRole: currentUser?.role || '',
+            content,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            upvoteCount: 0,
+            downvoteCount: 0,
+            totalVotes: 0,
+            currentUserVoteType: null,
+        };
+
+        setQuestionData((prev) => {
+            if (!prev) return prev;
+            const nextComments = [...(prev.comments || []), temporaryComment];
+            return { ...prev, comments: nextComments };
+        });
+        setPendingCommentIds((prev) => ({
+            ...prev,
+            [temporaryCommentId]: true,
+        }));
+        setLocalVoteByCommentId((prev) => ({
+            ...prev,
+            [temporaryCommentId]: null,
+        }));
+        setNewCommentContent('');
+
         try {
             setIsCreatingComment(true);
-            const commentId = await createComment(questionId, content);
-
-            if (commentId === null || commentId <= 0) {
-                await fetchData();
-                setNewCommentContent('');
-                toast.success('Bình luận đã được tạo.');
-                return;
-            }
-
-            const newComment: CommentItem = {
-                id: commentId,
-                userId: currentUser?.id ?? '',
-                userName: currentUser?.name || currentUser?.fullName || currentUser?.userName || 'Bạn',
-                userAvatarUrl: currentUser?.avatar || currentUser?.avatarUrl || '',
-                userRole: currentUser?.role || '',
-                content,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-                upvoteCount: 0,
-                downvoteCount: 0,
-                totalVotes: 0,
-                currentUserVoteType: null,
-            };
-
-            setQuestionData((prev) => {
-                if (!prev) return prev;
-                const nextComments = [...(prev.comments || []), newComment];
-                return { ...prev, comments: nextComments };
-            });
-
-            setLocalVoteByCommentId((prev) => ({
-                ...prev,
-                [newComment.id]: null,
-            }));
-
-            setNewCommentContent('');
-            toast.success('Bình luận đã được tạo.');
+            await createComment(questionId, content);
+            await fetchData();
+            toast.success('Bình luận đã được gửi và đã cập nhật danh sách mới nhất.');
         } catch (error) {
             console.error('Failed to create comment:', error);
+            setQuestionData((prev) => {
+                if (!prev) return prev;
+                return {
+                    ...prev,
+                    comments: (prev.comments || []).filter((comment) => comment.id !== temporaryCommentId),
+                };
+            });
+            setLocalVoteByCommentId((prev) => {
+                const next = { ...prev };
+                delete next[temporaryCommentId];
+                return next;
+            });
             toast.error('Không thể tạo bình luận. Vui lòng thử lại.');
         } finally {
+            setPendingCommentIds((prev) => {
+                const next = { ...prev };
+                delete next[temporaryCommentId];
+                return next;
+            });
             setIsCreatingComment(false);
         }
     };
@@ -573,6 +589,7 @@ export function ViewContributeQuestionModal({
                                     sortedComments.map((comment) => {
                                         const isOwn = isOwnComment(comment.userId);
                                         const isEditing = editingCommentId === comment.id;
+                                        const isPending = Boolean(pendingCommentIds[comment.id]);
                                         const currentVote = localVoteByCommentId[comment.id] ?? getInitialVoteType(comment);
 
                                         return (
@@ -588,10 +605,11 @@ export function ViewContributeQuestionModal({
                                                         <p className="text-xs text-slate-400">
                                                             {formatCommentDate(comment.createdAt)}
                                                             {comment.updatedAt && comment.updatedAt !== comment.createdAt ? ' (đã chỉnh sửa)' : ''}
+                                                            {isPending ? ' • Đang chờ AI duyệt...' : ''}
                                                         </p>
                                                     </div>
 
-                                                    {isLoggedIn && isOwn && (
+                                                    {isLoggedIn && isOwn && !isPending && (
                                                         <div className="flex items-center gap-2">
                                                             {!isEditing ? (
                                                                 <>
@@ -652,39 +670,41 @@ export function ViewContributeQuestionModal({
                                                     </div>
                                                 )}
 
-                                                <div className="flex items-center gap-2 pt-1">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleVoteComment(comment, true)}
-                                                        disabled={!isLoggedIn || votingCommentId === comment.id}
-                                                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-md border text-xs transition-colors ${
-                                                            currentVote === 'upvote'
-                                                                ? 'border-emerald-400/60 text-emerald-300 bg-emerald-500/10'
-                                                                : 'border-slate-600 text-slate-300 hover:border-emerald-500/50'
-                                                        } disabled:opacity-60`}
-                                                    >
-                                                        <ThumbsUp className="w-3.5 h-3.5" />
-                                                        {comment.upvoteCount}
-                                                    </button>
+                                                {!isPending && (
+                                                    <div className="flex items-center gap-2 pt-1">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleVoteComment(comment, true)}
+                                                            disabled={!isLoggedIn || votingCommentId === comment.id}
+                                                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-md border text-xs transition-colors ${
+                                                                currentVote === 'upvote'
+                                                                    ? 'border-emerald-400/60 text-emerald-300 bg-emerald-500/10'
+                                                                    : 'border-slate-600 text-slate-300 hover:border-emerald-500/50'
+                                                            } disabled:opacity-60`}
+                                                        >
+                                                            <ThumbsUp className="w-3.5 h-3.5" />
+                                                            {comment.upvoteCount}
+                                                        </button>
 
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleVoteComment(comment, false)}
-                                                        disabled={!isLoggedIn || votingCommentId === comment.id}
-                                                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-md border text-xs transition-colors ${
-                                                            currentVote === 'downvote'
-                                                                ? 'border-rose-400/60 text-rose-300 bg-rose-500/10'
-                                                                : 'border-slate-600 text-slate-300 hover:border-rose-500/50'
-                                                        } disabled:opacity-60`}
-                                                    >
-                                                        <ThumbsDown className="w-3.5 h-3.5" />
-                                                        {comment.downvoteCount}
-                                                    </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleVoteComment(comment, false)}
+                                                            disabled={!isLoggedIn || votingCommentId === comment.id}
+                                                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-md border text-xs transition-colors ${
+                                                                currentVote === 'downvote'
+                                                                    ? 'border-rose-400/60 text-rose-300 bg-rose-500/10'
+                                                                    : 'border-slate-600 text-slate-300 hover:border-rose-500/50'
+                                                            } disabled:opacity-60`}
+                                                        >
+                                                            <ThumbsDown className="w-3.5 h-3.5" />
+                                                            {comment.downvoteCount}
+                                                        </button>
 
-                                                    <span className="text-sm font-semibold text-violet-400 ml-1">
-                                                        {comment.totalVotes}
-                                                    </span>
-                                                </div>
+                                                        <span className="text-sm font-semibold text-violet-400 ml-1">
+                                                            {comment.totalVotes}
+                                                        </span>
+                                                    </div>
+                                                )}
                                             </div>
                                         );
                                     })

@@ -16,7 +16,15 @@ import { cn } from "@/lib/utils";
 import UserMenu from "@/components/custom/UserMenu";
 import type { MenuItem } from '@/types/common/menu';
 import { ROLES } from '@/constants/role';
-import { useSignalR, type NotificationPayload } from '@/store/SignalRContext';
+import { useSignalR } from '@/store/SignalRContext';
+
+type HeaderNotification = {
+  id: number;
+  isRead: boolean;
+  link?: string;
+  message?: string;
+  createdAt?: string;
+};
 
 const formatRelativeTime = (value?: string) => {
   if (!value) {
@@ -43,18 +51,24 @@ const formatRelativeTime = (value?: string) => {
 
 function Header() {
   const { user, isAuthenticated } = useAuth();
-  const {
-    notifications,
-    unreadCount,
-    markNotificationAsRead,
-    markAllNotificationsAsRead,
-  } = useSignalR();
+  const signalRContext = useSignalR() as {
+    notifications?: HeaderNotification[];
+    unreadCount?: number;
+    markNotificationAsRead?: (notificationId: number) => Promise<void>;
+    markAllNotificationsAsRead?: () => Promise<void>;
+  };
+  const notifications = signalRContext.notifications ?? [];
+  const unreadCount = signalRContext.unreadCount ?? notifications.filter((notification) => !notification.isRead).length;
+  const markNotificationAsRead = signalRContext.markNotificationAsRead ?? (async () => {});
+  const markAllNotificationsAsRead = signalRContext.markAllNotificationsAsRead ?? (async () => {});
+  const unreadBadgeLabel = unreadCount > 99 ? "99+" : String(unreadCount);
   const navigate = useNavigate();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isOpenUserMenu, setIsOpenUserMenu] = useState(false);
   const [isOpenNotificationMenu, setIsOpenNotificationMenu] = useState(false);
   const [showAllNotifications, setShowAllNotifications] = useState(false);
+  const [expandedNotificationId, setExpandedNotificationId] = useState<number | null>(null);
 
   const userMenuRef = useRef<HTMLDivElement>(null);
   const notificationMenuRef = useRef<HTMLDivElement>(null);
@@ -101,17 +115,15 @@ function Header() {
   const toggleNotificationMenu = () => {
     setIsOpenNotificationMenu((prev) => !prev);
     setShowAllNotifications(false);
+    setExpandedNotificationId(null);
   };
 
-  const handleNotificationClick = async (notification: NotificationPayload) => {
+  const handleNotificationClick = async (notification: HeaderNotification) => {
     if (!notification.isRead) {
       await markNotificationAsRead(notification.id);
     }
 
-    if (notification.link) {
-      navigate(notification.link);
-      setIsOpenNotificationMenu(false);
-    }
+    setExpandedNotificationId((prev) => (prev === notification.id ? null : notification.id));
   };
 
   const handleMarkAllAsRead = async () => {
@@ -188,7 +200,9 @@ function Header() {
                 >
                   <Bell className="h-5 w-5" />
                   {unreadCount > 0 && (
-                    <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-slate-900" />
+                    <span className="absolute -right-1 -top-1 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[10px] leading-none font-semibold flex items-center justify-center ring-2 ring-slate-900">
+                      {unreadBadgeLabel}
+                    </span>
                   )}
                 </button>
 
@@ -235,10 +249,22 @@ function Header() {
                             </div>
 
                             <div className="flex-1">
-                              <p className="text-sm text-slate-100">{notification.message}</p>
+                              <p
+                                className={cn(
+                                  "text-sm text-slate-100 whitespace-pre-wrap transition-all",
+                                  expandedNotificationId === notification.id ? "line-clamp-none" : "line-clamp-2"
+                                )}
+                              >
+                                {notification.message}
+                              </p>
                               <p className="mt-1 text-xs text-slate-400">
                                 {formatRelativeTime(notification.createdAt)}
                               </p>
+                              {notification.link && (
+                                <p className="mt-1 text-[11px] text-slate-500">
+                                  Thông báo có đính kèm liên kết.
+                                </p>
+                              )}
                             </div>
 
                             {!notification.isRead && (
