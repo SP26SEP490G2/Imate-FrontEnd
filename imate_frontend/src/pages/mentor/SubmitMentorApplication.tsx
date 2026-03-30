@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth } from "@/store/AuthContext";
-import { submitMentorProfile } from "@/services/mentorService";
+import { submitMentorProfile, getBankList } from "@/services/mentorService";
 import { getAllPositions, getAllSkills, getAllCompanies } from "@/services/commonService";
 import type { PositionItem, SkillItem, CompanyItem } from "@/types/common/question";
 import type { SubmitMentorProfileRequest } from "@/types/request/mentor.request";
+import type { BankInfo } from "@/types/common/data";
 import { FileText, ChevronRight, ChevronLeft, Check, Briefcase, Award, CreditCard, Building2, User } from "lucide-react";
 
 export default function SubmitMentorApplication() {
@@ -35,19 +36,22 @@ export default function SubmitMentorApplication() {
   const [positions, setPositions] = useState<PositionItem[]>([]);
   const [skills, setSkills] = useState<SkillItem[]>([]);
   const [companies, setCompanies] = useState<CompanyItem[]>([]);
+  const [banks, setBanks] = useState<BankInfo[]>([]);
 
   // Fetch meta data
   useEffect(() => {
     const fetchMetaData = async () => {
       try {
-        const [posRes, skillRes, compRes] = await Promise.all([
+        const [posRes, skillRes, compRes, bankList] = await Promise.all([
           getAllPositions({ pageSize: 100, pageNumber: 1 }),
           getAllSkills({ pageSize: 100, pageNumber: 1 }),
           getAllCompanies({ pageSize: 100, pageNumber: 1 }),
+          getBankList(),
         ]);
         setPositions(posRes.data);
         setSkills(skillRes.data);
         setCompanies(compRes.data);
+        setBanks(bankList);
       } catch (err) {
         console.error("Error fetching meta data:", err);
       }
@@ -69,7 +73,17 @@ export default function SubmitMentorApplication() {
     }
 
     setFormData((prev) => ({ ...prev, [name]: value }));
-    if (name === "bankName") setFormData((prev) => ({ ...prev, bankCode: value }));
+    if (error) setError(null);
+  };
+
+  const handleBankSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedCode = e.target.value;
+    const bank = banks.find((b) => b.code === selectedCode);
+    setFormData((prev) => ({
+      ...prev,
+      bankCode: bank?.code ?? "",
+      bankName: bank?.name ?? "",
+    }));
     if (error) setError(null);
   };
 
@@ -370,15 +384,22 @@ export default function SubmitMentorApplication() {
                 </div>
                 <div>
                   <label className={labelClass}>Ngân hàng *</label>
-                  <input
-                    type="text"
-                    name="bankName"
-                    value={formData.bankName}
-                    onChange={handleChange}
-                    placeholder="VD: Vietcombank"
-                    className={inputClass}
+                  <select
+                    name="bankCode"
+                    value={formData.bankCode}
+                    onChange={handleBankSelect}
+                    className={`${inputClass} cursor-pointer`}
                     required
-                  />
+                  >
+                    <option value="" disabled>
+                      -- Chọn ngân hàng --
+                    </option>
+                    {banks.map((bank) => (
+                      <option key={bank.id} value={bank.code}>
+                        {bank.shortName} – {bank.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className={labelClass}>Số tài khoản *</label>
