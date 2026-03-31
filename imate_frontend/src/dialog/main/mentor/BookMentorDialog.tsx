@@ -1,5 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { X, ChevronLeft, ChevronRight, ArrowRight, Info } from "lucide-react";
+import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/store/AuthContext";
 import { 
   getMentorRecurringSlots, 
@@ -264,15 +266,21 @@ const BookMentorDialog: React.FC<BookMentorDialogProps> = ({
 
   const handleBookingClick = () => {
     if (!selectedSlot) return;
-    
-    // 🔍 Balance Check
-    const currentBalance = (user as any)?.balance || 0;
-    console.log("[BookMentor] Checking balance:", { balance: currentBalance, price: pricePerSession });
-    
+
+    const currentBalance = (user as any)?.balance ?? 0;
+
     if (currentBalance < pricePerSession) {
-      console.warn("[BookMentor] Insufficient balance. Flow continues for testing.");
+      toast.error(
+        <div>
+          <p className="font-semibold">Số dư imCoin không đủ</p>
+          <p className="text-sm opacity-80">Cần {pricePerSession.toLocaleString("vi-VN")}₫, hiện có {currentBalance.toLocaleString("vi-VN")}₫</p>
+        </div>
+      );
+      navigate("/wallet");
+      onClose();
+      return;
     }
-    
+
     setShowConfirm(true);
   };
 
@@ -311,7 +319,8 @@ const BookMentorDialog: React.FC<BookMentorDialogProps> = ({
       navigate("/interview-schedule");
     } catch (err: any) {
       console.error("[BookMentor] Booking failed:", err);
-      alert(err.message || "Đã xảy ra lỗi khi đặt lịch.");
+      const msg = err?.response?.data?.Message || err?.response?.data?.message || err?.message || "Đã xảy ra lỗi khi đặt lịch.";
+      toast.error(msg);
     } finally {
       setIsBooking(false);
     }
@@ -420,22 +429,35 @@ const BookMentorDialog: React.FC<BookMentorDialogProps> = ({
               <div className="flex justify-between text-sm"><span className="text-slate-400">📅 Ngày:</span><span className="text-white font-medium">{selectedDate.toLocaleDateString("vi-VN")}</span></div>
               <div className="flex justify-between text-sm"><span className="text-slate-400">🕐 Giờ:</span><span className="text-white font-medium">{selectedSlot?.time}</span></div>
               <div className="flex justify-between text-sm"><span className="text-slate-400">👤 Mentor:</span><span className="text-white font-medium">{mentorName}</span></div>
-              <div className="flex justify-between text-sm"><span className="text-slate-400">💰 Chi phí:</span><span className="text-indigo-400 font-medium">{pricePerSession.toLocaleString("vi-VN")}₫</span></div>
+              <div className="flex justify-between text-sm border-t border-white/10 pt-2 mt-1">
+                <span className="text-slate-400">💰 Phí buổi học:</span>
+                <span className="text-indigo-400 font-semibold">{pricePerSession.toLocaleString("vi-VN")}₫</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-400">💎 Số dư hiện tại:</span>
+                <span className={`font-semibold ${ ((user as any)?.balance ?? 0) >= pricePerSession ? "text-emerald-400" : "text-red-400" }`}>
+                  {((user as any)?.balance ?? 0).toLocaleString("vi-VN")}₫
+                </span>
+              </div>
             </div>
 
-            {/* Warning if balance low (but skipping block as requested) */}
-            {((user as any)?.balance || 0) < pricePerSession && (
-              <div className="rounded-lg bg-orange-500/10 border border-orange-500/20 p-3 mb-4 flex gap-2 items-start">
-                <Info size={16} className="text-orange-400 shrink-0 mt-0.5" />
-                <p className="text-[10px] text-orange-300/80">
-                  Số dư ví không đủ ({(user as any)?.balance || 0}₫). Hiện tại chức năng thanh toán đang được bỏ qua để bạn trải nghiệm flow.
-                </p>
+            {((user as any)?.balance ?? 0) < pricePerSession && (
+              <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-3 mb-4 flex gap-2 items-start">
+                <Info size={16} className="text-red-400 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs text-red-300 font-medium">Số dư imCoin không đủ</p>
+                  <Link to="/wallet" onClick={onClose} className="text-[11px] text-red-400/70 underline hover:text-red-300">Nạp thêm imCoin tại đây</Link>
+                </div>
               </div>
             )}
 
             <div className="flex gap-3">
               <button onClick={() => setShowConfirm(false)} disabled={isBooking} className="flex-1 h-11 rounded-xl text-slate-400 hover:text-white text-sm font-semibold">Hủy</button>
-              <button onClick={handleConfirmBooking} disabled={isBooking} className="flex-1 h-11 rounded-xl bg-indigo-600 text-white text-sm font-bold">
+              <button
+                onClick={handleConfirmBooking}
+                disabled={isBooking || ((user as any)?.balance ?? 0) < pricePerSession}
+                className="flex-1 h-11 rounded-xl bg-indigo-600 text-white text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 {isBooking ? "Đang xử lý..." : "Xác nhận"}
               </button>
             </div>

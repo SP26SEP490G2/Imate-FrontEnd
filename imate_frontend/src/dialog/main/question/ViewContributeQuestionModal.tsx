@@ -19,7 +19,7 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { AlertTriangle, Bookmark, Save, Send, ThumbsDown, ThumbsUp, X } from 'lucide-react';
+import { Bookmark, Save, Send, ThumbsDown, ThumbsUp, X } from 'lucide-react';
 import {
     createComment,
     deleteComment,
@@ -32,8 +32,6 @@ import type { CommentItem, ContributedQuestionDetail } from '@/types/common/ques
 import { DIFFICULTY_MAP, LEVEL_MAP } from '@/constants/common';
 import { toast } from 'react-toastify';
 import { StatusBadge } from '@/components/ui/status-badge';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { ReportCommentDialog } from '../reportApplication/ReportCommentDialog';
 
 interface ViewContributeQuestionModalProps {
     questionId: number;
@@ -49,8 +47,15 @@ const getInitialVoteType = (comment: CommentItem): VoteType => {
     if (comment.currentUserVoteType === 'upvote' || comment.currentUserVoteType === 'downvote') {
         return comment.currentUserVoteType;
     }
-    if (comment.currentUserVoteIsUpvote === true) return 'upvote';
-    if (comment.currentUserVoteIsUpvote === false) return 'downvote';
+
+    if (comment.currentUserVoteIsUpvote === true) {
+        return 'upvote';
+    }
+
+    if (comment.currentUserVoteIsUpvote === false) {
+        return 'downvote';
+    }
+
     return null;
 };
 
@@ -79,9 +84,9 @@ export function ViewContributeQuestionModal({
     const [commentToDeleteId, setCommentToDeleteId] = useState<number | null>(null);
     const [votingCommentId, setVotingCommentId] = useState<number | null>(null);
     const [localVoteByCommentId, setLocalVoteByCommentId] = useState<Record<number, VoteType>>({});
-    const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
-    const [selectedCommentIdForReport, setSelectedCommentIdForReport] = useState<number | null>(null);
-
+    const [pendingCommentIds, setPendingCommentIds] = useState<Record<number, true>>({});
+    
+    // Track if data has been fetched to prevent duplicate calls
     const hasFetchedRef = useRef(false);
 
     const currentUser = useMemo(() => {
@@ -107,6 +112,8 @@ export function ViewContributeQuestionModal({
             hasFetchedRef.current = true;
             fetchData();
         }
+        
+        // Reset when modal closes
         if (!open) {
             hasFetchedRef.current = false;
             setEditingCommentId(null);
@@ -114,6 +121,7 @@ export function ViewContributeQuestionModal({
             setNewCommentContent('');
             setCommentToDeleteId(null);
             setLocalVoteByCommentId({});
+            setPendingCommentIds({});
         }
     }, [open, questionId]);
 
@@ -161,27 +169,16 @@ export function ViewContributeQuestionModal({
             toast.info('Vui lòng đăng nhập để bình luận.');
             return;
         }
+
         const content = newCommentContent.trim();
         if (!content) {
             toast.warning('Vui lòng nhập nội dung bình luận.');
             return;
         }
-        try {
-            try {
-        setIsCreatingComment(true);
-        const commentId = await createComment(questionId, content);
 
-        // --- GIỮ LẠI LOGIC TỪ HEAD ĐỂ CHECK LỖI ---
-        if (commentId === null || commentId <= 0) {
-            await fetchData();
-            setNewCommentContent('');
-            toast.success('Bình luận đã được tạo.');
-            return;
-        }
-
-        // --- TIẾP TỤC LOGIC TỪ NHÁNH HUYVVP ĐỂ UPDATE UI NHANH ---
-        const newComment: CommentItem = {
-            id: commentId,
+        const temporaryCommentId = -Date.now();
+        const temporaryComment: CommentItem = {
+            id: temporaryCommentId,
             userId: currentUser?.id ?? '',
             userName: currentUser?.name || currentUser?.fullName || currentUser?.userName || 'Bạn',
             userAvatarUrl: currentUser?.avatar || currentUser?.avatarUrl || '',
@@ -197,23 +194,45 @@ export function ViewContributeQuestionModal({
 
         setQuestionData((prev) => {
             if (!prev) return prev;
-            return { ...prev, comments: [...(prev.comments || []), newComment] };
+            const nextComments = [...(prev.comments || []), temporaryComment];
+            return { ...prev, comments: nextComments };
         });
-        
-        setLocalVoteByCommentId((prev) => ({ ...prev, [newComment.id]: null }));
+        setPendingCommentIds((prev) => ({
+            ...prev,
+            [temporaryCommentId]: true,
+        }));
+        setLocalVoteByCommentId((prev) => ({
+            ...prev,
+            [temporaryCommentId]: null,
+        }));
         setNewCommentContent('');
-        toast.success('Bình luận đã được tạo.');
 
-    } catch (error) {
-        console.error('Failed to create comment:', error);
-        toast.error('Không thể tạo bình luận. Vui lòng thử lại.');
-    } finally {
-        setIsCreatingComment(false);
-    }
+        try {
+            setIsCreatingComment(true);
+            await createComment(questionId, content);
+            await fetchData();
+            toast.success('Bình luận đã được gửi và đã cập nhật danh sách mới nhất.');
         } catch (error) {
             console.error('Failed to create comment:', error);
+            setQuestionData((prev) => {
+                if (!prev) return prev;
+                return {
+                    ...prev,
+                    comments: (prev.comments || []).filter((comment) => comment.id !== temporaryCommentId),
+                };
+            });
+            setLocalVoteByCommentId((prev) => {
+                const next = { ...prev };
+                delete next[temporaryCommentId];
+                return next;
+            });
             toast.error('Không thể tạo bình luận. Vui lòng thử lại.');
         } finally {
+            setPendingCommentIds((prev) => {
+                const next = { ...prev };
+                delete next[temporaryCommentId];
+                return next;
+            });
             setIsCreatingComment(false);
         }
     };
@@ -233,25 +252,33 @@ export function ViewContributeQuestionModal({
             toast.info('Vui lòng đăng nhập để chỉnh sửa bình luận.');
             return;
         }
+
         const content = editingCommentContent.trim();
         if (!content) {
             toast.warning('Nội dung bình luận không được để trống.');
             return;
         }
+
         try {
             setIsSavingEdit(true);
             await updateComment(commentId, content);
+
             setQuestionData((prev) => {
                 if (!prev) return prev;
                 return {
                     ...prev,
                     comments: (prev.comments || []).map((comment) =>
                         comment.id === commentId
-                            ? { ...comment, content, updatedAt: new Date().toISOString() }
+                            ? {
+                                ...comment,
+                                content,
+                                updatedAt: new Date().toISOString(),
+                            }
                             : comment
                     ),
                 };
             });
+
             setEditingCommentId(null);
             setEditingCommentContent('');
             toast.success('Đã cập nhật bình luận.');
@@ -268,9 +295,11 @@ export function ViewContributeQuestionModal({
             toast.info('Vui lòng đăng nhập để xoá bình luận.');
             return;
         }
+
         try {
             setDeletingCommentId(commentId);
             await deleteComment(commentId);
+
             setQuestionData((prev) => {
                 if (!prev) return prev;
                 return {
@@ -278,12 +307,17 @@ export function ViewContributeQuestionModal({
                     comments: (prev.comments || []).filter((comment) => comment.id !== commentId),
                 };
             });
+
             setLocalVoteByCommentId((prev) => {
                 const next = { ...prev };
                 delete next[commentId];
                 return next;
             });
-            if (editingCommentId === commentId) handleCancelEditComment();
+
+            if (editingCommentId === commentId) {
+                handleCancelEditComment();
+            }
+
             toast.success('Đã xoá bình luận.');
         } catch (error) {
             console.error('Failed to delete comment:', error);
@@ -299,24 +333,32 @@ export function ViewContributeQuestionModal({
             toast.info('Vui lòng đăng nhập để vote bình luận.');
             return;
         }
+
         const requestedVote: VoteType = isUpvote ? 'upvote' : 'downvote';
         const previousVote = localVoteByCommentId[comment.id] ?? getInitialVoteType(comment);
         const nextVote: VoteType = previousVote === requestedVote ? null : requestedVote;
+
         try {
             setVotingCommentId(comment.id);
             await voteComment(comment.id, isUpvote);
+
             setQuestionData((prev) => {
                 if (!prev) return prev;
+
                 return {
                     ...prev,
                     comments: (prev.comments || []).map((item) => {
                         if (item.id !== comment.id) return item;
+
                         let nextUpvoteCount = item.upvoteCount;
                         let nextDownvoteCount = item.downvoteCount;
+
                         if (previousVote === 'upvote') nextUpvoteCount = Math.max(0, nextUpvoteCount - 1);
                         if (previousVote === 'downvote') nextDownvoteCount = Math.max(0, nextDownvoteCount - 1);
+
                         if (nextVote === 'upvote') nextUpvoteCount += 1;
                         if (nextVote === 'downvote') nextDownvoteCount += 1;
+
                         return {
                             ...item,
                             upvoteCount: nextUpvoteCount,
@@ -328,7 +370,11 @@ export function ViewContributeQuestionModal({
                     }),
                 };
             });
-            setLocalVoteByCommentId((prev) => ({ ...prev, [comment.id]: nextVote }));
+
+            setLocalVoteByCommentId((prev) => ({
+                ...prev,
+                [comment.id]: nextVote,
+            }));
         } catch (error) {
             console.error('Failed to vote comment:', error);
             toast.error('Không thể vote bình luận. Vui lòng thử lại.');
@@ -353,7 +399,9 @@ export function ViewContributeQuestionModal({
                         <button
                             onClick={onSaveToggle}
                             className={`p-2 rounded-lg transition-colors mt-1 ${
-                                isSaved ? 'text-yellow-400 hover:text-yellow-300' : 'text-slate-500 hover:text-yellow-400'
+                                isSaved
+                                    ? 'text-yellow-400 hover:text-yellow-300'
+                                    : 'text-slate-500 hover:text-yellow-400'
                             }`}
                             title={isSaved ? 'Bỏ lưu' : 'Lưu câu hỏi'}
                         >
@@ -364,7 +412,7 @@ export function ViewContributeQuestionModal({
 
                 {loadingData ? (
                     <div className="py-12 text-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto mb-4" />
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto mb-4"></div>
                         <p className="text-slate-400">Đang tải dữ liệu...</p>
                     </div>
                 ) : questionData ? (
@@ -376,13 +424,17 @@ export function ViewContributeQuestionModal({
                                     <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">
                                         Người đóng góp
                                     </label>
-                                    <p className="text-sm text-slate-200 font-medium">{questionData.creatorName || 'N/A'}</p>
+                                    <p className="text-sm text-slate-200 font-medium">
+                                        {questionData.creatorName || 'N/A'}
+                                    </p>
                                 </div>
                                 <div>
                                     <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">
                                         Công ty
                                     </label>
-                                    <p className="text-sm text-slate-200 font-medium">{questionData.companyName || 'N/A'}</p>
+                                    <p className="text-sm text-slate-200 font-medium">
+                                        {questionData.companyName || 'N/A'}
+                                    </p>
                                 </div>
                                 <div>
                                     <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">
@@ -397,7 +449,9 @@ export function ViewContributeQuestionModal({
 
                         {/* Question Content */}
                         <div className="space-y-2">
-                            <label className="block text-sm font-medium text-slate-200">Nội dung câu hỏi</label>
+                            <label className="block text-sm font-medium text-slate-200">
+                                Nội dung câu hỏi
+                            </label>
                             <div className="w-full min-h-32 rounded-lg px-4 py-3 bg-slate-800/40 border border-slate-700 text-slate-100 text-sm whitespace-pre-wrap">
                                 {questionData.content || 'Không có nội dung'}
                             </div>
@@ -406,7 +460,9 @@ export function ViewContributeQuestionModal({
                         {/* Sample Answer */}
                         {questionData.sampleAnswer && (
                             <div className="space-y-2">
-                                <label className="block text-sm font-medium text-slate-200">Câu trả lời</label>
+                                <label className="block text-sm font-medium text-slate-200">
+                                    Câu trả lời
+                                </label>
                                 <div className="w-full min-h-40 rounded-lg px-4 py-3 bg-slate-800/40 border border-slate-700 text-slate-100 text-sm whitespace-pre-wrap">
                                     {questionData.sampleAnswer}
                                 </div>
@@ -416,26 +472,39 @@ export function ViewContributeQuestionModal({
                         {/* Difficulty and Level */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <label className="block text-sm font-medium text-slate-200">Độ khó</label>
-                                <StatusBadge status={getDifficultyStatus(questionData.difficulty)}>
-                                    {questionData.difficulty !== null ? DIFFICULTY_MAP[questionData.difficulty as 0 | 1 | 2] : 'N/A'}
-                                </StatusBadge>
+                                <label className="block text-sm font-medium text-slate-200">
+                                    Độ khó
+                                </label>
+                                <div>
+                                    <StatusBadge status={getDifficultyStatus(questionData.difficulty)}>
+                                        {questionData.difficulty !== null ? DIFFICULTY_MAP[questionData.difficulty as 0 | 1 | 2] : 'N/A'}
+                                    </StatusBadge>
+                                </div>
                             </div>
+
                             <div className="space-y-2">
-                                <label className="block text-sm font-medium text-slate-200">Cấp độ</label>
-                                <StatusBadge status={getLevelStatus(questionData.level)}>
-                                    {questionData.level !== null ? LEVEL_MAP[questionData.level as 0 | 1 | 2 | 3 | 4 | 5] : 'N/A'}
-                                </StatusBadge>
+                                <label className="block text-sm font-medium text-slate-200">
+                                    Cấp độ
+                                </label>
+                                <div>
+                                    <StatusBadge status={getLevelStatus(questionData.level)}>
+                                        {questionData.level !== null ? LEVEL_MAP[questionData.level as 0 | 1 | 2 | 3 | 4 | 5] : 'N/A'}
+                                    </StatusBadge>
+                                </div>
                             </div>
                         </div>
 
                         {/* Categories */}
                         {questionData.categoriesName && questionData.categoriesName.length > 0 && (
                             <div className="space-y-2">
-                                <label className="block text-sm font-medium text-slate-200">Danh mục</label>
+                                <label className="block text-sm font-medium text-slate-200">
+                                    Danh mục
+                                </label>
                                 <div className="flex flex-wrap gap-2">
                                     {questionData.categoriesName.map((category, idx) => (
-                                        <StatusBadge key={idx} status="inactive">{category}</StatusBadge>
+                                        <StatusBadge key={idx} status="inactive">
+                                            {category}
+                                        </StatusBadge>
                                     ))}
                                 </div>
                             </div>
@@ -444,10 +513,14 @@ export function ViewContributeQuestionModal({
                         {/* Positions */}
                         {questionData.positionsName && questionData.positionsName.length > 0 && (
                             <div className="space-y-2">
-                                <label className="block text-sm font-medium text-slate-200">Vị trí</label>
+                                <label className="block text-sm font-medium text-slate-200">
+                                    Vị trí
+                                </label>
                                 <div className="flex flex-wrap gap-2">
                                     {questionData.positionsName.map((position, idx) => (
-                                        <StatusBadge key={idx} status="inactive">{position}</StatusBadge>
+                                        <StatusBadge key={idx} status="inactive">
+                                            {position}
+                                        </StatusBadge>
                                     ))}
                                 </div>
                             </div>
@@ -456,10 +529,14 @@ export function ViewContributeQuestionModal({
                         {/* Skills */}
                         {questionData.skillsName && questionData.skillsName.length > 0 && (
                             <div className="space-y-2">
-                                <label className="block text-sm font-medium text-slate-200">Kỹ năng</label>
+                                <label className="block text-sm font-medium text-slate-200">
+                                    Kỹ năng
+                                </label>
                                 <div className="flex flex-wrap gap-2">
                                     {questionData.skillsName.map((skill, idx) => (
-                                        <StatusBadge key={idx} status="inactive">{skill}</StatusBadge>
+                                        <StatusBadge key={idx} status="inactive">
+                                            {skill}
+                                        </StatusBadge>
                                     ))}
                                 </div>
                             </div>
@@ -468,8 +545,12 @@ export function ViewContributeQuestionModal({
                         {/* Comments */}
                         <div className="space-y-3 pt-2">
                             <div className="flex items-center justify-between">
-                                <label className="block text-sm font-medium text-slate-200">Bình luận</label>
-                                <span className="text-xs text-slate-400">{sortedComments.length} bình luận</span>
+                                <label className="block text-sm font-medium text-slate-200">
+                                    Bình luận
+                                </label>
+                                <span className="text-xs text-slate-400">
+                                    {sortedComments.length} bình luận
+                                </span>
                             </div>
 
                             {isLoggedIn ? (
@@ -508,6 +589,7 @@ export function ViewContributeQuestionModal({
                                     sortedComments.map((comment) => {
                                         const isOwn = isOwnComment(comment.userId);
                                         const isEditing = editingCommentId === comment.id;
+                                        const isPending = Boolean(pendingCommentIds[comment.id]);
                                         const currentVote = localVoteByCommentId[comment.id] ?? getInitialVoteType(comment);
 
                                         return (
@@ -523,50 +605,33 @@ export function ViewContributeQuestionModal({
                                                         <p className="text-xs text-slate-400">
                                                             {formatCommentDate(comment.createdAt)}
                                                             {comment.updatedAt && comment.updatedAt !== comment.createdAt ? ' (đã chỉnh sửa)' : ''}
+                                                            {isPending ? ' • Đang chờ AI duyệt...' : ''}
                                                         </p>
                                                     </div>
 
-                                                    <div className="flex items-center gap-2">
-                                                        {/* Icon Báo cáo — chỉ hiện với comment không phải của mình */}
-                                                        {!isOwn && isLoggedIn && (
-                                                            <Tooltip>
-                                                                <TooltipTrigger asChild>
+                                                    {isLoggedIn && isOwn && !isPending && (
+                                                        <div className="flex items-center gap-2">
+                                                            {!isEditing ? (
+                                                                <>
                                                                     <button
                                                                         type="button"
-                                                                        onClick={() => {
-                                                                            setSelectedCommentIdForReport(comment.id);
-                                                                            setIsReportDialogOpen(true);
-                                                                        }}
-                                                                        className="text-slate-400 hover:text-red-400 transition-colors"
+                                                                        onClick={() => handleStartEditComment(comment)}
+                                                                        className="text-xs text-slate-400 hover:text-sky-300 transition-colors"
                                                                     >
-                                                                        <AlertTriangle className="w-4 h-4" />
+                                                                        Chỉnh sửa
                                                                     </button>
-                                                                </TooltipTrigger>
-                                                                <TooltipContent>Báo cáo bình luận</TooltipContent>
-                                                            </Tooltip>
-                                                        )}
-
-                                                        {/* Nút chỉnh sửa / xoá — chỉ hiện với comment của mình */}
-                                                        {isLoggedIn && isOwn && !isEditing && (
-                                                            <div className="flex items-center gap-2">
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => handleStartEditComment(comment)}
-                                                                    className="text-xs text-slate-400 hover:text-sky-300 transition-colors"
-                                                                >
-                                                                    Chỉnh sửa
-                                                                </button>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => setCommentToDeleteId(comment.id)}
-                                                                    disabled={deletingCommentId === comment.id}
-                                                                    className="text-xs text-slate-400 hover:text-red-300 transition-colors disabled:opacity-60"
-                                                                >
-                                                                    Xoá
-                                                                </button>
-                                                            </div>
-                                                        )}
-                                                    </div>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setCommentToDeleteId(comment.id)}
+                                                                        disabled={deletingCommentId === comment.id}
+                                                                        className="text-xs text-slate-400 hover:text-red-300 transition-colors disabled:opacity-60"
+                                                                    >
+                                                                        Xoá
+                                                                    </button>
+                                                                </>
+                                                            ) : null}
+                                                        </div>
+                                                    )}
                                                 </div>
 
                                                 {!isEditing ? (
@@ -605,37 +670,41 @@ export function ViewContributeQuestionModal({
                                                     </div>
                                                 )}
 
-                                                <div className="flex items-center gap-2 pt-1">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleVoteComment(comment, true)}
-                                                        disabled={!isLoggedIn || votingCommentId === comment.id}
-                                                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-md border text-xs transition-colors ${
-                                                            currentVote === 'upvote'
-                                                                ? 'border-emerald-400/60 text-emerald-300 bg-emerald-500/10'
-                                                                : 'border-slate-600 text-slate-300 hover:border-emerald-500/50'
-                                                        } disabled:opacity-60`}
-                                                    >
-                                                        <ThumbsUp className="w-3.5 h-3.5" />
-                                                        {comment.upvoteCount}
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleVoteComment(comment, false)}
-                                                        disabled={!isLoggedIn || votingCommentId === comment.id}
-                                                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-md border text-xs transition-colors ${
-                                                            currentVote === 'downvote'
-                                                                ? 'border-rose-400/60 text-rose-300 bg-rose-500/10'
-                                                                : 'border-slate-600 text-slate-300 hover:border-rose-500/50'
-                                                        } disabled:opacity-60`}
-                                                    >
-                                                        <ThumbsDown className="w-3.5 h-3.5" />
-                                                        {comment.downvoteCount}
-                                                    </button>
-                                                    <span className="text-sm font-semibold text-violet-400 ml-1">
-                                                        {comment.totalVotes}
-                                                    </span>
-                                                </div>
+                                                {!isPending && (
+                                                    <div className="flex items-center gap-2 pt-1">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleVoteComment(comment, true)}
+                                                            disabled={!isLoggedIn || votingCommentId === comment.id}
+                                                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-md border text-xs transition-colors ${
+                                                                currentVote === 'upvote'
+                                                                    ? 'border-emerald-400/60 text-emerald-300 bg-emerald-500/10'
+                                                                    : 'border-slate-600 text-slate-300 hover:border-emerald-500/50'
+                                                            } disabled:opacity-60`}
+                                                        >
+                                                            <ThumbsUp className="w-3.5 h-3.5" />
+                                                            {comment.upvoteCount}
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleVoteComment(comment, false)}
+                                                            disabled={!isLoggedIn || votingCommentId === comment.id}
+                                                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-md border text-xs transition-colors ${
+                                                                currentVote === 'downvote'
+                                                                    ? 'border-rose-400/60 text-rose-300 bg-rose-500/10'
+                                                                    : 'border-slate-600 text-slate-300 hover:border-rose-500/50'
+                                                            } disabled:opacity-60`}
+                                                        >
+                                                            <ThumbsDown className="w-3.5 h-3.5" />
+                                                            {comment.downvoteCount}
+                                                        </button>
+
+                                                        <span className="text-sm font-semibold text-violet-400 ml-1">
+                                                            {comment.totalVotes}
+                                                        </span>
+                                                    </div>
+                                                )}
                                             </div>
                                         );
                                     })
@@ -643,7 +712,7 @@ export function ViewContributeQuestionModal({
                             </div>
                         </div>
 
-                        {/* Footer */}
+                        {/* Footer with Close Button */}
                         <div className="flex justify-between items-center pt-4 border-t border-slate-700">
                             {onSaveToggle ? (
                                 <button
@@ -659,7 +728,9 @@ export function ViewContributeQuestionModal({
                                 </button>
                             ) : <div />}
                             <DialogClose asChild>
-                                <Button variant="outline">Đóng</Button>
+                                <Button variant="outline">
+                                    Đóng
+                                </Button>
                             </DialogClose>
                         </div>
                     </div>
@@ -669,9 +740,10 @@ export function ViewContributeQuestionModal({
                     </div>
                 )}
 
-                {/* AlertDialog Xóa comment */}
                 <AlertDialog open={commentToDeleteId !== null} onOpenChange={(openState) => {
-                    if (!openState && deletingCommentId === null) setCommentToDeleteId(null);
+                    if (!openState && deletingCommentId === null) {
+                        setCommentToDeleteId(null);
+                    }
                 }}>
                     <AlertDialogContent className="border-slate-700 bg-slate-900 text-slate-100">
                         <AlertDialogHeader>
@@ -688,7 +760,9 @@ export function ViewContributeQuestionModal({
                                 className="bg-red-500/20 border border-red-500/50 text-red-200 hover:bg-red-500/30"
                                 disabled={commentToDeleteId === null || deletingCommentId !== null}
                                 onClick={() => {
-                                    if (commentToDeleteId !== null) void handleDeleteComment(commentToDeleteId);
+                                    if (commentToDeleteId !== null) {
+                                        void handleDeleteComment(commentToDeleteId);
+                                    }
                                 }}
                             >
                                 {deletingCommentId !== null ? 'Đang xoá...' : 'Xoá bình luận'}
@@ -697,14 +771,6 @@ export function ViewContributeQuestionModal({
                     </AlertDialogContent>
                 </AlertDialog>
             </DialogContent>
-
-            {/* ReportCommentDialog — đặt ngoài DialogContent để tránh z-index conflict */}
-            <ReportCommentDialog
-                open={isReportDialogOpen}
-                onOpenChange={setIsReportDialogOpen}
-                commentId={selectedCommentIdForReport}
-                onSuccess={() => setSelectedCommentIdForReport(null)}
-            />
         </Dialog>
     );
 }
