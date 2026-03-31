@@ -14,16 +14,24 @@ import { auth as firebaseAuth } from "@/lib/firebaseConfig";
 import { EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 import { changePassword as changePasswordService } from "@/services/authService";
 import { toast } from "react-toastify";
+import { MSG01, MSG57, MSG58, MSG60, MSG61 } from "@/constants/messages";
 
 // 1. Định nghĩa schema validation
 const passwordSchema = z
   .object({
-    currentPassword: z.string().min(1, "Vui lòng nhập mật khẩu hiện tại."),
-    newPassword: z.string().min(6, "Mật khẩu mới phải có ít nhất 6 ký tự."),
-    confirmPassword: z.string(),
+    currentPassword: z.string().min(1, MSG01),
+    newPassword: z
+      .string()
+      .min(1, MSG01)
+      .refine((val) => val === val.trim(), { message: MSG60 })
+      .refine((val) => !/\s/.test(val), { message: MSG61 })
+      .refine((val) => /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(val), {
+        message: MSG57,
+      }),
+    confirmPassword: z.string().min(1, MSG01),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "Mật khẩu xác nhận không khớp.",
+    message: MSG58,
     path: ["confirmPassword"], // Gắn lỗi vào trường confirmPassword
   });
 

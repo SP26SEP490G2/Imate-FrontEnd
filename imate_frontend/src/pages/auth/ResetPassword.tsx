@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { getAuth, confirmPasswordReset, verifyPasswordResetCode } from "firebase/auth";
 import { toast } from "react-toastify";
 import { Lock, Eye, EyeOff } from "lucide-react";
+import { MSG01, MSG57, MSG58, MSG60, MSG61 } from "@/constants/messages";
 
 function ResetPassword() {
   const [viewNewPassword, setViewNewPassword] = useState(false);
@@ -41,18 +42,41 @@ function ResetPassword() {
     e.preventDefault();
     setError(null);
 
-    // 1. Validation cơ bản
-    if (newPassword.length < 8) {
-        setError("Mật khẩu phải có ít nhất 8 ký tự.");
-        return;
-    }
-    if (newPassword !== confirmPassword) {
-      setError("Mật khẩu xác nhận không khớp.");
+    // 1. Kiểm tra khoảng trắng ở đầu/cuối (MSG60)
+    if (newPassword !== newPassword.trim() || confirmPassword !== confirmPassword.trim()) {
+      setError(MSG60);
       return;
     }
+
+    // 2. Kiểm tra chỉ có khoảng trắng hoặc trống (MSG01)
+    if (!newPassword.trim() || !confirmPassword.trim()) {
+      setError(MSG01);
+      return;
+    }
+
+    // 3. Kiểm tra mật khẩu không được chứa bất kỳ khoảng trắng nào (MSG61)
+    if (/\s/.test(newPassword)) {
+      setError(MSG61);
+      return;
+    }
+
+    // 4. Kiểm tra độ mạnh mật khẩu (MSG57)
+    // Ít nhất 8 ký tự, 1 chữ hoa, 1 chữ thường, 1 số, 1 ký tự đặc biệt
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(newPassword)) {
+      setError(MSG57);
+      return;
+    }
+
+    // 5. Kiểm tra xác nhận mật khẩu (MSG58)
+    if (newPassword !== confirmPassword) {
+      setError(MSG58);
+      return;
+    }
+
     if (!oobCode) return;
 
-    // 2. Gọi API Firebase
+    // 6. Gọi API Firebase
     setIsLoading(true);
     try {
       const auth = getAuth();
