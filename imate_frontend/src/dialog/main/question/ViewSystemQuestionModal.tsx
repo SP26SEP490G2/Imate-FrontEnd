@@ -1,14 +1,14 @@
 import { useEffect, useState, useRef } from 'react';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogClose,
-  DialogDescription,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogClose,
+    DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Bookmark } from 'lucide-react';
+import { Bookmark, Eye, EyeOff } from 'lucide-react';
 import { getSystemQuestionDetail } from '@/services/questionService';
 import type { SystemQuestionDetail } from '@/types/common/question';
 import { DIFFICULTY_MAP } from '@/constants/common';
@@ -32,6 +32,7 @@ export function ViewSystemQuestionModal({
 }: ViewSystemQuestionModalProps) {
     const [loadingData, setLoadingData] = useState(true);
     const [questionData, setQuestionData] = useState<SystemQuestionDetail | null>(null);
+    const [isSampleAnswerVisible, setIsSampleAnswerVisible] = useState(false);
 
     const hasFetchedRef = useRef(false);
 
@@ -44,6 +45,7 @@ export function ViewSystemQuestionModal({
         if (!open) {
             hasFetchedRef.current = false;
             setQuestionData(null);
+            setIsSampleAnswerVisible(false);
         }
     }, [open, questionId]);
 
@@ -83,11 +85,10 @@ export function ViewSystemQuestionModal({
                     {onSaveToggle && (
                         <button
                             onClick={onSaveToggle}
-                            className={`p-2 rounded-lg transition-colors mt-1 ${
-                                isSaved
-                                    ? 'text-yellow-400 hover:text-yellow-300'
-                                    : 'text-slate-500 hover:text-yellow-400'
-                            }`}
+                            className={`p-2 rounded-lg transition-colors mt-1 ${isSaved
+                                ? 'text-yellow-400 hover:text-yellow-300'
+                                : 'text-slate-500 hover:text-yellow-400'
+                                }`}
                             title={isSaved ? 'Bỏ lưu' : 'Lưu câu hỏi'}
                         >
                             <Bookmark className={`w-5 h-5 ${isSaved ? 'fill-current' : ''}`} />
@@ -138,8 +139,33 @@ export function ViewSystemQuestionModal({
                                 <label className="block text-sm font-medium text-slate-200">
                                     Câu trả lời mẫu
                                 </label>
-                                <div className="w-full min-h-40 rounded-lg px-4 py-3 bg-slate-800/40 border border-slate-700 text-slate-100 text-sm whitespace-pre-wrap">
-                                    {questionData.sampleAnswer}
+                                <div className="relative w-full min-h-40 rounded-lg px-4 py-3 bg-slate-800/40 border border-slate-700 text-sm">
+                                    {isSampleAnswerVisible ? (
+                                        <>
+                                            <div className="text-slate-100 whitespace-pre-wrap">
+                                                {questionData.sampleAnswer}
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsSampleAnswerVisible(false)}
+                                                className="absolute top-3 right-3 inline-flex items-center gap-2 text-xs text-slate-300 hover:text-slate-100 transition-colors"
+                                                aria-label="Ẩn câu trả lời"
+                                            >
+                                                <EyeOff className="w-4 h-4" />
+                                                Ẩn
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsSampleAnswerVisible(true)}
+                                            className="absolute inset-0 flex items-center justify-center gap-2 text-slate-400 hover:text-slate-100 transition-colors"
+                                            aria-label="Hiện câu trả lời"
+                                        >
+                                            <Eye className="w-5 h-5" />
+                                            Hiện câu trả lời
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         )}
@@ -210,11 +236,10 @@ export function ViewSystemQuestionModal({
                         <div className="flex justify-between items-center pt-4 border-t border-slate-700">
                             <button
                                 onClick={onSaveToggle}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors text-sm font-medium ${
-                                    isSaved
-                                        ? 'border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10'
-                                        : 'border-slate-600 text-slate-400 hover:border-yellow-500/50 hover:text-yellow-400'
-                                }`}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors text-sm font-medium ${isSaved
+                                    ? 'border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10'
+                                    : 'border-slate-600 text-slate-400 hover:border-yellow-500/50 hover:text-yellow-400'
+                                    }`}
                             >
                                 <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
                                 {isSaved ? 'Đã lưu' : 'Lưu câu hỏi'}
