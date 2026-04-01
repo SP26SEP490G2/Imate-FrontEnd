@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogClose,
-  DialogDescription,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogClose,
+    DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +19,7 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Bookmark, Save, Send, ThumbsDown, ThumbsUp, X } from 'lucide-react';
+import { Bookmark, Eye, EyeOff, Save, Send, X } from 'lucide-react';
 import {
     createComment,
     deleteComment,
@@ -85,7 +85,8 @@ export function ViewContributeQuestionModal({
     const [votingCommentId, setVotingCommentId] = useState<number | null>(null);
     const [localVoteByCommentId, setLocalVoteByCommentId] = useState<Record<number, VoteType>>({});
     const [pendingCommentIds, setPendingCommentIds] = useState<Record<number, true>>({});
-    
+    const [isSampleAnswerVisible, setIsSampleAnswerVisible] = useState(false);
+
     // Track if data has been fetched to prevent duplicate calls
     const hasFetchedRef = useRef(false);
 
@@ -112,7 +113,7 @@ export function ViewContributeQuestionModal({
             hasFetchedRef.current = true;
             fetchData();
         }
-        
+
         // Reset when modal closes
         if (!open) {
             hasFetchedRef.current = false;
@@ -122,6 +123,7 @@ export function ViewContributeQuestionModal({
             setCommentToDeleteId(null);
             setLocalVoteByCommentId({});
             setPendingCommentIds({});
+            setIsSampleAnswerVisible(false);
         }
     }, [open, questionId]);
 
@@ -398,11 +400,10 @@ export function ViewContributeQuestionModal({
                     {onSaveToggle && (
                         <button
                             onClick={onSaveToggle}
-                            className={`p-2 rounded-lg transition-colors mt-1 ${
-                                isSaved
-                                    ? 'text-yellow-400 hover:text-yellow-300'
-                                    : 'text-slate-500 hover:text-yellow-400'
-                            }`}
+                            className={`p-2 rounded-lg transition-colors mt-1 ${isSaved
+                                ? 'text-yellow-400 hover:text-yellow-300'
+                                : 'text-slate-500 hover:text-yellow-400'
+                                }`}
                             title={isSaved ? 'Bỏ lưu' : 'Lưu câu hỏi'}
                         >
                             <Bookmark className={`w-5 h-5 ${isSaved ? 'fill-current' : ''}`} />
@@ -463,8 +464,33 @@ export function ViewContributeQuestionModal({
                                 <label className="block text-sm font-medium text-slate-200">
                                     Câu trả lời
                                 </label>
-                                <div className="w-full min-h-40 rounded-lg px-4 py-3 bg-slate-800/40 border border-slate-700 text-slate-100 text-sm whitespace-pre-wrap">
-                                    {questionData.sampleAnswer}
+                                <div className="relative w-full min-h-40 rounded-lg px-4 py-3 bg-slate-800/40 border border-slate-700 text-sm">
+                                    {isSampleAnswerVisible ? (
+                                        <>
+                                            <div className="text-slate-100 whitespace-pre-wrap">
+                                                {questionData.sampleAnswer}
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsSampleAnswerVisible(false)}
+                                                className="absolute top-3 right-3 inline-flex items-center gap-2 text-xs text-slate-300 hover:text-slate-100 transition-colors"
+                                                aria-label="Ẩn câu trả lời"
+                                            >
+                                                <EyeOff className="w-4 h-4" />
+                                                Ẩn
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsSampleAnswerVisible(true)}
+                                            className="absolute inset-0 flex items-center justify-center gap-2 text-slate-400 hover:text-slate-100 transition-colors"
+                                            aria-label="Hiện câu trả lời"
+                                        >
+                                            <Eye className="w-5 h-5" />
+                                            Hiện câu trả lời
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         )}
@@ -671,38 +697,39 @@ export function ViewContributeQuestionModal({
                                                 )}
 
                                                 {!isPending && (
-                                                    <div className="flex items-center gap-2 pt-1">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleVoteComment(comment, true)}
-                                                            disabled={!isLoggedIn || votingCommentId === comment.id}
-                                                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-md border text-xs transition-colors ${
-                                                                currentVote === 'upvote'
-                                                                    ? 'border-emerald-400/60 text-emerald-300 bg-emerald-500/10'
-                                                                    : 'border-slate-600 text-slate-300 hover:border-emerald-500/50'
-                                                            } disabled:opacity-60`}
-                                                        >
-                                                            <ThumbsUp className="w-3.5 h-3.5" />
-                                                            {comment.upvoteCount}
-                                                        </button>
-
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleVoteComment(comment, false)}
-                                                            disabled={!isLoggedIn || votingCommentId === comment.id}
-                                                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-md border text-xs transition-colors ${
-                                                                currentVote === 'downvote'
-                                                                    ? 'border-rose-400/60 text-rose-300 bg-rose-500/10'
-                                                                    : 'border-slate-600 text-slate-300 hover:border-rose-500/50'
-                                                            } disabled:opacity-60`}
-                                                        >
-                                                            <ThumbsDown className="w-3.5 h-3.5" />
-                                                            {comment.downvoteCount}
-                                                        </button>
-
-                                                        <span className="text-sm font-semibold text-violet-400 ml-1">
-                                                            {comment.totalVotes}
-                                                        </span>
+                                                    <div className="pt-1">
+                                                        <div className="flex flex-col items-center gap-2">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleVoteComment(comment, true)}
+                                                                disabled={!isLoggedIn || votingCommentId === comment.id}
+                                                                className={`w-10 h-10 rounded-lg flex items-center justify-center hover:bg-white/5 transition-all ${currentVote === 'upvote'
+                                                                    ? 'text-emerald-300'
+                                                                    : 'text-slate-500'
+                                                                    } disabled:opacity-60`}
+                                                                aria-label="Upvote"
+                                                            >
+                                                                <span className="material-symbols-rounded text-3xl">arrow_drop_up</span>
+                                                            </button>
+                                                            <span
+                                                                className={`text-lg font-bold ${comment.totalVotes >= 0 ? 'text-emerald-300' : 'text-rose-300'
+                                                                    }`}
+                                                            >
+                                                                {comment.totalVotes >= 0 ? '+' : ''}{comment.totalVotes}
+                                                            </span>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleVoteComment(comment, false)}
+                                                                disabled={!isLoggedIn || votingCommentId === comment.id}
+                                                                className={`w-10 h-10 rounded-lg flex items-center justify-center hover:bg-white/5 transition-all ${currentVote === 'downvote'
+                                                                    ? 'text-rose-300'
+                                                                    : 'text-slate-500'
+                                                                    } disabled:opacity-60`}
+                                                                aria-label="Downvote"
+                                                            >
+                                                                <span className="material-symbols-rounded text-3xl">arrow_drop_down</span>
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 )}
                                             </div>
@@ -717,11 +744,10 @@ export function ViewContributeQuestionModal({
                             {onSaveToggle ? (
                                 <button
                                     onClick={onSaveToggle}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors text-sm font-medium ${
-                                        isSaved
-                                            ? 'border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10'
-                                            : 'border-slate-600 text-slate-400 hover:border-yellow-500/50 hover:text-yellow-400'
-                                    }`}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors text-sm font-medium ${isSaved
+                                        ? 'border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10'
+                                        : 'border-slate-600 text-slate-400 hover:border-yellow-500/50 hover:text-yellow-400'
+                                        }`}
                                 >
                                     <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
                                     {isSaved ? 'Đã lưu' : 'Lưu câu hỏi'}

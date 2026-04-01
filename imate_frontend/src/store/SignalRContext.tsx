@@ -36,8 +36,8 @@ const SignalRContext = createContext<SignalRContextState>({
   connection: null,
   notifications: [],
   unreadCount: 0,
-  markNotificationAsRead: async () => {},
-  markAllNotificationsAsRead: async () => {},
+  markNotificationAsRead: async () => { },
+  markAllNotificationsAsRead: async () => { },
 });
 
 // Custom hook để component khác dễ dàng sử dụng
@@ -76,51 +76,6 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
     return [];
   };
 
-  const callMarkSingleReadApi = async (notificationId: number) => {
-    const attempts: Array<() => Promise<unknown>> = [
-      () => apiClient.patch(`/notifications/${notificationId}/read`),
-      () => apiClient.post(`/notifications/${notificationId}/read`),
-      () => apiClient.put(`/notifications/${notificationId}/read`),
-      () => apiClient.patch('/notifications/mark-as-read', { notificationId }),
-      () => apiClient.post('/notifications/mark-as-read', { notificationId }),
-      () => apiClient.patch('/notifications/read', { id: notificationId }),
-      () => apiClient.post('/notifications/read', { id: notificationId }),
-    ];
-
-    for (const attempt of attempts) {
-      try {
-        await attempt();
-        return;
-      } catch {
-        // Try next endpoint shape.
-      }
-    }
-
-    throw new Error('Không thể cập nhật trạng thái đã đọc cho thông báo.');
-  };
-
-  const callMarkAllReadApi = async () => {
-    const attempts: Array<() => Promise<unknown>> = [
-      () => apiClient.patch('/notifications/mark-all-as-read'),
-      () => apiClient.post('/notifications/mark-all-as-read'),
-      () => apiClient.patch('/notifications/read-all'),
-      () => apiClient.post('/notifications/read-all'),
-      () => apiClient.patch('/notifications/mark-all-read'),
-      () => apiClient.post('/notifications/mark-all-read'),
-    ];
-
-    for (const attempt of attempts) {
-      try {
-        await attempt();
-        return;
-      } catch {
-        // Try next endpoint shape.
-      }
-    }
-
-    throw new Error('Không thể cập nhật trạng thái đã đọc cho tất cả thông báo.');
-  };
-
   const markNotificationAsRead = async (notificationId: number) => {
     const target = notifications.find((notification) => notification.id === notificationId);
     if (!target || target.isRead) {
@@ -136,7 +91,11 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
     );
 
     try {
-      await callMarkSingleReadApi(notificationId);
+      if (connection && connection.state === signalR.HubConnectionState.Connected) {
+        await connection.invoke('MarkNotificationAsRead', notificationId.toString());
+      } else {
+        console.warn("SignalR: Cannot mark notification as read. Hub is not connected.");
+      }
     } catch (error) {
       console.error('SignalR: Failed to mark notification as read:', error);
     }
@@ -150,7 +109,11 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
     setNotifications((prev) => prev.map((notification) => ({ ...notification, isRead: true })));
 
     try {
-      await callMarkAllReadApi();
+      if (connection && connection.state === signalR.HubConnectionState.Connected) {
+        await connection.invoke('MarkAllNotificationsAsRead');
+      } else {
+        console.warn("SignalR: Cannot mark all as read. Hub is not connected.");
+      }
     } catch (error) {
       console.error('SignalR: Failed to mark all notifications as read:', error);
     }
