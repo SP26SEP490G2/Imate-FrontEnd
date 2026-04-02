@@ -171,6 +171,13 @@ function SignUp() {
 
       const responseData = await registerWithEmail(dataToSend);
 
+      // LƯU LOCAL TOKEN VÀ REFETCH USER
+      localStorage.setItem("authToken", responseData.token);
+      localStorage.setItem("user", JSON.stringify(responseData.user));
+      await refetchUser();
+
+      const auth = getAuth();
+      /*
       try {
         const oobCode = await generateActionCode(formData.email, "VERIFY_EMAIL");
         //await sendActionEmail(oobCode, formData.email, "VERIFY_EMAIL");
@@ -178,6 +185,8 @@ function SignUp() {
       } catch (emailError: any) {
         console.error("Failed to send verification email:", emailError);
       }
+      */
+
 
       // Sử dụng role đã chọn trong thông báo
       const roleLabel = getRoleLabel(role);
