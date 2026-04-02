@@ -1,17 +1,17 @@
 import { useEffect, useState, useRef } from 'react';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
     DialogFooter,
-  DialogClose,
-  DialogDescription,
+    DialogClose,
+    DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
-        getContributedQuestionDetail,
-        changeContributedQuestionStatusForStaff
+    getContributedQuestionDetail,
+    changeContributedQuestionStatusForStaff
 } from '@/services/questionService';
 import type { ContributedQuestionDetail } from '@/types/common/question';
 import { DIFFICULTY_MAP, DIFFICULTY_LEVEL } from '@/constants/common';
@@ -33,7 +33,7 @@ export function ViewPendingContributeQuestionModal({
     const [loadingData, setLoadingData] = useState(true);
     const [loadingAction, setLoadingAction] = useState(false);
     const [questionData, setQuestionData] = useState<ContributedQuestionDetail | null>(null);
-    
+
     // Track if data has been fetched to prevent duplicate calls
     const hasFetchedRef = useRef(false);
 
@@ -42,7 +42,7 @@ export function ViewPendingContributeQuestionModal({
             hasFetchedRef.current = true;
             fetchData();
         }
-        
+
         // Reset when modal closes
         if (!open) {
             hasFetchedRef.current = false;
@@ -141,11 +141,10 @@ export function ViewPendingContributeQuestionModal({
                                             key={level}
                                             type="button"
                                             disabled
-                                            className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all cursor-not-allowed ${
-                                                questionData.difficulty === level
+                                            className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all cursor-not-allowed ${questionData.difficulty === level
                                                     ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
                                                     : 'border-slate-700 bg-slate-800 text-slate-400'
-                                            }`}
+                                                }`}
                                         >
                                             {DIFFICULTY_MAP[level]}
                                         </button>
@@ -210,20 +209,6 @@ export function ViewPendingContributeQuestionModal({
                                 </div>
                             </div>
 
-                            {/* Is Active */}
-                            <div className="flex items-center gap-3 p-4 rounded-lg bg-slate-800 border border-slate-700">
-                                <input
-                                    type="checkbox"
-                                    id="isActive"
-                                    checked={questionData.isActive}
-                                    readOnly
-                                    disabled
-                                    className="w-5 h-5 rounded border-slate-600 bg-slate-700 text-indigo-500 focus:ring-2 focus:ring-primary/50 focus:ring-offset-0"
-                                />
-                                <label htmlFor="isActive" className="text-sm font-medium text-slate-200">
-                                    Kích hoạt câu hỏi
-                                </label>
-                            </div>
                         </div>
 
                         <DialogFooter>
