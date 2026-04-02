@@ -21,7 +21,7 @@ export const CANDIDATE_MENU_ITEMS: MenuItem[] = [
       { label: "Câu hỏi từ cộng đồng", href: "/contributed-question-bank", icon: LibraryBig },
     ],
   },
-  { label: "Luyện tập với AI", href: "/practice-with-AI" },
+  { label: "Luyện tập với AI", href: "/interview-setup" },
   { label: "Mentor", href: "/view-mentor" },
   { label: "Gói dịch vụ", href: "/view-subscription" },
   { label: "Gửi đơn", href: "/view-application" },
