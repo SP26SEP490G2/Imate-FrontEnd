@@ -17,6 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import BookingDetailDialog from "@/dialog/main/booking/BookingDetailDialog";
 
 const MOCK_AVATAR = "https://i.pravatar.cc/150?img=11";
 
@@ -37,6 +38,9 @@ const InterviewSchedule = () => {
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [bookingToCancel, setBookingToCancel] = useState<number | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
+
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<BookingDetailResponse | null>(null);
 
   useEffect(() => {
     fetchBookings();
@@ -118,6 +122,11 @@ const InterviewSchedule = () => {
   const handleCancelClick = (bookingId: number) => {
     setBookingToCancel(bookingId);
     setIsCancelDialogOpen(true);
+  };
+
+  const handleViewDetail = (booking: BookingDetailResponse) => {
+    setSelectedBooking(booking);
+    setIsDetailDialogOpen(true);
   };
 
   const handleConfirmCancel = async () => {
@@ -280,11 +289,12 @@ const InterviewSchedule = () => {
                        >
                          Hủy lịch
                        </button>
-                       <button 
-                         className="px-4 py-2 text-sm font-medium text-gray-300 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-xl transition-all"
-                       >
-                         Xem chi tiết
-                       </button>
+                        <button 
+                          onClick={() => handleViewDetail(booking)}
+                          className="px-4 py-2 text-sm font-medium text-gray-300 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-xl transition-all"
+                        >
+                          Xem chi tiết
+                        </button>
                        <button 
                          onClick={() => handleJoinMeeting(booking.bookingId)}
                          disabled={!isJoinable(booking.startTime)}
@@ -328,6 +338,13 @@ const InterviewSchedule = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <BookingDetailDialog 
+        open={isDetailDialogOpen}
+        onClose={() => setIsDetailDialogOpen(false)}
+        booking={selectedBooking}
+        userRole={user?.role === "Mentor" ? "Mentor" : "Candidate"}
+      />
     </div>
   );
 };

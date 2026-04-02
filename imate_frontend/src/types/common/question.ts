@@ -392,6 +392,7 @@ export interface SystemQuestionDetail {
   positionsName: string[];
   createdAt?: string;
   updatedAt?: string;
+  comments?: CommentItem[];
 }
 
 // Contributed Question Detail for View
@@ -422,7 +423,7 @@ export interface CommentItem {
   userName: string;
   userAvatarUrl: string;
   userRole: string;
-  content: string;  
+  content: string;
   createdAt: string;
   updatedAt: string;
   upvoteCount: number;

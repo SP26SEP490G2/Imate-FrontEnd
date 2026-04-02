@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogClose,
-  DialogDescription,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogClose,
+    DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +19,7 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Bookmark, Save, Send, ThumbsDown, ThumbsUp, X } from 'lucide-react';
+import { ArrowBigDown, ArrowBigUp, Bookmark, Eye, EyeOff, Save, Send, X } from 'lucide-react';
 import {
     createComment,
     deleteComment,
@@ -63,6 +63,7 @@ const formatCommentDate = (value?: string): string => {
     if (!value) return '';
     const parsed = new Date(value);
     if (Number.isNaN(parsed.getTime())) return '';
+    if (parsed.getFullYear() <= 1) return '';
     return parsed.toLocaleString('vi-VN');
 };
 
@@ -84,7 +85,9 @@ export function ViewContributeQuestionModal({
     const [commentToDeleteId, setCommentToDeleteId] = useState<number | null>(null);
     const [votingCommentId, setVotingCommentId] = useState<number | null>(null);
     const [localVoteByCommentId, setLocalVoteByCommentId] = useState<Record<number, VoteType>>({});
-    
+    const [pendingCommentIds, setPendingCommentIds] = useState<Record<number, true>>({});
+    const [isSampleAnswerVisible, setIsSampleAnswerVisible] = useState(false);
+
     // Track if data has been fetched to prevent duplicate calls
     const hasFetchedRef = useRef(false);
 
@@ -111,7 +114,7 @@ export function ViewContributeQuestionModal({
             hasFetchedRef.current = true;
             fetchData();
         }
-        
+
         // Reset when modal closes
         if (!open) {
             hasFetchedRef.current = false;
@@ -120,6 +123,8 @@ export function ViewContributeQuestionModal({
             setNewCommentContent('');
             setCommentToDeleteId(null);
             setLocalVoteByCommentId({});
+            setPendingCommentIds({});
+            setIsSampleAnswerVisible(false);
         }
     }, [open, questionId]);
 
@@ -174,42 +179,63 @@ export function ViewContributeQuestionModal({
             return;
         }
 
+        const temporaryCommentId = -Date.now();
+        const temporaryComment: CommentItem = {
+            id: temporaryCommentId,
+            userId: currentUser?.id ?? '',
+            userName: currentUser?.name || currentUser?.fullName || currentUser?.userName || 'Bạn',
+            userAvatarUrl: currentUser?.avatar || currentUser?.avatarUrl || '',
+            userRole: currentUser?.role || '',
+            content,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            upvoteCount: 0,
+            downvoteCount: 0,
+            totalVotes: 0,
+            currentUserVoteType: null,
+        };
+
+        setQuestionData((prev) => {
+            if (!prev) return prev;
+            const nextComments = [...(prev.comments || []), temporaryComment];
+            return { ...prev, comments: nextComments };
+        });
+        setPendingCommentIds((prev) => ({
+            ...prev,
+            [temporaryCommentId]: true,
+        }));
+        setLocalVoteByCommentId((prev) => ({
+            ...prev,
+            [temporaryCommentId]: null,
+        }));
+        setNewCommentContent('');
+
         try {
             setIsCreatingComment(true);
-            const commentId = await createComment(questionId, content);
-
-            const newComment: CommentItem = {
-                id: Number(commentId),
-                userId: currentUser?.id ?? '',
-                userName: currentUser?.name || currentUser?.fullName || currentUser?.userName || 'Bạn',
-                userAvatarUrl: currentUser?.avatar || currentUser?.avatarUrl || '',
-                userRole: currentUser?.role || '',
-                content,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-                upvoteCount: 0,
-                downvoteCount: 0,
-                totalVotes: 0,
-                currentUserVoteType: null,
-            };
-
-            setQuestionData((prev) => {
-                if (!prev) return prev;
-                const nextComments = [...(prev.comments || []), newComment];
-                return { ...prev, comments: nextComments };
-            });
-
-            setLocalVoteByCommentId((prev) => ({
-                ...prev,
-                [newComment.id]: null,
-            }));
-
-            setNewCommentContent('');
-            toast.success('Bình luận đã được tạo.');
+            await createComment(questionId, content);
+            await fetchData();
+            toast.success('Bình luận đã được gửi và đã cập nhật danh sách mới nhất.');
         } catch (error) {
             console.error('Failed to create comment:', error);
+            setQuestionData((prev) => {
+                if (!prev) return prev;
+                return {
+                    ...prev,
+                    comments: (prev.comments || []).filter((comment) => comment.id !== temporaryCommentId),
+                };
+            });
+            setLocalVoteByCommentId((prev) => {
+                const next = { ...prev };
+                delete next[temporaryCommentId];
+                return next;
+            });
             toast.error('Không thể tạo bình luận. Vui lòng thử lại.');
         } finally {
+            setPendingCommentIds((prev) => {
+                const next = { ...prev };
+                delete next[temporaryCommentId];
+                return next;
+            });
             setIsCreatingComment(false);
         }
     };
@@ -375,11 +401,10 @@ export function ViewContributeQuestionModal({
                     {onSaveToggle && (
                         <button
                             onClick={onSaveToggle}
-                            className={`p-2 rounded-lg transition-colors mt-1 ${
-                                isSaved
-                                    ? 'text-yellow-400 hover:text-yellow-300'
-                                    : 'text-slate-500 hover:text-yellow-400'
-                            }`}
+                            className={`p-2 rounded-lg transition-colors mt-1 ${isSaved
+                                ? 'text-yellow-400 hover:text-yellow-300'
+                                : 'text-slate-500 hover:text-yellow-400'
+                                }`}
                             title={isSaved ? 'Bỏ lưu' : 'Lưu câu hỏi'}
                         >
                             <Bookmark className={`w-5 h-5 ${isSaved ? 'fill-current' : ''}`} />
@@ -440,8 +465,33 @@ export function ViewContributeQuestionModal({
                                 <label className="block text-sm font-medium text-slate-200">
                                     Câu trả lời
                                 </label>
-                                <div className="w-full min-h-40 rounded-lg px-4 py-3 bg-slate-800/40 border border-slate-700 text-slate-100 text-sm whitespace-pre-wrap">
-                                    {questionData.sampleAnswer}
+                                <div className="relative w-full min-h-40 rounded-lg px-4 py-3 bg-slate-800/40 border border-slate-700 text-sm">
+                                    {isSampleAnswerVisible ? (
+                                        <>
+                                            <div className="text-slate-100 whitespace-pre-wrap">
+                                                {questionData.sampleAnswer}
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsSampleAnswerVisible(false)}
+                                                className="absolute top-3 right-3 inline-flex items-center gap-2 text-xs text-slate-300 hover:text-slate-100 transition-colors"
+                                                aria-label="Ẩn câu trả lời"
+                                            >
+                                                <EyeOff className="w-4 h-4" />
+                                                Ẩn
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsSampleAnswerVisible(true)}
+                                            className="absolute inset-0 flex items-center justify-center gap-2 text-slate-400 hover:text-slate-100 transition-colors"
+                                            aria-label="Hiện câu trả lời"
+                                        >
+                                            <Eye className="w-5 h-5" />
+                                            Hiện câu trả lời
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         )}
@@ -566,117 +616,130 @@ export function ViewContributeQuestionModal({
                                     sortedComments.map((comment) => {
                                         const isOwn = isOwnComment(comment.userId);
                                         const isEditing = editingCommentId === comment.id;
+                                        const isPending = Boolean(pendingCommentIds[comment.id]);
                                         const currentVote = localVoteByCommentId[comment.id] ?? getInitialVoteType(comment);
+                                        const createdLabel = formatCommentDate(comment.createdAt);
+                                        const updatedLabel = formatCommentDate(comment.updatedAt);
+                                        const displayLabel = createdLabel || updatedLabel;
+                                        const showEdited = Boolean(createdLabel && updatedLabel && updatedLabel !== createdLabel);
 
                                         return (
                                             <div
                                                 key={comment.id}
-                                                className="rounded-lg border border-slate-700 bg-slate-800/30 p-3 space-y-3"
+                                                className="rounded-lg border border-slate-700 bg-slate-800/30 p-3"
                                             >
-                                                <div className="flex items-start justify-between gap-3">
-                                                    <div>
-                                                        <p className="text-sm font-medium text-slate-200">
-                                                            {comment.userName || 'Ẩn danh'}
-                                                        </p>
-                                                        <p className="text-xs text-slate-400">
-                                                            {formatCommentDate(comment.createdAt)}
-                                                            {comment.updatedAt && comment.updatedAt !== comment.createdAt ? ' (đã chỉnh sửa)' : ''}
-                                                        </p>
-                                                    </div>
-
-                                                    {isLoggedIn && isOwn && (
-                                                        <div className="flex items-center gap-2">
-                                                            {!isEditing ? (
-                                                                <>
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => handleStartEditComment(comment)}
-                                                                        className="text-xs text-slate-400 hover:text-sky-300 transition-colors"
-                                                                    >
-                                                                        Chỉnh sửa
-                                                                    </button>
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => setCommentToDeleteId(comment.id)}
-                                                                        disabled={deletingCommentId === comment.id}
-                                                                        className="text-xs text-slate-400 hover:text-red-300 transition-colors disabled:opacity-60"
-                                                                    >
-                                                                        Xoá
-                                                                    </button>
-                                                                </>
-                                                            ) : null}
+                                                <div className="flex items-start gap-4">
+                                                    {!isPending && (
+                                                        <div className="flex flex-col items-center gap-2 pt-1">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleVoteComment(comment, true)}
+                                                                disabled={!isLoggedIn || votingCommentId === comment.id}
+                                                                className={`w-10 h-10 rounded-lg flex items-center justify-center hover:bg-white/5 transition-all ${currentVote === 'upvote'
+                                                                    ? 'text-emerald-300'
+                                                                    : 'text-slate-500'
+                                                                    } disabled:opacity-60`}
+                                                                aria-label="Upvote"
+                                                            >
+                                                                <ArrowBigUp className="w-6 h-6" />
+                                                            </button>
+                                                            <span
+                                                                className={`text-lg font-bold ${comment.totalVotes >= 0 ? 'text-emerald-300' : 'text-rose-300'
+                                                                    }`}
+                                                            >
+                                                                {comment.totalVotes >= 0 ? '+' : ''}{comment.totalVotes}
+                                                            </span>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleVoteComment(comment, false)}
+                                                                disabled={!isLoggedIn || votingCommentId === comment.id}
+                                                                className={`w-10 h-10 rounded-lg flex items-center justify-center hover:bg-white/5 transition-all ${currentVote === 'downvote'
+                                                                    ? 'text-rose-300'
+                                                                    : 'text-slate-500'
+                                                                    } disabled:opacity-60`}
+                                                                aria-label="Downvote"
+                                                            >
+                                                                <ArrowBigDown className="w-6 h-6" />
+                                                            </button>
                                                         </div>
                                                     )}
-                                                </div>
 
-                                                {!isEditing ? (
-                                                    <p className="text-sm text-slate-100 whitespace-pre-wrap">
-                                                        {comment.content}
-                                                    </p>
-                                                ) : (
-                                                    <div className="space-y-2">
-                                                        <Textarea
-                                                            value={editingCommentContent}
-                                                            onChange={(event) => setEditingCommentContent(event.target.value)}
-                                                            className="min-h-20 bg-slate-900/60 border-slate-700 text-slate-100"
-                                                        />
-                                                        <div className="flex items-center justify-end gap-2">
-                                                            <Button
-                                                                type="button"
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={handleCancelEditComment}
-                                                                disabled={isSavingEdit}
-                                                            >
-                                                                <X className="w-4 h-4" />
-                                                                Huỷ
-                                                            </Button>
-                                                            <Button
-                                                                type="button"
-                                                                variant="primary"
-                                                                size="sm"
-                                                                onClick={() => handleSaveEditComment(comment.id)}
-                                                                disabled={isSavingEdit || !editingCommentContent.trim()}
-                                                            >
-                                                                <Save className="w-4 h-4" />
-                                                                {isSavingEdit ? 'Đang lưu...' : 'Lưu'}
-                                                            </Button>
+                                                    <div className="flex-1 space-y-3">
+                                                        <div className="flex items-start justify-between gap-3">
+                                                            <div className="group">
+                                                                <p className="text-sm font-medium text-slate-200">
+                                                                    {comment.userName || 'Ẩn danh'}
+                                                                </p>
+                                                                {displayLabel && (
+                                                                    <p className="text-xs text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                        {displayLabel}
+                                                                        {showEdited ? ' (đã chỉnh sửa)' : ''}
+                                                                        {isPending ? ' • Đang chờ AI duyệt...' : ''}
+                                                                    </p>
+                                                                )}
+                                                            </div>
+
+                                                            {isLoggedIn && isOwn && !isPending && (
+                                                                <div className="flex items-center gap-2">
+                                                                    {!isEditing ? (
+                                                                        <>
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => handleStartEditComment(comment)}
+                                                                                className="text-xs text-slate-400 hover:text-sky-300 transition-colors"
+                                                                            >
+                                                                                Chỉnh sửa
+                                                                            </button>
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => setCommentToDeleteId(comment.id)}
+                                                                                disabled={deletingCommentId === comment.id}
+                                                                                className="text-xs text-slate-400 hover:text-red-300 transition-colors disabled:opacity-60"
+                                                                            >
+                                                                                Xoá
+                                                                            </button>
+                                                                        </>
+                                                                    ) : null}
+                                                                </div>
+                                                            )}
                                                         </div>
+
+                                                        {!isEditing ? (
+                                                            <p className="text-sm text-slate-100 whitespace-pre-wrap">
+                                                                {comment.content}
+                                                            </p>
+                                                        ) : (
+                                                            <div className="space-y-2">
+                                                                <Textarea
+                                                                    value={editingCommentContent}
+                                                                    onChange={(event) => setEditingCommentContent(event.target.value)}
+                                                                    className="min-h-20 bg-slate-900/60 border-slate-700 text-slate-100"
+                                                                />
+                                                                <div className="flex items-center justify-end gap-2">
+                                                                    <Button
+                                                                        type="button"
+                                                                        variant="outline"
+                                                                        size="sm"
+                                                                        onClick={handleCancelEditComment}
+                                                                        disabled={isSavingEdit}
+                                                                    >
+                                                                        <X className="w-4 h-4" />
+                                                                        Huỷ
+                                                                    </Button>
+                                                                    <Button
+                                                                        type="button"
+                                                                        variant="primary"
+                                                                        size="sm"
+                                                                        onClick={() => handleSaveEditComment(comment.id)}
+                                                                        disabled={isSavingEdit || !editingCommentContent.trim()}
+                                                                    >
+                                                                        <Save className="w-4 h-4" />
+                                                                        {isSavingEdit ? 'Đang lưu...' : 'Lưu'}
+                                                                    </Button>
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
-                                                )}
-
-                                                <div className="flex items-center gap-2 pt-1">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleVoteComment(comment, true)}
-                                                        disabled={!isLoggedIn || votingCommentId === comment.id}
-                                                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-md border text-xs transition-colors ${
-                                                            currentVote === 'upvote'
-                                                                ? 'border-emerald-400/60 text-emerald-300 bg-emerald-500/10'
-                                                                : 'border-slate-600 text-slate-300 hover:border-emerald-500/50'
-                                                        } disabled:opacity-60`}
-                                                    >
-                                                        <ThumbsUp className="w-3.5 h-3.5" />
-                                                        {comment.upvoteCount}
-                                                    </button>
-
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleVoteComment(comment, false)}
-                                                        disabled={!isLoggedIn || votingCommentId === comment.id}
-                                                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-md border text-xs transition-colors ${
-                                                            currentVote === 'downvote'
-                                                                ? 'border-rose-400/60 text-rose-300 bg-rose-500/10'
-                                                                : 'border-slate-600 text-slate-300 hover:border-rose-500/50'
-                                                        } disabled:opacity-60`}
-                                                    >
-                                                        <ThumbsDown className="w-3.5 h-3.5" />
-                                                        {comment.downvoteCount}
-                                                    </button>
-
-                                                    <span className="text-sm font-semibold text-violet-400 ml-1">
-                                                        {comment.totalVotes}
-                                                    </span>
                                                 </div>
                                             </div>
                                         );
@@ -690,11 +753,10 @@ export function ViewContributeQuestionModal({
                             {onSaveToggle ? (
                                 <button
                                     onClick={onSaveToggle}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors text-sm font-medium ${
-                                        isSaved
-                                            ? 'border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10'
-                                            : 'border-slate-600 text-slate-400 hover:border-yellow-500/50 hover:text-yellow-400'
-                                    }`}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors text-sm font-medium ${isSaved
+                                        ? 'border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10'
+                                        : 'border-slate-600 text-slate-400 hover:border-yellow-500/50 hover:text-yellow-400'
+                                        }`}
                                 >
                                     <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
                                     {isSaved ? 'Đã lưu' : 'Lưu câu hỏi'}

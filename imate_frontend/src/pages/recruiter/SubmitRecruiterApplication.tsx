@@ -8,7 +8,7 @@ import { Briefcase, Camera, Upload } from "lucide-react";
 
 export default function SubmitRecruiterApplication() {
   const navigate = useNavigate();
-  const { user, refetchUser } = useAuth();
+  const { user, isLoading: isAuthLoading, refetchUser } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<SubmitRecruiterProfileRequest>({
@@ -86,19 +86,39 @@ export default function SubmitRecruiterApplication() {
     }
   };
 
+  useEffect(() => {
+    if (user && user.role === "Recruiter") {
+      setFormData((prev) => ({
+        ...prev,
+        companyName: user.companyName || prev.companyName,
+        companyAddress: user.address || prev.companyAddress,
+        companyWebsite: user.website || prev.companyWebsite,
+        phone: user.phone || prev.phone,
+        companyLogo: user.companyLogo || prev.companyLogo,
+      }));
+    }
+  }, [user]);
+
   // Dùng useEffect để redirect, tránh navigate() during render
   useEffect(() => {
+    if (isAuthLoading) return;
+    
     if (!user || user.role !== "Recruiter") {
       navigate("/", { replace: true });
     } else if (user.accountStatus === "Active") {
       navigate("/recruiter/dashboard", { replace: true });
+    } else if (user.accountStatus === "PendingVerification" && user.verificationStatus !== "Rejected" && user.companyName) {
+      navigate("/recruiter-pending-application", { replace: true });
     }
-    // Không redirect PendingVerification – recruiter mới chưa nộp hồ sơ cần ở lại trang này
-  }, [user, navigate]);
+  }, [user, isAuthLoading, navigate]);
 
-  // Hiển thị null trong khi đang redirect
-  if (!user || user.role !== "Recruiter" || user.accountStatus === "Active") {
-    return null;
+  // Hiển thị loading trong khi đang redirect hoặc check quyền
+  if (isAuthLoading || !user || user.role !== "Recruiter" || user.accountStatus === "Active") {
+    return (
+      <div className="flex min-h-[80vh] items-center justify-center bg-[#020617]">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-indigo-500"></div>
+      </div>
+    );
   }
 
 

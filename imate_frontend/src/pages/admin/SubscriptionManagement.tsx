@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Pencil, Package, TrendingUp, TrendingDown, Crown } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 import { useSubscriptionPackages } from "@/hooks/useSubscriptionPackages";
 import { getSubscriptionOverview, updateSubscriptionPackagePrice } from "@/services/subscriptionPackageService";
 import type { SubscriptionOverviewResponse } from "@/services/subscriptionPackageService";

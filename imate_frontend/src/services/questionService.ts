@@ -368,12 +368,61 @@ export const contributeQuestion = async (
 export const createComment = async (
   questionId: number,
   content: string
-): Promise<number> => {
-  const response = await apiClient.post<number>(APIConfig.Comment.Create, {
+): Promise<number | null> => {
+  const response = await apiClient.post<unknown>(APIConfig.Comment.Create, {
     questionId,
     content,
   });
-  return response.data;
+
+  const toNumber = (value: unknown): number | null => {
+    if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+      return value;
+    }
+
+    if (typeof value === "string") {
+      const parsed = Number(value.trim());
+      return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+    }
+
+    return null;
+  };
+
+  const extractCommentId = (payload: unknown): number | null => {
+    const direct = toNumber(payload);
+    if (direct !== null) {
+      return direct;
+    }
+
+    if (!payload || typeof payload !== "object") {
+      return null;
+    }
+
+    const record = payload as Record<string, unknown>;
+    const directKeys = ["id", "commentId", "Id", "CommentId"];
+    for (const key of directKeys) {
+      const parsed = toNumber(record[key]);
+      if (parsed !== null) {
+        return parsed;
+      }
+    }
+
+    const nested = record.data;
+    if (!nested || typeof nested !== "object") {
+      return null;
+    }
+
+    const nestedRecord = nested as Record<string, unknown>;
+    for (const key of directKeys) {
+      const parsed = toNumber(nestedRecord[key]);
+      if (parsed !== null) {
+        return parsed;
+      }
+    }
+
+    return toNumber(nested);
+  };
+
+  return extractCommentId(response.data);
 };
 
 export const updateComment = async (

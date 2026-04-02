@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
     DialogFooter,
-  DialogClose,
-  DialogDescription,
+    DialogClose,
+    DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { getContributedQuestionDetail, sortCommentsByTotalVotesDesc } from '@/services/questionService';
@@ -27,7 +27,7 @@ export function ViewContributeQuestionModal({
 }: ViewContributeQuestionModalProps) {
     const [loadingData, setLoadingData] = useState(true);
     const [questionData, setQuestionData] = useState<ContributedQuestionDetail | null>(null);
-    
+
     // Track if data has been fetched to prevent duplicate calls
     const hasFetchedRef = useRef(false);
 
@@ -35,11 +35,20 @@ export function ViewContributeQuestionModal({
         return sortCommentsByTotalVotesDesc(questionData?.comments || []);
     }, [questionData?.comments]);
 
-    const formatCommentDate = (value?: string): string => {
-        if (!value) return '';
-        const parsed = new Date(value);
+    const formatCommentDate = (createdAt?: string, updatedAt?: string): string => {
+        const isDefaultDate = !createdAt || createdAt.startsWith('0001-01-01');
+        const targetDate = isDefaultDate ? updatedAt : createdAt;
+
+        if (!targetDate) return '';
+        const parsed = new Date(targetDate);
         if (Number.isNaN(parsed.getTime())) return '';
         return parsed.toLocaleString('vi-VN');
+    };
+
+    const isCommentEdited = (createdAt?: string, updatedAt?: string): boolean => {
+        if (!createdAt || !updatedAt) return false;
+        if (createdAt.startsWith('0001-01-01')) return false;
+        return updatedAt !== createdAt;
     };
 
     useEffect(() => {
@@ -47,7 +56,7 @@ export function ViewContributeQuestionModal({
             hasFetchedRef.current = true;
             fetchData();
         }
-        
+
         // Reset when modal closes
         if (!open) {
             hasFetchedRef.current = false;
@@ -131,11 +140,10 @@ export function ViewContributeQuestionModal({
                                             key={level}
                                             type="button"
                                             disabled
-                                            className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all cursor-not-allowed ${
-                                                questionData.difficulty === level
-                                                    ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                                                    : 'border-slate-700 bg-slate-800 text-slate-400'
-                                            }`}
+                                            className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all cursor-not-allowed ${questionData.difficulty === level
+                                                ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
+                                                : 'border-slate-700 bg-slate-800 text-slate-400'
+                                                }`}
                                         >
                                             {DIFFICULTY_MAP[level]}
                                         </button>
@@ -243,8 +251,8 @@ export function ViewContributeQuestionModal({
                                                             {comment.userName || 'Ẩn danh'}
                                                         </p>
                                                         <p className="text-xs text-slate-400">
-                                                            {formatCommentDate(comment.createdAt)}
-                                                            {comment.updatedAt && comment.updatedAt !== comment.createdAt ? ' (đã chỉnh sửa)' : ''}
+                                                            {formatCommentDate(comment.createdAt, comment.updatedAt)}
+                                                            {isCommentEdited(comment.createdAt, comment.updatedAt) ? ' (đã chỉnh sửa)' : ''}
                                                         </p>
                                                     </div>
                                                     <span className="text-sm font-semibold text-violet-400">

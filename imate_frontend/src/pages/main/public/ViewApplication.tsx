@@ -33,8 +33,8 @@ import {
   TooltipContent
 } from "@/components/ui/tooltip";
 
-import { CreateApplicationDialog } from "@/pages/dialog/CreateApplicationDialog";
-import { ViewApplicationDetailDialog } from "@/pages/dialog/ViewApplicationDetailDialog";
+import { ViewApplicationDetailDialog } from "@/dialog/main/reportApplication/ViewApplicationDetailDialog";
+import { CreateApplicationDialog } from "@/dialog/main/reportApplication/CreateApplicationDialog";
 
 export default function ViewApplication() {
   const { user } = useAuth();

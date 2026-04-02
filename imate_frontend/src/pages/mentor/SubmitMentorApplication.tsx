@@ -2,15 +2,16 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth } from "@/store/AuthContext";
-import { submitMentorProfile } from "@/services/mentorService";
+import { submitMentorProfile, getBankList } from "@/services/mentorService";
 import { getAllPositions, getAllSkills, getAllCompanies } from "@/services/commonService";
 import type { PositionItem, SkillItem, CompanyItem } from "@/types/common/question";
 import type { SubmitMentorProfileRequest } from "@/types/request/mentor.request";
+import type { BankInfo } from "@/types/common/data";
 import { FileText, ChevronRight, ChevronLeft, Check, Briefcase, Award, CreditCard, Building2, User } from "lucide-react";
 
 export default function SubmitMentorApplication() {
   const navigate = useNavigate();
-  const { user, refetchUser } = useAuth();
+  const { user, isLoading: isAuthLoading, refetchUser } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -35,19 +36,22 @@ export default function SubmitMentorApplication() {
   const [positions, setPositions] = useState<PositionItem[]>([]);
   const [skills, setSkills] = useState<SkillItem[]>([]);
   const [companies, setCompanies] = useState<CompanyItem[]>([]);
+  const [banks, setBanks] = useState<BankInfo[]>([]);
 
   // Fetch meta data
   useEffect(() => {
     const fetchMetaData = async () => {
       try {
-        const [posRes, skillRes, compRes] = await Promise.all([
+        const [posRes, skillRes, compRes, bankList] = await Promise.all([
           getAllPositions({ pageSize: 100, pageNumber: 1 }),
           getAllSkills({ pageSize: 100, pageNumber: 1 }),
           getAllCompanies({ pageSize: 100, pageNumber: 1 }),
+          getBankList(),
         ]);
         setPositions(posRes.data);
         setSkills(skillRes.data);
         setCompanies(compRes.data);
+        setBanks(bankList);
       } catch (err) {
         console.error("Error fetching meta data:", err);
       }
@@ -69,7 +73,17 @@ export default function SubmitMentorApplication() {
     }
 
     setFormData((prev) => ({ ...prev, [name]: value }));
-    if (name === "bankName") setFormData((prev) => ({ ...prev, bankCode: value }));
+    if (error) setError(null);
+  };
+
+  const handleBankSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedCode = e.target.value;
+    const bank = banks.find((b) => b.code === selectedCode);
+    setFormData((prev) => ({
+      ...prev,
+      bankCode: bank?.code ?? "",
+      bankName: bank?.name ?? "",
+    }));
     if (error) setError(null);
   };
 
@@ -143,8 +157,11 @@ export default function SubmitMentorApplication() {
         positionIds: formData.positionIds,
         skillIds: formData.skillIds,
         companyIds: formData.companyIds,
-        yoe: formData.yoe,
       };
+      
+      if (formData.yoe !== undefined && formData.yoe !== null && String(formData.yoe) !== "") {
+        payload.yoe = Number(formData.yoe);
+      }
       if (formData.birthDate) payload.birthDate = formData.birthDate;
       if (formData.pricePerSession != null && formData.pricePerSession > 0) payload.pricePerSession = formData.pricePerSession;
 
@@ -162,14 +179,24 @@ export default function SubmitMentorApplication() {
   };
 
   useEffect(() => {
+    if (isAuthLoading) return;
+
     if (!user || user.role !== "Mentor") {
       navigate("/", { replace: true });
     } else if (user.accountStatus === "Active") {
       navigate("/mentor/interview-schedule", { replace: true });
+    } else if (user.accountStatus === "PendingVerification" && user.verificationStatus !== "Rejected" && (user.bio || user.phone)) {
+      navigate("/pending-application", { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, isAuthLoading, navigate]);
 
-  if (!user || user.role !== "Mentor" || user.accountStatus === "Active") return null;
+  if (isAuthLoading || !user || user.role !== "Mentor" || user.accountStatus === "Active") {
+    return (
+      <div className="flex min-h-[80vh] items-center justify-center bg-[#020617]">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
 
   const inputClass = "w-full bg-slate-900/50 border border-white/10 rounded-xl h-12 px-4 text-sm focus:ring-2 focus:ring-indigo-500/50 text-white placeholder-slate-500 transition-all duration-200 outline-none hover:border-white/20";
   const labelClass = "text-sm text-slate-300 font-medium mb-1.5 block";
@@ -357,15 +384,22 @@ export default function SubmitMentorApplication() {
                 </div>
                 <div>
                   <label className={labelClass}>Ngân hàng *</label>
-                  <input
-                    type="text"
-                    name="bankName"
-                    value={formData.bankName}
-                    onChange={handleChange}
-                    placeholder="VD: Vietcombank"
-                    className={inputClass}
+                  <select
+                    name="bankCode"
+                    value={formData.bankCode}
+                    onChange={handleBankSelect}
+                    className={`${inputClass} cursor-pointer`}
                     required
-                  />
+                  >
+                    <option value="" disabled>
+                      -- Chọn ngân hàng --
+                    </option>
+                    {banks.map((bank) => (
+                      <option key={bank.id} value={bank.code}>
+                        {bank.shortName} – {bank.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className={labelClass}>Số tài khoản *</label>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Trash2, Plus, Loader2, ChevronRight, Calendar as CalendarIcon, Clock, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import { 
     getMyRecurringSlots, 

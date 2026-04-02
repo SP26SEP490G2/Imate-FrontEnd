@@ -14,7 +14,7 @@ export const MENTOR_MENU_ITEMS: MenuItem[] = [
 export const CANDIDATE_MENU_ITEMS: MenuItem[] = [
   {
     label: "Ngân hàng câu hỏi",
-    href: "/system-question-bank",
+    href: "/view-question-bank",
     hasDropdown: true,
     subItems: [
       { label: "Câu hỏi của Imate", href: "/system-question-bank", icon: FolderOpen },
@@ -123,7 +123,7 @@ export const MENTOR_PROFILE_MENU: MenuItem[] = [
   },
   {
     label: "Gửi đơn",
-    href: "/mentor/view-application",
+    href: "/view-application",
     icon: FolderOpen,
   },
   {
