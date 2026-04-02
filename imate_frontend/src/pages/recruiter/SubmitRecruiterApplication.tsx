@@ -3,8 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth } from "@/store/AuthContext";
 import { submitRecruiterProfile, uploadCompanyLogo } from "@/services/recruiterService";
+import { getListCompany } from "@/services/companyService";
 import type { SubmitRecruiterProfileRequest } from "@/types/request/recruiter.request";
-import { Briefcase, Camera, Upload } from "lucide-react";
+import type { CompanyItem } from "@/types/response/company.response";
+import { Briefcase, Camera, Upload, Check, ChevronsUpDown, Plus } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 
 export default function SubmitRecruiterApplication() {
   const navigate = useNavigate();
@@ -17,6 +22,12 @@ export default function SubmitRecruiterApplication() {
     companyWebsite: "",
     phone: "",
   });
+
+  // Company selection states
+  const [open, setOpen] = useState(false);
+  const [companies, setCompanies] = useState<CompanyItem[]>([]);
+  const [isFetchingCompanies, setIsFetchingCompanies] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     let { name, value } = e.target;
@@ -99,6 +110,43 @@ export default function SubmitRecruiterApplication() {
     }
   }, [user]);
 
+  // Fetch companies for selection
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      setIsFetchingCompanies(true);
+      try {
+        const response = await getListCompany(1, 100, searchValue, true);
+        if (response?.items) {
+          setCompanies(response.items);
+        }
+      } catch (err) {
+        console.error("Error fetching companies:", err);
+      } finally {
+        setIsFetchingCompanies(false);
+      }
+    };
+
+    const timer = setTimeout(() => {
+      fetchCompanies();
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchValue]);
+
+  const handleSelectCompany = (company: CompanyItem) => {
+    setFormData((prev) => ({
+      ...prev,
+      companyName: company.name,
+      companyLogo: company.imageUrl || prev.companyLogo,
+    }));
+    setOpen(false);
+  };
+
+  const handleManualCompanyName = (name: string) => {
+    setFormData((prev) => ({ ...prev, companyName: name }));
+    setOpen(false);
+  };
+
   // Dùng useEffect để redirect, tránh navigate() during render
   useEffect(() => {
     if (isAuthLoading) return;
@@ -158,15 +206,85 @@ export default function SubmitRecruiterApplication() {
 
           <div>
             <label className={labelClass}>Tên công ty *</label>
-            <input
-              type="text"
-              name="companyName"
-              value={formData.companyName}
-              onChange={handleChange}
-              placeholder="VD: Công ty TNHH Imate"
-              className={inputClass}
-              required
-            />
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  role="combobox"
+                  aria-expanded={open}
+                  className={cn(inputClass, "flex items-center justify-between font-normal text-left h-12")}
+                >
+                  {formData.companyName || "Chọn hoặc nhập tên công ty..."}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 bg-slate-900 border-white/10" align="start">
+                <Command className="bg-slate-900 text-white" shouldFilter={false}>
+                  <CommandInput 
+                    placeholder="Tìm kiếm công ty..." 
+                    value={searchValue}
+                    onValueChange={setSearchValue}
+                    className="text-white"
+                  />
+                  <CommandList className="max-h-64 overflow-y-auto custom-scrollbar">
+                    {isFetchingCompanies ? (
+                      <div className="py-6 text-center text-sm text-slate-400">Đang tìm kiếm...</div>
+                    ) : (
+                      <>
+                        <CommandEmpty className="flex flex-col items-center gap-2 py-6">
+                          <p className="text-sm text-slate-400">Không tìm thấy công ty thành viên nào.</p>
+                          {searchValue.trim() && (
+                            <button
+                              type="button"
+                              onClick={() => handleManualCompanyName(searchValue.trim())}
+                              className="text-xs font-semibold text-indigo-400 hover:text-indigo-300"
+                            >
+                              Sử dụng "{searchValue.trim()}" làm tên công ty của bạn
+                            </button>
+                          )}
+                        </CommandEmpty>
+                        <CommandGroup heading="Danh sách công ty hệ thống">
+                          {companies.map((company) => (
+                            <CommandItem
+                              key={company.id}
+                              value={company.name}
+                              onSelect={() => handleSelectCompany(company)}
+                              className="flex items-center gap-2 py-3 px-4 hover:bg-white/5 cursor-pointer"
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  formData.companyName === company.name ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {company.imageUrl && (
+                                <img src={company.imageUrl} alt={company.name} className="h-6 w-6 rounded object-contain bg-white/10" />
+                              )}
+                              <span>{company.name}</span>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                        {searchValue.trim() && !companies.some(c => c.name.toLowerCase() === searchValue.trim().toLowerCase()) && (
+                          <>
+                            <div className="h-px bg-white/5 mx-1 my-1" />
+                            <CommandGroup heading="Tùy chọn khác">
+                              <CommandItem
+                                value={searchValue}
+                                onSelect={() => handleManualCompanyName(searchValue.trim())}
+                                className="py-3 px-4 hover:bg-white/5 cursor-pointer text-indigo-400"
+                              >
+                                <Plus className="mr-2 h-4 w-4" />
+                                Thêm mới: "{searchValue.trim()}"
+                              </CommandItem>
+                            </CommandGroup>
+                          </>
+                        )}
+                      </>
+                    )}
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div>
