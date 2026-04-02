@@ -28,16 +28,16 @@ function App() {
                 ))}
               </Routes>
               <ToastContainer
-                position="top-right" // Vị trí hiển thị
-                autoClose={5000} // Tự động đóng sau 5 giây
+                position="top-right"
+                autoClose={4000}
                 hideProgressBar={false}
-                newestOnTop={false}
+                newestOnTop
                 closeOnClick
                 rtl={false}
                 pauseOnFocusLoss
                 draggable
                 pauseOnHover
-                theme="light" // Giao diện (light, dark, colored)
+                theme="dark"
               />
               {!hideNotificationCenter && (
                 <div className="fixed right-6 bottom-6 z-50">

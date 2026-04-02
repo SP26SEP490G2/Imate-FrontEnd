@@ -22,7 +22,7 @@ import { Input } from "@/components/ui/input";
 import type { JobItem, JobResponse } from "@/types/common/recruiter";
 import { getRecruiterJobApplications, CloseJob } from "@/services/recruiterService";
 import UpdateJobPostModal from "@/dialog/main/recruiter/UpdateJobPostModal";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 import {
     AlertDialog,
     AlertDialogAction,

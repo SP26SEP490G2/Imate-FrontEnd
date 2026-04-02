@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 
 import { GetAppliedCandidate, UpdateJobApplication } from "@/services/recruiterService";
 import type { AppliedCandidateResponse, AppliedCandidateItem } from "@/types/common/recruiter";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 import { Loader2 } from "lucide-react";
 
 const AppliedCandidateList: React.FC = () => {

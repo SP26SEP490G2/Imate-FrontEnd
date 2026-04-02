@@ -1,6 +1,6 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 
 interface AuthGuardProps {
   children: React.ReactNode;
