@@ -19,7 +19,7 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Bookmark, Eye, EyeOff, Save, Send, X } from 'lucide-react';
+import { ArrowBigDown, ArrowBigUp, Bookmark, Eye, EyeOff, Save, Send, X } from 'lucide-react';
 import {
     createComment,
     deleteComment,
@@ -63,6 +63,7 @@ const formatCommentDate = (value?: string): string => {
     if (!value) return '';
     const parsed = new Date(value);
     if (Number.isNaN(parsed.getTime())) return '';
+    if (parsed.getFullYear() <= 1) return '';
     return parsed.toLocaleString('vi-VN');
 };
 
@@ -617,88 +618,19 @@ export function ViewContributeQuestionModal({
                                         const isEditing = editingCommentId === comment.id;
                                         const isPending = Boolean(pendingCommentIds[comment.id]);
                                         const currentVote = localVoteByCommentId[comment.id] ?? getInitialVoteType(comment);
+                                        const createdLabel = formatCommentDate(comment.createdAt);
+                                        const updatedLabel = formatCommentDate(comment.updatedAt);
+                                        const displayLabel = createdLabel || updatedLabel;
+                                        const showEdited = Boolean(createdLabel && updatedLabel && updatedLabel !== createdLabel);
 
                                         return (
                                             <div
                                                 key={comment.id}
-                                                className="rounded-lg border border-slate-700 bg-slate-800/30 p-3 space-y-3"
+                                                className="rounded-lg border border-slate-700 bg-slate-800/30 p-3"
                                             >
-                                                <div className="flex items-start justify-between gap-3">
-                                                    <div>
-                                                        <p className="text-sm font-medium text-slate-200">
-                                                            {comment.userName || 'Ẩn danh'}
-                                                        </p>
-                                                        <p className="text-xs text-slate-400">
-                                                            {formatCommentDate(comment.createdAt)}
-                                                            {comment.updatedAt && comment.updatedAt !== comment.createdAt ? ' (đã chỉnh sửa)' : ''}
-                                                            {isPending ? ' • Đang chờ AI duyệt...' : ''}
-                                                        </p>
-                                                    </div>
-
-                                                    {isLoggedIn && isOwn && !isPending && (
-                                                        <div className="flex items-center gap-2">
-                                                            {!isEditing ? (
-                                                                <>
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => handleStartEditComment(comment)}
-                                                                        className="text-xs text-slate-400 hover:text-sky-300 transition-colors"
-                                                                    >
-                                                                        Chỉnh sửa
-                                                                    </button>
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => setCommentToDeleteId(comment.id)}
-                                                                        disabled={deletingCommentId === comment.id}
-                                                                        className="text-xs text-slate-400 hover:text-red-300 transition-colors disabled:opacity-60"
-                                                                    >
-                                                                        Xoá
-                                                                    </button>
-                                                                </>
-                                                            ) : null}
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {!isEditing ? (
-                                                    <p className="text-sm text-slate-100 whitespace-pre-wrap">
-                                                        {comment.content}
-                                                    </p>
-                                                ) : (
-                                                    <div className="space-y-2">
-                                                        <Textarea
-                                                            value={editingCommentContent}
-                                                            onChange={(event) => setEditingCommentContent(event.target.value)}
-                                                            className="min-h-20 bg-slate-900/60 border-slate-700 text-slate-100"
-                                                        />
-                                                        <div className="flex items-center justify-end gap-2">
-                                                            <Button
-                                                                type="button"
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={handleCancelEditComment}
-                                                                disabled={isSavingEdit}
-                                                            >
-                                                                <X className="w-4 h-4" />
-                                                                Huỷ
-                                                            </Button>
-                                                            <Button
-                                                                type="button"
-                                                                variant="primary"
-                                                                size="sm"
-                                                                onClick={() => handleSaveEditComment(comment.id)}
-                                                                disabled={isSavingEdit || !editingCommentContent.trim()}
-                                                            >
-                                                                <Save className="w-4 h-4" />
-                                                                {isSavingEdit ? 'Đang lưu...' : 'Lưu'}
-                                                            </Button>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {!isPending && (
-                                                    <div className="pt-1">
-                                                        <div className="flex flex-col items-center gap-2">
+                                                <div className="flex items-start gap-4">
+                                                    {!isPending && (
+                                                        <div className="flex flex-col items-center gap-2 pt-1">
                                                             <button
                                                                 type="button"
                                                                 onClick={() => handleVoteComment(comment, true)}
@@ -709,7 +641,7 @@ export function ViewContributeQuestionModal({
                                                                     } disabled:opacity-60`}
                                                                 aria-label="Upvote"
                                                             >
-                                                                <span className="material-symbols-rounded text-3xl">arrow_drop_up</span>
+                                                                <ArrowBigUp className="w-6 h-6" />
                                                             </button>
                                                             <span
                                                                 className={`text-lg font-bold ${comment.totalVotes >= 0 ? 'text-emerald-300' : 'text-rose-300'
@@ -727,11 +659,88 @@ export function ViewContributeQuestionModal({
                                                                     } disabled:opacity-60`}
                                                                 aria-label="Downvote"
                                                             >
-                                                                <span className="material-symbols-rounded text-3xl">arrow_drop_down</span>
+                                                                <ArrowBigDown className="w-6 h-6" />
                                                             </button>
                                                         </div>
+                                                    )}
+
+                                                    <div className="flex-1 space-y-3">
+                                                        <div className="flex items-start justify-between gap-3">
+                                                            <div className="group">
+                                                                <p className="text-sm font-medium text-slate-200">
+                                                                    {comment.userName || 'Ẩn danh'}
+                                                                </p>
+                                                                {displayLabel && (
+                                                                    <p className="text-xs text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                        {displayLabel}
+                                                                        {showEdited ? ' (đã chỉnh sửa)' : ''}
+                                                                        {isPending ? ' • Đang chờ AI duyệt...' : ''}
+                                                                    </p>
+                                                                )}
+                                                            </div>
+
+                                                            {isLoggedIn && isOwn && !isPending && (
+                                                                <div className="flex items-center gap-2">
+                                                                    {!isEditing ? (
+                                                                        <>
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => handleStartEditComment(comment)}
+                                                                                className="text-xs text-slate-400 hover:text-sky-300 transition-colors"
+                                                                            >
+                                                                                Chỉnh sửa
+                                                                            </button>
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => setCommentToDeleteId(comment.id)}
+                                                                                disabled={deletingCommentId === comment.id}
+                                                                                className="text-xs text-slate-400 hover:text-red-300 transition-colors disabled:opacity-60"
+                                                                            >
+                                                                                Xoá
+                                                                            </button>
+                                                                        </>
+                                                                    ) : null}
+                                                                </div>
+                                                            )}
+                                                        </div>
+
+                                                        {!isEditing ? (
+                                                            <p className="text-sm text-slate-100 whitespace-pre-wrap">
+                                                                {comment.content}
+                                                            </p>
+                                                        ) : (
+                                                            <div className="space-y-2">
+                                                                <Textarea
+                                                                    value={editingCommentContent}
+                                                                    onChange={(event) => setEditingCommentContent(event.target.value)}
+                                                                    className="min-h-20 bg-slate-900/60 border-slate-700 text-slate-100"
+                                                                />
+                                                                <div className="flex items-center justify-end gap-2">
+                                                                    <Button
+                                                                        type="button"
+                                                                        variant="outline"
+                                                                        size="sm"
+                                                                        onClick={handleCancelEditComment}
+                                                                        disabled={isSavingEdit}
+                                                                    >
+                                                                        <X className="w-4 h-4" />
+                                                                        Huỷ
+                                                                    </Button>
+                                                                    <Button
+                                                                        type="button"
+                                                                        variant="primary"
+                                                                        size="sm"
+                                                                        onClick={() => handleSaveEditComment(comment.id)}
+                                                                        disabled={isSavingEdit || !editingCommentContent.trim()}
+                                                                    >
+                                                                        <Save className="w-4 h-4" />
+                                                                        {isSavingEdit ? 'Đang lưu...' : 'Lưu'}
+                                                                    </Button>
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
-                                                )}
+                                                </div>
                                             </div>
                                         );
                                     })
