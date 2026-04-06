@@ -60,14 +60,6 @@ const HomePage: React.FC = () => {
     fetchQuestions();
   }, []);
 
-  // Placeholder images cho mentors
-  const placeholderImages = [
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuAui6WN99bSHHdAQTGwuwQDYHov1eX3WALp5S5HHLTgzlJedK-QJ-WP77gKJkSnrulmZlanCUymhkc3gtJAiRCovmqDEqrmKTuvJRiUo4JFPeSsXLxL4YopTlLq55RoGiGiajPJrcYLpjRBT3z3bfQO47xUOd1ySztn4mdORWo7AJR4JR5FoQseiKMhm0PfqgzCbVtdwe8RVqcW9fI7B5t-fx32qh7_V9mUOMM8fd_rgrZyC2h9-jdaZVziXSOicHTj4jOl-hLxbro",
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuBL2D_YXsRQ6VyKpNSQnagL0rWekTiTpgT_2JCqxSzvWsNBeZi7xdMQVKiPCIEgr9dhs0q8ufT8MqAtj6hR9ewQ2oxEcBM7lpj8Fnj5fde0IbZpqRv2hVBu1QdtEITt_VcvHuqhmmYQD9Z1UAscGQdniBLEO5OwY7Ai-ZsjkvZPoFIfjTJi0KlGwBGqx_EzQsqoPaa69qUckH2wMuqu9t9ro0_reZyPoO1l4lI4mSBvzU5F1getk7ZwWtfb4x0t3VI9YgJXovNUdYM",
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuDsoCoFXkDjfMs3rYoRWIoPQpPG-2BB_vxo05Zp31-sAu-sKtMjdwevcYsQQ5pkojJbGkLmkqS2vnN1kRvdd9VgH-dBbsr0eBY2p6DvCSVAEBhKYo_MsQ3Lqw1C8J4HU1d9wtnP8V4NfGA9oHnnSffBoq99dckDMCq6dyxO4u7M2fF55BBSk3LVEKlMCoUF4U6CmNqrRnKENao6nCZPnBjV_SgpAnrpaxYQeREOrd1QTrg0cj_o8QBtjI1d9S1vr8aA4ljfuejYtk0",
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuD-Jkv4rzYbi9tmfVoNtvttHZDzng6n-ASUtofoXhDlQ4snpUcq6yZkXKI4F83MyeMttEwjYzBaXSHrW6eR23wd3cHHJbuALuGRpqCBOlmt6Ut_B2ws_sQecCsDT6OFCdpnMZF4HVNdxjxSuFgt2D7oBtbYVXXBMt3Lojpfu8-8paZeCqaAp23Duo978OAu0-tuYmpOgKm4vB6OfpXX-QNKegJgz_dl8QOUrMjvb5OyCjKhLL8hCKlTGEpz0bmSNz0aDm9rkrBIYkY"
-  ];
-
   return (
     <div className="font-sans">
       {/* Main Content */}
@@ -262,7 +254,7 @@ const HomePage: React.FC = () => {
                         <img
                           alt={mentor.fullName}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                          src={placeholderImages[index % placeholderImages.length]}
+                          src={mentor.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(mentor.fullName)}&background=random&color=fff&size=512`}
                         />
                         <div className="absolute bottom-4 left-4 right-4 p-3 bg-[#020617]/80 backdrop-blur-md rounded-xl border border-white/10">
                           <div className="text-white font-bold">{mentor.fullName}</div>
