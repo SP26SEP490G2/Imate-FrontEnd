@@ -7,7 +7,7 @@ export const MENTOR_MENU_ITEMS: MenuItem[] = [
   { label: "Đánh giá từ ứng viên", href: "/mentor/ratings" },
   { label: "Thu nhập", href: "/mentor/income" },
   { label: "Lịch sử phỏng vấn", href: "/mentor/interview-history" },
-  { label: "Câu hỏi từ cộng đồng", href: "/contributed-question-bank" },
+  { label: "Câu hỏi từ cộng đồng", href: "/view-question-bank" },
   { label: "Gửi đơn", href: "/view-application" }
 ];
 
@@ -18,7 +18,7 @@ export const CANDIDATE_MENU_ITEMS: MenuItem[] = [
     hasDropdown: true,
     subItems: [
       { label: "Câu hỏi của Imate", href: "/system-question-bank", icon: FolderOpen },
-      { label: "Câu hỏi từ cộng đồng", href: "/contributed-question-bank", icon: LibraryBig },
+      { label: "Câu hỏi từ cộng đồng", href: "/view-question-bank", icon: LibraryBig },
     ],
   },
   { label: "Luyện tập với AI", href: "/practice-with-AI" },
