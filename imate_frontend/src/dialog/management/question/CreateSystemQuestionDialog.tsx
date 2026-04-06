@@ -46,8 +46,7 @@ export function CreateSystemQuestionDialog({
     sampleAnswer: '',
     categoryIds: [],
     skillIds: [],
-    positionIds: [],
-    creatorId: 0
+    positionIds: []
   });
 
   // Dropdown options
@@ -127,13 +126,12 @@ export function CreateSystemQuestionDialog({
       setLoading(true);
 
       const requestData = {
-        ...formData,
-        creatorId: 1 // TODO: Replace with actual user ID from auth
+        ...formData
       };
 
       await createSystemQuestionForStaff(requestData);
       toast.success('Thêm câu hỏi thành công!');
-      
+
       // Reset form
       setFormData({
         content: '',
@@ -141,11 +139,10 @@ export function CreateSystemQuestionDialog({
         sampleAnswer: '',
         categoryIds: [],
         skillIds: [],
-        positionIds: [],
-        creatorId: 0
+        positionIds: []
       });
       setErrors({});
-      
+
       onOpenChange(false);
       onSuccess?.();
     } catch (error: any) {
@@ -212,9 +209,8 @@ export function CreateSystemQuestionDialog({
                     setFormData(prev => ({ ...prev, content: e.target.value }));
                     if (errors.content) setErrors(prev => ({ ...prev, content: '' }));
                   }}
-                  className={`w-full h-32 rounded-lg px-4 py-3 bg-slate-800 border ${
-                    errors.content ? 'border-red-500' : 'border-slate-700'
-                  } text-slate-100 text-sm placeholder:text-slate-500 resize-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 outline-none transition-all`}
+                  className={`w-full h-32 rounded-lg px-4 py-3 bg-slate-800 border ${errors.content ? 'border-red-500' : 'border-slate-700'
+                    } text-slate-100 text-sm placeholder:text-slate-500 resize-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 outline-none transition-all`}
                   placeholder="Viết câu hỏi phỏng vấn của bạn ở đây..."
                   disabled={loading}
                 />
@@ -237,9 +233,8 @@ export function CreateSystemQuestionDialog({
                     setFormData(prev => ({ ...prev, sampleAnswer: e.target.value }));
                     if (errors.sampleAnswer) setErrors(prev => ({ ...prev, sampleAnswer: '' }));
                   }}
-                  className={`w-full h-40 rounded-lg px-4 py-3 bg-slate-800 border ${
-                    errors.sampleAnswer ? 'border-red-500' : 'border-slate-700'
-                  } text-slate-100 text-sm placeholder:text-slate-500 resize-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 outline-none transition-all`}
+                  className={`w-full h-40 rounded-lg px-4 py-3 bg-slate-800 border ${errors.sampleAnswer ? 'border-red-500' : 'border-slate-700'
+                    } text-slate-100 text-sm placeholder:text-slate-500 resize-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 outline-none transition-all`}
                   placeholder="Viết câu trả lời gợi ý cho câu hỏi của bạn ở đây..."
                   disabled={loading}
                 />
@@ -263,11 +258,10 @@ export function CreateSystemQuestionDialog({
                       type="button"
                       onClick={() => handleDifficultyChange(level)}
                       disabled={loading}
-                      className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
-                        formData.difficulty === level
-                          ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                          : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
-                      }`}
+                      className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${formData.difficulty === level
+                        ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
+                        : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
+                        }`}
                     >
                       {DIFFICULTY_MAP[level]}
                     </button>
@@ -290,11 +284,10 @@ export function CreateSystemQuestionDialog({
                       type="button"
                       onClick={() => toggleSelection('categoryIds', category.id)}
                       disabled={loading}
-                      className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
-                        formData.categoryIds.includes(category.id)
-                          ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                          : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
-                      }`}
+                      className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${formData.categoryIds.includes(category.id)
+                        ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
+                        : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
+                        }`}
                     >
                       {category.name}
                     </button>
@@ -317,11 +310,10 @@ export function CreateSystemQuestionDialog({
                       type="button"
                       onClick={() => toggleSelection('positionIds', position.id)}
                       disabled={loading}
-                      className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
-                        formData.positionIds.includes(position.id)
-                          ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                          : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
-                      }`}
+                      className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${formData.positionIds.includes(position.id)
+                        ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
+                        : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
+                        }`}
                     >
                       {position.name}
                     </button>
@@ -344,11 +336,10 @@ export function CreateSystemQuestionDialog({
                       type="button"
                       onClick={() => toggleSelection('skillIds', skill.id)}
                       disabled={loading}
-                      className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
-                        formData.skillIds.includes(skill.id)
-                          ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                          : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
-                      }`}
+                      className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${formData.skillIds.includes(skill.id)
+                        ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
+                        : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
+                        }`}
                     >
                       {skill.name}
                     </button>
