@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { getListPreviewMentors } from '../../../services/mentorService';
 import { getListHotQuestions } from '../../../services/questionService';
@@ -12,6 +12,20 @@ const HomePage: React.FC = () => {
   const [questions, setQuestions] = useState<ListHotQuestionResponse[]>([]);
   const [questionsLoading, setQuestionsLoading] = useState(true);
   const [questionsError, setQuestionsError] = useState<string | null>(null);
+
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -324, behavior: 'smooth' }); // 300 (card) + 24 (gap)
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 324, behavior: 'smooth' });
+    }
+  };
 
   useEffect(() => {
     const fetchMentors = async () => {
@@ -196,15 +210,21 @@ const HomePage: React.FC = () => {
                 <p className="text-slate-400">Kết nối trực tiếp với các Mentor đang làm việc tại các tập đoàn lớn.</p>
               </div>
               <div className="flex gap-2">
-                <button className="w-12 h-12 rounded-full border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white hover:border-white transition-all">
+                <button
+                  onClick={scrollLeft}
+                  className="w-12 h-12 rounded-full border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white hover:border-white transition-all">
                   <span className="material-symbols-outlined">arrow_back</span>
                 </button>
-                <button className="w-12 h-12 rounded-full border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white hover:border-white transition-all">
+                <button
+                  onClick={scrollRight}
+                  className="w-12 h-12 rounded-full border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white hover:border-white transition-all">
                   <span className="material-symbols-outlined">arrow_forward</span>
                 </button>
               </div>
             </div>
-            <div className="flex overflow-x-auto gap-6 pb-8 no-scrollbar scroll-smooth">
+            <div
+              ref={scrollContainerRef}
+              className="flex overflow-x-auto gap-6 pb-8 no-scrollbar scroll-smooth">
               {loading ? (
                 // Loading skeleton
                 <>
@@ -232,46 +252,66 @@ const HomePage: React.FC = () => {
                 </div>
               ) : mentors.length > 0 ? (
                 // Mentor cards from API
-                mentors.map((mentor, index) => (
-                  <div
-                    key={index}
-                    className="min-w-[300px] flex-none bg-[#1e293b] rounded-3xl border border-white/5 p-6 group hover:border-indigo-500/50 transition-all duration-300"
-                  >
-                    <div className="relative mb-6 overflow-hidden rounded-2xl aspect-[4/5]">
-                      <img
-                        alt={mentor.fullName}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                        src={placeholderImages[index % placeholderImages.length]}
-                      />
-                      <div className="absolute bottom-4 left-4 right-4 p-3 bg-[#020617]/80 backdrop-blur-md rounded-xl border border-white/10">
-                        <div className="text-white font-bold">{mentor.fullName}</div>
-                        <div className="text-xs text-slate-400">{mentor.position || 'Mentor'}</div>
+                <>
+                  {mentors.map((mentor, index) => (
+                    <div
+                      key={index}
+                      className="min-w-[300px] flex-none bg-[#1e293b] rounded-3xl border border-white/5 p-6 group hover:border-indigo-500/50 transition-all duration-300"
+                    >
+                      <div className="relative mb-6 overflow-hidden rounded-2xl aspect-[4/5]">
+                        <img
+                          alt={mentor.fullName}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          src={placeholderImages[index % placeholderImages.length]}
+                        />
+                        <div className="absolute bottom-4 left-4 right-4 p-3 bg-[#020617]/80 backdrop-blur-md rounded-xl border border-white/10">
+                          <div className="text-white font-bold">{mentor.fullName}</div>
+                          <div className="text-xs text-slate-400">{mentor.position || 'Mentor'}</div>
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-slate-400">Kinh nghiệm</span>
+                          <span className="text-white font-semibold">{mentor.yoe} năm</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-slate-400">Nơi làm việc</span>
+                          <span className="text-white font-semibold">{mentor.company || 'N/A'}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-amber-400">
+                          <span className="material-symbols-outlined text-sm fill-1">star</span>
+                          <span className="text-xs font-bold">
+                            {mentor.avgRatings?.toFixed(1) || '0.0'} ({mentor.totalRatingCount || 0} đánh giá)
+                          </span>
+                        </div>
+                        <Link
+                          to={`/view-mentor/${mentor.accountId}?book=true`}
+                          className="w-full py-3 bg-white text-[#0f172a] font-bold rounded-xl hover:bg-slate-100 transition-all flex items-center justify-center cursor-pointer"
+                        >
+                          Đặt lịch
+                        </Link>
                       </div>
                     </div>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-slate-400">Kinh nghiệm</span>
-                        <span className="text-white font-semibold">{mentor.yoe} năm</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-slate-400">Nơi làm việc</span>
-                        <span className="text-white font-semibold">{mentor.company || 'N/A'}</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-amber-400">
-                        <span className="material-symbols-outlined text-sm fill-1">star</span>
-                        <span className="text-xs font-bold">
-                          {mentor.avgRatings?.toFixed(1) || '0.0'} ({mentor.totalRatingCount || 0} đánh giá)
-                        </span>
-                      </div>
-                      <Link
-                        to={`/view-mentor/${mentor.accountId}?book=true`}
-                        className="w-full py-3 bg-white text-[#0f172a] font-bold rounded-xl hover:bg-slate-100 transition-all flex items-center justify-center cursor-pointer"
-                      >
-                        Đặt lịch
-                      </Link>
+                  ))}
+
+                  {/* View More Card */}
+                  <div className="min-w-[300px] flex-none rounded-3xl border border-white/10 border-dashed p-6 group hover:border-indigo-500/50 transition-all duration-300 flex flex-col items-center justify-center bg-[#1e293b]/30">
+                    <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center mb-6 group-hover:bg-indigo-500/20 group-hover:scale-110 transition-all duration-300">
+                      <span className="material-symbols-outlined text-3xl text-slate-400 group-hover:text-indigo-400 transition-colors">arrow_forward</span>
                     </div>
+                    <h3 className="text-white font-bold text-xl mb-3">Xem thêm Mentor</h3>
+                    <p className="text-slate-400 text-sm text-center mb-8 px-4">
+                      Khám phá thêm hàng trăm chuyên gia hướng dẫn xuất sắc trên hệ thống
+                    </p>
+                    <Link
+                      to="/view-mentor"
+                      onClick={() => window.scrollTo(0, 0)}
+                      className="px-8 py-3 bg-white/5 text-white font-bold rounded-xl hover:bg-white/10 border border-white/5 hover:border-white/20 transition-all w-full text-center"
+                    >
+                      Khám phá ngay
+                    </Link>
                   </div>
-                ))
+                </>
               ) : (
                 // No mentors available
                 <div className="w-full text-center py-12">
@@ -293,21 +333,21 @@ const HomePage: React.FC = () => {
               {questionsLoading ? (
                 // Loading skeleton
                 <>              {[1, 2, 3].map((i) => (
-                    <div key={i} className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100 animate-pulse">
-                      <div className="flex gap-2 mb-4">
-                        <div className="h-6 w-16 bg-slate-200 rounded-full"></div>
-                        <div className="h-6 w-20 bg-slate-200 rounded-full"></div>
-                      </div>
-                      <div className="space-y-2 mb-6">
-                        <div className="h-4 bg-slate-200 rounded w-full"></div>
-                        <div className="h-4 bg-slate-200 rounded w-3/4"></div>
-                      </div>
-                      <div className="flex items-center justify-between border-t border-slate-100 pt-6">
-                        <div className="h-4 w-20 bg-slate-200 rounded"></div>
-                        <div className="h-4 w-24 bg-slate-200 rounded"></div>
-                      </div>
+                  <div key={i} className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100 animate-pulse">
+                    <div className="flex gap-2 mb-4">
+                      <div className="h-6 w-16 bg-slate-200 rounded-full"></div>
+                      <div className="h-6 w-20 bg-slate-200 rounded-full"></div>
                     </div>
-                  ))}
+                    <div className="space-y-2 mb-6">
+                      <div className="h-4 bg-slate-200 rounded w-full"></div>
+                      <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+                    </div>
+                    <div className="flex items-center justify-between border-t border-slate-100 pt-6">
+                      <div className="h-4 w-20 bg-slate-200 rounded"></div>
+                      <div className="h-4 w-24 bg-slate-200 rounded"></div>
+                    </div>
+                  </div>
+                ))}
                 </>
               ) : questionsError ? (
                 // Error state
@@ -332,7 +372,7 @@ const HomePage: React.FC = () => {
                     'bg-amber-50 text-amber-600',
                     'bg-rose-50 text-rose-600',
                   ];
-                  
+
                   return (
                     <div key={question.id} className="bg-white rounded-3xl p-6 shadow-xl hover:-translate-y-2 transition-transform duration-300 border border-slate-100">
                       <div className="flex gap-2 mb-4 flex-wrap">
@@ -362,9 +402,12 @@ const HomePage: React.FC = () => {
               )}
             </div>
             <div className="mt-12 text-center">
-              <button className="px-8 py-3 rounded-2xl bg-slate-800 text-white font-bold hover:bg-slate-700 transition-all">
+              <Link
+                to="/view-question-bank"
+                onClick={() => window.scrollTo(0, 0)}
+                className="inline-block px-8 py-3 rounded-2xl bg-slate-800 text-white font-bold hover:bg-slate-700 transition-all">
                 Xem thêm câu hỏi
-              </button>
+              </Link>
             </div>
           </div>
         </section>
