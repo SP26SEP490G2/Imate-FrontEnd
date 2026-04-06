@@ -49,6 +49,8 @@ import PendingApplication from "@/pages/mentor/PendingApplication";
 // Mentor calendar management
 import AvailabilityCalendar from "@/pages/mentor/AvailabilityCalendar";
 import MentorInterviewSchedule from "@/pages/mentor/MentorInterviewSchedule";
+import MentorInterviewHistoryPage from "@/pages/mentor/MentorInterviewHistoryPage";
+import MentorInterviewHistoryDetailPage from "@/pages/mentor/MentorInterviewHistoryDetailPage";
 import MentorRatings from "@/pages/mentor/MentorRatings";
 import MentorPricing from "@/pages/mentor/MentorPricing";
 
@@ -137,6 +139,8 @@ const routeConfigs: RouteConfig[] = [
   { path: "/recruiter-pending-application", element: <RecruiterPendingApplication />, layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/interview-schedule", element: <InterviewSchedule />, layout: LAYOUT.MAIN, requireAuth: true, roles: [ROLES.CANDIDATE] },
   { path: "/mentor/interview-schedule", element: <MentorInterviewSchedule />, layout: LAYOUT.MAIN, requireAuth: true, roles: [ROLES.MENTOR], accountStatus: ACCOUNT_STATUS.Active },
+  { path: "/mentor/interview-history", element: <MentorInterviewHistoryPage />, layout: LAYOUT.MAIN, requireAuth: true, roles: [ROLES.MENTOR], accountStatus: ACCOUNT_STATUS.Active },
+  { path: "/mentor/interview-history/:sessionId", element: <MentorInterviewHistoryDetailPage />, layout: LAYOUT.MAIN, requireAuth: true, roles: [ROLES.MENTOR], accountStatus: ACCOUNT_STATUS.Active },
   { path: "/mentor/manage-slots", element: <AvailabilityCalendar />, layout: LAYOUT.MAIN, requireAuth: true, roles: [ROLES.MENTOR], accountStatus: ACCOUNT_STATUS.Active },
   { path: "/mentor/ratings", element: <MentorRatings />, layout: LAYOUT.MAIN, requireAuth: true, roles: [ROLES.MENTOR], accountStatus: ACCOUNT_STATUS.Active },
   { path: "/mentor/pricing", element: <MentorPricing />, layout: LAYOUT.MAIN, requireAuth: true, roles: [ROLES.MENTOR], accountStatus: ACCOUNT_STATUS.Active },

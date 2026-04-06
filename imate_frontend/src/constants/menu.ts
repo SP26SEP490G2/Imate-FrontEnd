@@ -102,6 +102,11 @@ export const MENTOR_PROFILE_MENU: MenuItem[] = [
     icon: Calendar,
   },
   {
+    label: "Lịch sử phỏng vấn",
+    href: "/mentor/interview-history",
+    icon: History,
+  },
+  {
     label: "Quản lý lịch lặp lại",
     href: "/mentor/manage-slots",
     icon: Calendar,
