@@ -173,8 +173,8 @@ function SignUp() {
 
       try {
         const oobCode = await generateActionCode(formData.email, "VERIFY_EMAIL");
-        //await sendActionEmail(oobCode, formData.email, "VERIFY_EMAIL");
-        await sendActionEmail(oobCode, "startingimate@gmail.com", "VERIFY_EMAIL");
+        await sendActionEmail(oobCode, formData.email, "VERIFY_EMAIL");
+        //await sendActionEmail(oobCode, "startingimate@gmail.com", "VERIFY_EMAIL");
       } catch (emailError: any) {
         console.error("Failed to send verification email:", emailError);
       }
