@@ -46,7 +46,7 @@ export const USER_PROFILE_MENU: MenuItem[] = [
   },
   {
     label: "Lịch sử Mentor",
-    href: "/test-history?tab=mentor",
+    href: "/candidate/interview-history",
     icon: History,
   },
   {

@@ -43,6 +43,8 @@ import ViewJobApplications from "@/pages/candidate/ViewJobApplications";
 import ViewJobApplicationDetail from "@/pages/candidate/ViewJobApplicationDetail";
 import ViewAppliedJob from "@/pages/candidate/ViewAppliedJob";
 import VideoCallPage from "@/pages/videocall/VideoCallPage";
+import CandidateInterviewHistoryPage from "@/pages/candidate/CandidateInterviewHistoryPage";
+import CandidateInterviewHistoryDetailPage from "@/pages/candidate/CandidateInterviewHistoryDetailPage";
 // Pages - Mentor
 import SubmitMentorApplication from "@/pages/mentor/SubmitMentorApplication";
 import PendingApplication from "@/pages/mentor/PendingApplication";
@@ -138,6 +140,8 @@ const routeConfigs: RouteConfig[] = [
   { path: "/submit-recruiter-application", element: <SubmitRecruiterApplication />, layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/recruiter-pending-application", element: <RecruiterPendingApplication />, layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/interview-schedule", element: <InterviewSchedule />, layout: LAYOUT.MAIN, requireAuth: true, roles: [ROLES.CANDIDATE] },
+  { path: "/candidate/interview-history", element: <CandidateInterviewHistoryPage />, layout: LAYOUT.MAIN, requireAuth: true, roles: [ROLES.CANDIDATE] },
+  { path: "/candidate/interview-history/:sessionId", element: <CandidateInterviewHistoryDetailPage />, layout: LAYOUT.MAIN, requireAuth: true, roles: [ROLES.CANDIDATE] },
   { path: "/mentor/interview-schedule", element: <MentorInterviewSchedule />, layout: LAYOUT.MAIN, requireAuth: true, roles: [ROLES.MENTOR], accountStatus: ACCOUNT_STATUS.Active },
   { path: "/mentor/interview-history", element: <MentorInterviewHistoryPage />, layout: LAYOUT.MAIN, requireAuth: true, roles: [ROLES.MENTOR], accountStatus: ACCOUNT_STATUS.Active },
   { path: "/mentor/interview-history/:sessionId", element: <MentorInterviewHistoryDetailPage />, layout: LAYOUT.MAIN, requireAuth: true, roles: [ROLES.MENTOR], accountStatus: ACCOUNT_STATUS.Active },

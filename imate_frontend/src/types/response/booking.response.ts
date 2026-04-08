@@ -28,6 +28,18 @@ export interface MentorSessionSummaryResponse {
   reviewText?: string;
 }
 
+export interface CandidateSessionSummaryResponse {
+  bookingId: number;
+  mentorId: number;
+  mentorName: string;
+  mentorAvatarUrl?: string;
+  status: number;
+  startTime: string;
+  ratingScore?: number;
+  reviewText?: string;
+  ratingCreatedAt?: string;
+}
+
 export interface SlotDetailResponse {
   id: number;
   dayOfWeek: number;
