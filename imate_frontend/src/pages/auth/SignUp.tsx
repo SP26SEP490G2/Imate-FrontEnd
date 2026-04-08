@@ -1,7 +1,7 @@
 import { Eye, EyeOff, CheckCircle2, Quote, Banknote } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { registerWithEmail } from "@/services/authService";
+import { registerWithEmail, generateActionCode, sendActionEmail } from "@/services/authService";
 import type { RegisterEmailData, UserRole, User } from "@/types/common/auth";
 import { toast } from "react-toastify";
 import { useAuth } from "@/store/AuthContext";
@@ -175,7 +175,13 @@ function SignUp() {
       localStorage.setItem("user", JSON.stringify(responseData.user));
       await refetchUser();
 
-
+      // Gửi email xác minh (nếu cần)
+      try {
+        const oobCode = await generateActionCode(formData.email, "VERIFY_EMAIL");
+        await sendActionEmail(oobCode, formData.email, "VERIFY_EMAIL");
+      } catch (emailError: any) {
+        console.error("Failed to send verification email:", emailError);
+      }
 
       // Sử dụng role đã chọn trong thông báo
       const roleLabel = getRoleLabel(role);
