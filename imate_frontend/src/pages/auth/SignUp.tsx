@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { registerWithEmail, generateActionCode, sendActionEmail } from "@/services/authService";
 import type { RegisterEmailData, UserRole, User } from "@/types/common/auth";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { toast } from "react-toastify";
 import { useAuth } from "@/store/AuthContext";
 import { managementRoutes } from "@/config/managementRoutes";
@@ -171,19 +170,31 @@ function SignUp() {
 
       const responseData = await registerWithEmail(dataToSend);
 
+      // LƯU LOCAL TOKEN VÀ REFETCH USER
+      localStorage.setItem("authToken", responseData.token);
+      localStorage.setItem("user", JSON.stringify(responseData.user));
+      await refetchUser();
+
+      // Gửi email xác minh (nếu cần)
       try {
         const oobCode = await generateActionCode(formData.email, "VERIFY_EMAIL");
-        //await sendActionEmail(oobCode, formData.email, "VERIFY_EMAIL");
-        await sendActionEmail(oobCode, "startingimate@gmail.com", "VERIFY_EMAIL");
+        await sendActionEmail(oobCode, formData.email, "VERIFY_EMAIL");
       } catch (emailError: any) {
         console.error("Failed to send verification email:", emailError);
       }
 
       // Sử dụng role đã chọn trong thông báo
       const roleLabel = getRoleLabel(role);
-      toast.success(`Đăng ký thành công vai trò ${roleLabel}! Vui lòng đăng nhập để tiếp tục.`);
+      toast.success(`Đăng ký thành công vai trò ${roleLabel}!`);
 
-      navigate("/sign-in");
+      // REDIRECT TRỰC TIẾP DỰA TRÊN ROLE
+      if (role === "Recruiter") {
+        navigate("/submit-recruiter-application");
+      } else if (role === "Mentor") {
+        navigate("/submit-mentor-application");
+      } else {
+        navigate("/sign-in");
+      }
     } catch (err: any) {
       console.error("Lỗi đăng ký:", err);
 

@@ -332,7 +332,6 @@ export interface CreateSystemQuestionRequest {
   categoryIds: number[];
   skillIds: number[];
   positionIds: number[];
-  creatorId: number;
 }
 
 export interface UpdateSystemQuestionRequest {

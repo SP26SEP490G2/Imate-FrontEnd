@@ -91,6 +91,7 @@ export const getPendingRecruiterApplications = async (): Promise<StaffRecruiterA
 export interface ReviewRecruiterPayload {
   isApproved: boolean;
   note?: string | null;
+  createCompany?: boolean;
 }
 
 export const reviewRecruiterApplication = async (
