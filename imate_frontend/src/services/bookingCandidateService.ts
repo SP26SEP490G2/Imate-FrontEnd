@@ -137,3 +137,5 @@ export const getCandidateSessionDetail = async (sessionId: number) => {
     throw error;
   }
 };
+
+

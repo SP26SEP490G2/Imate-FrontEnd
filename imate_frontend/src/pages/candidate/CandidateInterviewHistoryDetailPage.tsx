@@ -5,14 +5,16 @@ import { vi } from "date-fns/locale";
 import { 
   ArrowLeft, 
   Calendar, 
-  Clock, 
-  Star, 
   Info,
-  XCircle,
   Video,
-  ExternalLink
+  XCircle,
+  ExternalLink,
+  MessageSquareText,
+  Loader2,
+  Star,
+  Clock
 } from "lucide-react";
-import { getCandidateSessionDetail } from "@/services/bookingCandidateService";
+import { getCandidateSessionDetail, rateMentor } from "@/services/bookingCandidateService";
 import type { BookingDetailResponse } from "@/types/response/booking.response";
 import ImateLoading from "@/components/custom/imateLoading";
 import { toast } from "react-toastify";
@@ -24,6 +26,12 @@ const CandidateInterviewHistoryDetailPage = () => {
   const navigate = useNavigate();
   const [session, setSession] = useState<BookingDetailResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Rating Modal States
+  const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
+  const [ratingScore, setRatingScore] = useState<number>(5);
+  const [reviewText, setReviewText] = useState("");
+  const [isSubmittingRating, setIsSubmittingRating] = useState(false);
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -59,6 +67,29 @@ const CandidateInterviewHistoryDetailPage = () => {
       case 2: return "Đã hoàn thành";
       case 3: return "Đã hủy";
       default: return "Khác";
+    }
+  };
+
+  const handleSubmitRating = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!sessionId) return;
+    if (reviewText.trim().length < 10) {
+      toast.error("Vui lòng nhập lời nhận xét ít nhất 10 ký tự.");
+      return;
+    }
+
+    try {
+      setIsSubmittingRating(true);
+      await rateMentor(parseInt(sessionId), ratingScore, reviewText.trim());
+      toast.success("Đánh giá thành công!");
+      setIsRatingModalOpen(false);
+      // Giả lập cập nhật UI ngay lập tức
+      setSession(prev => prev ? { ...prev, ratingScore, reviewText: reviewText.trim() } : prev);
+    } catch (error: any) {
+      console.error("Error rating mentor:", error);
+      toast.error(error.response?.data?.message || "Có lỗi xảy ra khi gửi đánh giá.");
+    } finally {
+      setIsSubmittingRating(false);
     }
   };
 
@@ -163,9 +194,18 @@ const CandidateInterviewHistoryDetailPage = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-4 text-gray-500 bg-white/5 p-6 rounded-2xl border border-dashed border-white/10">
-                    <Info size={24} />
-                    <p>Bạn chưa gửi đánh giá cho buổi học này.</p>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-gray-500 bg-white/5 p-6 rounded-2xl border border-dashed border-white/10">
+                    <div className="flex items-center gap-4">
+                      <Info size={24} />
+                      <p>Bạn chưa gửi đánh giá cho buổi học này.</p>
+                    </div>
+                    <button 
+                      onClick={() => setIsRatingModalOpen(true)}
+                      className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all shadow-lg flex-shrink-0 flex items-center gap-2"
+                    >
+                      <MessageSquareText size={18} />
+                      Đánh giá Mentor
+                    </button>
                   </div>
                 )}
               </div>
@@ -248,6 +288,99 @@ const CandidateInterviewHistoryDetailPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Rating Modal */}
+      {isRatingModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#1A1A2E] w-full max-w-lg rounded-3xl border border-indigo-500/20 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <Star className="text-amber-400" /> Đánh giá buổi học
+              </h3>
+              <button 
+                onClick={() => setIsRatingModalOpen(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+                disabled={isSubmittingRating}
+              >
+                <XCircle size={24} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSubmitRating} className="p-6 space-y-6">
+              <div>
+                <label className="block text-sm font-bold text-gray-300 mb-3">Mức độ hài lòng</label>
+                <div className="flex justify-center gap-3">
+                  {[1, 2, 3, 4, 5].map((score) => (
+                    <button
+                      key={score}
+                      type="button"
+                      onClick={() => setRatingScore(score)}
+                      className="transition-transform hover:scale-110 active:scale-95"
+                    >
+                      <Star 
+                        size={40} 
+                        fill={ratingScore >= score ? "currentColor" : "none"} 
+                        className={ratingScore >= score ? "text-amber-400" : "text-gray-600"}
+                      />
+                    </button>
+                  ))}
+                </div>
+                <p className="text-center text-amber-400 font-bold mt-2 h-6">
+                  {ratingScore === 1 && "Kém"}
+                  {ratingScore === 2 && "Dưới trung bình"}
+                  {ratingScore === 3 && "Trung bình"}
+                  {ratingScore === 4 && "Tốt"}
+                  {ratingScore === 5 && "Tuyệt vời!"}
+                </p>
+              </div>
+
+              <div>
+                <label htmlFor="reviewText" className="block text-sm font-bold text-gray-300 mb-2">Nhận xét của bạn</label>
+                <textarea 
+                  id="reviewText"
+                  rows={4}
+                  value={reviewText}
+                  onChange={(e) => setReviewText(e.target.value)}
+                  placeholder="Chia sẻ trải nghiệm của bạn về Mentor (ít nhất 10 ký tự)..."
+                  className="w-full bg-[#0B0F19] border border-white/10 rounded-xl p-4 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all resize-none"
+                  disabled={isSubmittingRating}
+                  required
+                ></textarea>
+                <div className="text-right mt-1">
+                  <span className={`text-xs ${reviewText.trim().length >= 10 ? 'text-emerald-400' : 'text-gray-500'}`}>
+                    {reviewText.trim().length}/1000 ký tự (Tối thiểu 10 ký tự)
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex gap-4 pt-4 border-t border-white/10">
+                <button 
+                  type="button"
+                  onClick={() => setIsRatingModalOpen(false)}
+                  className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl transition-colors"
+                  disabled={isSubmittingRating}
+                >
+                  Hủy
+                </button>
+                <button 
+                  type="submit"
+                  disabled={isSubmittingRating || reviewText.trim().length < 10}
+                  className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:bg-gray-700 disabled:text-gray-400 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+                >
+                  {isSubmittingRating ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      Đang gửi...
+                    </>
+                  ) : (
+                    "Gửi đánh giá"
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
