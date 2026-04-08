@@ -295,12 +295,22 @@ export const generateQuestion = async (
 };
 
 /**
- * Gửi câu trả lời của người dùng (lưu + phân tích ngầm)
+ * Gửi câu trả lời của người dùng — nhận phản hồi AI
  */
+export interface SubmitAnswerResponse {
+  message: string;
+  aiReaction?: string;
+}
+
 export const submitAnswer = async (
   request: SubmitAnswerRequest
-): Promise<void> => {
-  await apiClient.post(APIConfig.InterviewAI.SubmitAnswer, request);
+): Promise<SubmitAnswerResponse> => {
+  const response = await apiClient.post(
+    APIConfig.InterviewAI.SubmitAnswer,
+    request
+  );
+  const data = response.data?.data ?? response.data;
+  return data as SubmitAnswerResponse;
 };
 
 /**

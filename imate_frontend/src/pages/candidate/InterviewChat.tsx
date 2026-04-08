@@ -240,14 +240,24 @@ export default function InterviewChat() {
       addMessage("user", answer);
       setInputText("");
 
+      // Gửi câu trả lời → nhận phản hồi AI
+      let aiReaction: string | undefined;
       if (!USE_MOCK) {
-        await submitAnswer({
+        const result = await submitAnswer({
           interviewSessionId: sessionId,
           interviewResponseId: currentResponseId,
           userAnswer: answer,
         });
+        aiReaction = result.aiReaction;
       } else {
         await new Promise((r) => setTimeout(r, 300));
+        aiReaction = "Cảm ơn câu trả lời! Để tôi hỏi tiếp nhé.";
+      }
+
+      // Hiển thị phản hồi AI (nếu có)
+      if (aiReaction) {
+        addMessage("ai", aiReaction);
+        await new Promise((r) => setTimeout(r, 800)); // Delay nhỏ cho tự nhiên
       }
 
       // Generate next question
