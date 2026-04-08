@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Plus, Pencil, Search, Users, Ban } from "lucide-react";
+import { Plus, Pencil, Search, Users, Ban, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
@@ -20,8 +20,19 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { Input } from "@/components/ui/input";
 
 import type { JobItem, JobResponse } from "@/types/common/recruiter";
-import { getRecruiterJobApplications } from "@/services/recruiterService";
+import { getRecruiterJobApplications, CloseJob } from "@/services/recruiterService";
 import UpdateJobPostModal from "@/dialog/main/recruiter/UpdateJobPostModal";
+import { toast } from "react-toastify";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 const JobPostingList: React.FC = () => {
     const navigate = useNavigate();
 
@@ -37,10 +48,27 @@ const JobPostingList: React.FC = () => {
 
     const [showEditModal, setShowEditModal] = useState(false);
     const [selectedJob, setSelectedJob] = useState<JobItem | null>(null);
+    const [jobToClose, setJobToClose] = useState<JobItem | null>(null);
+    const [isClosing, setIsClosing] = useState(false);
 
     const handleEdit = (job: JobItem) => {
         setSelectedJob(job);
         setShowEditModal(true);
+    };
+
+    const handleCloseJob = async () => {
+        if (!jobToClose) return;
+        try {
+            setIsClosing(true);
+            await CloseJob(jobToClose.id);
+            toast.success("Đóng bài đăng thành công");
+            setJobToClose(null);
+            fetchJobs();
+        } catch (err: any) {
+            toast.error(err?.response?.data?.message || "Đã có lỗi xảy ra khi đóng bài đăng");
+        } finally {
+            setIsClosing(false);
+        }
     };
 
     const fetchJobs = async () => {
@@ -222,8 +250,9 @@ const JobPostingList: React.FC = () => {
                                                     <Button
                                                         size="sm"
                                                         variant="secondary"
-                                                        className="text-green-400 hover:text-green-300"
+                                                        className="text-green-400 hover:text-green-300 cursor-pointer"
                                                         icon={<Users size={14} />}
+                                                        onClick={() => navigate(`/management/recruiter-dashboard/job-postings/${job.id}/candidates`)}
                                                     />
                                                 </TooltipTrigger>
                                                 <TooltipContent>Ứng viên</TooltipContent>
@@ -233,10 +262,14 @@ const JobPostingList: React.FC = () => {
                                                 <TooltipTrigger asChild>
                                                     <Button
                                                         size="sm"
-                                                        variant="secondary"
-                                                        className="text-red-400 hover:text-red-300"
-                                                        icon={<Ban size={14} />}
-                                                    />
+                                                        variant="outline"
+                                                        className="w-8 h-8 p-0 text-red-500 border-red-500 hover:bg-red-500 hover:text-white flex-shrink-0"
+                                                        title="Đóng bài"
+                                                        onClick={() => setJobToClose(job)}
+                                                        disabled={job.status === "Closed"}
+                                                    >
+                                                        <Ban size={16} />
+                                                    </Button>
                                                 </TooltipTrigger>
                                                 <TooltipContent>Đóng bài</TooltipContent>
                                             </Tooltip>
@@ -257,6 +290,30 @@ const JobPostingList: React.FC = () => {
                     onSuccess={fetchJobs}
                 />
             )}
+
+            <AlertDialog open={!!jobToClose} onOpenChange={(open) => !open && !isClosing && setJobToClose(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Xác nhận đóng bài đăng</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Bạn có chắc chắn muốn đóng bài đăng <span className="font-medium text-white">"{jobToClose?.title}"</span>? Hành động này không thể hoàn tác.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isClosing}>Bỏ qua</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handleCloseJob();
+                            }}
+                            disabled={isClosing}
+                            className="bg-red-600 hover:bg-red-700 text-white"
+                        >
+                            {isClosing ? "Đang xử lý..." : "Xác nhận đóng"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 };

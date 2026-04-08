@@ -5,7 +5,30 @@ import APIConfig from "@/config/apiConfig";
 import type { ListPreviewMentorResponse } from "@/types/common/mentor";
 import type { CommonParams, PaginatedApiResponse } from "@/types/common/pagination";
 import type { SubmitMentorProfileRequest } from "@/types/request/mentor.request";
+import type { CandidateRatingsResponse } from "@/types/response/rating.response";
 import type { BankInfo } from "@/types/common/data";
+
+
+
+export const getMentorRatings = async (): Promise<CandidateRatingsResponse> => {
+  try {
+    const res = await apiClient.get<CandidateRatingsResponse>(APIConfig.Mentor.GetMyCandidateRatings);
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching mentor ratings: ", error);
+    throw error;
+  }
+};
+
+export const updateMentorPrice = async (price: number) => {
+  try {
+    const res = await apiClient.put(APIConfig.Mentor.UpdatePrice, { pricePerSession: price });
+    return res.data;
+  } catch (error) {
+    console.error("Error updating mentor price: ", error);
+    throw error;
+  }
+};
 
 /** @deprecated Dùng SubmitMentorProfileRequest từ @/types/request/mentor.request */
 export type SubmitMentorProfilePayload = SubmitMentorProfileRequest;

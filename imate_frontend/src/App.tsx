@@ -1,12 +1,12 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import { routeConfig } from "./routes/index";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { AppProvider } from "./store/Context";
 import { AuthProvider } from "./store/AuthContext";
+import { SignalRProvider } from "./store/SignalRContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-// import { SignalRProvider } from "./store/SignalRContext.tsx"; // Import provider
 function App() {
   const queryClient = new QueryClient();
   const location = useLocation();
@@ -17,7 +17,7 @@ function App() {
       <GoogleOAuthProvider clientId={import.meta.env.REACT_APP_GOOGLE_CLIENT_ID}>
         <AppProvider>
           <AuthProvider>
-            {/* <SignalRProvider> */}
+            <SignalRProvider>
               <Routes>
                 {routeConfig.map((route, index) => (
                   <Route key={index} path={route.path} element={route.element}>
@@ -28,22 +28,22 @@ function App() {
                 ))}
               </Routes>
               <ToastContainer
-                position="top-right" // Vị trí hiển thị
-                autoClose={5000} // Tự động đóng sau 5 giây
+                position="top-right"
+                autoClose={4000}
                 hideProgressBar={false}
-                newestOnTop={false}
+                newestOnTop
                 closeOnClick
                 rtl={false}
                 pauseOnFocusLoss
                 draggable
                 pauseOnHover
-                theme="light" // Giao diện (light, dark, colored)
+                theme="dark"
               />
               {!hideNotificationCenter && (
                 <div className="fixed right-6 bottom-6 z-50">
                 </div>
               )}
-            {/* </SignalRProvider> */}
+            </SignalRProvider>
           </AuthProvider>
         </AppProvider>
       </GoogleOAuthProvider>

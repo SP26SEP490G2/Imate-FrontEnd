@@ -1,11 +1,11 @@
 import { cn } from "@/lib/utils"
 
-type Status =
+export type Status =
   | "active"
   | "inactive"
   | "pending"
   | "draft"
-  | "error"
+  | "error";
 
 const statusStyles: Record<Status, string> = {
   active: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30",

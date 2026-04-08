@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useLocation } from "react-router-dom";
+import BookMentorDialog from "@/dialog/main/mentor/BookMentorDialog";
 import { getMentorApplicationById } from "@/services/staffReviewService";
 import type { StaffMentorApplication } from "@/types/response/staffReview.response";
 import {
@@ -36,6 +37,7 @@ const MentorDetail: React.FC = () => {
   const [mentor, setMentor] = useState<StaffMentorApplication | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [bookDialogOpen, setBookDialogOpen] = useState(false);
 
   const fetchMentor = useCallback(async () => {
     if (!id) return;
@@ -53,9 +55,19 @@ const MentorDetail: React.FC = () => {
     }
   }, [id]);
 
+  const { search } = useLocation();
+  const queryParams = new URLSearchParams(search);
+  const autoBook = queryParams.get("book") === "true";
+
   useEffect(() => {
     fetchMentor();
   }, [fetchMentor]);
+
+  useEffect(() => {
+    if (autoBook && mentor && !loading) {
+      setBookDialogOpen(true);
+    }
+  }, [autoBook, mentor, loading]);
 
   if (loading) {
     return (
@@ -158,8 +170,8 @@ const MentorDetail: React.FC = () => {
               </p>
               <button
                 type="button"
-                disabled
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold shadow-lg shadow-indigo-500/25 cursor-not-allowed opacity-90"
+                onClick={() => setBookDialogOpen(true)}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
               >
                 <Calendar className="w-5 h-5" /> Đặt lịch ngay
               </button>
@@ -294,6 +306,15 @@ const MentorDetail: React.FC = () => {
           </div>
         </div>
       </main>
+
+      {/* Book Mentor Dialog */}
+      <BookMentorDialog
+        open={bookDialogOpen}
+        onClose={() => setBookDialogOpen(false)}
+        mentorName={mentor.fullName}
+        mentorId={Number(id)}
+        pricePerSession={pricePerSession}
+      />
     </div>
   );
 };

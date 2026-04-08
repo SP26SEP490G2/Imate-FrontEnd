@@ -18,26 +18,37 @@ const APIConfig = {
   Mentor: {
     GetListPreviewMentors: "get-list-preview-mentors",
     SubmitMentorProfile: "profile/mentor",
+    CancelBooking: "/bookings/{bookingId}/cancel",
+    GetMyCandidateRatings: "mentor/my-candidate-ratings",
+    UpdatePrice: "mentor/price",
   },
 
   // Question endpoints (không dùng leading slash để axios nối đúng baseURL .../api)
   Question: {
     GetListHotQuestions: "get-list-hot-questions",
-    GetQuestionBankList: "get-question-bank-list",
+    GetQuestionBankList: "get-public-system-question-banks",
+    GetPublicContributedQuestionBankList: "get-public-contributed-question-banks",
+    GetMyContributedQuestions: "/get-my-contributed-questions",
+    GetSavedSystemQuestions: "/savedquestions-system",
+    GetSavedContributedQuestions: "/savedquestions-contributed",
     GetListQuestionCategories: "get-list-question-categories",
     GetAllSystemQuestionsForStaff: "/get-all-system-question-banks-for-staff",
     GetAllContributedQuestionsForStaff: "/get-all-contributed-question-banks-for-staff",
+    GetAllPendingContributedQuestionsForStaff: "/get-all-pending-contributed-questions-for-staff",
     CreateSystemQuestionForStaff: "/create-system-question-for-staff",
     UpdateSystemQuestionForStaff: "/update-system-question-for-staff/{questionId}",
     GetSystemQuestionDetail: "/get-system-question-by-id/{questionId}",
     GetContributedQuestionDetail: "/get-contributed-question-by-id/{questionId}",
+    ChangeContributedQuestionStatusStaff: "/change-contributed-question-status-staff/{questionId}",
+    ExportSystemQuestions: "/export-system-questions",
     ContributeQuestion: "/contribute-question",
+    SaveQuestion: "/save-question",
   },
 
   // Category endpoints
   Category: {
     GetAllCategories: "/get-categories",
-    AddCategory:"/categories",
+    AddCategory: "/categories",
     UpdateCategory: "/categories/{categoryId}",
     GetAffectedQuestions: "/categories/{categoryId}/affected-questions",
   },
@@ -67,7 +78,21 @@ const APIConfig = {
   Recruiter: {
     SubmitRecruiterProfile: "/recruiters/submit-profile",
     GetJobApplicationList: "job-applications",
-    GetRecruiterJobApplication: "recruiter-job-applications"
+    GetRecruiterJobApplication: "recruiter-job-applications",
+    UpdateRecruiterProfile: "/recruiter-profile",
+    UploadLogo: "/recruiters/upload-logo",
+    CreateJobPost: "/create-job-posts",
+    UpdateJob: "/update-job",
+    CloseJob: "/close-job",
+    GetAppliedCandidate: (jobId: number) => `${jobId}/applied-candidates`,
+    UpdateJobApplication: "/update-job-application",
+  },
+
+  Candidate: {
+    GetAllOpenedJob: "get-all-jobs",
+    GetJobDetail: (jobId: number) => `get-job-detail/${jobId}`,
+    CreateJobApplication: "/apply-job",
+    GetAppliedJob: "get-applied-jobs",
   },
 
   // Staff review endpoints (baseURL thường đã có /api)
@@ -78,7 +103,7 @@ const APIConfig = {
     GetPendingRecruiters: "/staff-review/recruiters/pending",
     ReviewRecruiter: "/staff-review/recruiters",
   },
-  
+
   // Subscription endpoints
   Subscription: {
     GetSubscriptionPackages: "/subscription-packages",
@@ -96,6 +121,41 @@ const APIConfig = {
   // AI endpoints
   AI: {
     AnalyseCv: "/ai/analyse-cv",
+    GeneratePracticeTest: "/ai/practice-test/generate",
+  },
+
+  // Practice Test History endpoints (UC-31, UC-32)
+  PracticeTest: {
+    Submit: "/practice-test/submit",
+    GetHistory: "/practice-test/history",
+    GetDetail: "/practice-test/history/{id}",
+  },
+
+  // Interview AI endpoints (UC-33, UC-34, UC-35)
+  InterviewAI: {
+    // UC-33: Xem kết quả
+    GetHistory: "/ai-interview/history",
+    GetResult: "/ai-interview/result/{sessionId}",
+    // UC-34: Thiết lập phỏng vấn
+    CheckCost: "/ai-interview/check-interview-cost",
+    Setup: "/ai-interview/setup",
+    CreateSession: "/ai-interview/create-session",
+    // UC-35: Phỏng vấn trực tiếp
+    WelcomeMessage: "/ai-interview/welcome-message/{sessionId}",
+    GenerateQuestion: "/ai-interview/generate-question",
+    SubmitAnswer: "/ai-interview/submit-answer",
+    EndInterview: "/ai-interview/end-interview/{sessionId}",
+    // Hỗ trợ giọng nói & JD
+    TranscribeWhisper: "/ai-interview/transcribe-whisper-base64",
+    CorrectTranscript: "/ai-interview/correct-transcript",
+    ParseHtml: "/ai-interview/scraping/parse-html",
+  },
+  // Comment endpoints
+  Comment: {
+    Create: "/create-comment",
+    Update: "/update-comment/{commentId}",
+    Delete: "/delete-comment/{commentId}",
+    Vote: "/vote-comment/{commentId}",
   },
 } as const;
 

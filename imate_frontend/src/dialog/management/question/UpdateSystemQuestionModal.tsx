@@ -1,17 +1,18 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogClose,
-  DialogDescription,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+    DialogClose,
+    DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
     updateSystemQuestionForStaff,
-    getSystemQuestionDetail
+    getSystemQuestionDetail,
+    sortCommentsByTotalVotesDesc
 } from '@/services/questionService';
 import {
     getAllPositions,
@@ -24,7 +25,8 @@ import type {
     DifficultyLevel,
     PositionItem,
     SkillItem,
-    CategoryItem
+    CategoryItem,
+    SystemQuestionDetail
 } from '@/types/common/question';
 import { DIFFICULTY_MAP, DIFFICULTY_LEVEL } from '@/constants/common';
 import { toast } from 'react-toastify';
@@ -44,6 +46,7 @@ export function UpdateSystemQuestionModal({
 }: UpdateSystemQuestionModalProps) {
     const [loading, setLoading] = useState(false);
     const [loadingData, setLoadingData] = useState(true);
+    const [questionData, setQuestionData] = useState<SystemQuestionDetail | null>(null);
 
     // Form state
     const [formData, setFormData] = useState<UpdateSystemQuestionRequest>({
@@ -63,16 +66,37 @@ export function UpdateSystemQuestionModal({
 
     // Form errors
     const [errors, setErrors] = useState<Record<string, string>>({});
-    
+
     // Track if data has been fetched to prevent duplicate calls
     const hasFetchedRef = useRef(false);
+
+    const sortedComments = React.useMemo(() => {
+        return sortCommentsByTotalVotesDesc(questionData?.comments || []);
+    }, [questionData?.comments]);
+
+    const formatCommentDate = (createdAt?: string, updatedAt?: string): string => {
+        // If createdAt is missing or is the C# default "0001-01-01...", use updatedAt instead
+        const isDefaultDate = !createdAt || createdAt.startsWith('0001-01-01');
+        const targetDate = isDefaultDate ? updatedAt : createdAt;
+
+        if (!targetDate) return '';
+        const parsed = new Date(targetDate);
+        if (Number.isNaN(parsed.getTime())) return '';
+        return parsed.toLocaleString('vi-VN');
+    };
+
+    const isCommentEdited = (createdAt?: string, updatedAt?: string): boolean => {
+        if (!createdAt || !updatedAt) return false;
+        if (createdAt.startsWith('0001-01-01')) return false; // Not considered edited if createdAt is default
+        return updatedAt !== createdAt;
+    };
 
     useEffect(() => {
         if (open && questionId && !hasFetchedRef.current) {
             hasFetchedRef.current = true;
             fetchData();
         }
-        
+
         // Reset when modal closes
         if (!open) {
             hasFetchedRef.current = false;
@@ -84,9 +108,9 @@ export function UpdateSystemQuestionModal({
             setLoadingData(true);
             const [questionDetail, positionsRes, skillsRes, categoriesRes] = await Promise.all([
                 getSystemQuestionDetail(questionId),
-                getAllPositions({ pageSize: 100, isActive: true }),
-                getAllSkills({ pageSize: 100, isActive: true }),
-                getAllCategories({ pageSize: 100, isActive: true }),
+                getAllPositions({ pageSize: 10, isActive: true }),
+                getAllSkills({ pageSize: 10, isActive: true }),
+                getAllCategories({ pageSize: 10, isActive: true }),
                 getListQuestionCategories()
             ]);
 
@@ -101,13 +125,13 @@ export function UpdateSystemQuestionModal({
                     .filter(c => questionDetail.categoriesName.includes(c.name))
                     .map(c => c.id)
                 : [];
-            
+
             const skillIds = Array.isArray(questionDetail.skillsName)
                 ? skillsRes.data
                     .filter(s => questionDetail.skillsName.includes(s.name))
                     .map(s => s.id)
                 : [];
-            
+
             const positionIds = Array.isArray(questionDetail.positionsName)
                 ? positionsRes.data
                     .filter(p => questionDetail.positionsName.includes(p.name))
@@ -115,6 +139,7 @@ export function UpdateSystemQuestionModal({
                 : [];
 
             console.log('Mapped IDs:', { categoryIds, skillIds, positionIds });
+            setQuestionData(questionDetail);
 
             // Populate form with question details
             setFormData({
@@ -244,9 +269,8 @@ export function UpdateSystemQuestionModal({
                                         setFormData(prev => ({ ...prev, content: e.target.value }));
                                         if (errors.content) setErrors(prev => ({ ...prev, content: '' }));
                                     }}
-                                    className={`w-full h-32 rounded-lg px-4 py-3 bg-slate-800 border ${
-                                        errors.content ? 'border-red-500' : 'border-slate-700'
-                                    } text-slate-100 text-sm placeholder:text-slate-500 resize-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 outline-none transition-all`}
+                                    className={`w-full h-32 rounded-lg px-4 py-3 bg-slate-800 border ${errors.content ? 'border-red-500' : 'border-slate-700'
+                                        } text-slate-100 text-sm placeholder:text-slate-500 resize-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 outline-none transition-all`}
                                     placeholder="Viết câu hỏi phỏng vấn của bạn ở đây..."
                                     disabled={loading}
                                 />
@@ -269,9 +293,8 @@ export function UpdateSystemQuestionModal({
                                         setFormData(prev => ({ ...prev, sampleAnswer: e.target.value }));
                                         if (errors.sampleAnswer) setErrors(prev => ({ ...prev, sampleAnswer: '' }));
                                     }}
-                                    className={`w-full h-40 rounded-lg px-4 py-3 bg-slate-800 border ${
-                                        errors.sampleAnswer ? 'border-red-500' : 'border-slate-700'
-                                    } text-slate-100 text-sm placeholder:text-slate-500 resize-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 outline-none transition-all`}
+                                    className={`w-full h-40 rounded-lg px-4 py-3 bg-slate-800 border ${errors.sampleAnswer ? 'border-red-500' : 'border-slate-700'
+                                        } text-slate-100 text-sm placeholder:text-slate-500 resize-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 outline-none transition-all`}
                                     placeholder="Viết câu trả lời gợi ý cho câu hỏi của bạn ở đây..."
                                     disabled={loading}
                                 />
@@ -295,11 +318,10 @@ export function UpdateSystemQuestionModal({
                                             type="button"
                                             onClick={() => handleDifficultyChange(level)}
                                             disabled={loading}
-                                            className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
-                                                formData.difficulty === level
-                                                    ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                                                    : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
-                                            }`}
+                                            className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${formData.difficulty === level
+                                                ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
+                                                : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
+                                                }`}
                                         >
                                             {DIFFICULTY_MAP[level]}
                                         </button>
@@ -319,11 +341,10 @@ export function UpdateSystemQuestionModal({
                                             type="button"
                                             onClick={() => toggleSelection('categoryIds', category.id)}
                                             disabled={loading}
-                                            className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
-                                                formData.categoryIds.includes(category.id)
-                                                    ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                                                    : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
-                                            }`}
+                                            className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${formData.categoryIds.includes(category.id)
+                                                ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
+                                                : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
+                                                }`}
                                         >
                                             {category.name}
                                         </button>
@@ -346,11 +367,10 @@ export function UpdateSystemQuestionModal({
                                             type="button"
                                             onClick={() => toggleSelection('positionIds', position.id)}
                                             disabled={loading}
-                                            className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
-                                                formData.positionIds.includes(position.id)
-                                                    ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                                                    : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
-                                            }`}
+                                            className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${formData.positionIds.includes(position.id)
+                                                ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
+                                                : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
+                                                }`}
                                         >
                                             {position.name}
                                         </button>
@@ -373,11 +393,10 @@ export function UpdateSystemQuestionModal({
                                             type="button"
                                             onClick={() => toggleSelection('skillIds', skill.id)}
                                             disabled={loading}
-                                            className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
-                                                formData.skillIds.includes(skill.id)
-                                                    ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                                                    : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
-                                            }`}
+                                            className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${formData.skillIds.includes(skill.id)
+                                                ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
+                                                : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
+                                                }`}
                                         >
                                             {skill.name}
                                         </button>
@@ -388,19 +407,72 @@ export function UpdateSystemQuestionModal({
                                 )}
                             </div>
 
-                            {/* Is Active */}
-                            <div className="flex items-center gap-3 p-4 rounded-lg bg-slate-800 border border-slate-700">
-                                <input
-                                    type="checkbox"
-                                    id="isActive"
-                                    checked={formData.isActive}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
-                                    disabled={loading}
-                                    className="w-5 h-5 rounded border-slate-600 bg-slate-700 text-indigo-500 focus:ring-2 focus:ring-primary/50 focus:ring-offset-0"
-                                />
-                                <label htmlFor="isActive" className="text-sm font-medium text-slate-200 cursor-pointer">
-                                    Kích hoạt câu hỏi
+                            {/* Status */}
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium text-slate-200">
+                                    Trạng thái <span className="text-red-400">*</span>
                                 </label>
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData((prev) => ({ ...prev, isActive: !prev.isActive }))}
+                                    disabled={loading}
+                                    className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${formData.isActive
+                                        ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400'
+                                        : 'border-slate-600 bg-slate-800 text-slate-300'
+                                        } ${loading ? 'cursor-not-allowed opacity-70' : ''}`}
+                                >
+                                    {formData.isActive ? 'Hoạt động' : 'Vô hiệu'}
+                                </button>
+                            </div>
+
+                            {/* Comments - Read only for staff */}
+                            <div className="space-y-3 pt-2">
+                                <div className="flex items-center justify-between">
+                                    <label className="block text-sm font-medium text-slate-200">
+                                        Bình luận
+                                    </label>
+                                    <span className="text-xs text-slate-400">
+                                        {sortedComments.length} bình luận
+                                    </span>
+                                </div>
+
+                                <div className="space-y-3">
+                                    {sortedComments.length === 0 ? (
+                                        <div className="rounded-lg border border-dashed border-slate-700 p-4 text-sm text-slate-400 text-center">
+                                            Chưa có bình luận nào.
+                                        </div>
+                                    ) : (
+                                        sortedComments.map((comment) => (
+                                            <div
+                                                key={comment.id}
+                                                className="rounded-lg border border-slate-700 bg-slate-800/30 p-3 space-y-3"
+                                            >
+                                                <div className="flex items-start justify-between gap-3">
+                                                    <div>
+                                                        <p className="text-sm font-medium text-slate-200">
+                                                            {comment.userName || 'Ẩn danh'}
+                                                        </p>
+                                                        <p className="text-xs text-slate-400">
+                                                            {formatCommentDate(comment.createdAt, comment.updatedAt)}
+                                                            {isCommentEdited(comment.createdAt, comment.updatedAt) ? ' (đã chỉnh sửa)' : ''}
+                                                        </p>
+                                                    </div>
+                                                    <span className="text-sm font-semibold text-violet-400">
+                                                        {comment.totalVotes}
+                                                    </span>
+                                                </div>
+
+                                                <p className="text-sm text-slate-100 whitespace-pre-wrap">
+                                                    {comment.content}
+                                                </p>
+
+                                                <p className="text-[11px] text-slate-500">
+                                                    Up: {comment.upvoteCount} | Down: {comment.downvoteCount}
+                                                </p>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
                             </div>
                         </div>
 

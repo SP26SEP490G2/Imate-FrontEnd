@@ -29,7 +29,13 @@ const MentorList: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await getListPreviewMentors({ pageNumber, pageSize: PAGE_SIZE });
+      const res = await getListPreviewMentors({ 
+        pageNumber, 
+        pageSize: PAGE_SIZE,
+        positionName: activeTag || filterPosition,
+        skillName: filterSkill,
+        companyName: filterCompany
+      });
       setMentors(res.data);
       setTotalPages(res.totalPages);
     } catch (err) {
@@ -39,7 +45,7 @@ const MentorList: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [pageNumber]);
+  }, [pageNumber, filterPosition, filterSkill, filterCompany, activeTag]);
 
   const fetchFilters = useCallback(async () => {
     setFiltersLoading(true);
@@ -64,25 +70,17 @@ const MentorList: React.FC = () => {
 
   useEffect(() => {
     fetchMentors();
-    fetchFilters();
-  }, [fetchMentors, fetchFilters]);
+  }, [fetchMentors]);
 
+  useEffect(() => {
+    fetchFilters();
+  }, [fetchFilters]);
+
+  // Server handles filtering now, so we just return the fetched mentors.
+  // We keep this useMemo to maintain compatibility with the rest of the component.
   const filteredMentors = useMemo(() => {
-    let list = mentors;
-    if (filterPosition) {
-      list = list.filter((m) => m.position?.toLowerCase().includes(filterPosition.toLowerCase()));
-    }
-    if (filterSkill) {
-      list = list.filter((m) => (m as any).skills?.some?.((s: string) => s.toLowerCase().includes(filterSkill.toLowerCase())) ?? true);
-    }
-    if (filterCompany) {
-      list = list.filter((m) => m.company?.toLowerCase().includes(filterCompany.toLowerCase()));
-    }
-    if (activeTag) {
-      list = list.filter((m) => m.position?.toLowerCase().includes(activeTag.toLowerCase()));
-    }
-    return list;
-  }, [mentors, filterPosition, filterSkill, filterCompany, activeTag]);
+    return mentors;
+  }, [mentors]);
 
   const visibleMentors = filteredMentors;
 
@@ -246,7 +244,7 @@ const MentorList: React.FC = () => {
                           <p className="text-xs text-slate-500 mb-4">{mentor.totalRatingCount ?? 0} đánh giá</p>
                         </Link>
                         <Link
-                          to={mentor.accountId ? `/mentor/${mentor.accountId}/book` : '/sign-in'}
+                          to={mentor.accountId ? `/view-mentor/${mentor.accountId}?book=true` : '/sign-in'}
                           className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold text-center hover:opacity-90 transition-all shadow-lg shadow-indigo-500/20"
                         >
                           Đặt lịch

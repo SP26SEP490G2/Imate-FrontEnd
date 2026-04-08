@@ -3,9 +3,10 @@ import { X, Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { getAllPositions, getAllSkills } from "@/services/commonService";
 import type { PositionItem, SkillItem } from "@/types/common/question";
 import { Badge } from "@/components/ui/badge";
-import { UpdateJobApplication } from "@/services/recruiterService";
+import { UpdateJob } from "@/services/recruiterService";
 import { toast } from "react-toastify";
 import type { JobItem } from "@/types/common/recruiter";
+import { MSG54, MSG55 } from "@/constants/messages";
 
 interface UpdateJobPostModalProps {
   open: boolean;
@@ -28,6 +29,7 @@ const UpdateJobPostModal: React.FC<UpdateJobPostModalProps> = ({ open, onClose, 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedPositions, setSelectedPositions] = useState<PositionItem[]>([]);
   const [selectedSkills, setSelectedSkills] = useState<SkillItem[]>([]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [availablePositions, setAvailablePositions] = useState<PositionItem[]>([]);
   const [availableSkills, setAvailableSkills] = useState<SkillItem[]>([]);
@@ -107,6 +109,14 @@ const UpdateJobPostModal: React.FC<UpdateJobPostModalProps> = ({ open, onClose, 
       ...form,
       [e.target.name]: e.target.value,
     });
+    // Clear error for the field being edited
+    if (errors[e.target.name]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[e.target.name];
+        return newErrors;
+      });
+    }
   };
 
   const togglePosition = (pos: PositionItem) => {
@@ -116,6 +126,14 @@ const UpdateJobPostModal: React.FC<UpdateJobPostModalProps> = ({ open, onClose, 
       setSelectedPositions([...selectedPositions, pos]);
     }
     setPositionSearch("");
+    // Clear position error if a position is added
+    if (errors.positions) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.positions;
+        return newErrors;
+      });
+    }
   };
 
   const toggleSkill = (skill: SkillItem) => {
@@ -125,11 +143,64 @@ const UpdateJobPostModal: React.FC<UpdateJobPostModalProps> = ({ open, onClose, 
       setSelectedSkills([...selectedSkills, skill]);
     }
     setSkillSearch("");
+    // Clear skill error if a skill is added
+    if (errors.skills) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.skills;
+        return newErrors;
+      });
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!form.title.trim()) newErrors.title = "Vui lòng nhập tiêu đề công việc";
+    if (selectedPositions.length === 0) newErrors.positions = "Vui lòng chọn ít nhất một vị trí";
+    if (!form.location.trim()) newErrors.location = "Vui lòng nhập địa điểm làm việc";
+    if (selectedSkills.length === 0) newErrors.skills = "Vui lòng chọn ít nhất một kỹ năng";
+
+    if (!form.minSalary) {
+      newErrors.minSalary = "Vui lòng nhập lương tối thiểu";
+    } else if (Number(form.minSalary) < 0) {
+      newErrors.minSalary = "Lương không thể âm";
+    }
+
+    if (!form.maxSalary) {
+      newErrors.maxSalary = "Vui lòng nhập lương tối đa";
+    } else if (Number(form.maxSalary) < 0) {
+      newErrors.maxSalary = "Lương không thể âm";
+    }
+
+    if (form.minSalary && form.maxSalary && Number(form.minSalary) > Number(form.maxSalary)) {
+      newErrors.maxSalary = "Lương tối đa phải lớn hơn lương tối thiểu";
+    }
+
+    if (!form.applicationDeadline) newErrors.applicationDeadline = "Vui lòng chọn hạn chót ứng tuyển";
+
+    // Check if deadline is in the past
+    if (form.applicationDeadline) {
+      const today = new Date().toISOString().split("T")[0];
+      if (form.applicationDeadline < today) {
+        newErrors.applicationDeadline = "Hạn chót không thể ở quá khứ";
+      }
+    }
+
+    if (!form.description.trim()) newErrors.description = "Vui lòng nhập mô tả công việc";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!job) return;
+
+    if (!validateForm()) {
+      toast.error("Vui lòng kiểm tra lại thông tin nhập liệu");
+      return;
+    }
 
     try {
       const payload = {
@@ -142,16 +213,16 @@ const UpdateJobPostModal: React.FC<UpdateJobPostModalProps> = ({ open, onClose, 
       };
       setIsSubmitting(true);
 
-      await UpdateJobApplication(payload);
+      await UpdateJob(payload);
       setIsSubmitting(false);
 
-      toast.success("Cập nhật tin tuyển dụng thành công!");
+      toast.success(MSG54);
       onSuccess();
       onClose();
 
     } catch (error) {
       console.error(error);
-      toast.error("Cập nhật thất bại. Vui lòng thử lại.");
+      toast.error(MSG55);
       setIsSubmitting(false);
     }
   };
@@ -207,9 +278,9 @@ const UpdateJobPostModal: React.FC<UpdateJobPostModalProps> = ({ open, onClose, 
                   value={form.title}
                   onChange={handleChange}
                   placeholder="VD: Senior Backend Developer"
-                  className="w-full h-12 px-4 rounded-xl bg-[#0F1333] border border-white/10 focus:border-indigo-500 outline-none text-white transition-all placeholder:text-slate-600"
-                  required
+                  className={`w-full h-12 px-4 rounded-xl bg-[#0F1333] border ${errors.title ? "border-red-500" : "border-white/10"} focus:border-indigo-500 outline-none text-white transition-all placeholder:text-slate-600`}
                 />
+                {errors.title && <p className="text-red-500 text-[10px] mt-1 italic font-medium">{errors.title}</p>}
               </div>
 
               {/* Status */}
@@ -256,8 +327,9 @@ const UpdateJobPostModal: React.FC<UpdateJobPostModalProps> = ({ open, onClose, 
                   value={form.location}
                   onChange={handleChange}
                   placeholder="VD: Remote / TP. Hồ Chí Minh"
-                  className="w-full h-12 px-4 rounded-xl bg-[#0F1333] border border-white/10 focus:border-indigo-500 outline-none text-white transition-all placeholder:text-slate-600"
+                  className={`w-full h-12 px-4 rounded-xl bg-[#0F1333] border ${errors.location ? "border-red-500" : "border-white/10"} focus:border-indigo-500 outline-none text-white transition-all placeholder:text-slate-600`}
                 />
+                {errors.location && <p className="text-red-500 text-[10px] mt-1 italic font-medium">{errors.location}</p>}
               </div>
 
               {/* Deadline */}
@@ -270,8 +342,9 @@ const UpdateJobPostModal: React.FC<UpdateJobPostModalProps> = ({ open, onClose, 
                   type="date"
                   value={form.applicationDeadline}
                   onChange={handleChange}
-                  className="w-full h-12 px-4 rounded-xl bg-[#0F1333] border border-white/10 focus:border-indigo-500 outline-none text-white"
+                  className={`w-full h-12 px-4 rounded-xl bg-[#0F1333] border ${errors.applicationDeadline ? "border-red-500" : "border-white/10"} focus:border-indigo-500 outline-none text-white`}
                 />
+                {errors.applicationDeadline && <p className="text-red-500 text-[10px] mt-1 italic font-medium">{errors.applicationDeadline}</p>}
               </div>
 
               {/* Salary Min */}
@@ -285,8 +358,9 @@ const UpdateJobPostModal: React.FC<UpdateJobPostModalProps> = ({ open, onClose, 
                   value={form.minSalary}
                   onChange={handleChange}
                   placeholder="1000"
-                  className="w-full h-12 px-4 rounded-xl bg-[#0F1333] border border-white/10 focus:border-indigo-500 outline-none text-white transition-all placeholder:text-slate-600"
+                  className={`w-full h-12 px-4 rounded-xl bg-[#0F1333] border ${errors.minSalary ? "border-red-500" : "border-white/10"} focus:border-indigo-500 outline-none text-white transition-all placeholder:text-slate-600`}
                 />
+                {errors.minSalary && <p className="text-red-500 text-[10px] mt-1 italic font-medium">{errors.minSalary}</p>}
               </div>
 
               {/* Salary Max */}
@@ -300,8 +374,9 @@ const UpdateJobPostModal: React.FC<UpdateJobPostModalProps> = ({ open, onClose, 
                   value={form.maxSalary}
                   onChange={handleChange}
                   placeholder="4000"
-                  className="w-full h-12 px-4 rounded-xl bg-[#0F1333] border border-white/10 focus:border-indigo-500 outline-none text-white transition-all placeholder:text-slate-600"
+                  className={`w-full h-12 px-4 rounded-xl bg-[#0F1333] border ${errors.maxSalary ? "border-red-500" : "border-white/10"} focus:border-indigo-500 outline-none text-white transition-all placeholder:text-slate-600`}
                 />
+                {errors.maxSalary && <p className="text-red-500 text-[10px] mt-1 italic font-medium">{errors.maxSalary}</p>}
               </div>
             </div>
 
@@ -311,7 +386,7 @@ const UpdateJobPostModal: React.FC<UpdateJobPostModalProps> = ({ open, onClose, 
                 Vị trí tuyển dụng
               </label>
               <div
-                className="min-h-[48px] flex flex-wrap gap-2 p-2 rounded-xl bg-[#0F1333] border border-white/10 cursor-text"
+                className={`min-h-[48px] flex flex-wrap gap-2 p-2 rounded-xl bg-[#0F1333] border ${errors.positions ? "border-red-500" : "border-white/10"} cursor-text`}
                 onClick={() => setShowPositionDropdown(!showPositionDropdown)}
               >
                 {selectedPositions.map((pos) => (
@@ -344,6 +419,7 @@ const UpdateJobPostModal: React.FC<UpdateJobPostModalProps> = ({ open, onClose, 
                 />
                 <ChevronsUpDown size={18} className="text-slate-500 self-center ml-auto" />
               </div>
+              {errors.positions && <p className="text-red-500 text-[10px] mt-1 italic font-medium">{errors.positions}</p>}
               {showPositionDropdown && (
                 <div className="absolute z-50 w-full mt-2 bg-[#1e293b] border border-white/10 rounded-xl shadow-2xl max-h-[200px] overflow-y-auto custom-scrollbar">
                   {loading ? (
@@ -372,7 +448,7 @@ const UpdateJobPostModal: React.FC<UpdateJobPostModalProps> = ({ open, onClose, 
                 Yêu cầu kỹ năng
               </label>
               <div
-                className="min-h-[48px] flex flex-wrap gap-2 p-2 rounded-xl bg-[#0F1333] border border-white/10 cursor-text"
+                className={`min-h-[48px] flex flex-wrap gap-2 p-2 rounded-xl bg-[#0F1333] border ${errors.skills ? "border-red-500" : "border-white/10"} cursor-text`}
                 onClick={() => setShowSkillDropdown(!showSkillDropdown)}
               >
                 {selectedSkills.map((skill) => (
@@ -405,6 +481,7 @@ const UpdateJobPostModal: React.FC<UpdateJobPostModalProps> = ({ open, onClose, 
                 />
                 <ChevronsUpDown size={18} className="text-slate-500 self-center ml-auto" />
               </div>
+              {errors.skills && <p className="text-red-500 text-[10px] mt-1 italic font-medium">{errors.skills}</p>}
               {showSkillDropdown && (
                 <div className="absolute z-50 w-full mt-2 bg-[#1e293b] border border-white/10 rounded-xl shadow-2xl max-h-[200px] overflow-y-auto custom-scrollbar">
                   {loading ? (
@@ -438,8 +515,9 @@ const UpdateJobPostModal: React.FC<UpdateJobPostModalProps> = ({ open, onClose, 
                 value={form.description}
                 onChange={handleChange}
                 placeholder="Mô tả trách nhiệm, quyền lợi, yêu cầu..."
-                className="w-full p-4 rounded-xl bg-[#0F1333] border border-white/10 focus:border-indigo-500 outline-none text-white transition-all placeholder:text-slate-600 resize-none"
+                className={`w-full p-4 rounded-xl bg-[#0F1333] border ${errors.description ? "border-red-500" : "border-white/10"} focus:border-indigo-500 outline-none text-white transition-all placeholder:text-slate-600 resize-none`}
               />
+              {errors.description && <p className="text-red-500 text-[10px] mt-1 italic font-medium">{errors.description}</p>}
             </div>
 
             {/* Submit Button */}

@@ -27,6 +27,54 @@ export interface QuestionBankItem {
   createdAt: string;
 }
 
+export interface PublicQuestionLookupItem {
+  id: number;
+  name: string;
+}
+
+export interface PublicSystemQuestionBankItem {
+  id: number;
+  content: string;
+  difficulty: string | null;
+  sampleAnswer?: string;
+  creatorName: string;
+  createdAt: string;
+  categories: PublicQuestionLookupItem[];
+  skills: PublicQuestionLookupItem[];
+  positions: PublicQuestionLookupItem[];
+  isSaved: boolean;
+}
+
+export interface PublicContributedQuestionDetail {
+  id: number;
+  interviewDate?: string;
+  level?: string;
+  company?: string;
+  companyURL?: string;
+}
+
+export interface PublicContributedQuestionBankItem {
+  id: number;
+  content: string;
+  difficulty?: string | null;
+  sampleAnswer?: string;
+  isActive: boolean;
+  createdAt: string;
+  creatorId: number;
+  creatorName: string;
+  creatorAvatarUrl?: string;
+  creatorRole?: string;
+  contributedDetail?: PublicContributedQuestionDetail;
+  categories: PublicQuestionLookupItem[];
+  skills: PublicQuestionLookupItem[];
+  positions: PublicQuestionLookupItem[];
+  isSaved: boolean;
+}
+
+export type SavedSystemQuestionItem = PublicSystemQuestionBankItem;
+
+export type SavedContributedQuestionItem = PublicContributedQuestionBankItem;
+
 export interface SystemQuestionBankItem {
   skillId: number;
   positionId: number;
@@ -48,11 +96,13 @@ export interface ContributeQuestionBankItem {
 }
 
 export interface QuestionBankListResponse {
-  questions: QuestionBankItem[];
+  items: PublicSystemQuestionBankItem[];
   totalCount: number;
   pageNumber: number;
   pageSize: number;
   totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
 }
 
 export interface SystemQuestionBankListResponse {
@@ -80,17 +130,92 @@ export interface GetContributeQuestionBankListResponse {
 }
 
 export interface GetQuestionBankListResponse {
+  success: boolean;
   data: QuestionBankListResponse;
+  message?: string;
 }
 
 // Request Types
 export interface GetQuestionBankListRequest {
+  skillId?: number;
+  positionId?: number;
   searchTerm?: string;
   categoryId?: number;
-  difficulty?: string;
+  difficulty?: number;
   sortBy?: string;
+  sortOrder?: "asc" | "desc";
   pageNumber?: number;
   pageSize?: number;
+}
+
+export interface GetPublicContributedQuestionBankListRequest extends GetQuestionBankListRequest {
+  companyId?: number;
+  level?: number;
+  companyName?: string;
+}
+
+export interface GetMyContributedQuestionsRequest {
+  approvalStatus?: number;
+  skillId?: number;
+  positionId?: number;
+  categoryId?: number;
+  level?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+  pageNumber?: number;
+  pageSize?: number;
+  searchTerm?: string;
+}
+
+export interface PublicContributedQuestionBankListResponse {
+  items: PublicContributedQuestionBankItem[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
+
+export interface MyContributedQuestionItem {
+  id: number;
+  content: string;
+  isActive: boolean;
+  isSaved?: boolean;
+  approvalStatus: string;
+  sampleAnswer?: string;
+  contributedDetailId?: number;
+  contributedDetail?: {
+    id?: number;
+    interviewDate?: string;
+    level?: string;
+    company?: {
+      id?: number;
+      name?: string;
+      imageUrl?: string;
+    };
+  };
+  categoriesName: string[];
+  skillsName: string[];
+  positionsName: string[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface MyContributedQuestionListResponse {
+  items: MyContributedQuestionItem[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
+
+export interface GetPublicContributedQuestionBankListResponse {
+  success: boolean;
+  data: PublicContributedQuestionBankListResponse;
+  message?: string;
 }
 
 // Category Types
@@ -167,12 +292,14 @@ export interface GetContributedQuestionParams {
   positionId?: number;
   categoryId?: number;
   companyId?: number;
+  level?: Level;
   difficulty?: DifficultyLevel;
   isActive?: boolean;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
   pageNumber?: number;
   pageSize?: number;
+  searchTerm?: string;
 }
 
 // Position and Skill Types
@@ -205,7 +332,6 @@ export interface CreateSystemQuestionRequest {
   categoryIds: number[];
   skillIds: number[];
   positionIds: number[];
-  creatorId: number;
 }
 
 export interface UpdateSystemQuestionRequest {
@@ -226,6 +352,12 @@ export interface CreateQuestionResponse {
 export interface UpdateQuestionResponse {
   message: string;
   questionId: number;
+}
+
+export interface ChangeContributedQuestionStatusResponse {
+  message: string;
+  questionId: number;
+  newStatus: boolean;
 }
 
 // Contribute Question Request (Candidate)
@@ -259,6 +391,7 @@ export interface SystemQuestionDetail {
   positionsName: string[];
   createdAt?: string;
   updatedAt?: string;
+  comments?: CommentItem[];
 }
 
 // Contributed Question Detail for View
@@ -280,4 +413,21 @@ export interface ContributedQuestionDetail {
   positionsName: string[];
   createdAt?: string;
   updatedAt?: string;
+  comments?: CommentItem[];
+}
+
+export interface CommentItem {
+  id: number;
+  userId: string | number;
+  userName: string;
+  userAvatarUrl: string;
+  userRole: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+  upvoteCount: number;
+  downvoteCount: number;
+  totalVotes: number;
+  currentUserVoteIsUpvote?: boolean | null;
+  currentUserVoteType?: "upvote" | "downvote" | null;
 }

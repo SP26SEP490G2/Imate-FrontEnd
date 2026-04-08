@@ -23,12 +23,14 @@ interface UploadCVModalProps {
 
 export default function UploadCVModal({ open, onOpenChange }: UploadCVModalProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [cvName, setCvName] = useState("");
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
   const uploadMutation = useMutation({
-    mutationFn: uploadCV,
+    mutationFn: (params: { file: File; fileName: string }) =>
+      uploadCV(params.file, params.fileName),
     onSuccess: () => {
       toast.success(MSG22);
       queryClient.invalidateQueries({ queryKey: ["cv-list"] });
@@ -51,6 +53,7 @@ export default function UploadCVModal({ open, onOpenChange }: UploadCVModalProps
 
   const handleClose = () => {
     setSelectedFile(null);
+    setCvName("");
     setDragActive(false);
     onOpenChange(false);
   };
@@ -106,7 +109,8 @@ export default function UploadCVModal({ open, onOpenChange }: UploadCVModalProps
 
   const handleUpload = () => {
     if (selectedFile) {
-      uploadMutation.mutate(selectedFile);
+      const finalName = cvName.trim() || selectedFile.name.replace(/\.[^/.]+$/, "");
+      uploadMutation.mutate({ file: selectedFile, fileName: finalName });
     }
   };
 
@@ -125,6 +129,21 @@ export default function UploadCVModal({ open, onOpenChange }: UploadCVModalProps
             Hỗ trợ {CV_UPLOAD.ACCEPTED_DISPLAY} (tối đa {CV_UPLOAD.MAX_SIZE_MB}MB)
           </DialogDescription>
         </DialogHeader>
+
+        {/* CV Name Input */}
+        <div>
+          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400">
+            Tên CV
+          </label>
+          <input
+            type="text"
+            value={cvName}
+            onChange={(e) => setCvName(e.target.value)}
+            placeholder="VD: CV Backend Developer 2024"
+            maxLength={255}
+            className="w-full rounded-lg border border-slate-600 bg-slate-800/50 px-3 py-2 text-sm text-white placeholder-slate-500 outline-none transition-colors focus:border-purple-500/50"
+          />
+        </div>
 
         {/* Drop Zone */}
         <div
