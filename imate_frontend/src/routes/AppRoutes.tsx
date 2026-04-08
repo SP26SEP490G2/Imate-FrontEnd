@@ -25,6 +25,8 @@ import MentorDetail from "@/pages/main/public/MentorDetail";
 
 // Pages - Candidate
 import ViewProfile from "@/pages/candidate/ViewProfile";
+import CVManagement from "@/pages/candidate/CVManagement";
+import AnalyseCV from "@/pages/candidate/AnalyseCV";
 
 // Pages - Mentor
 import SubmitMentorApplication from "@/pages/mentor/SubmitMentorApplication";
@@ -91,6 +93,8 @@ const routeConfigs: RouteConfig[] = [
 
   // ===== MAIN LAYOUT ROUTES =====
   { path: "/profile",                        element: <ViewProfile />,                layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/cv-management",                   element: <CVManagement />,               layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/analyse-cv",                       element: <AnalyseCV />,                  layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/submit-mentor-application",      element: <SubmitMentorApplication />,    layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/pending-application",            element: <PendingApplication />,         layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/submit-recruiter-application",   element: <SubmitRecruiterApplication />, layout: LAYOUT.MAIN, requireAuth: true },
