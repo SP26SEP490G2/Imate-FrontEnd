@@ -178,6 +178,8 @@ export interface GenerateQuestionResponse {
   isTerminated?: boolean;
   terminationReason?: string;
   terminationMessage?: string;
+  audioBase64?: string | null;
+  mimeType?: string | null;
   metrics?: {
     bloomTaxonomy?: { level: number; levelName: string; description: string };
     irt?: { difficultyScore: number; estimatedAbility: number; interpretation: string };
@@ -253,16 +255,22 @@ export const createInterviewSession = async (
 /**
  * Lấy tin chào đầu buổi phỏng vấn
  */
+export interface WelcomeMessageResponse {
+  welcomeMessage: string;
+  audioBase64?: string | null;
+  mimeType?: string | null;
+}
+
 export const getWelcomeMessage = async (
   sessionId: number
-): Promise<string> => {
+): Promise<WelcomeMessageResponse> => {
   const url = APIConfig.InterviewAI.WelcomeMessage.replace(
     "{sessionId}",
     sessionId.toString()
   );
   const response = await apiClient.get(url);
   const data = response.data?.data ?? response.data;
-  return data.welcomeMessage as string;
+  return data as WelcomeMessageResponse;
 };
 
 /**
@@ -300,6 +308,8 @@ export const generateQuestion = async (
 export interface SubmitAnswerResponse {
   message: string;
   aiReaction?: string;
+  aiReactionAudioBase64?: string | null;
+  mimeType?: string | null;
 }
 
 export const submitAnswer = async (

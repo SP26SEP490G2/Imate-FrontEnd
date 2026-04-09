@@ -19,6 +19,7 @@ import {
   correctTranscript,
   synthesizeSpeech,
   type GenerateQuestionResponse,
+  type WelcomeMessageResponse,
 } from "@/services/interviewService";
 import { MSG28 } from "@/constants/messages";
 import {
@@ -35,6 +36,8 @@ interface ChatMessage {
   role: "ai" | "user";
   text: string;
   responseId?: number; // chỉ có ở câu hỏi AI
+  audioBase64?: string | null;
+  mimeType?: string | null;
 }
 
 /* ------------------------------------------------------------------ */
@@ -100,7 +103,33 @@ export default function InterviewChat() {
     return `${m}:${s}`;
   };
 
-  // TTS: phát giọng nói cho tin nhắn AI
+  // Phát audio base64 inline (dùng cho auto-play và nút Nghe)
+  const playAudioBase64 = useCallback((messageId: string, audioBase64: string, mimeType?: string | null) => {
+    try {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      setPlayingMessageId(messageId);
+
+      const mime = mimeType || "audio/wav";
+      const audio = new Audio(`data:${mime};base64,${audioBase64}`);
+      audioRef.current = audio;
+      audio.onended = () => {
+        setPlayingMessageId(null);
+        audioRef.current = null;
+      };
+      audio.onerror = () => {
+        setPlayingMessageId(null);
+        audioRef.current = null;
+      };
+      audio.play();
+    } catch {
+      setPlayingMessageId(null);
+    }
+  }, []);
+
+  // TTS: phát giọng nói cho tin nhắn AI (fallback khi không có audio inline)
   const playTTS = useCallback(async (messageId: string, text: string) => {
     try {
       // Dừng audio đang phát (nếu có)
@@ -136,14 +165,20 @@ export default function InterviewChat() {
 
   // Add message helper
   const addMessage = useCallback(
-    (role: "ai" | "user", text: string, responseId?: number) => {
+    (role: "ai" | "user", text: string, responseId?: number, audioBase64?: string | null, mimeType?: string | null) => {
       const msgId = `${Date.now()}-${Math.random()}`;
       setMessages((prev) => [
         ...prev,
-        { id: msgId, role, text, responseId },
+        { id: msgId, role, text, responseId, audioBase64, mimeType },
       ]);
+
+      // Tự động phát audio nếu là tin nhắn AI và có audio inline
+      if (role === "ai" && audioBase64) {
+        // Delay nhỏ để UI render xong trước khi phát
+        setTimeout(() => playAudioBase64(msgId, audioBase64, mimeType), 200);
+      }
     },
-    []
+    [playAudioBase64]
   );
 
   // Fetch next question
@@ -173,7 +208,10 @@ export default function InterviewChat() {
       if (q.isTerminated) {
         addMessage(
           "ai",
-          q.terminationMessage || "Buổi phỏng vấn đã kết thúc. Cảm ơn bạn!"
+          q.terminationMessage || "Buổi phỏng vấn đã kết thúc. Cảm ơn bạn!",
+          undefined,
+          q.audioBase64,
+          q.mimeType
         );
         try {
           await endInterview(sessionId);
@@ -188,7 +226,7 @@ export default function InterviewChat() {
 
       setQuestionCount((c) => c + 1);
       setCurrentResponseId(q.interviewResponseId);
-      addMessage("ai", q.questionText, q.interviewResponseId);
+      addMessage("ai", q.questionText, q.interviewResponseId, q.audioBase64, q.mimeType);
     } catch {
       toast.error(MSG28);
       try {
@@ -217,8 +255,8 @@ export default function InterviewChat() {
           await fetchNextQuestion();
           return;
         }
-        const welcomeMsg = await getWelcomeMessage(sessionId);
-        addMessage("ai", welcomeMsg);
+        const welcomeData: WelcomeMessageResponse = await getWelcomeMessage(sessionId);
+        addMessage("ai", welcomeData.welcomeMessage, undefined, welcomeData.audioBase64, welcomeData.mimeType);
         await fetchNextQuestion();
       } catch {
         toast.error("Không thể khởi tạo buổi phỏng vấn.");
@@ -242,6 +280,8 @@ export default function InterviewChat() {
 
       // Gửi câu trả lời → nhận phản hồi AI
       let aiReaction: string | undefined;
+      let aiReactionAudioBase64: string | null | undefined;
+      let reactionMimeType: string | null | undefined;
       if (!USE_MOCK) {
         const result = await submitAnswer({
           interviewSessionId: sessionId,
@@ -249,6 +289,8 @@ export default function InterviewChat() {
           userAnswer: answer,
         });
         aiReaction = result.aiReaction;
+        aiReactionAudioBase64 = result.aiReactionAudioBase64;
+        reactionMimeType = result.mimeType;
       } else {
         await new Promise((r) => setTimeout(r, 300));
         aiReaction = "Cảm ơn câu trả lời! Để tôi hỏi tiếp nhé.";
@@ -256,7 +298,7 @@ export default function InterviewChat() {
 
       // Hiển thị phản hồi AI (nếu có)
       if (aiReaction) {
-        addMessage("ai", aiReaction);
+        addMessage("ai", aiReaction, undefined, aiReactionAudioBase64, reactionMimeType);
         await new Promise((r) => setTimeout(r, 800)); // Delay nhỏ cho tự nhiên
       }
 
@@ -471,7 +513,13 @@ export default function InterviewChat() {
                     {/* Nút nghe giọng nói (chỉ hiển thị cho AI) */}
                     {msg.role === "ai" && (
                       <button
-                        onClick={() => playTTS(msg.id, msg.text)}
+                        onClick={() => {
+                          if (msg.audioBase64) {
+                            playAudioBase64(msg.id, msg.audioBase64, msg.mimeType);
+                          } else {
+                            playTTS(msg.id, msg.text);
+                          }
+                        }}
                         disabled={playingMessageId === msg.id}
                         className="mt-2 flex items-center gap-1.5 text-xs text-purple-400/70 transition-colors hover:text-purple-300 disabled:animate-pulse disabled:text-purple-400"
                         title="Nghe AI đọc"
@@ -484,7 +532,7 @@ export default function InterviewChat() {
                         ) : (
                           <>
                             <Volume2 className="h-3.5 w-3.5" />
-                            Nghe
+                            Nghe lại
                           </>
                         )}
                       </button>
