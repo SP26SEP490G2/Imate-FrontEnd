@@ -34,10 +34,10 @@ export const USER_PROFILE_MENU: MenuItem[] = [
     href: "/profile",
     icon: CircleUser,
   },
-  {
-    label: "Quản lý giao dịch",
-    href: "/transactions",
-    icon: CreditCard,
+    {
+    label: "Ví Imate",
+    href: "/wallet",
+    icon: Wallet,
   },
   {
     label: "Lịch phỏng vấn",
@@ -48,11 +48,6 @@ export const USER_PROFILE_MENU: MenuItem[] = [
     label: "Lịch sử Mentor",
     href: "/candidate/interview-history",
     icon: History,
-  },
-  {
-    label: "Ví Imate",
-    href: "/wallet",
-    icon: Wallet,
   },
   {
     label: "Quản lý CV",
@@ -68,11 +63,6 @@ export const USER_PROFILE_MENU: MenuItem[] = [
     label: "Nâng cấp gói dịch vụ",
     href: "/view-subscription",
     icon: Sparkles,
-  },
-  {
-    label: "Quản lý gói đăng ký",
-    href: "/manage-subscription",
-    icon: Package,
   },
   {
     label: "Danh sách ứng tuyển",
@@ -91,10 +81,10 @@ export const MENTOR_PROFILE_MENU: MenuItem[] = [
     href: "/profile",
     icon: CircleUser,
   },
-  {
-    label: "Quản lý giao dịch",
-    href: "/transactions",
-    icon: History,
+    {
+    label: "Ví Imate",
+    href: "/wallet",
+    icon: CreditCard,
   },
   {
     label: "Lịch làm việc",
@@ -122,19 +112,9 @@ export const MENTOR_PROFILE_MENU: MenuItem[] = [
     icon: Star,
   },
   {
-    label: "Câu hỏi đã đăng",
-    href: "/mentor/my-contributed-questions",
-    icon: FileQuestion,
-  },
-  {
     label: "Gửi đơn",
     href: "/view-application",
     icon: FolderOpen,
-  },
-  {
-    label: "Nạp tiền",
-    href: "/wallet",
-    icon: CreditCard,
   },
   {
     label: "Đăng xuất",
