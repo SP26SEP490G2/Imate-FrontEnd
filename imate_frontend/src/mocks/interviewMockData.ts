@@ -2,7 +2,7 @@
  * Mock data cho UC-34/UC-35 — dùng khi backend offline
  * ĐẶT USE_MOCK = false khi backend online
  */
-export const USE_MOCK = false;
+export const USE_MOCK = true;
 
 /* ------------------------------------------------------------------ */
 /*  Mock CV list                                                       */

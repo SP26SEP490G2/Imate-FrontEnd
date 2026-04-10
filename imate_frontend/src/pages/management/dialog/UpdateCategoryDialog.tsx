@@ -39,18 +39,16 @@ export function UpdateCategoryDialog({
   const [name, setName] = React.useState(category.name);
   const [isActive, setIsActive] = React.useState(category.isActive);
   const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
+  // ...existing code...
 
   // Đồng bộ state khi category thay đổi
   React.useEffect(() => {
     setName(category.name);
     setIsActive(category.isActive);
-    setError(null);
   }, [category, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     setLoading(true);
 
     if (!name.trim()) {

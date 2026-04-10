@@ -4,8 +4,7 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
-  Users,
-  Briefcase,
+  // ...existing code...
   CheckCircle,
   XCircle,
   X,

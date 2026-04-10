@@ -1,6 +1,6 @@
 import apiClient from "./apiClient";
 import APIConfig from "@/config/apiConfig";
-import type { User } from "@/types/common/auth";
+// ...existing code...
 import type { SubmitRecruiterProfileRequest, UpdateRecruiterProfileRequest } from "@/types/request/recruiter.request";
 import type { AppliedCandidateResponse, CandidateJobListResponse, GetAppliedCandidateRequest, GetCandidateJobListRequest, JobResponse } from "@/types/common/recruiter";
 import type { GetJobApplicationsRequest } from "@/types/common/recruiter";

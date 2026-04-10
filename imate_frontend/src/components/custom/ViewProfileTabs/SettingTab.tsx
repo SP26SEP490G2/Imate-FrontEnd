@@ -1,9 +1,6 @@
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
-import { Eye, EyeOff, Lock } from "lucide-react";
+import { Eye, EyeOff} from "lucide-react";
 
 // --- Thêm các import ---
 import { useForm, type SubmitHandler } from "react-hook-form";

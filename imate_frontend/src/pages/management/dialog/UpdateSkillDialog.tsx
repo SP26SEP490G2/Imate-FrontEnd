@@ -22,17 +22,15 @@ export function UpdateSkillDialog({ open, onOpenChange, skill, onSuccess }: Upda
   const [name, setName] = React.useState(skill.name);
   const [isActive, setIsActive] = React.useState(skill.isActive);
   const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
+  // ...existing code...
 
   React.useEffect(() => {
     setName(skill.name);
     setIsActive(skill.isActive);
-    setError(null);
   }, [skill, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     setLoading(true);
 
     if (!name.trim()) {

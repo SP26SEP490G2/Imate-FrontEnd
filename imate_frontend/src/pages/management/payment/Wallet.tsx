@@ -22,7 +22,7 @@ function Wallet() {
 
   const [openDeposit, setOpenDeposit] = useState(false);
   const [openWithdraw, setOpenWithdraw] = useState(false);
-  const [countdown, setCountdown] = useState(5);
+  // ...existing code...
 
   // Wallet Summary
   const [walletSummary, setWalletSummary] = useState<WalletSummaryResponse | null>(null);

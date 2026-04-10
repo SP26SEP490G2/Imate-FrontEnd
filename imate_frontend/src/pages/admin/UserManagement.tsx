@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Users, Zap, UserPlus, Eye, Trash2, Search } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Users, Zap, UserPlus, Eye, Search } from "lucide-react";
 import {
   Table,
   TableHeader,
@@ -19,7 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+// ...existing code...
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "react-toastify";
 import { cn } from "@/lib/utils";

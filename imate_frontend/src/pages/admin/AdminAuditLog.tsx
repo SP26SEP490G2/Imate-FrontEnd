@@ -19,7 +19,7 @@ import { AppTabs } from "@/components/ui/tabs";
 
 // 5. TYPES
 import type { PaginatedAuditLogResponse } from "@/types/response/audit-log.response";
-import { getPaginationRange } from "@/helpers/getPaginationRange";
+// ...existing code...
 
 const PAGE_SIZE = 10;
 
@@ -60,7 +60,6 @@ const AdminAuditLog: React.FC = () => {
   // DERIVED STATE
   const totalPage = data?.totalPages || 0;
   const totalCount = data?.totalCount || 0;
-  const [paginationRange, setPaginationRange] = useState<(number | "dots")[]>([]);
 
   //==========USE EFFECT==========
   // Sync formFilter with URL params
@@ -105,13 +104,6 @@ const AdminAuditLog: React.FC = () => {
         const response = await getAuditLogs(requestParams);
         if (response) {
           setData(response);
-          setPaginationRange(
-            getPaginationRange({
-              currentPage: currentPage,
-              totalPage: response?.totalPages,
-              siblingCount: 1,
-            })
-          );
         }
       } catch (error) {
         console.log("List error:", error);
