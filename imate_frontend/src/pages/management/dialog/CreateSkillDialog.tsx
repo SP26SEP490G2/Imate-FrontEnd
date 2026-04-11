@@ -14,11 +14,10 @@ interface CreateSkillDialogProps {
 export function CreateSkillDialog({ open, onOpenChange, onSuccess }: CreateSkillDialogProps) {
   const [name, setName] = React.useState("");
   const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
+  // ...existing code...
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     setLoading(true);
 
     if (!name.trim()) {

@@ -4,7 +4,7 @@ import { getAuth, applyActionCode } from "firebase/auth";
 import { toast } from "react-toastify";
 // import AuthLayout from "@/layout/auth/authLayout";
 // import AuthBanner from "@/components/custom/authBanner";
-import { Mail, CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, XCircle } from "lucide-react";
 
 function VerifyEmail() {
   const [isLoading, setIsLoading] = useState(true);

@@ -610,11 +610,11 @@ const ViewQuestions: React.FC = () => {
                     </TableCell>
                     <TableCell className="px-6 py-6">
                       <StatusBadge status="inactive">
-                        {question.positionsName?.length > 0 ? question.positionsName.join(', ') : 'N/A'}
+                        {Array.isArray(question.positionsName) && question.positionsName.length > 0 ? question.positionsName.join(', ') : 'N/A'}
                       </StatusBadge>
                     </TableCell>
                     <TableCell className="px-6 py-6 text-sm text-slate-400">
-                      {question.skillsName?.length > 0 ? question.skillsName.join(', ') : 'N/A'}
+                      {Array.isArray(question.skillsName) && question.skillsName.length > 0 ? question.skillsName.join(', ') : 'N/A'}
                     </TableCell>
                     <TableCell className="px-6 py-6">
                       <StatusBadge status={getDifficultyStatus(DIFFICULTY_MAP[question.difficulty as 0 | 1 | 2] || 'Easy')}>

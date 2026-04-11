@@ -28,7 +28,7 @@ import { AlertTriangle, Info, ThumbsDown, ThumbsUp } from "lucide-react";
 import {
   addApplicationTechnical,
   addApplicationMentor,
-  addReportCommentApplication,
+  // ...existing code...
 } from "@/services/applicationService";
 
 import { useAuth } from "@/store/AuthContext";
@@ -55,7 +55,7 @@ export function CreateApplicationDialog({
   const [title, setTitle] = React.useState("");
   const [content, setContent] = React.useState("");
   const [bookingId, setBookingId] = React.useState("");
-  const [commentId, setCommentId] = React.useState("");
+  // ...existing code...
 
   const [evidenceFiles, setEvidenceFiles] = React.useState<File[]>([]);
   const [loading, setLoading] = React.useState(false);
@@ -67,7 +67,7 @@ export function CreateApplicationDialog({
     setTitle("");
     setContent("");
     setBookingId("");
-    setCommentId("");
+    // ...existing code...
     setEvidenceFiles([]);
   };
 
@@ -99,11 +99,11 @@ export function CreateApplicationDialog({
     evidenceFiles.forEach((file) => formData.append("evidenceFiles", file));
 
     try {
-      let response;
+      // ...existing code...
 
       switch (type) {
         case ApplicationType.TechnicalError:
-          response = await addApplicationTechnical(formData, user.id);
+          await addApplicationTechnical(formData, user.id);
           break;
         case ApplicationType.ReportMentor:
           if (!bookingId || isNaN(Number(bookingId))) {
@@ -112,7 +112,7 @@ export function CreateApplicationDialog({
             return;
           }
           formData.append("bookingId", bookingId.trim());
-          response = await addApplicationMentor(formData, user.id);
+          await addApplicationMentor(formData, user.id);
           break;
         default:
           toast.error("Loại đơn không hợp lệ");

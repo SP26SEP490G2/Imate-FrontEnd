@@ -41,7 +41,7 @@ import { UpdatePositionDialog } from "../dialog/UpdatePositionDialog";
 import { CreateCompanyDialog } from "@/pages/management/dialog/CreateCompanyDialog";
 import { UpdateCompanyDialog } from "@/pages/management/dialog/UpdateCompanyDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
+// ...existing code...
 
 
 const tabs = [

@@ -2,7 +2,7 @@ import { auth } from "@/lib/firebaseConfig";
 import apiClient from "@/services/apiClient";
 import { registerWithGoogle, verifyTokenAndLogin } from "@/services/authService";
 import type { AuthContextType, AuthResponse, LoginEmailData, User, UserRole } from "@/types/common/auth";
-import { GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup, signOut, type UserCredential } from "firebase/auth";
+import { GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup, signOut } from "firebase/auth";
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
