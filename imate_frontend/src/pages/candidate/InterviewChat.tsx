@@ -1,13 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  Send,
-  Mic,
-  MicOff,
-  Loader2,
-  Bot,
-  Volume2,
-} from "lucide-react";
+import { Send, Mic, MicOff, Loader2, Bot } from "lucide-react";
 import { toast } from "react-toastify";
 
 import {
@@ -15,19 +8,16 @@ import {
   generateQuestion,
   submitAnswer,
   endInterview,
-  resumeSession,
-  transcribeWhisperBase64,
   correctTranscript,
-  synthesizeSpeech,
   type GenerateQuestionResponse,
   type WelcomeMessageResponse,
 } from "@/services/interviewService";
+import { recognizeSpeechFromBase64 } from "@/services/azureSpeechService";
 import { MSG28 } from "@/constants/messages";
-import {
-  USE_MOCK,
-  MOCK_WELCOME,
-  MOCK_QUESTIONS,
-} from "@/mocks/interviewMockData";
+import { USE_MOCK, MOCK_WELCOME, MOCK_QUESTIONS } from "@/mocks/interviewMockData";
+
+import voiceOnVideo from "@/assets/video/voiceOn.mp4";
+import voiceOffVideo from "@/assets/video/voiceOff.mp4";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -36,10 +26,17 @@ interface ChatMessage {
   id: string;
   role: "ai" | "user";
   text: string;
-  responseId?: number; // chỉ có ở câu hỏi AI
+  responseId?: number;
   audioBase64?: string | null;
   mimeType?: string | null;
 }
+
+interface AudioQueueItem {
+  audioBase64: string;
+  mimeType?: string | null;
+}
+
+type VideoState = "off" | "on" | "transitioning-to-on" | "transitioning-to-off";
 
 /* ------------------------------------------------------------------ */
 /*  Main Page                                                          */
@@ -55,7 +52,7 @@ export default function InterviewChat() {
   const [currentResponseId, setCurrentResponseId] = useState<number | null>(null);
   const [questionCount, setQuestionCount] = useState(0);
   const [totalQuestions] = useState(10);
-  const mockQuestionIndex = useRef(0); // cho mock mode
+  const mockQuestionIndex = useRef(0);
 
   // Loading states
   const [initializing, setInitializing] = useState(true);
@@ -75,14 +72,28 @@ export default function InterviewChat() {
   // End confirmation
   const [showEndConfirm, setShowEndConfirm] = useState(false);
 
-  // TTS state
-  const [playingMessageId, setPlayingMessageId] = useState<string | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  // ----------------------------------------------------------------
+  //  VIDEO + AUDIO QUEUE STATE
+  // ----------------------------------------------------------------
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+
+  const videoStateRef = useRef<VideoState>("off");
+  const setVideoStateSynced = useCallback((s: VideoState) => {
+    videoStateRef.current = s;
+  }, []);
+
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const audioQueueRef = useRef<AudioQueueItem[]>([]);
+  const isProcessingQueueRef = useRef(false);
+  const audioElRef = useRef<HTMLAudioElement | null>(null);
+  const pendingStartRef = useRef(false);   // voiceOff đang chờ hết loop để chuyển sang voiceOn
+  const pendingStopRef = useRef(false);    // voiceOn đang chờ hết loop để chuyển sang voiceOff
+  const pendingAudioRef = useRef(false);   // voiceOn đã switch, chờ hết 1 lần play rồi mới phát audio
+  const waitingForAudioRef = useRef(false);
 
   // Refs
   const chatEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const initCalledRef = useRef(false); // Ngăn StrictMode gọi init 2 lần
 
   // Auto-scroll
   useEffect(() => {
@@ -91,99 +102,189 @@ export default function InterviewChat() {
 
   // Timer
   useEffect(() => {
-    const timer = setInterval(() => {
-      setElapsedSeconds((s) => s + 1);
-    }, 1000);
+    const timer = setInterval(() => setElapsedSeconds((s) => s + 1), 1000);
     return () => clearInterval(timer);
   }, []);
 
   const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60)
-      .toString()
-      .padStart(2, "0");
+    const m = Math.floor(seconds / 60).toString().padStart(2, "0");
     const s = (seconds % 60).toString().padStart(2, "0");
     return `${m}:${s}`;
   };
 
-  // Phát audio base64 inline (dùng cho auto-play và nút Nghe)
-  const playAudioBase64 = useCallback((messageId: string, audioBase64: string, mimeType?: string | null) => {
-    try {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
+  // ----------------------------------------------------------------
+  //  AUDIO QUEUE PROCESSING
+  // ----------------------------------------------------------------
+  const startPlayingAudio = useCallback(() => {
+    if (isProcessingQueueRef.current) return;
+    if (audioQueueRef.current.length === 0) {
+      // Queue rỗng → chờ voiceOn hết loop rồi switch về voiceOff
+      const vid = videoRef.current;
+      if (vid) {
+        pendingStopRef.current = true;
+        vid.loop = false;
       }
-      setPlayingMessageId(messageId);
-
-      const mime = mimeType || "audio/wav";
-      const audio = new Audio(`data:${mime};base64,${audioBase64}`);
-      audioRef.current = audio;
-      audio.onended = () => {
-        setPlayingMessageId(null);
-        audioRef.current = null;
-      };
-      audio.onerror = () => {
-        setPlayingMessageId(null);
-        audioRef.current = null;
-      };
-      audio.play();
-    } catch {
-      setPlayingMessageId(null);
+      setVideoStateSynced("transitioning-to-off");
+      setIsPlayingAudio(false);
+      return;
     }
+
+    isProcessingQueueRef.current = true;
+    setIsPlayingAudio(true); // ← chỉ set true Ở ĐÂY, khi thực sự phát
+
+    const item = audioQueueRef.current.shift()!;
+    const mime = item.mimeType || "audio/wav";
+    const audio = new Audio(`data:${mime};base64,${item.audioBase64}`);
+    audioElRef.current = audio;
+
+    const playNext = () => {
+      audioElRef.current = null;
+      isProcessingQueueRef.current = false;
+      if (audioQueueRef.current.length > 0) {
+        startPlayingAudio();
+      } else {
+        // Hết queue → chờ voiceOn hết loop rồi switch về voiceOff
+        const vid = videoRef.current;
+        if (vid) {
+          pendingStopRef.current = true;
+          vid.loop = false;
+        }
+        setVideoStateSynced("transitioning-to-off");
+        setIsPlayingAudio(false);
+      }
+    };
+
+    audio.onended = playNext;
+    audio.onerror = playNext;
+    audio.play().catch(playNext);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setVideoStateSynced]);
+
+  // ----------------------------------------------------------------
+  //  VIDEO ENDED HANDLER
+  //  Flow: voiceOff loop → ended → switch voiceOn (loop=false, 1 lần)
+  //        → ended → loop=true + startPlayingAudio (đồng bộ)
+  //        → audio hết → voiceOn loop=false → ended → switch voiceOff
+  // ----------------------------------------------------------------
+  const handleVideoEnded = useCallback(() => {
+    const vid = videoRef.current;
+    if (!vid) return;
+
+    const currentState = videoStateRef.current;
+
+    if (currentState === "transitioning-to-on" || pendingStartRef.current) {
+      pendingStartRef.current = false;
+      setVideoStateSynced("on");
+      vid.src = voiceOnVideo;
+      vid.loop = true;        // loop ngay
+      vid.play().catch(() => {});
+      startPlayingAudio();
+      // voiceOn đã chạy xong 1 lần → giờ loop + phát audio đồng bộ
+      pendingAudioRef.current = false;
+      vid.loop = true;
+      vid.play().catch(() => {});
+      startPlayingAudio(); // ← audio bắt đầu đúng lúc video loop
+
+    } else if (currentState === "transitioning-to-off" || pendingStopRef.current) {
+      // Audio hết, voiceOn vừa hết loop → switch về voiceOff
+      pendingStopRef.current = false;
+      setVideoStateSynced("off");
+      vid.src = voiceOffVideo;
+      vid.loop = true;
+      vid.play().catch(() => {});
+
+    } else {
+      // Trường hợp thường — loop lại
+      vid.loop = true;
+      vid.play().catch(() => {});
+    }
+  }, [startPlayingAudio, setVideoStateSynced]);
+
+  // Initialize video to voiceOff on mount
+  useEffect(() => {
+    const vid = videoRef.current;
+    if (!vid) return;
+    vid.src = voiceOffVideo;
+    vid.loop = true;
+    vid.play().catch(() => {});
   }, []);
 
-  // TTS: phát giọng nói cho tin nhắn AI (fallback khi không có audio inline)
-  const playTTS = useCallback(async (messageId: string, text: string) => {
-    try {
-      // Dừng audio đang phát (nếu có)
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-      setPlayingMessageId(messageId);
+  // ----------------------------------------------------------------
+  //  Enqueue audio
+  //  Preload audio trước, khi sẵn sàng mới trigger voiceOff → voiceOn
+  //  KHÔNG set isPlayingAudio ở đây — để startPlayingAudio quản lý
+  // ----------------------------------------------------------------
+  const enqueueAudio = useCallback((audioBase64: string, mimeType?: string | null) => {
+    const mime = mimeType || "audio/wav";
+    const audio = new Audio(`data:${mime};base64,${audioBase64}`);
+    audio.preload = "auto";
 
-      const result = await synthesizeSpeech(text);
-      if (!result.audioBase64) {
-        throw new Error("No audio data");
-      }
+    const onReady = () => {
+      waitingForAudioRef.current = false;
+      audioQueueRef.current.push({ audioBase64, mimeType });
 
-      // Sử dụng mimeType từ API response (Gemini có thể trả audio/wav, audio/L16, etc.)
-      const mime = result.mimeType || "audio/wav";
-      const audio = new Audio(`data:${mime};base64,${result.audioBase64}`);
-      audioRef.current = audio;
-      audio.onended = () => {
-        setPlayingMessageId(null);
-        audioRef.current = null;
-      };
-      audio.onerror = () => {
-        setPlayingMessageId(null);
-        audioRef.current = null;
-      };
-      await audio.play();
-    } catch {
-      setPlayingMessageId(null);
-      // TTS lỗi thì im lặng, không chặn flow
+      const vid = videoRef.current;
+      const currentState = videoStateRef.current;
+      const currentlyOn = currentState === "on" || currentState === "transitioning-to-on";
+
+      if (!currentlyOn) {
+        // Đang ở voiceOff → trigger chuyển sang voiceOn
+        // Chờ voiceOff hết loop (vid.loop = false → onEnded → handleVideoEnded)
+        pendingStartRef.current = true;
+        if (vid) vid.loop = false;
+        setVideoStateSynced("transitioning-to-on");
+        // KHÔNG set isPlayingAudio ở đây
+      } else if (currentState === "on" && !pendingAudioRef.current && !isProcessingQueueRef.current) {
+        // Đang loop voiceOn và không có audio đang phát → phát luôn
+        startPlayingAudio();
+      }
+      // Nếu đang transitioning hoặc pendingAudio → audio đã trong queue, sẽ tự phát
+    };
+
+    if (audio.readyState >= 3) {
+      onReady();
+    } else {
+      waitingForAudioRef.current = true;
+      audio.addEventListener("canplaythrough", onReady, { once: true });
+      audio.addEventListener("error", () => { waitingForAudioRef.current = false; }, { once: true });
     }
-  }, []);
+  }, [startPlayingAudio, setVideoStateSynced]);
 
-  // Add message helper
+  // ----------------------------------------------------------------
+  //  Stop all audio + reset state
+  // ----------------------------------------------------------------
+  const stopAllAudio = useCallback(() => {
+    if (audioElRef.current) {
+      audioElRef.current.pause();
+      audioElRef.current = null;
+    }
+    audioQueueRef.current = [];
+    isProcessingQueueRef.current = false;
+    pendingStartRef.current = false;
+    pendingStopRef.current = false;
+    pendingAudioRef.current = false;
+    waitingForAudioRef.current = false;
+    setVideoStateSynced("off");
+    setIsPlayingAudio(false);
+  }, [setVideoStateSynced]);
+
+  // ----------------------------------------------------------------
+  //  Add message helper
+  // ----------------------------------------------------------------
   const addMessage = useCallback(
     (role: "ai" | "user", text: string, responseId?: number, audioBase64?: string | null, mimeType?: string | null) => {
       const msgId = `${Date.now()}-${Math.random()}`;
-      setMessages((prev) => [
-        ...prev,
-        { id: msgId, role, text, responseId, audioBase64, mimeType },
-      ]);
-
-      // Tự động phát audio nếu là tin nhắn AI và có audio inline
+      setMessages((prev) => [...prev, { id: msgId, role, text, responseId, audioBase64, mimeType }]);
       if (role === "ai" && audioBase64) {
-        // Delay nhỏ để UI render xong trước khi phát
-        setTimeout(() => playAudioBase64(msgId, audioBase64, mimeType), 200);
+        enqueueAudio(audioBase64, mimeType);
       }
     },
-    [playAudioBase64]
+    [enqueueAudio]
   );
 
-  // Fetch next question
+  // ----------------------------------------------------------------
+  //  Fetch next question
+  // ----------------------------------------------------------------
   const fetchNextQuestion = useCallback(async () => {
     try {
       setGenerating(true);
@@ -193,7 +294,7 @@ export default function InterviewChat() {
         const idx = mockQuestionIndex.current;
         if (idx >= MOCK_QUESTIONS.length) {
           addMessage("ai", "Buổi phỏng vấn đã kết thúc. Cảm ơn bạn đã tham gia! Đang chuyển đến trang kết quả...");
-          setTimeout(() => navigate(`/interview-history/${sessionId}`), 3000);
+          setTimeout(() => { stopAllAudio(); navigate(`/interview-history/${sessionId}`); }, 3000);
           return;
         }
         const q = MOCK_QUESTIONS[idx];
@@ -206,23 +307,10 @@ export default function InterviewChat() {
 
       const q: GenerateQuestionResponse = await generateQuestion(sessionId);
 
-      // Check if interview is over
       if (q.isTerminated) {
-        addMessage(
-          "ai",
-          q.terminationMessage || "Buổi phỏng vấn đã kết thúc. Cảm ơn bạn!",
-          undefined,
-          q.audioBase64,
-          q.mimeType
-        );
-        try {
-          await endInterview(sessionId);
-        } catch {
-          // ignore
-        }
-        setTimeout(() => {
-          navigate(`/interview-history/${sessionId}`);
-        }, 3000);
+        addMessage("ai", q.terminationMessage || "Buổi phỏng vấn đã kết thúc. Cảm ơn bạn!", undefined, q.audioBase64, q.mimeType);
+        try { await endInterview(sessionId); } catch { /* ignore */ }
+        setTimeout(() => { stopAllAudio(); navigate(`/interview-history/${sessionId}`); }, 3000);
         return;
       }
 
@@ -231,76 +319,27 @@ export default function InterviewChat() {
       addMessage("ai", q.questionText, q.interviewResponseId, q.audioBase64, q.mimeType);
     } catch {
       toast.error(MSG28);
-      try {
-        await endInterview(sessionId);
-      } catch {
-        // ignore
-      }
-      setTimeout(() => {
-        navigate(`/interview-history/${sessionId}`);
-      }, 3000);
+      try { await endInterview(sessionId); } catch { /* ignore */ }
+      setTimeout(() => { stopAllAudio(); navigate(`/interview-history/${sessionId}`); }, 3000);
     } finally {
       setGenerating(false);
     }
-  }, [sessionId, addMessage, navigate]);
+  }, [sessionId, addMessage, navigate, stopAllAudio]);
 
-  // Initialize interview — kiểm tra resume trước khi bắt đầu mới
+  // ----------------------------------------------------------------
+  //  Initialize interview
+  // ----------------------------------------------------------------
   useEffect(() => {
     if (!sessionId) return;
-    // Ngăn React 18 StrictMode gọi 2 lần
-    if (initCalledRef.current) return;
-    initCalledRef.current = true;
-
     const init = async () => {
       try {
         setInitializing(true);
-
         if (USE_MOCK) {
           await new Promise((r) => setTimeout(r, 800));
           addMessage("ai", MOCK_WELCOME);
           await fetchNextQuestion();
           return;
         }
-
-        // Thử resume session từ DB trước
-        try {
-          const resumeData = await resumeSession(sessionId);
-
-          // Nếu session đã hoàn thành, chuyển sang trang kết quả
-          if (resumeData.session.status === "Completed") {
-            toast.info("Phiên phỏng vấn này đã hoàn thành.");
-            navigate(`/interview-history/${sessionId}`);
-            return;
-          }
-
-          // Nếu session đã có tiến trình (có ít nhất 1 response), rebuild chat
-          if (resumeData.responses.length > 0) {
-            // Rebuild lịch sử chat từ các responses đã có
-            for (const r of resumeData.responses) {
-              // Thêm câu hỏi AI
-              addMessage("ai", r.questionContent, r.id);
-              // Thêm câu trả lời user (nếu đã trả lời)
-              if (r.userAnswer) {
-                addMessage("user", r.userAnswer);
-              }
-            }
-
-            setQuestionCount(resumeData.responses.length);
-
-            // Nếu câu hỏi cuối chưa có câu trả lời → user cần trả lời câu đó
-            if (resumeData.hasUnansweredQuestion && resumeData.currentResponseId) {
-              setCurrentResponseId(resumeData.currentResponseId);
-            } else {
-              // Tất cả đã trả lời → sinh câu hỏi mới
-              await fetchNextQuestion();
-            }
-            return;
-          }
-        } catch {
-          // Resume thất bại (session mới hoàn toàn) → bắt đầu fresh
-        }
-
-        // Fresh start: gọi welcome + câu hỏi đầu tiên
         const welcomeData: WelcomeMessageResponse = await getWelcomeMessage(sessionId);
         addMessage("ai", welcomeData.welcomeMessage, undefined, welcomeData.audioBase64, welcomeData.mimeType);
         await fetchNextQuestion();
@@ -314,7 +353,9 @@ export default function InterviewChat() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
 
-  // Send answer
+  // ----------------------------------------------------------------
+  //  Send answer
+  // ----------------------------------------------------------------
   const handleSendAnswer = async () => {
     const answer = inputText.trim();
     if (!answer || !currentResponseId || sending) return;
@@ -324,10 +365,10 @@ export default function InterviewChat() {
       addMessage("user", answer);
       setInputText("");
 
-      // Gửi câu trả lời → nhận phản hồi AI
       let aiReaction: string | undefined;
       let aiReactionAudioBase64: string | null | undefined;
       let reactionMimeType: string | null | undefined;
+
       if (!USE_MOCK) {
         const result = await submitAnswer({
           interviewSessionId: sessionId,
@@ -342,13 +383,11 @@ export default function InterviewChat() {
         aiReaction = "Cảm ơn câu trả lời! Để tôi hỏi tiếp nhé.";
       }
 
-      // Hiển thị phản hồi AI (nếu có)
       if (aiReaction) {
         addMessage("ai", aiReaction, undefined, aiReactionAudioBase64, reactionMimeType);
-        await new Promise((r) => setTimeout(r, 800)); // Delay nhỏ cho tự nhiên
+        await new Promise((r) => setTimeout(r, 800));
       }
 
-      // Generate next question
       await fetchNextQuestion();
     } catch {
       toast.error("Không gửi được câu trả lời. Vui lòng thử lại.");
@@ -357,13 +396,13 @@ export default function InterviewChat() {
     }
   };
 
-  // Voice recording
+  // ----------------------------------------------------------------
+  //  Voice recording — Azure STT
+  // ----------------------------------------------------------------
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: "audio/webm",
-      });
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
@@ -373,35 +412,25 @@ export default function InterviewChat() {
 
       mediaRecorder.onstop = async () => {
         stream.getTracks().forEach((t) => t.stop());
-        const audioBlob = new Blob(audioChunksRef.current, {
-          type: "audio/webm",
-        });
-
+        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
         try {
           setIsTranscribing(true);
-          // Convert to base64
           const reader = new FileReader();
           const base64 = await new Promise<string>((resolve) => {
             reader.onloadend = () => resolve(reader.result as string);
             reader.readAsDataURL(audioBlob);
           });
 
-          // Transcribe
-          let transcript = await transcribeWhisperBase64(
-            base64,
-            "recording.webm"
-          );
+          let transcript = await recognizeSpeechFromBase64({
+            audioData: base64,
+            language: "vi-VN",
+          });
 
-          // Correct IT terms
           try {
             transcript = await correctTranscript(transcript);
-          } catch {
-            // Use raw transcript if correction fails
-          }
+          } catch { /* dùng raw nếu lỗi */ }
 
-          setInputText((prev) =>
-            prev ? `${prev} ${transcript}` : transcript
-          );
+          setInputText((prev) => prev ? `${prev} ${transcript}` : transcript);
         } catch {
           toast.error("Không thể nhận dạng giọng nói. Vui lòng thử lại.");
         } finally {
@@ -423,29 +452,23 @@ export default function InterviewChat() {
     }
   };
 
-  // End interview
+  // ----------------------------------------------------------------
+  //  End interview
+  // ----------------------------------------------------------------
   const handleEndInterview = async () => {
     try {
       setEnding(true);
       setShowEndConfirm(false);
-      if (!USE_MOCK) {
-        await endInterview(sessionId);
-      } else {
-        await new Promise((r) => setTimeout(r, 500));
-      }
-      toast.success(
-        "Buổi phỏng vấn đã kết thúc. Đang chuyển sang trang kết quả..."
-      );
-      setTimeout(() => {
-        navigate(`/interview-history/${sessionId}`);
-      }, 2000);
+      if (!USE_MOCK) await endInterview(sessionId);
+      else await new Promise((r) => setTimeout(r, 500));
+      toast.success("Buổi phỏng vấn đã kết thúc. Đang chuyển sang trang kết quả...");
+      setTimeout(() => { stopAllAudio(); navigate(`/interview-history/${sessionId}`); }, 2000);
     } catch {
       toast.error("Không thể kết thúc phỏng vấn. Vui lòng thử lại.");
       setEnding(false);
     }
   };
 
-  // Key handler
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -462,27 +485,16 @@ export default function InterviewChat() {
     <div className="flex h-screen flex-col bg-[#0a0b1a]">
       {/* ===== HEADER ===== */}
       <header className="flex items-center justify-between border-b border-slate-800/60 bg-[#0d0e21] px-6 py-3">
-        {/* Question counter */}
         <div className="flex items-center gap-2 rounded-full border border-slate-700/50 bg-slate-800/60 px-4 py-1.5">
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-            Câu hỏi
-          </span>
-          <span className="text-sm font-bold text-purple-400">
-            {questionCount}/{totalQuestions}
-          </span>
+          <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Câu hỏi</span>
+          <span className="text-sm font-bold text-purple-400">{questionCount}/{totalQuestions}</span>
         </div>
 
-        {/* Title + timer */}
         <div className="text-center">
-          <h1 className="text-sm font-bold uppercase tracking-widest text-white">
-            Luyện tập thử với AI
-          </h1>
-          <p className="mt-0.5 text-xs text-purple-400">
-            ⏱ {formatTime(elapsedSeconds)}
-          </p>
+          <h1 className="text-sm font-bold uppercase tracking-widest text-white">Luyện tập thử với AI</h1>
+          <p className="mt-0.5 text-xs text-purple-400">⏱ {formatTime(elapsedSeconds)}</p>
         </div>
 
-        {/* End button */}
         <button
           onClick={() => setShowEndConfirm(true)}
           disabled={ending}
@@ -494,106 +506,43 @@ export default function InterviewChat() {
 
       {/* ===== MAIN CONTENT ===== */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left sidebar — AI interviewer */}
-        <aside className="hidden w-64 flex-col items-center border-r border-slate-800/40 bg-[#0d0e21]/60 px-4 py-6 lg:flex">
-          <div className="mb-3 flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-green-400" />
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-green-400">
-              AI Interviewer Online
-            </span>
-          </div>
 
-          {/* Avatar */}
-          <div className="mb-4 overflow-hidden rounded-2xl border-2 border-purple-500/30 bg-gradient-to-b from-slate-800 to-slate-900 p-1 shadow-lg shadow-purple-500/10">
-            <div className="flex h-40 w-40 items-center justify-center rounded-xl bg-gradient-to-br from-slate-700/80 to-slate-800/80">
-              <Bot className="h-20 w-20 text-purple-400/60" />
-            </div>
-          </div>
-
-          <h3 className="mb-1 text-center text-lg font-bold text-white">
-            Bernie
-          </h3>
-          <p className="text-center text-xs leading-relaxed text-slate-500">
-            Chuyên gia phỏng vấn AI với 10 năm kinh nghiệm tuyển dụng IT
-          </p>
-        </aside>
-
-        {/* Chat area */}
-        <div className="flex flex-1 flex-col">
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-6 py-6">
-            <div className="mx-auto max-w-3xl space-y-4">
+        {/* ===== LEFT: CHAT PANEL ===== */}
+        <div className="flex w-1/2 flex-col order-1 border-r border-slate-800/40">
+          <div className="flex-1 overflow-y-auto px-4 py-4">
+            <div className="space-y-3">
               {initializing && (
                 <div className="flex items-center gap-3 text-purple-400">
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  <span className="text-sm">
-                    Đang khởi tạo buổi phỏng vấn...
-                  </span>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-sm">Đang khởi tạo buổi phỏng vấn...</span>
                 </div>
               )}
 
               {messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex ${
-                    msg.role === "user" ? "justify-end" : "justify-start"
-                  }`}
-                >
+                <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                   {msg.role === "ai" && (
-                    <div className="mr-3 mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-purple-600/20">
-                      <Bot className="h-4 w-4 text-purple-400" />
+                    <div className="mr-2 mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-purple-600/20">
+                      <Bot className="h-3.5 w-3.5 text-purple-400" />
                     </div>
                   )}
-                  <div
-                    className={`max-w-[75%] rounded-2xl px-5 py-3.5 text-sm leading-relaxed ${
-                      msg.role === "ai"
-                        ? "rounded-tl-md bg-slate-800/80 text-slate-200"
-                        : "rounded-tr-md bg-purple-600/20 text-white"
-                    }`}
-                  >
+                  <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                    msg.role === "ai"
+                      ? "rounded-tl-md bg-slate-800/80 text-slate-200"
+                      : "rounded-tr-md bg-purple-600/20 text-white"
+                  }`}>
                     {msg.text.split("\n").map((line, i) => (
-                      <p key={i} className={i > 0 ? "mt-2" : ""}>
-                        {line}
-                      </p>
+                      <p key={i} className={i > 0 ? "mt-1.5" : ""}>{line}</p>
                     ))}
-                    {/* Nút nghe giọng nói (chỉ hiển thị cho AI) */}
-                    {msg.role === "ai" && (
-                      <button
-                        onClick={() => {
-                          if (msg.audioBase64) {
-                            playAudioBase64(msg.id, msg.audioBase64, msg.mimeType);
-                          } else {
-                            playTTS(msg.id, msg.text);
-                          }
-                        }}
-                        disabled={playingMessageId === msg.id}
-                        className="mt-2 flex items-center gap-1.5 text-xs text-purple-400/70 transition-colors hover:text-purple-300 disabled:animate-pulse disabled:text-purple-400"
-                        title="Nghe AI đọc"
-                      >
-                        {playingMessageId === msg.id ? (
-                          <>
-                            <Volume2 className="h-3.5 w-3.5 animate-pulse" />
-                            Đang phát...
-                          </>
-                        ) : (
-                          <>
-                            <Volume2 className="h-3.5 w-3.5" />
-                            Nghe lại
-                          </>
-                        )}
-                      </button>
-                    )}
                   </div>
                 </div>
               ))}
 
-              {/* AI typing indicator */}
               {generating && (
-                <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-purple-600/20">
-                    <Bot className="h-4 w-4 text-purple-400" />
+                <div className="flex items-center gap-2">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-purple-600/20">
+                    <Bot className="h-3.5 w-3.5 text-purple-400" />
                   </div>
-                  <div className="rounded-2xl rounded-tl-md bg-slate-800/80 px-5 py-3.5">
+                  <div className="rounded-2xl rounded-tl-md bg-slate-800/80 px-4 py-3">
                     <div className="flex items-center gap-1.5">
                       <span className="h-2 w-2 animate-bounce rounded-full bg-purple-400 [animation-delay:0ms]" />
                       <span className="h-2 w-2 animate-bounce rounded-full bg-purple-400 [animation-delay:150ms]" />
@@ -607,78 +556,93 @@ export default function InterviewChat() {
             </div>
           </div>
 
-          {/* ===== INPUT AREA ===== */}
-          <div className="border-t border-slate-800/60 bg-[#0d0e21]/80 px-6 py-4">
-            <div className="mx-auto flex max-w-3xl items-end gap-3">
-              {/* Mic button */}
+          {/* INPUT AREA */}
+          <div className="border-t border-slate-800/60 bg-[#0d0e21]/80 px-4 py-3">
+            <div className="flex items-end gap-2">
               <button
                 onClick={isRecording ? stopRecording : startRecording}
                 disabled={isBusy || isTranscribing}
-                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-all ${
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${
                   isRecording
                     ? "animate-pulse bg-red-500 text-white"
                     : isTranscribing
                     ? "bg-purple-500/20 text-purple-400"
                     : "bg-purple-600/20 text-purple-400 hover:bg-purple-600/30"
                 } disabled:opacity-50`}
-                title={
-                  isRecording
-                    ? "Dừng ghi âm"
-                    : isTranscribing
-                    ? "Đang chuyển giọng nói..."
-                    : "Ghi âm giọng nói"
-                }
+                title={isRecording ? "Dừng ghi âm" : isTranscribing ? "Đang chuyển giọng nói..." : "Ghi âm giọng nói"}
               >
-                {isTranscribing ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : isRecording ? (
-                  <MicOff className="h-5 w-5" />
-                ) : (
-                  <Mic className="h-5 w-5" />
-                )}
+                {isTranscribing ? <Loader2 className="h-4 w-4 animate-spin" /> : isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
               </button>
 
-              {/* Textarea */}
               <div className="relative flex-1">
                 <textarea
                   ref={textareaRef}
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Nhập câu trả lời của bạn tại đây..."
+                  placeholder="Nhập câu trả lời của bạn..."
                   rows={1}
                   disabled={isBusy}
-                  className="w-full resize-none rounded-xl border border-slate-700/50 bg-slate-800/60 px-4 py-3 pr-12 text-sm text-white placeholder-slate-500 outline-none transition-colors focus:border-purple-500/50 disabled:opacity-50"
-                  style={{
-                    maxHeight: "120px",
-                    height: "auto",
-                    minHeight: "44px",
-                  }}
+                  className="w-full resize-none rounded-xl border border-slate-700/50 bg-slate-800/60 px-3 py-2.5 pr-10 text-sm text-white placeholder-slate-500 outline-none transition-colors focus:border-purple-500/50 disabled:opacity-50"
+                  style={{ maxHeight: "100px", height: "auto", minHeight: "40px" }}
                   onInput={(e) => {
                     const t = e.currentTarget;
                     t.style.height = "auto";
-                    t.style.height = Math.min(t.scrollHeight, 120) + "px";
+                    t.style.height = Math.min(t.scrollHeight, 100) + "px";
                   }}
                 />
-                <span className="absolute bottom-2.5 right-3 text-[10px] text-slate-600">
-                  Nhấn Shift + Enter để xuống dòng
-                </span>
+                <span className="absolute bottom-2 right-2 text-[9px] text-slate-600">Shift+Enter</span>
               </div>
 
-              {/* Send button */}
               <button
                 onClick={handleSendAnswer}
                 disabled={!inputText.trim() || isBusy}
-                className="flex h-11 shrink-0 items-center gap-2 rounded-xl bg-purple-600 px-5 text-sm font-semibold text-white transition-all hover:bg-purple-500 disabled:opacity-50 disabled:hover:bg-purple-600"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-600 text-white transition-all hover:bg-purple-500 disabled:opacity-50 disabled:hover:bg-purple-600"
               >
-                {sending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
-                <span className="hidden sm:block">Gửi câu trả lời</span>
+                {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               </button>
             </div>
+          </div>
+        </div>
+
+        {/* ===== RIGHT: VIDEO PANEL ===== */}
+        <div className="relative flex w-1/2 flex-col items-center justify-center border-l border-slate-800/40 bg-[#080918] order-2">
+          <div className="relative w-full overflow-hidden rounded-2xl shadow-2xl shadow-purple-900/20">
+            <video
+              ref={videoRef}
+              className="h-full w-full object-cover"
+              playsInline
+              muted
+              onEnded={handleVideoEnded}
+            />
+            <div className={`absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 rounded-full px-4 py-1.5 backdrop-blur-sm transition-all ${
+              isPlayingAudio ? "bg-purple-600/80 opacity-100" : "bg-slate-800/60 opacity-60"
+            }`}>
+              {isPlayingAudio ? (
+                <>
+                  <div className="flex items-end gap-[3px] h-4">
+                    {[1, 2, 3, 4, 3].map((h, i) => (
+                      <span
+                        key={i}
+                        className="w-[3px] rounded-full bg-white animate-bounce"
+                        style={{ height: `${h * 4}px`, animationDelay: `${i * 80}ms`, animationDuration: "600ms" }}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-xs font-semibold text-white">Đang nói...</span>
+                </>
+              ) : (
+                <>
+                  <span className="h-2 w-2 rounded-full bg-green-400" />
+                  <span className="text-xs font-semibold text-slate-300">Đang lắng nghe</span>
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-4 text-center">
+            <h3 className="text-xl font-bold text-white">Bernie</h3>
+            <p className="text-xs text-slate-500">Nhà tuyển dụng IMATE • AI Interviewer</p>
           </div>
         </div>
       </div>
@@ -687,12 +651,9 @@ export default function InterviewChat() {
       {showEndConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="mx-4 w-full max-w-md rounded-2xl border border-slate-700/60 bg-slate-800 p-6 shadow-2xl">
-            <h3 className="mb-3 text-lg font-bold text-white">
-              Kết thúc phỏng vấn?
-            </h3>
+            <h3 className="mb-3 text-lg font-bold text-white">Kết thúc phỏng vấn?</h3>
             <p className="mb-6 text-sm text-slate-400">
-              Bạn có chắc chắn muốn kết thúc buổi phỏng vấn sớm? AI sẽ tạo báo
-              cáo phản hồi dựa trên các câu hỏi bạn đã trả lời.
+              Bạn có chắc chắn muốn kết thúc buổi phỏng vấn sớm? AI sẽ tạo báo cáo phản hồi dựa trên các câu hỏi bạn đã trả lời.
             </p>
             <div className="flex justify-end gap-3">
               <button
