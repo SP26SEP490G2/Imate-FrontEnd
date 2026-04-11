@@ -145,6 +145,7 @@ const APIConfig = {
     GenerateQuestion: "/ai-interview/generate-question",
     SubmitAnswer: "/ai-interview/submit-answer",
     EndInterview: "/ai-interview/end-interview/{sessionId}",
+    ResumeSession: "/ai-interview/resume-session/{sessionId}",
     // Hỗ trợ giọng nói & JD
     TranscribeWhisper: "/ai-interview/transcribe-whisper-base64",
     CorrectTranscript: "/ai-interview/correct-transcript",

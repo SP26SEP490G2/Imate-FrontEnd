@@ -335,6 +335,46 @@ export const endInterview = async (sessionId: number): Promise<void> => {
 };
 
 /**
+ * Khôi phục trạng thái phiên phỏng vấn khi reload trang
+ */
+export interface ResumeSessionResponseItem {
+  id: number;
+  turnNumber: number;
+  questionContent: string;
+  userAnswer: string | null;
+  answerTimestamp: string | null;
+}
+
+export interface ResumeSessionResponse {
+  session: {
+    id: number;
+    positionName: string | null;
+    skillName: string | null;
+    levelName: string | null;
+    companyName: string | null;
+    startTime: string;
+    endTime: string | null;
+    status: string;
+  };
+  responses: ResumeSessionResponseItem[];
+  answeredCount: number;
+  currentResponseId: number | null;
+  hasUnansweredQuestion: boolean;
+}
+
+export const resumeSession = async (
+  sessionId: number
+): Promise<ResumeSessionResponse> => {
+  const url = APIConfig.InterviewAI.ResumeSession.replace(
+    "{sessionId}",
+    sessionId.toString()
+  );
+  const response = await apiClient.get(url);
+  const data = response.data?.data ?? response.data;
+  return data as ResumeSessionResponse;
+};
+
+/**
  * Chuyển giọng nói (base64) → văn bản bằng Whisper
  */
 export const transcribeWhisperBase64 = async (

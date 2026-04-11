@@ -15,6 +15,7 @@ import {
   generateQuestion,
   submitAnswer,
   endInterview,
+  resumeSession,
   transcribeWhisperBase64,
   correctTranscript,
   synthesizeSpeech,
@@ -81,6 +82,7 @@ export default function InterviewChat() {
   // Refs
   const chatEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const initCalledRef = useRef(false); // Ngăn StrictMode gọi init 2 lần
 
   // Auto-scroll
   useEffect(() => {
@@ -242,19 +244,63 @@ export default function InterviewChat() {
     }
   }, [sessionId, addMessage, navigate]);
 
-  // Initialize interview
+  // Initialize interview — kiểm tra resume trước khi bắt đầu mới
   useEffect(() => {
     if (!sessionId) return;
+    // Ngăn React 18 StrictMode gọi 2 lần
+    if (initCalledRef.current) return;
+    initCalledRef.current = true;
 
     const init = async () => {
       try {
         setInitializing(true);
+
         if (USE_MOCK) {
           await new Promise((r) => setTimeout(r, 800));
           addMessage("ai", MOCK_WELCOME);
           await fetchNextQuestion();
           return;
         }
+
+        // Thử resume session từ DB trước
+        try {
+          const resumeData = await resumeSession(sessionId);
+
+          // Nếu session đã hoàn thành, chuyển sang trang kết quả
+          if (resumeData.session.status === "Completed") {
+            toast.info("Phiên phỏng vấn này đã hoàn thành.");
+            navigate(`/interview-history/${sessionId}`);
+            return;
+          }
+
+          // Nếu session đã có tiến trình (có ít nhất 1 response), rebuild chat
+          if (resumeData.responses.length > 0) {
+            // Rebuild lịch sử chat từ các responses đã có
+            for (const r of resumeData.responses) {
+              // Thêm câu hỏi AI
+              addMessage("ai", r.questionContent, r.id);
+              // Thêm câu trả lời user (nếu đã trả lời)
+              if (r.userAnswer) {
+                addMessage("user", r.userAnswer);
+              }
+            }
+
+            setQuestionCount(resumeData.responses.length);
+
+            // Nếu câu hỏi cuối chưa có câu trả lời → user cần trả lời câu đó
+            if (resumeData.hasUnansweredQuestion && resumeData.currentResponseId) {
+              setCurrentResponseId(resumeData.currentResponseId);
+            } else {
+              // Tất cả đã trả lời → sinh câu hỏi mới
+              await fetchNextQuestion();
+            }
+            return;
+          }
+        } catch {
+          // Resume thất bại (session mới hoàn toàn) → bắt đầu fresh
+        }
+
+        // Fresh start: gọi welcome + câu hỏi đầu tiên
         const welcomeData: WelcomeMessageResponse = await getWelcomeMessage(sessionId);
         addMessage("ai", welcomeData.welcomeMessage, undefined, welcomeData.audioBase64, welcomeData.mimeType);
         await fetchNextQuestion();
