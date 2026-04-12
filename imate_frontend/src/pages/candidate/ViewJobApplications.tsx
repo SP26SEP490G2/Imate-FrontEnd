@@ -370,7 +370,7 @@ const ViewJobApplications: React.FC = () => {
                                                     </div>
                                                     <div className="flex items-center gap-2.5 text-emerald-400 text-xs font-bold py-1.5 px-3 rounded-lg bg-emerald-500/5 border border-emerald-500/10">
                                                         <DollarSign size={14} className="shrink-0" />
-                                                        <span>${job.minSalary.toLocaleString()} - ${job.maxSalary.toLocaleString()}</span>
+                                                        <span>${job.minSalary.toLocaleString('en-US')} VNĐ - ${job.maxSalary.toLocaleString('en-US')} VNĐ</span>
                                                     </div>
                                                 </div>
 

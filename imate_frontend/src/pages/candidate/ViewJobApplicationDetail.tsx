@@ -106,13 +106,13 @@ const ViewJobApplicationDetail: React.FC = () => {
                                         </div>
                                         <div className="flex items-center gap-2 bg-[#0F1333] px-3 py-1.5 rounded-lg border border-white/5 text-emerald-400 font-semibold">
                                             <DollarSign size={16} />
-                                            <span>${job.minSalary} - ${job.maxSalary} / tháng</span>
+                                            <span>${job.minSalary.toLocaleString('en-US')} VNĐ - ${job.maxSalary.toLocaleString('en-US')} VNĐ / tháng</span>
                                         </div>
                                     </div>
                                 </div>
                                 <Button
                                     onClick={() => setIsApplyDialogOpen(true)}
-                                    className="w-full md:w-auto px-8 h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 font-bold shadow-lg shadow-indigo-600/20 text-base cursor-pointer"
+                                    className="w-full md:w-auto whitespace-nowrap shrink-0 px-8 h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 font-bold shadow-lg shadow-indigo-600/20 text-base cursor-pointer"
                                 >
                                     Ứng tuyển ngay
                                 </Button>
@@ -213,7 +213,9 @@ const ViewJobApplicationDetail: React.FC = () => {
                                     </div>
                                     <div>
                                         <p className="text-xs text-slate-500 uppercase font-bold">Quy mô</p>
-                                        <p className="text-sm text-slate-200">{job.companyRecruiter.companySize} nhân viên</p>
+                                        <p className="text-sm text-slate-200">
+                                            {job.companyRecruiter.companySize ? `${job.companyRecruiter.companySize} nhân viên` : "Đang cập nhật"}
+                                        </p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-4">
