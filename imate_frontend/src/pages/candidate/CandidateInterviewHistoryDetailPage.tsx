@@ -26,6 +26,7 @@ const CandidateInterviewHistoryDetailPage = () => {
   const navigate = useNavigate();
   const [session, setSession] = useState<BookingDetailResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedVideoIndex, setSelectedVideoIndex] = useState(0);
 
   // Rating Modal States
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
@@ -116,29 +117,52 @@ const CandidateInterviewHistoryDetailPage = () => {
                 <Video size={20} className="text-indigo-400" />
                 <h3 className="text-xl font-bold">Video ghi lại buổi học</h3>
               </div>
-              {session.audioRecordKey && (
+              {session.recordingUrls && session.recordingUrls.length > 0 && (
                 <a 
-                  href={session.audioRecordKey} 
+                  href={session.recordingUrls[selectedVideoIndex]} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors"
                 >
                   <ExternalLink size={14} />
-                  Mở trong tab mới
+                  Mở {session.recordingUrls.length > 1 ? `Phần ${selectedVideoIndex + 1}` : "video"} trong tab mới
                 </a>
               )}
             </div>
             
-            <div className="aspect-video bg-[#0B0F19] relative flex items-center justify-center">
-              {session.audioRecordKey ? (
-                <video 
-                  controls 
-                  className="w-full h-full object-contain"
-                  poster={MOCK_AVATAR}
-                >
-                  <source src={session.audioRecordKey} type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
+            <div className="aspect-video bg-[#0B0F19] relative flex flex-col items-center justify-center">
+              {session.recordingUrls && session.recordingUrls.length > 0 ? (
+                <>
+                  <video 
+                    key={session.recordingUrls[selectedVideoIndex]}
+                    controls 
+                    className="w-full h-full object-contain"
+                    poster={MOCK_AVATAR}
+                  >
+                    <source src={session.recordingUrls[selectedVideoIndex]} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                  
+                  {session.recordingUrls.length > 1 && (
+                    <div className="absolute bottom-12 left-0 right-0 p-4 flex justify-center gap-2 pointer-events-none">
+                      <div className="flex gap-2 p-2 bg-black/60 backdrop-blur-md rounded-2xl pointer-events-auto border border-white/10">
+                        {session.recordingUrls.map((_, index) => (
+                          <button
+                            key={index}
+                            onClick={() => setSelectedVideoIndex(index)}
+                            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                              selectedVideoIndex === index 
+                                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20" 
+                                : "text-gray-400 hover:text-white hover:bg-white/5"
+                            }`}
+                          >
+                            Phần {index + 1}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="text-center px-6">
                   <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
