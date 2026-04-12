@@ -157,7 +157,7 @@ export default function InterviewChat() {
     audio.onended = playNext;
     audio.onerror = playNext;
     audio.play().catch(playNext);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setVideoStateSynced]);
 
   // ----------------------------------------------------------------
@@ -177,12 +177,12 @@ export default function InterviewChat() {
       setVideoStateSynced("on");
       vid.src = voiceOnVideo;
       vid.loop = true;        // loop ngay
-      vid.play().catch(() => {});
+      vid.play().catch(() => { });
       startPlayingAudio();
       // voiceOn đã chạy xong 1 lần → giờ loop + phát audio đồng bộ
       pendingAudioRef.current = false;
       vid.loop = true;
-      vid.play().catch(() => {});
+      vid.play().catch(() => { });
       startPlayingAudio(); // ← audio bắt đầu đúng lúc video loop
 
     } else if (currentState === "transitioning-to-off" || pendingStopRef.current) {
@@ -191,12 +191,12 @@ export default function InterviewChat() {
       setVideoStateSynced("off");
       vid.src = voiceOffVideo;
       vid.loop = true;
-      vid.play().catch(() => {});
+      vid.play().catch(() => { });
 
     } else {
       // Trường hợp thường — loop lại
       vid.loop = true;
-      vid.play().catch(() => {});
+      vid.play().catch(() => { });
     }
   }, [startPlayingAudio, setVideoStateSynced]);
 
@@ -206,7 +206,7 @@ export default function InterviewChat() {
     if (!vid) return;
     vid.src = voiceOffVideo;
     vid.loop = true;
-    vid.play().catch(() => {});
+    vid.play().catch(() => { });
   }, []);
 
   // ----------------------------------------------------------------
@@ -358,7 +358,13 @@ export default function InterviewChat() {
   // ----------------------------------------------------------------
   const handleSendAnswer = async () => {
     const answer = inputText.trim();
-    if (!answer || !currentResponseId || sending) return;
+    if (!answer || sending) return;
+
+    if (currentResponseId == null) {
+      toast.error("Hệ thống chưa nhận được ID câu hỏi từ AI. Vui lòng thử lại!");
+      console.error("Missing currentResponseId. Check API generateQuestion response.");
+      return;
+    }
 
     try {
       setSending(true);
@@ -525,11 +531,10 @@ export default function InterviewChat() {
                       <Bot className="h-3.5 w-3.5 text-purple-400" />
                     </div>
                   )}
-                  <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-                    msg.role === "ai"
-                      ? "rounded-tl-md bg-slate-800/80 text-slate-200"
-                      : "rounded-tr-md bg-purple-600/20 text-white"
-                  }`}>
+                  <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${msg.role === "ai"
+                    ? "rounded-tl-md bg-slate-800/80 text-slate-200"
+                    : "rounded-tr-md bg-purple-600/20 text-white"
+                    }`}>
                     {msg.text.split("\n").map((line, i) => (
                       <p key={i} className={i > 0 ? "mt-1.5" : ""}>{line}</p>
                     ))}
@@ -562,13 +567,12 @@ export default function InterviewChat() {
               <button
                 onClick={isRecording ? stopRecording : startRecording}
                 disabled={isBusy || isTranscribing}
-                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${
-                  isRecording
-                    ? "animate-pulse bg-red-500 text-white"
-                    : isTranscribing
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${isRecording
+                  ? "animate-pulse bg-red-500 text-white"
+                  : isTranscribing
                     ? "bg-purple-500/20 text-purple-400"
                     : "bg-purple-600/20 text-purple-400 hover:bg-purple-600/30"
-                } disabled:opacity-50`}
+                  } disabled:opacity-50`}
                 title={isRecording ? "Dừng ghi âm" : isTranscribing ? "Đang chuyển giọng nói..." : "Ghi âm giọng nói"}
               >
                 {isTranscribing ? <Loader2 className="h-4 w-4 animate-spin" /> : isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
@@ -615,9 +619,8 @@ export default function InterviewChat() {
               muted
               onEnded={handleVideoEnded}
             />
-            <div className={`absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 rounded-full px-4 py-1.5 backdrop-blur-sm transition-all ${
-              isPlayingAudio ? "bg-purple-600/80 opacity-100" : "bg-slate-800/60 opacity-60"
-            }`}>
+            <div className={`absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 rounded-full px-4 py-1.5 backdrop-blur-sm transition-all ${isPlayingAudio ? "bg-purple-600/80 opacity-100" : "bg-slate-800/60 opacity-60"
+              }`}>
               {isPlayingAudio ? (
                 <>
                   <div className="flex items-end gap-[3px] h-4">
@@ -641,7 +644,7 @@ export default function InterviewChat() {
           </div>
 
           <div className="mt-4 text-center">
-            <h3 className="text-xl font-bold text-white">Bernie</h3>
+            <h3 className="text-xl font-bold text-white">imAI</h3>
             <p className="text-xs text-slate-500">Nhà tuyển dụng IMATE • AI Interviewer</p>
           </div>
         </div>
