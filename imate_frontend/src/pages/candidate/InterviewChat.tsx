@@ -46,13 +46,30 @@ export default function InterviewChat() {
   const sessionId = parseInt(sessionIdParam ?? "0");
   const navigate = useNavigate();
 
-  // Chat state
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  // Chat state — khôi phục từ sessionStorage nếu có
+  const storageKey = `interview-chat-${sessionId}`;
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    try {
+      const saved = sessionStorage.getItem(storageKey);
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
   const [inputText, setInputText] = useState("");
-  const [currentResponseId, setCurrentResponseId] = useState<number | null>(null);
-  const [questionCount, setQuestionCount] = useState(0);
+  const [currentResponseId, setCurrentResponseId] = useState<number | null>(() => {
+    try {
+      const saved = sessionStorage.getItem(`${storageKey}-responseId`);
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  });
+  const [questionCount, setQuestionCount] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem(`${storageKey}-qCount`);
+      return saved ? JSON.parse(saved) : 0;
+    } catch { return 0; }
+  });
   const [totalQuestions] = useState(10);
   const mockQuestionIndex = useRef(0);
+  const initCalledRef = useRef(false);
 
   // Loading states
   const [initializing, setInitializing] = useState(true);
@@ -282,6 +299,17 @@ export default function InterviewChat() {
     [enqueueAudio]
   );
 
+  // Lưu messages vào sessionStorage mỗi khi thay đổi
+  useEffect(() => {
+    try {
+      // Lưu messages (bỏ audioBase64 để tránh vượt quota 5MB)
+      const toSave = messages.map(({ audioBase64, ...rest }) => rest);
+      sessionStorage.setItem(storageKey, JSON.stringify(toSave));
+      sessionStorage.setItem(`${storageKey}-responseId`, JSON.stringify(currentResponseId));
+      sessionStorage.setItem(`${storageKey}-qCount`, JSON.stringify(questionCount));
+    } catch { /* quota exceeded — bỏ qua */ }
+  }, [messages, currentResponseId, questionCount, storageKey]);
+
   // ----------------------------------------------------------------
   //  Fetch next question
   // ----------------------------------------------------------------
@@ -331,6 +359,16 @@ export default function InterviewChat() {
   // ----------------------------------------------------------------
   useEffect(() => {
     if (!sessionId) return;
+    if (initCalledRef.current) return;
+    initCalledRef.current = true;
+
+    // Nếu đã có messages từ sessionStorage → không cần gọi lại welcome
+    const hasCache = messages.length > 0;
+    if (hasCache) {
+      setInitializing(false);
+      return;
+    }
+
     const init = async () => {
       try {
         setInitializing(true);
