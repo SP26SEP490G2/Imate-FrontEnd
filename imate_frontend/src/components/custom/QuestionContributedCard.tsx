@@ -54,16 +54,22 @@ const QuestionContributedCard: React.FC<QuestionContributedCardProps> = ({
   };
 
   const renderStars = () => {
-    return Array.from({ length: 5 }, (_, index) => (
-      <span
-        key={index}
-        className={`material-symbols-outlined text-sm ${
-          index < rating ? 'text-yellow-500 fill-current' : 'text-slate-600'
-        }`}
-      >
-        star
-      </span>
-    ));
+    return Array.from({ length: 3 }, (_, index) => {
+      let colorClass = 'text-slate-600';
+      if (index < rating) {
+        if (rating === 1) colorClass = 'text-green-500 fill-current';
+        else if (rating === 2) colorClass = 'text-yellow-500 fill-current';
+        else if (rating >= 3) colorClass = 'text-red-500 fill-current';
+      }
+      return (
+        <span
+          key={index}
+          className={`material-symbols-outlined text-sm ${colorClass}`}
+        >
+          star
+        </span>
+      );
+    });
   };
 
   return (
@@ -120,9 +126,8 @@ const QuestionContributedCard: React.FC<QuestionContributedCardProps> = ({
           {onSave && (
             <button
               onClick={onSave}
-              className={`flex items-center gap-1 transition-colors text-xs ${
-                isSaved ? 'text-yellow-400 hover:text-yellow-300' : 'text-slate-500 hover:text-yellow-400'
-              }`}
+              className={`flex items-center gap-1 transition-colors text-xs ${isSaved ? 'text-yellow-400 hover:text-yellow-300' : 'text-slate-500 hover:text-yellow-400'
+                }`}
             >
               <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
               {isSaved ? 'Đã lưu' : 'Lưu'}
