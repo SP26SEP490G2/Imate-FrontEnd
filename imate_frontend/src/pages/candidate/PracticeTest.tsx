@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   BookOpen,
@@ -13,6 +13,7 @@ import {
   Sparkles,
   Clock,
   FileText,
+  Code2,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -25,6 +26,7 @@ import {
   type GeneratePracticeTestParams,
 } from "@/services/geminiService";
 import { MSG25 } from "@/constants/messages";
+import { getAllSkills } from "@/services/commonService";
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
@@ -75,14 +77,32 @@ function ConfigScreen({
 }) {
   const [testType, setTestType] = useState("Technical");
   const [field, setField] = useState("Frontend Developer");
+  const [skill, setSkill] = useState("");
+  const [skills, setSkills] = useState<{ id: number; name: string }[]>([]);
   const [level, setLevel] = useState("Junior");
   const [useCV, setUseCV] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Fetch skills từ DB
+  useEffect(() => {
+    const fetchSkills = async () => {
+      try {
+        const result = await getAllSkills({ pageSize: 100, isActive: true });
+        setSkills(result.data);
+        if (result.data.length > 0 && !skill) {
+          setSkill(result.data[0].name);
+        }
+      } catch (err) {
+        console.error("Failed to fetch skills:", err);
+      }
+    };
+    fetchSkills();
+  }, []);
+
   const handleStart = async () => {
     setLoading(true);
     try {
-      await onStart({ testType, field, level, useCV, numberOfQuestions: 10 });
+      await onStart({ testType, field, skill, level, useCV, numberOfQuestions: 10 });
     } finally {
       setLoading(false);
     }
@@ -161,6 +181,28 @@ function ConfigScreen({
             {FIELDS.map((f) => (
               <option key={f} value={f}>
                 {f}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Skill */}
+        <div className="mb-6">
+          <label className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-300">
+            <Code2 className="h-4 w-4 text-purple-400" />
+            Kỹ năng
+          </label>
+          <select
+            value={skill}
+            onChange={(e) => setSkill(e.target.value)}
+            className="w-full rounded-xl border border-slate-700/50 bg-slate-800/60 px-4 py-3 text-white outline-none transition-colors focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30"
+          >
+            {skills.length === 0 && (
+              <option value="">Đang tải...</option>
+            )}
+            {skills.map((s) => (
+              <option key={s.id} value={s.name}>
+                {s.name}
               </option>
             ))}
           </select>
@@ -279,6 +321,7 @@ function TestScreen({
         testTitle: testData.testTitle,
         testType: testData.testType,
         field: testData.field,
+        skill: testData.skill ?? "",
         level: testData.level,
         totalQuestions: testData.totalQuestions,
         timeLimitMinutes: testData.timeLimitMinutes,
@@ -314,6 +357,11 @@ function TestScreen({
             <span className="rounded-md bg-purple-500/15 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-purple-400">
               {testData.field}
             </span>
+            {testData.skill && (
+              <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-emerald-400">
+                {testData.skill}
+              </span>
+            )}
             <span className="rounded-md bg-cyan-500/15 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-cyan-400">
               {testData.level}
             </span>
