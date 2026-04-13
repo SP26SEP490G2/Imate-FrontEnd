@@ -325,10 +325,10 @@ const ViewQuestionBank: React.FC = () => {
   const buildCardData = (question: PublicSystemQuestionBankItem) => {
     const difficultyText = question.difficulty || 'N/A';
     const rating = difficultyText.toLowerCase() === 'hard'
-      ? 5
+      ? 3
       : difficultyText.toLowerCase() === 'medium'
-        ? 4
-        : 3;
+        ? 2
+        : 1;
 
     return {
       id: question.id,
@@ -347,10 +347,10 @@ const ViewQuestionBank: React.FC = () => {
   const buildContributedCardData = (question: PublicContributedQuestionBankItem) => {
     const difficultyText = question.difficulty || 'N/A';
     const rating = difficultyText.toLowerCase() === 'hard'
-      ? 5
+      ? 3
       : difficultyText.toLowerCase() === 'medium'
-        ? 4
-        : 3;
+        ? 2
+        : 1;
 
     return {
       id: question.id,
@@ -366,9 +366,13 @@ const ViewQuestionBank: React.FC = () => {
     };
   };
 
-  const buildMyContributedCardData = (question: MyContributedQuestionItem) => {
-    const difficultyText = 'N/A';
-    const rating = 3;
+  const buildMyContributedCardData = (question: MyContributedQuestionItem & { difficulty?: string }) => {
+    const difficultyText = question.difficulty || 'N/A';
+    const rating = difficultyText.toLowerCase() === 'hard'
+      ? 3
+      : difficultyText.toLowerCase() === 'medium'
+        ? 2
+        : 1;
 
     return {
       id: question.id,
