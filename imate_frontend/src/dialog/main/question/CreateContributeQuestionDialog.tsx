@@ -115,6 +115,13 @@ export function CreateContributeQuestionDialog({
 
     if (!formData.interviewDate) {
       newErrors.interviewDate = 'Vui lòng chọn ngày phỏng vấn.';
+    } else {
+      const selectedDate = new Date(formData.interviewDate);
+      const currentDate = new Date();
+      currentDate.setHours(0, 0, 0, 0); // Reset time to start of day for accurate date comparison
+      if (selectedDate > currentDate) {
+        newErrors.interviewDate = 'Ngày phỏng vấn không được chọn ngày trong tương lai.';
+      }
     }
 
     setErrors(newErrors);
@@ -134,7 +141,7 @@ export function CreateContributeQuestionDialog({
 
       await contributeQuestion(formData);
       toast.success('Đóng góp câu hỏi thành công!');
-      
+
       // Reset form
       setFormData({
         content: '',
@@ -148,7 +155,7 @@ export function CreateContributeQuestionDialog({
         userAnswer: '',
       });
       setErrors({});
-      
+
       onOpenChange(false);
       onSuccess?.();
     } catch (error: any) {
@@ -166,7 +173,7 @@ export function CreateContributeQuestionDialog({
     }
   };
 
-   const handleLevelChange = (level: 0 | 1 | 2 | 3 | 4 | 5) => {
+  const handleLevelChange = (level: 0 | 1 | 2 | 3 | 4 | 5) => {
     setFormData(prev => ({ ...prev, level }));
     if (errors.level) {
       setErrors(prev => ({ ...prev, level: '' }));
@@ -222,9 +229,8 @@ export function CreateContributeQuestionDialog({
                     setFormData(prev => ({ ...prev, content: e.target.value }));
                     if (errors.content) setErrors(prev => ({ ...prev, content: '' }));
                   }}
-                  className={`w-full h-32 rounded-lg px-4 py-3 bg-slate-800 border ${
-                    errors.content ? 'border-red-500' : 'border-slate-700'
-                  } text-slate-100 text-sm placeholder:text-slate-500 resize-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 outline-none transition-all`}
+                  className={`w-full h-32 rounded-lg px-4 py-3 bg-slate-800 border ${errors.content ? 'border-red-500' : 'border-slate-700'
+                    } text-slate-100 text-sm placeholder:text-slate-500 resize-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 outline-none transition-all`}
                   placeholder="Viết câu hỏi phỏng vấn mà bạn đã gặp..."
                   disabled={loading}
                 />
@@ -256,190 +262,182 @@ export function CreateContributeQuestionDialog({
               </div>
 
               {/* Difficulty Level */}
-                <div className="space-y-2">
-                    <label className="block text-sm font-medium text-slate-200">
-                        Độ khó <span className="text-red-400">*</span>
-                    </label>
-                    <div className="flex flex-wrap gap-3">
-                                {([DIFFICULTY_LEVEL.EASY, DIFFICULTY_LEVEL.MEDIUM, DIFFICULTY_LEVEL.HARD] as const).map((difficulty) => (
-                                  <button
-                                    key={difficulty}
-                                    type="button"
-                                    onClick={() => handleDifficultyChange(difficulty)}
-                                    disabled={loading}
-                                    className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
-                                      formData.difficulty === difficulty
-                                        ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                                        : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
-                                    }`}
-                                  >
-                                    {DIFFICULTY_MAP[difficulty]}
-                                  </button>
-                                ))}
-                              </div>
-                              {errors.difficulty && (
-                                <p className="text-red-400 text-xs">{errors.difficulty}</p>
-                              )}
-                            </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-200">
+                  Độ khó <span className="text-red-400">*</span>
+                </label>
+                <div className="flex flex-wrap gap-3">
+                  {([DIFFICULTY_LEVEL.EASY, DIFFICULTY_LEVEL.MEDIUM, DIFFICULTY_LEVEL.HARD] as const).map((difficulty) => (
+                    <button
+                      key={difficulty}
+                      type="button"
+                      onClick={() => handleDifficultyChange(difficulty)}
+                      disabled={loading}
+                      className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${formData.difficulty === difficulty
+                        ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
+                        : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
+                        }`}
+                    >
+                      {DIFFICULTY_MAP[difficulty]}
+                    </button>
+                  ))}
+                </div>
+                {errors.difficulty && (
+                  <p className="text-red-400 text-xs">{errors.difficulty}</p>
+                )}
+              </div>
 
               {/* Level */}
-                <div className="space-y-2">
-                    <label className="block text-sm font-medium text-slate-200">
-                        Cấp độ <span className="text-red-400">*</span>
-                    </label>
-                    <div className="flex flex-wrap gap-3">
-                                {([LEVEL.INTERN, LEVEL.JUNIOR, LEVEL.MIDDLE, LEVEL.SENIOR, LEVEL.LEAD, LEVEL.MANAGER] as const).map((level) => (
-                                  <button
-                                    key={level}
-                                    type="button"
-                                    onClick={() => handleLevelChange(level)}
-                                    disabled={loading}
-                                    className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
-                                      formData.level === level
-                                        ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                                        : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
-                                    }`}
-                                  >
-                                    {LEVEL_MAP[level]}
-                                  </button>
-                                ))}
-                              </div>
-                              {errors.level && (
-                                <p className="text-red-400 text-xs">{errors.level}</p>
-                              )}
-                            </div>
-
-                            {/* Companies */}
-                            <div className="space-y-2">
-                              <label className="block text-sm font-medium text-slate-200">
-                                Công ty <span className="text-red-400">*</span>
-                              </label>
-                              <div className="flex flex-wrap gap-2">
-                                {companies.map((company) => (
-                                  <button
-                                    key={company.id}
-                                    type="button"
-                                    onClick={() => {
-                                      setFormData(prev => ({ ...prev, companyId: company.id }));
-                                      if (errors.companyId) setErrors(prev => ({ ...prev, companyId: '' }));
-                                    }}
-                                    disabled={loading}
-                                    className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
-                                      formData.companyId === company.id
-                                        ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                                        : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
-                                    }`}
-                                  >
-                                    {company.name}
-                                  </button>
-                                ))}
-                              </div>
-                              {errors.companyId && (
-                                <p className="text-red-400 text-xs">{errors.companyId}</p>
-                              )}
-                            </div>
-
-                            {/* Categories */}
-                            <div className="space-y-2">
-                              <label className="block text-sm font-medium text-slate-200">
-                                Danh mục <span className="text-red-400">*</span>
-                              </label>
-                              <div className="flex flex-wrap gap-2">
-                                {categories.map((category) => (
-                                  <button
-                                    key={category.id}
-                                    type="button"
-                                    onClick={() => toggleSelection('categoryIds', category.id)}
-                                    disabled={loading}
-                                    className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
-                                      formData.categoryIds.includes(category.id)
-                                        ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                                        : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
-                                    }`}
-                                  >
-                                    {category.name}
-                                  </button>
-                                ))}
-                              </div>
-                              {errors.categoryIds && (
-                                <p className="text-red-400 text-xs">{errors.categoryIds}</p>
-                              )}
-                            </div>
-              
-                            {/* Positions */}
-                            <div className="space-y-2">
-                              <label className="block text-sm font-medium text-slate-200">
-                                Vị trí <span className="text-red-400">*</span>
-                              </label>
-                              <div className="flex flex-wrap gap-2">
-                                {positions.map((position) => (
-                                  <button
-                                    key={position.id}
-                                    type="button"
-                                    onClick={() => toggleSelection('positionIds', position.id)}
-                                    disabled={loading}
-                                    className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
-                                      formData.positionIds.includes(position.id)
-                                        ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                                        : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
-                                    }`}
-                                  >
-                                    {position.name}
-                                  </button>
-                                ))}
-                              </div>
-                              {errors.positionIds && (
-                                <p className="text-red-400 text-xs">{errors.positionIds}</p>
-                              )}
-                            </div>
-              
-                            {/* Skills */}
-                            <div className="space-y-2">
-                              <label className="block text-sm font-medium text-slate-200">
-                                Kỹ năng <span className="text-red-400">*</span>
-                              </label>
-                              <div className="flex flex-wrap gap-2">
-                                {skills.map((skill) => (
-                                  <button
-                                    key={skill.id}
-                                    type="button"
-                                    onClick={() => toggleSelection('skillIds', skill.id)}
-                                    disabled={loading}
-                                    className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
-                                      formData.skillIds.includes(skill.id)
-                                        ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                                        : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
-                                    }`}
-                                  >
-                                    {skill.name}
-                                  </button>
-                                ))}
-                              </div>
-                              {errors.skillIds && (
-                                <p className="text-red-400 text-xs">{errors.skillIds}</p>
-                              )}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-200">
+                  Cấp độ <span className="text-red-400">*</span>
+                </label>
+                <div className="flex flex-wrap gap-3">
+                  {([LEVEL.INTERN, LEVEL.JUNIOR, LEVEL.MIDDLE, LEVEL.SENIOR, LEVEL.LEAD, LEVEL.MANAGER] as const).map((level) => (
+                    <button
+                      key={level}
+                      type="button"
+                      onClick={() => handleLevelChange(level)}
+                      disabled={loading}
+                      className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${formData.level === level
+                        ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
+                        : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
+                        }`}
+                    >
+                      {LEVEL_MAP[level]}
+                    </button>
+                  ))}
                 </div>
-                {/* Interview Date */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-slate-200">
-                    Ngày phỏng vấn <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.interviewDate}
-                    onChange={(e) => {
-                      setFormData(prev => ({ ...prev, interviewDate: e.target.value }));
-                      if (errors.interviewDate) setErrors(prev => ({ ...prev, interviewDate: '' }));
-                    }}
-                    className={`w-full rounded-lg px-4 py-3 bg-slate-800 border ${
-                      errors.interviewDate ? 'border-red-500' : 'border-slate-700'
+                {errors.level && (
+                  <p className="text-red-400 text-xs">{errors.level}</p>
+                )}
+              </div>
+
+              {/* Companies */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-200">
+                  Công ty <span className="text-red-400">*</span>
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {companies.map((company) => (
+                    <button
+                      key={company.id}
+                      type="button"
+                      onClick={() => {
+                        setFormData(prev => ({ ...prev, companyId: company.id }));
+                        if (errors.companyId) setErrors(prev => ({ ...prev, companyId: '' }));
+                      }}
+                      disabled={loading}
+                      className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${formData.companyId === company.id
+                        ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
+                        : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
+                        }`}
+                    >
+                      {company.name}
+                    </button>
+                  ))}
+                </div>
+                {errors.companyId && (
+                  <p className="text-red-400 text-xs">{errors.companyId}</p>
+                )}
+              </div>
+
+              {/* Categories */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-200">
+                  Danh mục <span className="text-red-400">*</span>
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {categories.map((category) => (
+                    <button
+                      key={category.id}
+                      type="button"
+                      onClick={() => toggleSelection('categoryIds', category.id)}
+                      disabled={loading}
+                      className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${formData.categoryIds.includes(category.id)
+                        ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
+                        : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
+                        }`}
+                    >
+                      {category.name}
+                    </button>
+                  ))}
+                </div>
+                {errors.categoryIds && (
+                  <p className="text-red-400 text-xs">{errors.categoryIds}</p>
+                )}
+              </div>
+
+              {/* Positions */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-200">
+                  Vị trí <span className="text-red-400">*</span>
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {positions.map((position) => (
+                    <button
+                      key={position.id}
+                      type="button"
+                      onClick={() => toggleSelection('positionIds', position.id)}
+                      disabled={loading}
+                      className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${formData.positionIds.includes(position.id)
+                        ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
+                        : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
+                        }`}
+                    >
+                      {position.name}
+                    </button>
+                  ))}
+                </div>
+                {errors.positionIds && (
+                  <p className="text-red-400 text-xs">{errors.positionIds}</p>
+                )}
+              </div>
+
+              {/* Skills */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-200">
+                  Kỹ năng <span className="text-red-400">*</span>
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {skills.map((skill) => (
+                    <button
+                      key={skill.id}
+                      type="button"
+                      onClick={() => toggleSelection('skillIds', skill.id)}
+                      disabled={loading}
+                      className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${formData.skillIds.includes(skill.id)
+                        ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
+                        : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
+                        }`}
+                    >
+                      {skill.name}
+                    </button>
+                  ))}
+                </div>
+                {errors.skillIds && (
+                  <p className="text-red-400 text-xs">{errors.skillIds}</p>
+                )}
+              </div>
+              {/* Interview Date */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-200">
+                  Ngày phỏng vấn <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="date" max={new Date().toISOString().split('T')[0]} value={formData.interviewDate}
+                  onChange={(e) => {
+                    setFormData(prev => ({ ...prev, interviewDate: e.target.value }));
+                    if (errors.interviewDate) setErrors(prev => ({ ...prev, interviewDate: '' }));
+                  }}
+                  className={`w-full rounded-lg px-4 py-3 bg-slate-800 border ${errors.interviewDate ? 'border-red-500' : 'border-slate-700'
                     } text-slate-100 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary/50 outline-none transition-all`}
-                    disabled={loading}
-                  />
-                  {errors.interviewDate && (
-                    <p className="text-red-400 text-xs">{errors.interviewDate}</p>
-                  )}
-                </div>
+                  disabled={loading}
+                />
+                {errors.interviewDate && (
+                  <p className="text-red-400 text-xs">{errors.interviewDate}</p>
+                )}
+              </div>
             </div>
 
             <DialogFooter>
