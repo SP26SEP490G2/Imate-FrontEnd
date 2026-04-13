@@ -334,12 +334,6 @@ export default function InterviewChat() {
       }
 
       const q: GenerateQuestionResponse = await generateQuestion(sessionId);
-      if (q.interviewResponseId === 0) {
-        console.log("Backend trả về câu hỏi ID = 0");
-        console.log("Raw payload từ BE:", q);
-        setGenerating(false);
-        return;
-      }
 
       if (q.isTerminated) {
         addMessage("ai", q.terminationMessage || "Buổi phỏng vấn đã kết thúc. Cảm ơn bạn!", undefined, q.audioBase64, q.mimeType);
