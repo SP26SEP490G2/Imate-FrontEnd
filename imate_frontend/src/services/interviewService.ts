@@ -285,7 +285,8 @@ export const generateQuestion = async (
     {
       interviewSessionId: sessionId,
       estimatedAbility: estimatedAbility ?? null,
-    }
+    },
+    { timeout: 200_000 } // 200 giây
   );
   const data = response.data?.data ?? response.data;
 
@@ -317,7 +318,8 @@ export const submitAnswer = async (
 ): Promise<SubmitAnswerResponse> => {
   const response = await apiClient.post(
     APIConfig.InterviewAI.SubmitAnswer,
-    request
+    request,
+    { timeout: 200_000 } // 200 giây
   );
   const data = response.data?.data ?? response.data;
   return data as SubmitAnswerResponse;

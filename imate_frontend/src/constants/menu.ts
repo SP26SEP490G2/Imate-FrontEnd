@@ -21,7 +21,15 @@ export const CANDIDATE_MENU_ITEMS: MenuItem[] = [
       { label: "Câu hỏi từ cộng đồng", href: "/view-question-bank", icon: LibraryBig },
     ],
   },
-  { label: "Luyện tập với AI", href: "/interview-setup" },
+  {
+    label: "Luyện tập với AI",
+    href: "/interview-setup",
+    hasDropdown: true,
+    subItems: [
+      { label: "Phỏng vấn với AI", href: "/interview-setup", icon: Sparkles },
+      { label: "Làm bài test", href: "/practice-test", icon: LibraryBig },
+    ],
+  },
   { label: "Mentor", href: "/view-mentor" },
   { label: "Gói dịch vụ", href: "/view-subscription" },
   { label: "Gửi đơn", href: "/view-application" },
