@@ -61,7 +61,7 @@ export default function InterviewChat() {
       return saved ? JSON.parse(saved) : null;
     } catch { return null; }
   });
-  const [questionCount, setQuestionCount] = useState(() => {
+  const [questionCount, setQuestionCount] = useState<number>(() => {
     try {
       const saved = sessionStorage.getItem(`${storageKey}-qCount`);
       return saved ? JSON.parse(saved) : 0;
@@ -334,6 +334,12 @@ export default function InterviewChat() {
       }
 
       const q: GenerateQuestionResponse = await generateQuestion(sessionId);
+      if (q.interviewResponseId === 0) {
+        console.log("Backend trả về câu hỏi ID = 0");
+        console.log("Raw payload từ BE:", q);
+        setGenerating(false);
+        return;
+      }
 
       if (q.isTerminated) {
         addMessage("ai", q.terminationMessage || "Buổi phỏng vấn đã kết thúc. Cảm ơn bạn!", undefined, q.audioBase64, q.mimeType);
