@@ -132,15 +132,15 @@ function ScoreBar({ label, value }: { label: string; value: number | null }) {
     scaled >= 4
       ? "from-emerald-500 to-emerald-400"
       : scaled >= 2.5
-      ? "from-amber-500 to-amber-400"
-      : "from-red-500 to-red-400";
+        ? "from-amber-500 to-amber-400"
+        : "from-red-500 to-red-400";
 
   const textColor =
     scaled >= 4
       ? "text-emerald-400"
       : scaled >= 2.5
-      ? "text-amber-400"
-      : "text-red-400";
+        ? "text-amber-400"
+        : "text-red-400";
 
   return (
     <div className="space-y-2">
@@ -239,21 +239,21 @@ function QuestionCard({
               response.starTaskScore !== null ||
               response.starActionScore !== null ||
               response.starResultScore !== null) && (
-              <div>
-                <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Điểm STAR
-                </p>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <ScoreBar
-                    label="Situation"
-                    value={response.starSituationScore}
-                  />
-                  <ScoreBar label="Task" value={response.starTaskScore} />
-                  <ScoreBar label="Action" value={response.starActionScore} />
-                  <ScoreBar label="Result" value={response.starResultScore} />
+                <div>
+                  <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    Điểm STAR
+                  </p>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <ScoreBar
+                      label="Situation"
+                      value={response.starSituationScore}
+                    />
+                    <ScoreBar label="Task" value={response.starTaskScore} />
+                    <ScoreBar label="Action" value={response.starActionScore} />
+                    <ScoreBar label="Result" value={response.starResultScore} />
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {/* AI Feedback */}
             {response.aiFeedback && (
@@ -312,17 +312,17 @@ function QuestionCard({
             {/* Suggested / Expected Answer */}
             {(response.expectedAnswerOutline ||
               feedback?.suggested_answer) && (
-              <div className="rounded-xl border border-purple-500/20 bg-purple-500/5 px-4 py-3">
-                <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-purple-400">
-                  <Star className="h-3.5 w-3.5" />
-                  Đáp án mẫu
-                </p>
-                <p className="text-sm leading-relaxed text-slate-300">
-                  {feedback?.suggested_answer ||
-                    response.expectedAnswerOutline}
-                </p>
-              </div>
-            )}
+                <div className="rounded-xl border border-purple-500/20 bg-purple-500/5 px-4 py-3">
+                  <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-purple-400">
+                    <Star className="h-3.5 w-3.5" />
+                    Đáp án mẫu
+                  </p>
+                  <p className="text-sm leading-relaxed text-slate-300">
+                    {feedback?.suggested_answer ||
+                      response.expectedAnswerOutline}
+                  </p>
+                </div>
+              )}
           </div>
         )}
       </div>
@@ -347,7 +347,11 @@ const MOCK_RESULT: InterviewResultDetail = {
     status: "Completed",
     totalQuestions: MOCK_QUESTIONS.length,
     totalQuestionsAnswered: MOCK_QUESTIONS.length,
-    overallFeedback: "Bạn đã hoàn thành " + MOCK_QUESTIONS.length + " câu hỏi. Điểm trung bình: 0.72/1.00.\n\nƯu điểm:\n- Trả lời rõ ràng, mạch lạc\n- Có kiến thức nền tảng tốt\n\nCần cải thiện:\n- Cần đưa thêm ví dụ thực tế\n- Nên giải thích sâu hơn về kiến trúc hệ thống",
+    overallFeedback: JSON.stringify({
+      overall_comment: "Bạn đã hoàn thành " + MOCK_QUESTIONS.length + " câu hỏi. Điểm trung bình: 0.72/1.00.",
+      strengths: ["Trả lời rõ ràng, mạch lạc", "Có kiến thức nền tảng tốt"],
+      improvements: ["Cần đưa thêm ví dụ thực tế", "Nên giải thích sâu hơn về kiến trúc hệ thống"]
+    }),
     estimatedAbility: 0.72,
   },
   responses: MOCK_QUESTIONS.map((q, i) => ({

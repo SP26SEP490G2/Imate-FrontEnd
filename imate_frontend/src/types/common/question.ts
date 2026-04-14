@@ -431,3 +431,23 @@ export interface CommentItem {
   currentUserVoteIsUpvote?: boolean | null;
   currentUserVoteType?: "upvote" | "downvote" | null;
 }
+
+export interface FinalImportRequest {
+  content: string;
+  difficulty: string;
+  sampleAnswer: string;
+  categoryNames: string;
+  skillNames: string;
+  positionNames: string;
+  isValid?: boolean;
+  validationErrors?: string[];
+  rowNumber?: number;
+}
+
+export interface ValidateExcelResponse {
+  validRequests: FinalImportRequest[];
+  invalidRequests: FinalImportRequest[];
+  totalRows: number;
+  validCount: number;
+  invalidCount: number;
+}

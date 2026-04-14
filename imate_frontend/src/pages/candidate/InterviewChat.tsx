@@ -36,8 +36,6 @@ interface AudioQueueItem {
   mimeType?: string | null;
 }
 
-type VideoState = "off" | "on" | "transitioning-to-on" | "transitioning-to-off";
-
 /* ------------------------------------------------------------------ */
 /*  Main Page                                                          */
 /* ------------------------------------------------------------------ */
@@ -90,26 +88,35 @@ export default function InterviewChat() {
   const [showEndConfirm, setShowEndConfirm] = useState(false);
 
   // ----------------------------------------------------------------
-  //  VIDEO + AUDIO QUEUE STATE
+  //  VIDEO STATE
+  //
+  //  Nguyên tắc hoạt động:
+  //  - Tại mọi thời điểm chỉ 1 video đang chạy, video kia ẩn & dừng.
+  //  - Muốn switch: tắt loop video đang chạy → nó tự chạy hết lượt
+  //    hiện tại → onEnded → ẩn video cũ, hiện + play video mới.
+  //  - Cắt đúng tại điểm nối frame cuối/đầu → tuyệt đối không giật.
+  //  - Khi có audio mới → pendingToOn; khi hết audio → pendingToOff.
   // ----------------------------------------------------------------
+  const videoOnRef  = useRef<HTMLVideoElement>(null);
+  const videoOffRef = useRef<HTMLVideoElement>(null);
+
+  const isOnRef          = useRef(false);  // video đang hiện: false=Off, true=On
+  const pendingToOnRef   = useRef(false);  // chờ voiceOff hết lượt để switch → On
+  const pendingToOffRef  = useRef(false);  // chờ voiceOn  hết lượt để switch → Off
+
+  const [showingOn, setShowingOn] = useState(false);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
 
-  const videoStateRef = useRef<VideoState>("off");
-  const setVideoStateSynced = useCallback((s: VideoState) => {
-    videoStateRef.current = s;
-  }, []);
-
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const audioQueueRef = useRef<AudioQueueItem[]>([]);
+  // Audio queue
+  const audioQueueRef        = useRef<AudioQueueItem[]>([]);
   const isProcessingQueueRef = useRef(false);
-  const audioElRef = useRef<HTMLAudioElement | null>(null);
-  const pendingStartRef = useRef(false);   // voiceOff đang chờ hết loop để chuyển sang voiceOn
-  const pendingStopRef = useRef(false);    // voiceOn đang chờ hết loop để chuyển sang voiceOff
-  const pendingAudioRef = useRef(false);   // voiceOn đã switch, chờ hết 1 lần play rồi mới phát audio
-  const waitingForAudioRef = useRef(false);
+  const audioElRef           = useRef<HTMLAudioElement | null>(null);
+
+  // Dùng ref để startPlayingAudio có thể tự gọi lại mà không bị stale closure
+  const startPlayingAudioRef = useRef<() => void>(() => {});
 
   // Refs
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatEndRef  = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-scroll
@@ -134,164 +141,168 @@ export default function InterviewChat() {
   // ----------------------------------------------------------------
   const startPlayingAudio = useCallback(() => {
     if (isProcessingQueueRef.current) return;
+
     if (audioQueueRef.current.length === 0) {
-      // Queue rỗng → chờ voiceOn hết loop rồi switch về voiceOff
-      const vid = videoRef.current;
-      if (vid) {
-        pendingStopRef.current = true;
-        vid.loop = false;
+      // Hết audio → request switch về voiceOff sau khi voiceOn chạy hết lượt
+      const vidOn = videoOnRef.current;
+      if (vidOn && isOnRef.current && !pendingToOffRef.current) {
+        pendingToOffRef.current = true;
+        vidOn.loop = false; // chạy hết lượt → onEnded tự switch
       }
-      setVideoStateSynced("transitioning-to-off");
       setIsPlayingAudio(false);
       return;
     }
 
     isProcessingQueueRef.current = true;
-    setIsPlayingAudio(true); // ← chỉ set true Ở ĐÂY, khi thực sự phát
+    setIsPlayingAudio(true);
 
     const item = audioQueueRef.current.shift()!;
     const mime = item.mimeType || "audio/wav";
     const audio = new Audio(`data:${mime};base64,${item.audioBase64}`);
     audioElRef.current = audio;
 
-    const playNext = () => {
+    const onDone = () => {
       audioElRef.current = null;
       isProcessingQueueRef.current = false;
-      if (audioQueueRef.current.length > 0) {
-        startPlayingAudio();
+      startPlayingAudioRef.current(); // gọi lại để phát item tiếp theo
+    };
+
+    audio.onended = onDone;
+    audio.onerror = onDone;
+    audio.play().catch(onDone);
+  }, []);
+
+  // Giữ ref luôn trỏ đến callback mới nhất
+  useEffect(() => {
+    startPlayingAudioRef.current = startPlayingAudio;
+  }, [startPlayingAudio]);
+
+  // ----------------------------------------------------------------
+  //  Initialize video + gắn onEnded handlers
+  // ----------------------------------------------------------------
+  useEffect(() => {
+    const vidOn  = videoOnRef.current;
+    const vidOff = videoOffRef.current;
+    if (!vidOn || !vidOff) return;
+
+    vidOn.src  = voiceOnVideo;
+    vidOff.src = voiceOffVideo;
+
+    // voiceOff onEnded: kiểm tra có cần switch sang voiceOn không
+    vidOff.onended = () => {
+      if (pendingToOnRef.current) {
+        pendingToOnRef.current = false;
+        isOnRef.current = true;
+        setShowingOn(true);
+        vidOn.currentTime = 0;
+        vidOn.loop = true;
+        vidOn.play().catch(() => {});
+        // Video On đã hiện → bắt đầu phát audio
+        startPlayingAudioRef.current();
       } else {
-        // Hết queue → chờ voiceOn hết loop rồi switch về voiceOff
-        const vid = videoRef.current;
-        if (vid) {
-          pendingStopRef.current = true;
-          vid.loop = false;
-        }
-        setVideoStateSynced("transitioning-to-off");
-        setIsPlayingAudio(false);
+        // Không cần switch → loop lại voiceOff
+        vidOff.play().catch(() => {});
       }
     };
 
-    audio.onended = playNext;
-    audio.onerror = playNext;
-    audio.play().catch(playNext);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [setVideoStateSynced]);
+    // voiceOn onEnded: kiểm tra có cần switch về voiceOff không
+    vidOn.onended = () => {
+      if (pendingToOffRef.current) {
+        pendingToOffRef.current = false;
+        isOnRef.current = false;
+        setShowingOn(false);
+        vidOff.currentTime = 0;
+        vidOff.loop = true;
+        vidOff.play().catch(() => {});
+      } else {
+        // Không cần switch → loop lại voiceOn
+        vidOn.play().catch(() => {});
+      }
+    };
 
-  // ----------------------------------------------------------------
-  //  VIDEO ENDED HANDLER
-  //  Flow: voiceOff loop → ended → switch voiceOn (loop=false, 1 lần)
-  //        → ended → loop=true + startPlayingAudio (đồng bộ)
-  //        → audio hết → voiceOn loop=false → ended → switch voiceOff
-  // ----------------------------------------------------------------
-  const handleVideoEnded = useCallback(() => {
-    const vid = videoRef.current;
-    if (!vid) return;
+    // Bắt đầu với voiceOff loop, preload voiceOn sẵn
+    vidOff.loop = true;
+    vidOff.play().catch(() => {});
+    vidOn.preload = "auto";
+    vidOn.load();
 
-    const currentState = videoStateRef.current;
-
-    if (currentState === "transitioning-to-on" || pendingStartRef.current) {
-      pendingStartRef.current = false;
-      setVideoStateSynced("on");
-      vid.src = voiceOnVideo;
-      vid.loop = true;        // loop ngay
-      vid.play().catch(() => { });
-      startPlayingAudio();
-      // voiceOn đã chạy xong 1 lần → giờ loop + phát audio đồng bộ
-      pendingAudioRef.current = false;
-      vid.loop = true;
-      vid.play().catch(() => { });
-      startPlayingAudio(); // ← audio bắt đầu đúng lúc video loop
-
-    } else if (currentState === "transitioning-to-off" || pendingStopRef.current) {
-      // Audio hết, voiceOn vừa hết loop → switch về voiceOff
-      pendingStopRef.current = false;
-      setVideoStateSynced("off");
-      vid.src = voiceOffVideo;
-      vid.loop = true;
-      vid.play().catch(() => { });
-
-    } else {
-      // Trường hợp thường — loop lại
-      vid.loop = true;
-      vid.play().catch(() => { });
-    }
-  }, [startPlayingAudio, setVideoStateSynced]);
-
-  // Initialize video to voiceOff on mount
-  useEffect(() => {
-    const vid = videoRef.current;
-    if (!vid) return;
-    vid.src = voiceOffVideo;
-    vid.loop = true;
-    vid.play().catch(() => { });
-  }, []);
+    return () => {
+      vidOff.onended = null;
+      vidOn.onended  = null;
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ----------------------------------------------------------------
   //  Enqueue audio
-  //  Preload audio trước, khi sẵn sàng mới trigger voiceOff → voiceOn
-  //  KHÔNG set isPlayingAudio ở đây — để startPlayingAudio quản lý
   // ----------------------------------------------------------------
-  const enqueueAudio = useCallback((audioBase64: string, mimeType?: string | null) => {
-    const mime = mimeType || "audio/wav";
-    const audio = new Audio(`data:${mime};base64,${audioBase64}`);
-    audio.preload = "auto";
-
-    const onReady = () => {
-      waitingForAudioRef.current = false;
+  const enqueueAudio = useCallback(
+    (audioBase64: string, mimeType?: string | null) => {
       audioQueueRef.current.push({ audioBase64, mimeType });
 
-      const vid = videoRef.current;
-      const currentState = videoStateRef.current;
-      const currentlyOn = currentState === "on" || currentState === "transitioning-to-on";
-
-      if (!currentlyOn) {
-        // Đang ở voiceOff → trigger chuyển sang voiceOn
-        // Chờ voiceOff hết loop (vid.loop = false → onEnded → handleVideoEnded)
-        pendingStartRef.current = true;
-        if (vid) vid.loop = false;
-        setVideoStateSynced("transitioning-to-on");
-        // KHÔNG set isPlayingAudio ở đây
-      } else if (currentState === "on" && !pendingAudioRef.current && !isProcessingQueueRef.current) {
-        // Đang loop voiceOn và không có audio đang phát → phát luôn
+      if (!isOnRef.current && !pendingToOnRef.current) {
+        // Đang ở voiceOff, chưa có pending → tắt loop, chờ hết lượt rồi switch
+        const vidOff = videoOffRef.current;
+        if (vidOff) {
+          pendingToOnRef.current = true;
+          vidOff.loop = false;
+        }
+        // Audio sẽ được phát bởi onEnded của voiceOff sau khi switch xong
+      } else if (pendingToOffRef.current) {
+        // Đang chờ về Off nhưng có audio mới → huỷ pending, voiceOn tiếp tục loop
+        pendingToOffRef.current = false;
+        const vidOn = videoOnRef.current;
+        if (vidOn) {
+          vidOn.loop = true;
+          if (!isProcessingQueueRef.current) startPlayingAudio();
+        }
+      } else if (isOnRef.current && !isProcessingQueueRef.current) {
+        // Đang ở voiceOn, không có gì phát → phát ngay
         startPlayingAudio();
       }
-      // Nếu đang transitioning hoặc pendingAudio → audio đã trong queue, sẽ tự phát
-    };
-
-    if (audio.readyState >= 3) {
-      onReady();
-    } else {
-      waitingForAudioRef.current = true;
-      audio.addEventListener("canplaythrough", onReady, { once: true });
-      audio.addEventListener("error", () => { waitingForAudioRef.current = false; }, { once: true });
-    }
-  }, [startPlayingAudio, setVideoStateSynced]);
+      // Nếu pendingToOn đang chờ → audio nằm trong queue, onEnded sẽ gọi startPlayingAudio
+    },
+    [startPlayingAudio]
+  );
 
   // ----------------------------------------------------------------
-  //  Stop all audio + reset state
+  //  Stop all audio + reset video về voiceOff
   // ----------------------------------------------------------------
   const stopAllAudio = useCallback(() => {
     if (audioElRef.current) {
       audioElRef.current.pause();
       audioElRef.current = null;
     }
-    audioQueueRef.current = [];
+    audioQueueRef.current       = [];
     isProcessingQueueRef.current = false;
-    pendingStartRef.current = false;
-    pendingStopRef.current = false;
-    pendingAudioRef.current = false;
-    waitingForAudioRef.current = false;
-    setVideoStateSynced("off");
+    pendingToOnRef.current      = false;
+    pendingToOffRef.current     = false;
+
+    const vidOn  = videoOnRef.current;
+    const vidOff = videoOffRef.current;
+    if (vidOn)  { vidOn.pause(); vidOn.loop = false; }
+    if (vidOff) { vidOff.loop = true; vidOff.play().catch(() => {}); }
+
+    isOnRef.current = false;
+    setShowingOn(false);
     setIsPlayingAudio(false);
-  }, [setVideoStateSynced]);
+  }, []);
 
   // ----------------------------------------------------------------
   //  Add message helper
   // ----------------------------------------------------------------
   const addMessage = useCallback(
-    (role: "ai" | "user", text: string, responseId?: number, audioBase64?: string | null, mimeType?: string | null) => {
+    (
+      role: "ai" | "user",
+      text: string,
+      responseId?: number,
+      audioBase64?: string | null,
+      mimeType?: string | null
+    ) => {
       const msgId = `${Date.now()}-${Math.random()}`;
-      setMessages((prev) => [...prev, { id: msgId, role, text, responseId, audioBase64, mimeType }]);
+      setMessages((prev) => [
+        ...prev,
+        { id: msgId, role, text, responseId, audioBase64, mimeType },
+      ]);
       if (role === "ai" && audioBase64) {
         enqueueAudio(audioBase64, mimeType);
       }
@@ -299,15 +310,14 @@ export default function InterviewChat() {
     [enqueueAudio]
   );
 
-  // Lưu messages vào sessionStorage mỗi khi thay đổi
+  // Lưu messages vào sessionStorage
   useEffect(() => {
     try {
-      // Lưu messages (bỏ audioBase64 để tránh vượt quota 5MB)
       const toSave = messages.map(({ audioBase64, ...rest }) => rest);
       sessionStorage.setItem(storageKey, JSON.stringify(toSave));
       sessionStorage.setItem(`${storageKey}-responseId`, JSON.stringify(currentResponseId));
       sessionStorage.setItem(`${storageKey}-qCount`, JSON.stringify(questionCount));
-    } catch { /* quota exceeded — bỏ qua */ }
+    } catch { /* quota exceeded */ }
   }, [messages, currentResponseId, questionCount, storageKey]);
 
   // ----------------------------------------------------------------
@@ -334,12 +344,6 @@ export default function InterviewChat() {
       }
 
       const q: GenerateQuestionResponse = await generateQuestion(sessionId);
-      if (q.interviewResponseId === 0) {
-        console.log("Backend trả về câu hỏi ID = 0");
-        console.log("Raw payload từ BE:", q);
-        setGenerating(false);
-        return;
-      }
 
       if (q.isTerminated) {
         addMessage("ai", q.terminationMessage || "Buổi phỏng vấn đã kết thúc. Cảm ơn bạn!", undefined, q.audioBase64, q.mimeType);
@@ -368,7 +372,6 @@ export default function InterviewChat() {
     if (initCalledRef.current) return;
     initCalledRef.current = true;
 
-    // Nếu đã có messages từ sessionStorage → không cần gọi lại welcome
     const hasCache = messages.length > 0;
     if (hasCache) {
       setInitializing(false);
@@ -557,8 +560,74 @@ export default function InterviewChat() {
       {/* ===== MAIN CONTENT ===== */}
       <div className="flex flex-1 overflow-hidden">
 
-        {/* ===== LEFT: CHAT PANEL ===== */}
-        <div className="flex w-1/2 flex-col order-1 border-r border-slate-800/40">
+        {/* ===== LEFT: VIDEO PANEL ===== */}
+        <div className="relative flex w-3/5 flex-col items-center justify-center border-r border-slate-800/40 bg-[#080918] px-4 pt-4 pb-10 order-2">
+          {/*
+           * Switch video tại điểm nối frame (onEnded) — hoàn toàn không giật.
+           * Chỉ 1 video chạy tại mỗi thời điểm, video kia dừng và ẩn.
+           * Không dùng CSS transition để tránh tạo khoảng mờ giữa 2 video.
+           */}
+          <div className="relative w-full h-full overflow-hidden rounded-2xl shadow-2xl shadow-purple-900/20">
+            {/* voiceOff — hiển thị mặc định */}
+            <video
+              ref={videoOffRef}
+              className="h-full w-full object-cover"
+              playsInline
+              muted
+              style={{
+                position: "absolute",
+                inset: 0,
+                opacity: showingOn ? 0 : 1,
+              }}
+            />
+
+            {/* voiceOn — hiển thị khi đang nói */}
+            <video
+              ref={videoOnRef}
+              className="h-full w-full object-cover"
+              playsInline
+              muted
+              style={{
+                opacity: showingOn ? 1 : 0,
+              }}
+            />
+
+            {/* Status badge */}
+            <div className={`absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 rounded-full px-4 py-1.5 backdrop-blur-sm transition-all z-10 ${
+              isPlayingAudio ? "bg-purple-600/80 opacity-100" : "bg-slate-800/60 opacity-60"
+            }`}>
+              {isPlayingAudio ? (
+                <>
+                  <div className="flex items-end gap-[3px] h-4">
+                    {[1, 2, 3, 4, 3].map((h, i) => (
+                      <span
+                        key={i}
+                        className="w-[3px] rounded-full bg-white animate-bounce"
+                        style={{ height: `${h * 4}px`, animationDelay: `${i * 80}ms`, animationDuration: "600ms" }}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-xs font-semibold text-white">Đang nói...</span>
+                </>
+              ) : (
+                <>
+                  <span className="h-2 w-2 rounded-full bg-green-400" />
+                  <span className="text-xs font-semibold text-slate-300">Đang lắng nghe</span>
+                </>
+              )}
+            </div>
+
+            {/* imAI Info - Overlay on video, top right corner */}
+            <div className="absolute top-4 right-4 text-right z-20 bg-black/40 backdrop-blur-sm rounded-xl px-4 py-3">
+              <h3 className="text-lg font-bold text-white">imAI</h3>
+              <p className="text-xs text-slate-300">Nhà tuyển dụng IMATE</p>
+              <p className="text-xs text-slate-400">AI Interviewer</p>
+            </div>
+          </div>
+        </div>
+
+        {/* ===== RIGHT: CHAT PANEL ===== */}
+        <div className="flex w-2/5 flex-col order-1 border-l border-slate-800/40">
           <div className="flex-1 overflow-y-auto px-4 py-4">
             <div className="space-y-3">
               {initializing && (
@@ -575,10 +644,11 @@ export default function InterviewChat() {
                       <Bot className="h-3.5 w-3.5 text-purple-400" />
                     </div>
                   )}
-                  <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${msg.role === "ai"
-                    ? "rounded-tl-md bg-slate-800/80 text-slate-200"
-                    : "rounded-tr-md bg-purple-600/20 text-white"
-                    }`}>
+                  <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                    msg.role === "ai"
+                      ? "rounded-tl-md bg-slate-800/80 text-slate-200"
+                      : "rounded-tr-md bg-purple-600/20 text-white"
+                  }`}>
                     {msg.text.split("\n").map((line, i) => (
                       <p key={i} className={i > 0 ? "mt-1.5" : ""}>{line}</p>
                     ))}
@@ -611,12 +681,13 @@ export default function InterviewChat() {
               <button
                 onClick={isRecording ? stopRecording : startRecording}
                 disabled={isBusy || isTranscribing}
-                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${isRecording
-                  ? "animate-pulse bg-red-500 text-white"
-                  : isTranscribing
-                    ? "bg-purple-500/20 text-purple-400"
-                    : "bg-purple-600/20 text-purple-400 hover:bg-purple-600/30"
-                  } disabled:opacity-50`}
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${
+                  isRecording
+                    ? "animate-pulse bg-red-500 text-white"
+                    : isTranscribing
+                      ? "bg-purple-500/20 text-purple-400"
+                      : "bg-purple-600/20 text-purple-400 hover:bg-purple-600/30"
+                } disabled:opacity-50`}
                 title={isRecording ? "Dừng ghi âm" : isTranscribing ? "Đang chuyển giọng nói..." : "Ghi âm giọng nói"}
               >
                 {isTranscribing ? <Loader2 className="h-4 w-4 animate-spin" /> : isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
@@ -653,45 +724,7 @@ export default function InterviewChat() {
           </div>
         </div>
 
-        {/* ===== RIGHT: VIDEO PANEL ===== */}
-        <div className="relative flex w-1/2 flex-col items-center justify-center border-l border-slate-800/40 bg-[#080918] order-2">
-          <div className="relative w-full overflow-hidden rounded-2xl shadow-2xl shadow-purple-900/20">
-            <video
-              ref={videoRef}
-              className="h-full w-full object-cover"
-              playsInline
-              muted
-              onEnded={handleVideoEnded}
-            />
-            <div className={`absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 rounded-full px-4 py-1.5 backdrop-blur-sm transition-all ${isPlayingAudio ? "bg-purple-600/80 opacity-100" : "bg-slate-800/60 opacity-60"
-              }`}>
-              {isPlayingAudio ? (
-                <>
-                  <div className="flex items-end gap-[3px] h-4">
-                    {[1, 2, 3, 4, 3].map((h, i) => (
-                      <span
-                        key={i}
-                        className="w-[3px] rounded-full bg-white animate-bounce"
-                        style={{ height: `${h * 4}px`, animationDelay: `${i * 80}ms`, animationDuration: "600ms" }}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-xs font-semibold text-white">Đang nói...</span>
-                </>
-              ) : (
-                <>
-                  <span className="h-2 w-2 rounded-full bg-green-400" />
-                  <span className="text-xs font-semibold text-slate-300">Đang lắng nghe</span>
-                </>
-              )}
-            </div>
-          </div>
 
-          <div className="mt-4 text-center">
-            <h3 className="text-xl font-bold text-white">imAI</h3>
-            <p className="text-xs text-slate-500">Nhà tuyển dụng IMATE • AI Interviewer</p>
-          </div>
-        </div>
       </div>
 
       {/* ===== END CONFIRM MODAL ===== */}
