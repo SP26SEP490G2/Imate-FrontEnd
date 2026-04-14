@@ -9,6 +9,7 @@ import {
 import { getListPosition } from '@/services/positionService';
 import { getAllSkill } from '@/services/skillService';
 import { DIFFICULTY_OPTIONS } from '@/constants/enum';
+import { ImportSystemQuestionDialog } from '@/dialog/management/question/ImportSystemQuestionDialog';
 import { UpdateSystemQuestionModal } from '@/dialog/management/question/UpdateSystemQuestionModal';
 import { CreateSystemQuestionDialog } from '@/dialog/management/question/CreateSystemQuestionDialog';
 import { CreateContributeQuestionDialog } from '@/dialog/main/question/CreateContributeQuestionDialog';
@@ -29,7 +30,8 @@ import {
   Eye,
   Pencil,
   Plus,
-  Download
+  Download,
+  Upload
 } from 'lucide-react';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -58,6 +60,7 @@ const ViewQuestions: React.FC = () => {
 
   // Create question modal state
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
 
   // Create contribute question modal state
   const [contributeModalOpen, setContributeModalOpen] = useState(false);
@@ -364,15 +367,25 @@ const ViewQuestions: React.FC = () => {
 
         <div className="flex items-center gap-3">
           {activeTab === 'system' && (
-            <Button
-              variant="outline"
-              onClick={handleExportSystemQuestions}
-              disabled={exporting}
-              icon={<Download className="w-4 h-4" />}
-              className="border-slate-700 text-slate-200 hover:bg-slate-800"
-            >
-              {exporting ? 'Đang export...' : 'Export câu hỏi'}
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                onClick={() => setImportModalOpen(true)}
+                icon={<Upload className="w-4 h-4" />}
+                className="border-slate-700 text-slate-200 hover:bg-slate-800"
+              >
+                Import câu hỏi
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleExportSystemQuestions}
+                disabled={exporting}
+                icon={<Download className="w-4 h-4" />}
+                className="border-slate-700 text-slate-200 hover:bg-slate-800"
+              >
+                {exporting ? 'Đang export...' : 'Export câu hỏi'}
+              </Button>
+            </>
           )}
 
           {activeTab === 'system' && (
@@ -808,6 +821,17 @@ const ViewQuestions: React.FC = () => {
         onSuccess={() => {
           if (activeTab === 'contributed') {
             fetchContributedQuestions();
+          }
+        }}
+      />
+
+      {/* Import Question Modal */}
+      <ImportSystemQuestionDialog
+        open={importModalOpen}
+        onOpenChange={setImportModalOpen}
+        onSuccess={() => {
+          if (activeTab === 'system') {
+            fetchSystemQuestions();
           }
         }}
       />
