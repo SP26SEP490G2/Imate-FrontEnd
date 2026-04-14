@@ -30,6 +30,8 @@ import type {
   SavedSystemQuestionItem,
   SavedContributedQuestionItem,
   CommentItem,
+  ValidateExcelResponse,
+  FinalImportRequest,
 } from "@/types/common/question";
 
 const parsePagination = (
@@ -226,7 +228,7 @@ export const getAllContributedQuestionsForStaff = async (
     hasNextPage: pagination.hasNextPage,
     hasPreviousPage: pagination.hasPreviousPage
   };
-  };
+};
 
 /**
  * Get all pending contributed questions for staff with filters and pagination
@@ -488,6 +490,52 @@ export const exportSystemQuestionsForStaff = async (params: GetSystemQuestionPar
   });
 
   const fileName = parseFilenameFromContentDisposition(response.headers["content-disposition"]);
+  return {
+    blob: response.data,
+    fileName,
+  };
+};
+
+export const validateQuestionsFromExcel = async (file: File): Promise<ValidateExcelResponse> => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const response = await apiClient.post<ValidateExcelResponse>(
+    APIConfig.Question.ValidateQuestionsFromExcel,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+  return response.data;
+};
+
+export const importValidatedQuestions = async (requests: FinalImportRequest[]): Promise<any> => {
+  const response = await apiClient.post(
+    APIConfig.Question.ImportValidatedQuestions,
+    requests
+  );
+  return response.data;
+};
+
+export const revalidateSingleQuestion = async (request: FinalImportRequest): Promise<any> => {
+  const response = await apiClient.post(
+    APIConfig.Question.RevalidateSingleQuestion,
+    request
+  );
+  return response.data;
+};
+
+export const downloadQuestionTemplate = async (): Promise<{ blob: Blob; fileName: string }> => {
+  const response = await apiClient.get(APIConfig.Question.DownloadQuestionTemplate, {
+    responseType: "blob",
+    headers: {
+      Accept: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    },
+  });
+
+  const fileName = parseFilenameFromContentDisposition(response.headers["content-disposition"] || `Question_Import_Template_${Date.now()}.xlsx`);
   return {
     blob: response.data,
     fileName,
