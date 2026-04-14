@@ -6,14 +6,14 @@ import { useAuth } from "@/store/AuthContext";
 export default function PendingApplication() {
   const navigate = useNavigate();
   const { user, isLoading } = useAuth();
-  
+
   useEffect(() => {
     if (isLoading) return;
 
     if (!user || user.role !== "Recruiter") {
       navigate("/", { replace: true });
     } else if (user.accountStatus === "Active") {
-      navigate("/recruiter/dashboard", { replace: true });
+      navigate("/management/recruiter-dashboard/job-applications", { replace: true });
     } else if (user.verificationStatus === "Rejected") {
       navigate("/submit-recruiter-application", { replace: true });
     } else if (user.accountStatus !== "PendingVerification" || !user.companyName) {
