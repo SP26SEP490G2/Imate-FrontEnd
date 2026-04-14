@@ -43,6 +43,10 @@ const APIConfig = {
     ExportSystemQuestions: "/export-system-questions",
     ContributeQuestion: "/contribute-question",
     SaveQuestion: "/save-question",
+    ValidateQuestionsFromExcel: "/validate-questions-from-excel",
+    ImportValidatedQuestions: "/import-validated-questions",
+    RevalidateSingleQuestion: "/revalidate-single-question",
+    DownloadQuestionTemplate: "/download-question-template",
   },
 
   // Category endpoints
