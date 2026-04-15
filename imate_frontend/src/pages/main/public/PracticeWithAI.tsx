@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Brain, MessageSquare } from "lucide-react";
 import { useAuth } from "@/store/AuthContext";
 
-import interviewImg from "@/assets/images/interview.png";
-import testImg from "@/assets/images/test.png";
+import interviewImg from "@/assets/images/interview.webp";
+import testImg from "@/assets/images/test.webp";
 
 const PracticeWithAI: React.FC = () => {
   const navigate = useNavigate();
