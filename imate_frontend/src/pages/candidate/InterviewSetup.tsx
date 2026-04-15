@@ -20,6 +20,7 @@ import {
   setupInterview,
   createInterviewSession,
   type SetupInterviewResponse,
+  type InterviewCostInfo,
 } from "@/services/interviewService";
 import type { CvItem } from "@/types/common/cv";
 import { MSG26, MSG27, MSG29, MSG30 } from "@/constants/messages";
@@ -59,6 +60,7 @@ export default function InterviewSetup() {
   const [submitting, setSubmitting] = useState(false);
   const [setupResult, setSetupResult] = useState<SetupInterviewResponse | null>(null);
   const [step, setStep] = useState<"config" | "review">("config");
+  const [costInfo, setCostInfo] = useState<InterviewCostInfo | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -87,6 +89,17 @@ export default function InterviewSetup() {
       }
     };
     fetchCvs();
+
+    // Fetch cost/usage info
+    const fetchCost = async () => {
+      try {
+        const info = await checkInterviewCost();
+        setCostInfo(info);
+      } catch {
+        // Skip log
+      }
+    };
+    fetchCost();
   }, []);
 
   // Handle file drop
@@ -270,11 +283,10 @@ export default function InterviewSetup() {
                 <button
                   key={key}
                   onClick={() => setJdTab(key)}
-                  className={`flex items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
-                    jdTab === key
-                      ? "bg-purple-600 text-white shadow-lg shadow-purple-500/20"
-                      : "text-slate-400 hover:text-white"
-                  }`}
+                  className={`flex items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${jdTab === key
+                    ? "bg-purple-600 text-white shadow-lg shadow-purple-500/20"
+                    : "text-slate-400 hover:text-white"
+                    }`}
                 >
                   <Icon className="h-3.5 w-3.5" />
                   {label}
@@ -373,22 +385,36 @@ export default function InterviewSetup() {
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2 rounded-xl border border-slate-700/60 bg-slate-900/60 px-4 py-3">
                 <Clock className="h-4 w-4 text-purple-400" />
-                <input
-                  type="number"
-                  min={10}
-                  max={60}
-                  value={duration}
-                  onChange={(e) => setDuration(e.target.value)}
-                  className="w-12 bg-transparent text-center text-sm font-semibold text-white outline-none"
-                />
-                <span className="text-sm text-slate-400">Phút</span>
+                <span className="text-sm text-slate-400">30 - 45 Phút</span>
               </div>
               <p className="text-xs text-slate-500">
-                Gợi ý: 30 - 45 phút cho một buổi phỏng vấn hiệu quả.
-                <br />
-                Số lượng câu hỏi AI sẽ được điều chỉnh phù hợp với khung thời gian này.
               </p>
             </div>
+
+            {/* Usage limits */}
+            {costInfo && (
+              <div className="mt-4 flex items-center gap-2 rounded-xl border border-purple-500/20 bg-purple-500/5 px-4 py-3 text-sm text-slate-300">
+                <AlertCircle className="h-4 w-4 text-purple-400" />
+                <span>
+                  Số lượt phỏng vấn đã dùng tháng này:{" "}
+                  <span className="font-bold text-white">
+                    {costInfo.usedMock ?? 0}
+                  </span>
+                  /
+                  <span className="font-bold text-white">
+                    {costInfo.limit ?? 0}
+                  </span>{" "}
+                  lượt.
+                </span>
+                {costInfo.limit !== undefined &&
+                  costInfo.usedMock !== undefined &&
+                  costInfo.limit - costInfo.usedMock <= 1 && (
+                    <span className="ml-auto text-xs font-semibold text-amber-400">
+                      Sắp hết lượt!
+                    </span>
+                  )}
+              </div>
+            )}
           </div>
 
           {/* Buttons */}

@@ -118,6 +118,9 @@ export interface InterviewCostInfo {
   freeUsedMock?: number;
   freeLimit?: number;
   remainingFree?: number;
+  usedMock?: number;      // New field from backend
+  limit?: number;         // New field from backend
+  remaining?: number;     // New field from backend
   cost?: number;
   balance?: number;
   hasEnoughBalance?: boolean;
