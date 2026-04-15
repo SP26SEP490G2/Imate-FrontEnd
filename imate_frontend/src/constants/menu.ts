@@ -1,4 +1,4 @@
-import { FolderOpen, LibraryBig, CircleUser, CreditCard, FileUser, Sparkles, LogOut, Wallet, History, Calendar, Briefcase, Star, DollarSign } from "lucide-react";
+import { FolderOpen, CircleUser, CreditCard, FileUser, LogOut, Wallet, History, Calendar, Briefcase, Star, DollarSign } from "lucide-react";
 import type { MenuItem } from "@/types/common/menu";
 
 export const MENTOR_MENU_ITEMS: MenuItem[] = [

@@ -6,9 +6,9 @@ import type { MenuItem } from "@/types/common/menu";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/store/AuthContext";
 import { cn } from "@/lib/utils";
-import { getInitials, getAvatarColor } from "@/helpers/common";
 
 import { motion, AnimatePresence } from "framer-motion";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 interface UserMenuProps {
   isOpenUserMenu: boolean;
@@ -75,20 +75,12 @@ const UserMenu: React.FC<UserMenuProps> = ({ isOpenUserMenu, onClose, anchorRef,
           <Card className="w-72 overflow-hidden rounded-xl border border-white/10 bg-slate-900/90 backdrop-blur-xl shadow-xl max-h-[70vh]">
             {/* User info */}
             <div className="flex items-center gap-3 border-b border-white/10 p-4">
-              <div
-                className={cn(
-                  "flex h-10 w-10 items-center justify-center overflow-hidden rounded-full font-semibold",
-                  getAvatarColor(user?.fullName || "User")
-                )}
-              >
-                {loaded ? (
-                  <img src={user?.avatarUrl} className="h-full w-full object-cover" />
-                ) : (
-                  <span className="font-semibold text-white">
-                    {getInitials(user?.fullName || "User")}
-                  </span>
-                )}
-              </div>
+              <Avatar size="lg">
+                <AvatarImage src={user?.avatarUrl || ""} />
+                <AvatarFallback
+                  name={user?.fullName || "User"}
+                />
+              </Avatar>
 
               <div className="flex flex-col">
                 <h3 className="text-sm font-semibold text-white">

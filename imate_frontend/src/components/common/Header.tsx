@@ -17,6 +17,7 @@ import UserMenu from "@/components/custom/UserMenu";
 import type { MenuItem } from '@/types/common/menu';
 import { ROLES } from '@/constants/role';
 import { useSignalR } from '@/store/SignalRContext';
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 type HeaderNotification = {
   id: number;
@@ -95,18 +96,15 @@ function Header() {
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 1279px)");
-    const handleChange = (event: MediaQueryListEvent | MediaQueryList) => {
+
+    const handleChange = (event: MediaQueryListEvent) => {
       setIsCompactNav(event.matches);
     };
 
-    handleChange(mediaQuery);
-    if ("addEventListener" in mediaQuery) {
-      mediaQuery.addEventListener("change", handleChange);
-      return () => mediaQuery.removeEventListener("change", handleChange);
-    }
+    setIsCompactNav(mediaQuery.matches);
 
-    mediaQuery.addListener(handleChange);
-    return () => mediaQuery.removeListener(handleChange);
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
 
   useEffect(() => {
@@ -325,9 +323,10 @@ function Header() {
                   className="flex items-center gap-2 cursor-pointer"
                   onClick={() => setIsOpenUserMenu(!isOpenUserMenu)}
                 >
-                  <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center text-white font-semibold">
-                    {user?.fullName?.charAt(0)}
-                  </div>
+                  <Avatar>
+                    <AvatarImage src={user?.avatarUrl} />
+                    <AvatarFallback name={user?.fullName} />
+                  </Avatar>
 
                   <span className="text-sm text-white">
                     {user?.fullName}
