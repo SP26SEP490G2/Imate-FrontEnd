@@ -209,18 +209,20 @@ export function ViewContributeQuestionModal({
                             </div>
 
                             {/* Is Active */}
-                            <div className="flex items-center gap-3 p-4 rounded-lg bg-slate-800 border border-slate-700">
-                                <input
-                                    type="checkbox"
-                                    id="isActive"
-                                    checked={questionData.isActive}
-                                    readOnly
-                                    disabled
-                                    className="w-5 h-5 rounded border-slate-600 bg-slate-700 text-indigo-500 focus:ring-2 focus:ring-primary/50 focus:ring-offset-0"
-                                />
-                                <label htmlFor="isActive" className="text-sm font-medium text-slate-200">
-                                    Kích hoạt câu hỏi
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium text-slate-200">
+                                    Trạng thái <span className="text-red-400">*</span>
                                 </label>
+                                <button
+                                    type="button"
+                                    disabled
+                                    className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${questionData.isActive
+                                        ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400'
+                                        : 'border-slate-600 bg-slate-800 text-slate-300'
+                                        } cursor-not-allowed opacity-70`}
+                                >
+                                    {questionData.isActive ? 'Hoạt động' : 'Vô hiệu'}
+                                </button>
                             </div>
 
                             {/* Comments - Read only for staff */}

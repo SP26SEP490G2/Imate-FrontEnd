@@ -15,9 +15,10 @@ interface UserMenuProps {
   onClose: () => void;
   userRole?: "Candidate" | "Mentor";
   anchorRef?: React.RefObject<HTMLDivElement | null>;
+  extraMenuItems?: MenuItem[];
 }
 
-const UserMenu: React.FC<UserMenuProps> = ({ isOpenUserMenu, onClose, anchorRef }) => {
+const UserMenu: React.FC<UserMenuProps> = ({ isOpenUserMenu, onClose, anchorRef, extraMenuItems }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const menuRef = useRef<HTMLDivElement>(null);
@@ -71,7 +72,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ isOpenUserMenu, onClose, anchorRef 
           className="absolute top-14 right-0 z-50 origin-top-right"
           ref={menuRef}
         >
-          <Card className="w-72 overflow-hidden rounded-xl border border-white/10 bg-slate-900/90 backdrop-blur-xl shadow-xl">
+          <Card className="w-72 overflow-hidden rounded-xl border border-white/10 bg-slate-900/90 backdrop-blur-xl shadow-xl max-h-[70vh]">
             {/* User info */}
             <div className="flex items-center gap-3 border-b border-white/10 p-4">
               <div
@@ -98,7 +99,32 @@ const UserMenu: React.FC<UserMenuProps> = ({ isOpenUserMenu, onClose, anchorRef 
             </div>
 
             {/* Menu */}
-            <div className="flex flex-col py-2">
+            <div className="flex flex-col py-2 overflow-y-auto">
+              {extraMenuItems && extraMenuItems.length > 0 && (
+                <div className="border-b border-white/10 px-4 pb-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">
+                    Điều hướng nhanh
+                  </p>
+                </div>
+              )}
+
+              {extraMenuItems?.map((item: MenuItem, index: number) => (
+                <Link
+                  key={`quick-${index}`}
+                  to={item.href || "#"}
+                  className="flex items-center gap-3 px-4 py-3 transition hover:bg-white/5"
+                >
+                  {item.icon && <item.icon className="h-4 w-4 text-slate-300" />}
+                  <span className="text-sm text-slate-200">
+                    {item.label}
+                  </span>
+                </Link>
+              ))}
+
+              {extraMenuItems && extraMenuItems.length > 0 && (
+                <div className="border-t border-white/10" />
+              )}
+
               {(user?.role === ROLES.MENTOR
                 ? MENTOR_PROFILE_MENU
                 : user?.role === ROLES.RECRUITER

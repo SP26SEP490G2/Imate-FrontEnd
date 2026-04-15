@@ -2,37 +2,24 @@ import { FolderOpen, LibraryBig, CircleUser, CreditCard, FileUser, Sparkles, Log
 import type { MenuItem } from "@/types/common/menu";
 
 export const MENTOR_MENU_ITEMS: MenuItem[] = [
+  { label: "Ngân hàng câu hỏi", href: "/view-question-bank" },
   { label: "Lịch làm việc", href: "/mentor/interview-schedule" },
   { label: "Quản lý lịch lặp lại", href: "/mentor/manage-slots" },
   { label: "Đánh giá từ ứng viên", href: "/mentor/ratings" },
-  { label: "Thu nhập", href: "/mentor/income" },
   { label: "Lịch sử phỏng vấn", href: "/mentor/interview-history" },
-  { label: "Câu hỏi từ cộng đồng", href: "/view-question-bank" },
-  { label: "Gửi đơn", href: "/view-application" }
 ];
 
 export const CANDIDATE_MENU_ITEMS: MenuItem[] = [
   {
     label: "Ngân hàng câu hỏi",
-    href: "/view-question-bank",
-    hasDropdown: true,
-    subItems: [
-      { label: "Câu hỏi của Imate", href: "/system-question-bank", icon: FolderOpen },
-      { label: "Câu hỏi từ cộng đồng", href: "/view-question-bank", icon: LibraryBig },
-    ],
+    href: "/view-question-bank"
   },
   {
     label: "Luyện tập với AI",
-    href: "/practice-with-ai",
-    hasDropdown: true,
-    subItems: [
-      { label: "Phỏng vấn với AI", href: "/interview-setup", icon: Sparkles },
-      { label: "Làm bài test", href: "/practice-test", icon: LibraryBig },
-    ],
+    href: "/practice-with-ai"
   },
   { label: "Mentor", href: "/view-mentor" },
   { label: "Gói dịch vụ", href: "/view-subscription" },
-  { label: "Gửi đơn", href: "/view-application" },
   { label: "Cơ hội việc làm", href: "/view-job-applications" }
 ];
 
@@ -42,7 +29,7 @@ export const USER_PROFILE_MENU: MenuItem[] = [
     href: "/profile",
     icon: CircleUser,
   },
-    {
+  {
     label: "Ví Imate",
     href: "/wallet",
     icon: Wallet,
@@ -53,8 +40,8 @@ export const USER_PROFILE_MENU: MenuItem[] = [
     icon: Calendar,
   },
   {
-    label: "Lịch sử Mentor",
-    href: "/candidate/interview-history",
+    label: "Lịch sử luyện tập",
+    href: "/test-history",
     icon: History,
   },
   {
@@ -66,11 +53,6 @@ export const USER_PROFILE_MENU: MenuItem[] = [
     label: "Gửi đơn",
     href: "/view-application",
     icon: FolderOpen,
-  },
-  {
-    label: "Nâng cấp gói dịch vụ",
-    href: "/view-subscription",
-    icon: Sparkles,
   },
   {
     label: "Danh sách ứng tuyển",
@@ -89,7 +71,7 @@ export const MENTOR_PROFILE_MENU: MenuItem[] = [
     href: "/profile",
     icon: CircleUser,
   },
-    {
+  {
     label: "Ví Imate",
     href: "/wallet",
     icon: CreditCard,

@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
-  ChevronRight,
   Loader2,
   Calendar,
   Clock,
@@ -35,14 +34,14 @@ function ScoreRing({ score }: { score: number }) {
     score >= 80
       ? "text-emerald-400"
       : score >= 50
-      ? "text-amber-400"
-      : "text-red-400";
+        ? "text-amber-400"
+        : "text-red-400";
   const strokeColor =
     score >= 80
       ? "stroke-emerald-400"
       : score >= 50
-      ? "stroke-amber-400"
-      : "stroke-red-400";
+        ? "stroke-amber-400"
+        : "stroke-red-400";
 
   return (
     <div className="relative flex h-28 w-28 items-center justify-center">
@@ -86,8 +85,8 @@ function SkillBar({ label, value }: { label: string; value: number | null }) {
     v >= 80
       ? "from-emerald-500 to-emerald-400"
       : v >= 50
-      ? "from-amber-500 to-amber-400"
-      : "from-red-500 to-red-400";
+        ? "from-amber-500 to-amber-400"
+        : "from-red-500 to-red-400";
 
   return (
     <div className="space-y-1.5">
@@ -126,11 +125,10 @@ function AnswerCard({
 
   return (
     <div
-      className={`rounded-2xl border p-5 transition-all ${
-        answer.isCorrect
-          ? "border-slate-700/60 bg-slate-800/40"
-          : "border-red-500/30 bg-red-500/5"
-      }`}
+      className={`rounded-2xl border p-5 transition-all ${answer.isCorrect
+        ? "border-slate-700/60 bg-slate-800/40"
+        : "border-red-500/30 bg-red-500/5"
+        }`}
     >
       {/* Question Header */}
       <div className="flex items-start justify-between gap-3">
@@ -157,7 +155,7 @@ function AnswerCard({
         <p className="mt-1 text-sm text-slate-300">
           {answer.userAnswer
             ? options.find((o) => o.label === answer.userAnswer)?.text ??
-              answer.userAnswer
+            answer.userAnswer
             : "Chưa trả lời"}
         </p>
       </div>
@@ -198,13 +196,12 @@ function AnswerCard({
                     className={`flex items-center gap-3 rounded-xl border px-4 py-2.5 ${optClass}`}
                   >
                     <span
-                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs font-bold ${
-                        isCorrect
-                          ? "bg-emerald-500/20 text-emerald-400"
-                          : isUserAnswer
+                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs font-bold ${isCorrect
+                        ? "bg-emerald-500/20 text-emerald-400"
+                        : isUserAnswer
                           ? "bg-red-500/20 text-red-400"
                           : "bg-slate-700/50 text-slate-400"
-                      }`}
+                        }`}
                     >
                       {opt.label}
                     </span>
@@ -295,32 +292,6 @@ export default function TestHistoryDetail() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 pb-28">
-      {/* Breadcrumb */}
-      <nav className="mb-6 flex items-center gap-1.5 text-sm text-slate-500">
-        <span
-          className="cursor-pointer transition-colors hover:text-slate-300"
-          onClick={() => navigate("/home")}
-        >
-          Trang chủ
-        </span>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span
-          className="cursor-pointer transition-colors hover:text-slate-300"
-          onClick={() => navigate("/test-history")}
-        >
-          Luyện tập AI
-        </span>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span
-          className="cursor-pointer transition-colors hover:text-slate-300"
-          onClick={() => navigate("/test-history")}
-        >
-          Lịch sử bài test
-        </span>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span className="font-medium text-purple-400">Chi tiết bài test</span>
-      </nav>
-
       {/* Header */}
       <div className="mb-8 flex items-start justify-between">
         <div>
