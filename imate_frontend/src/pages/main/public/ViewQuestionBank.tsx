@@ -56,6 +56,7 @@ const ViewQuestionBank: React.FC = () => {
   const [viewModalId, setViewModalId] = useState<number>(0);
   const [viewModalType, setViewModalType] = useState<'system' | 'contributed'>('system');
   const [viewModalEnableSave, setViewModalEnableSave] = useState(true);
+  const [viewModalStatus, setViewModalStatus] = useState<string | undefined>(undefined);
   const [savedTab, setSavedTab] = useState<SavedTabType>('system');
 
   // Saved overrides (optimistic toggle on top of API-returned isSaved)
@@ -289,10 +290,11 @@ const ViewQuestionBank: React.FC = () => {
     }
   };
 
-  const handleView = (id: number, type: 'system' | 'contributed', currentSaved: boolean, enableSave = true) => {
+  const handleView = (id: number, type: 'system' | 'contributed', currentSaved: boolean, enableSave = true, status?: string) => {
     setViewModalId(id);
     setViewModalType(type);
     setViewModalEnableSave(enableSave && isLoggedIn);
+    setViewModalStatus(status);
     setViewModalOpen(true);
     // Seed the override map so the modal has the correct initial value
     const questionKey = getQuestionKey(type, id);
@@ -539,6 +541,7 @@ const ViewQuestionBank: React.FC = () => {
                   onClick={() => {
                     setActiveTab('myContributed');
                     setPageNumber(1);
+                    setApprovalStatus(1); // Default to Approved
                   }}
                   className={`pb-4 font-bold text-xs uppercase tracking-widest border-b-2 transition-colors ${activeTab === 'myContributed'
                     ? 'text-indigo-400 border-indigo-500'
@@ -764,9 +767,8 @@ const ViewQuestionBank: React.FC = () => {
                         }}
                         className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none"
                       >
-                        <option value="">Tất cả</option>
-                        <option value={0}>Pending</option>
                         <option value={1}>Approved</option>
+                        <option value={0}>Pending</option>
                         <option value={2}>Rejected</option>
                       </select>
                     </div>
@@ -960,7 +962,7 @@ const ViewQuestionBank: React.FC = () => {
                         level={card.level}
                         rating={card.rating}
                         isSaved={saved}
-                        onView={() => handleView(question.id, 'contributed', saved)}
+                        onView={() => handleView(question.id, 'contributed', saved, true, 'Approved')}
                         onSave={isLoggedIn ? () => handleSave('contributed', question.id, saved) : undefined}
                       />
                     );
@@ -1050,7 +1052,7 @@ const ViewQuestionBank: React.FC = () => {
                         isSaved={saved}
                         statusLabel={card.status}
                         statusType={getApprovalStatusBadge(card.status)}
-                        onView={() => handleView(question.id, 'contributed', saved)}
+                        onView={() => handleView(question.id, 'contributed', saved, false, card.status)}
                         onSave={isLoggedIn ? () => handleSave('contributed', question.id, saved) : undefined}
                       />
                     );
@@ -1247,7 +1249,7 @@ const ViewQuestionBank: React.FC = () => {
                         level={card.level}
                         rating={card.rating}
                         isSaved={saved}
-                        onView={() => handleView(question.id, 'contributed', saved)}
+                        onView={() => handleView(question.id, 'contributed', saved, true, 'Approved')}
                         onSave={isLoggedIn ? () => handleSave('contributed', question.id, saved) : undefined}
                       />
                     );
@@ -1329,6 +1331,7 @@ const ViewQuestionBank: React.FC = () => {
           onOpenChange={setViewModalOpen}
           questionId={viewModalId}
           isSaved={isSavedFor('contributed', viewModalId, false)}
+          approvalStatus={viewModalStatus}
           onSaveToggle={viewModalEnableSave ? () => {
             const currentSaved = isSavedFor('contributed', viewModalId, false);
             handleSave('contributed', viewModalId, currentSaved);
