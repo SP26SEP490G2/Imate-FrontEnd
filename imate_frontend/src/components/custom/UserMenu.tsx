@@ -1,11 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef} from "react";
 import { Card } from "../ui/card";
 import { MENTOR_PROFILE_MENU, RECRUITER_PROFILE_MENU, USER_PROFILE_MENU } from "@/constants/menu";
 import { ROLES } from "@/constants/role";
 import type { MenuItem } from "@/types/common/menu";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/store/AuthContext";
-import { cn } from "@/lib/utils";
 
 import { motion, AnimatePresence } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -22,7 +21,6 @@ const UserMenu: React.FC<UserMenuProps> = ({ isOpenUserMenu, onClose, anchorRef,
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const menuRef = useRef<HTMLDivElement>(null);
-  const [loaded, setLoaded] = useState(false);
   const handleLogout = () => {
     logout();
     navigate("/sign-in");
@@ -56,9 +54,6 @@ const UserMenu: React.FC<UserMenuProps> = ({ isOpenUserMenu, onClose, anchorRef,
     if (!user?.avatarUrl) return;
     const img = new Image();
     img.src = user.avatarUrl;
-
-    img.onload = () => setLoaded(true);
-    img.onerror = () => setLoaded(false);
   }, [user?.avatarUrl]);
 
   return (

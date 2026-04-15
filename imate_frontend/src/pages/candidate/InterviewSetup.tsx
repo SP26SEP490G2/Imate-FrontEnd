@@ -58,7 +58,7 @@ export default function InterviewSetup() {
   const [jdFile, setJdFile] = useState<File | null>(null);
 
   // Duration
-  const [duration, setDuration] = useState("30");
+  // const [duration, setDuration] = useState("30");
 
   // Flow state
   const [submitting, setSubmitting] = useState(false);

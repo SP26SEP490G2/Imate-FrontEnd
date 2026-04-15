@@ -296,11 +296,11 @@ export default function UserManagement() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10 border border-slate-700">
-                          <AvatarImage src={user.avatarUrl} alt={user.fullName} />
-                          <AvatarFallback className="bg-slate-800 text-slate-300">
-                            {user.fullName.substring(0, 2).toUpperCase()}
-                          </AvatarFallback>
+                        <Avatar size="lg">
+                          <AvatarImage src={user?.avatarUrl} />
+                          <AvatarFallback
+                            name={user?.fullName}
+                          />
                         </Avatar>
                         <div className="flex flex-col">
                           <span className="font-semibold text-white">{user.fullName}</span>
