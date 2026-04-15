@@ -825,15 +825,8 @@ export default function Classification() {
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar>
-                          <AvatarImage
-                            src={comp.imageUrl || ""}
-                            alt={comp.name}
-                            className="h-full w-full object-cover"
-                          />
-
-                          <AvatarFallback className="bg-slate-800 text-slate-300">
-                            {getInitials(comp.name)}
-                          </AvatarFallback>
+                          <AvatarImage src={comp.imageUrl} />
+                          <AvatarFallback name={comp.name} />
                         </Avatar>
 
                         <div>
@@ -943,13 +936,4 @@ export default function Classification() {
       )}
     </div>
   );
-}
-
-export function getInitials(name: string): string {
-  if (!name) return "?";
-  const words = name.trim().split(/\s+/);
-  if (words.length === 1) {
-    return words[0].slice(0, 2).toUpperCase();
-  }
-  return (words[0][0] + words[1][0]).toUpperCase();
 }

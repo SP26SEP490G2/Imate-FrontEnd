@@ -80,9 +80,12 @@ const HomePage: React.FC = () => {
               Nền tảng luyện tập phỏng vấn thông minh, kết nối chuyên gia hàng đầu giúp bạn bứt phá sự nghiệp công nghệ.
             </p>
             <div className="flex justify-center mb-20">
-              <button className="w-full sm:w-auto px-12 py-4 bg-white text-[#0f172a] font-bold rounded-2xl hover:bg-slate-100 transition-all flex items-center justify-center gap-2 shadow-xl">
+              <Link
+                to="/practice-with-ai"
+                className="w-full sm:w-auto px-12 py-4 bg-white text-[#0f172a] font-bold rounded-2xl hover:bg-slate-100 transition-all flex items-center justify-center gap-2 shadow-xl"
+              >
                 Luyện tập ngay <span className="material-symbols-outlined">rocket_launch</span>
-              </button>
+              </Link>
             </div>
             <div className="pt-12 border-t border-slate-800/50">
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-8">
@@ -111,7 +114,7 @@ const HomePage: React.FC = () => {
                     <div className="w-3 h-3 rounded-full bg-emerald-500/50"></div>
                   </div>
                   <div className="px-3 py-1 bg-slate-800 rounded-lg text-[10px] text-slate-400 font-mono">
-                    localhost:3000/ai-interview
+                    imate.vn/practice-with-ai
                   </div>
                 </div>
                 <div className="space-y-6">

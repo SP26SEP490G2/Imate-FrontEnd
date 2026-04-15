@@ -29,7 +29,6 @@ import {
 import { MSG24 } from "@/constants/messages";
 import {
   USE_MOCK,
-  MOCK_QUESTIONS,
 } from "@/mocks/interviewMockData";
 
 /* ------------------------------------------------------------------ */
@@ -352,55 +351,6 @@ function QuestionCard({
 /* ------------------------------------------------------------------ */
 /*  Mock: kết quả phỏng vấn giả cho session 999                       */
 /* ------------------------------------------------------------------ */
-const MOCK_RESULT: InterviewResultDetail = {
-  session: {
-    id: 999,
-    positionName: "Backend Developer",
-    skillName: "Node.js, TypeScript, PostgreSQL",
-    levelName: "Junior",
-    companyName: "FPT Software",
-    startTime: new Date().toISOString(),
-    endTime: new Date().toISOString(),
-    status: "Completed",
-    totalQuestions: MOCK_QUESTIONS.length,
-    totalQuestionsAnswered: MOCK_QUESTIONS.length,
-    overallFeedback: JSON.stringify({
-      overall_comment: "Bạn đã hoàn thành " + MOCK_QUESTIONS.length + " câu hỏi. Điểm trung bình: 0.72/1.00.",
-      strengths: ["Trả lời rõ ràng, mạch lạc", "Có kiến thức nền tảng tốt"],
-      improvements: ["Cần đưa thêm ví dụ thực tế", "Nên giải thích sâu hơn về kiến trúc hệ thống"]
-    }),
-    estimatedAbility: 0.72,
-  },
-  responses: MOCK_QUESTIONS.map((q, i) => ({
-    id: q.interviewResponseId,
-    questionNumber: i + 1,
-    turnNumber: i + 1,
-    questionContent: q.questionText,
-    userAnswer: "(Mock) Câu trả lời mẫu cho câu hỏi " + (i + 1),
-    answerTimestamp: new Date().toISOString(),
-    expectedBloomLevel: 3,
-    demonstratedBloomLevel: 2,
-    bloomScore: 0.7,
-    difficultyScore: 0.5 + i * 0.05,
-    cognitiveLoadScore: 0.4,
-    technicalDepthScore: 0.65 + Math.random() * 0.2,
-    problemSolvingScore: 0.6 + Math.random() * 0.2,
-    communicationScore: 0.7 + Math.random() * 0.15,
-    practicalExperienceScore: 0.55 + Math.random() * 0.2,
-    starSituationScore: null,
-    starTaskScore: null,
-    starActionScore: null,
-    starResultScore: null,
-    structuredFeedbackJson: JSON.stringify({
-      overall_comment: "Câu trả lời đạt yêu cầu cơ bản.",
-      strengths: ["Trình bày rõ ràng", "Có kiến thức nền tảng"],
-      improvements: ["Cần ví dụ thực tế hơn"],
-      suggested_answer: "Đáp án mẫu chi tiết cho câu hỏi " + q.topic,
-    }),
-    aiFeedback: "Bạn có hiểu biết cơ bản về " + q.topic + ". Nên bổ sung thêm kinh nghiệm thực tế.",
-    expectedAnswerOutline: "Đáp án mẫu cho " + q.topic,
-  })),
-};
 
 /* ------------------------------------------------------------------ */
 /*  Main Page                                                          */

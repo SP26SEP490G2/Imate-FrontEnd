@@ -5,18 +5,38 @@ import { cn } from "@/lib/utils"
 
 function Avatar({
   className,
+  size = "md",
+  rounded = "full",
   ...props
-}: React.ComponentProps<typeof AvatarPrimitive.Root>) {
+}: React.ComponentProps<typeof AvatarPrimitive.Root> & {
+  size?: "sm" | "md" | "lg";
+  rounded?: "full" | "md" | "lg" | "none";
+}) {
+  const sizeClass = {
+    sm: "size-6",
+    md: "size-8",
+    lg: "size-10",
+  }[size];
+
+  const roundedClass = {
+    full: "rounded-full",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    none: "rounded-none",
+  }[rounded];
+
   return (
     <AvatarPrimitive.Root
       data-slot="avatar"
       className={cn(
-        "relative flex size-8 shrink-0 overflow-hidden rounded-full",
+        "relative flex shrink-0 overflow-hidden",
+        sizeClass,
+        roundedClass,
         className
       )}
       {...props}
     />
-  )
+  );
 }
 
 function AvatarImage({
@@ -38,10 +58,21 @@ function AvatarImage({
   )
 }
 
+function getInitials(name: string): string {
+  if (!name) return "?";
+  return name.trim().charAt(0).toUpperCase();
+}
+
 function AvatarFallback({
   className,
+  name,
+  children,
   ...props
-}: React.ComponentProps<typeof AvatarPrimitive.Fallback>) {
+}: React.ComponentProps<typeof AvatarPrimitive.Fallback> & {
+  name?: string;
+}) {
+  const content = children ?? (name ? getInitials(name) : "?");
+
   return (
     <AvatarPrimitive.Fallback
       data-slot="avatar-fallback"
@@ -50,8 +81,10 @@ function AvatarFallback({
         className
       )}
       {...props}
-    />
-  )
+    >
+      {content}
+    </AvatarPrimitive.Fallback>
+  );
 }
 
 export { Avatar, AvatarImage, AvatarFallback }
