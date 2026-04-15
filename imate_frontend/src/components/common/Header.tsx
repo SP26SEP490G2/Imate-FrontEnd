@@ -59,8 +59,8 @@ function Header() {
   };
   const notifications = signalRContext.notifications ?? [];
   const unreadCount = signalRContext.unreadCount ?? notifications.filter((notification) => !notification.isRead).length;
-  const markNotificationAsRead = signalRContext.markNotificationAsRead ?? (async () => {});
-  const markAllNotificationsAsRead = signalRContext.markAllNotificationsAsRead ?? (async () => {});
+  const markNotificationAsRead = signalRContext.markNotificationAsRead ?? (async () => { });
+  const markAllNotificationsAsRead = signalRContext.markAllNotificationsAsRead ?? (async () => { });
   const unreadBadgeLabel = unreadCount > 99 ? "99+" : String(unreadCount);
   const navigate = useNavigate();
 
@@ -69,6 +69,7 @@ function Header() {
   const [isOpenNotificationMenu, setIsOpenNotificationMenu] = useState(false);
   const [showAllNotifications, setShowAllNotifications] = useState(false);
   const [expandedNotificationId, setExpandedNotificationId] = useState<number | null>(null);
+  const [isCompactNav, setIsCompactNav] = useState(false);
 
   const userMenuRef = useRef<HTMLDivElement>(null);
   const notificationMenuRef = useRef<HTMLDivElement>(null);
@@ -91,6 +92,22 @@ function Header() {
       menuItems = CANDIDATE_MENU_ITEMS;
     }
   }
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 1279px)");
+    const handleChange = (event: MediaQueryListEvent | MediaQueryList) => {
+      setIsCompactNav(event.matches);
+    };
+
+    handleChange(mediaQuery);
+    if ("addEventListener" in mediaQuery) {
+      mediaQuery.addEventListener("change", handleChange);
+      return () => mediaQuery.removeEventListener("change", handleChange);
+    }
+
+    mediaQuery.addListener(handleChange);
+    return () => mediaQuery.removeListener(handleChange);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -323,6 +340,7 @@ function Header() {
                   isOpenUserMenu={isOpenUserMenu}
                   onClose={() => setIsOpenUserMenu(false)}
                   anchorRef={userMenuRef}
+                  extraMenuItems={isCompactNav ? menuItems : undefined}
                 />
               </div>
             </div>

@@ -24,7 +24,7 @@ const PracticeWithAI: React.FC = () => {
 
         {/* HEADER */}
         <div className="text-center mb-14">
-          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 bg-gradient-to-r from-white via-indigo-200 to-purple-300 bg-clip-text text-transparent">
+          <h1 className="inline-block text-4xl md:text-5xl font-extrabold mb-4 pb-1 leading-[1.2] bg-gradient-to-r from-white via-indigo-200 to-purple-300 bg-clip-text text-transparent">
             Luyện tập cùng AI
           </h1>
           <p className="text-slate-400">
