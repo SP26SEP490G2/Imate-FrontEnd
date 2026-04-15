@@ -342,7 +342,8 @@ const ViewQuestionBank: React.FC = () => {
       timeAgo: formatDate(question.createdAt),
       skills: question.skills.map((item) => item.name),
       position: question.positions.map((item) => item.name).join(', ') || 'N/A',
-      level: difficultyText,
+      level: "",
+      difficulty: difficultyText,
       rating,
     };
   };
@@ -365,6 +366,7 @@ const ViewQuestionBank: React.FC = () => {
       skills: question.skills.map((item) => item.name),
       position: question.positions.map((item) => item.name).join(', ') || 'N/A',
       level: question.contributedDetail?.level || 'N/A',
+      difficulty: difficultyText,
       rating,
     };
   };
@@ -387,6 +389,7 @@ const ViewQuestionBank: React.FC = () => {
       skills: question.skillsName || [],
       position: question.positionsName?.join(', ') || 'N/A',
       level: question.contributedDetail?.level || difficultyText,
+      difficulty: difficultyText,
       rating,
       status: question.approvalStatus || 'Pending',
     };
@@ -872,6 +875,7 @@ const ViewQuestionBank: React.FC = () => {
                         skills={card.skills}
                         position={card.position}
                         level={card.level}
+                        difficulty={card.difficulty}
                         rating={card.rating}
                         isSaved={saved}
                         onView={() => handleView(question.id, 'system', saved)}
@@ -960,6 +964,7 @@ const ViewQuestionBank: React.FC = () => {
                         skills={card.skills}
                         position={card.position}
                         level={card.level}
+                        difficulty={card.difficulty}
                         rating={card.rating}
                         isSaved={saved}
                         onView={() => handleView(question.id, 'contributed', saved, true, 'Approved')}
@@ -1048,6 +1053,7 @@ const ViewQuestionBank: React.FC = () => {
                         skills={card.skills}
                         position={card.position}
                         level={card.level}
+                        difficulty={card.difficulty}
                         rating={card.rating}
                         isSaved={saved}
                         statusLabel={card.status}
@@ -1191,6 +1197,7 @@ const ViewQuestionBank: React.FC = () => {
                         skills={card.skills}
                         position={card.position}
                         level={card.level}
+                        difficulty={card.difficulty}
                         rating={card.rating}
                         isSaved={saved}
                         onView={() => handleView(question.id, 'system', saved)}
@@ -1247,6 +1254,7 @@ const ViewQuestionBank: React.FC = () => {
                         skills={card.skills}
                         position={card.position}
                         level={card.level}
+                        difficulty={card.difficulty}
                         rating={card.rating}
                         isSaved={saved}
                         onView={() => handleView(question.id, 'contributed', saved, true, 'Approved')}

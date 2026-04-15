@@ -56,7 +56,7 @@ export interface PublicContributedQuestionDetail {
 export interface PublicContributedQuestionBankItem {
   id: number;
   content: string;
-  difficulty?: string | null;
+  difficulty: string | null;
   sampleAnswer?: string;
   isActive: boolean;
   createdAt: string;

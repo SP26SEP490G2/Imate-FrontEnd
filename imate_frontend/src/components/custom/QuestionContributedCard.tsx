@@ -8,6 +8,7 @@ interface QuestionContributedCardProps {
   description: string;
   author: string;
   company: string;
+  difficulty?: string;
   timeAgo: string;
   skills: string[];
   position: string;
@@ -29,6 +30,7 @@ const QuestionContributedCard: React.FC<QuestionContributedCardProps> = ({
   skills,
   position,
   level,
+  difficulty = 'N/A',
   rating,
   isSaved = false,
   statusLabel,
@@ -45,13 +47,21 @@ const QuestionContributedCard: React.FC<QuestionContributedCardProps> = ({
       .slice(0, 2);
   };
 
-  const getLevelStatus = (level: string): "active" | "pending" | "error" | "inactive" | "draft" => {
-    const levelLower = level.toLowerCase();
-    if (levelLower === 'intern' || levelLower === 'fresher') return 'active';
-    if (levelLower === 'junior' || levelLower === 'middle') return 'pending';
-    if (levelLower === 'senior') return 'error';
-    return 'inactive';
-  };
+  // const getLevelStatus = (level: string): "active" | "pending" | "error" | "inactive" | "draft" => {
+  //   const levelLower = level.toLowerCase();
+  //   if (levelLower === 'intern' || levelLower === 'fresher') return 'active';
+  //   if (levelLower === 'junior' || levelLower === 'middle') return 'pending';
+  //   if (levelLower === 'senior') return 'error';
+  //   return 'inactive';
+  // };
+  // const getDifficultyStatus = (difficultyText: string | undefined): "active" | "pending" | "error" | "inactive" | "draft" => {
+  //   const difficultyLower = (difficultyText || '').toLowerCase();
+  //   if (!difficultyLower) return 'inactive';
+  //   if (difficultyLower === 'easy') return 'active';
+  //   if (difficultyLower === 'medium') return 'pending';
+  //   if (difficultyLower === 'hard') return 'error';
+  //   return 'inactive';
+  // };
 
   const renderStars = () => {
     return Array.from({ length: 3 }, (_, index) => {
@@ -113,7 +123,6 @@ const QuestionContributedCard: React.FC<QuestionContributedCardProps> = ({
           </StatusBadge>
         ))}
         <StatusBadge status="draft">{position}</StatusBadge>
-        <StatusBadge status={getLevelStatus(level)}>{level}</StatusBadge>
       </div>
 
       {/* Footer: Rating & Actions */}
