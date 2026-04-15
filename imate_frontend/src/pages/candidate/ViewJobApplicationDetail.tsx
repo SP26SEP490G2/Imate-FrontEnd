@@ -27,7 +27,7 @@ const ViewJobApplicationDetail: React.FC = () => {
     const [isApplyDialogOpen, setIsApplyDialogOpen] = useState(false);
     const [job, setJob] = useState<CandidateJobItem | null>(null);
     const [loading, setLoading] = useState(true);
-    
+
 
     useEffect(() => {
         const fetchJobDetail = async () => {
@@ -48,7 +48,7 @@ const ViewJobApplicationDetail: React.FC = () => {
 
         fetchJobDetail();
     }, [id]);
-    
+
 
     if (loading) {
         return (
@@ -60,7 +60,7 @@ const ViewJobApplicationDetail: React.FC = () => {
     }
 
     if (!job) {
-        
+
         return (
             <div className="min-h-screen bg-[#050816] flex flex-col items-center justify-center text-white p-6">
                 <h2 className="text-2xl font-bold mb-4">Không tìm thấy công việc</h2>
@@ -90,7 +90,7 @@ const ViewJobApplicationDetail: React.FC = () => {
     };
 
     return (
-        
+
         <div className="min-h-screen bg-[#050816] text-white p-6 md:p-10 relative overflow-hidden">
             {/* Background Glows */}
             <div className="absolute top-[-10%] left-[-5%] w-[600px] h-[600px] bg-purple-600/5 blur-[120px] rounded-full" />
@@ -229,17 +229,21 @@ const ViewJobApplicationDetail: React.FC = () => {
                                 <h2 className="text-xl font-bold text-white mb-1 group-hover:text-purple-400 transition-colors">
                                     {job.companyRecruiter.companyName}
                                 </h2>
-                                <a
-                                    href={
-                                        job.companyRecruiter.website?.startsWith("http")
-                                            ? job.companyRecruiter.website
-                                            : `https://${job.companyRecruiter.website}`
-                                    }
-                                    target="_blank"
-                                    className="text-purple-400 text-sm hover:underline inline-flex items-center gap-1"
-                                >
-                                    {job.companyRecruiter.website.replace('https://', '').replace('http://', '')} <ExternalLink size={12} />
-                                </a>
+                                {job.companyRecruiter.website ? (
+                                    <a
+                                        href={
+                                            job.companyRecruiter.website.startsWith("http")
+                                                ? job.companyRecruiter.website
+                                                : `https://${job.companyRecruiter.website}`
+                                        }
+                                        target="_blank"
+                                        className="text-purple-400 text-sm hover:underline inline-flex items-center gap-1"
+                                    >
+                                        {job.companyRecruiter.website.replace('https://', '').replace('http://', '')} <ExternalLink size={12} />
+                                    </a>
+                                ) : (
+                                    <span className="text-slate-500 text-sm italic">website: N/A</span>
+                                )}
                             </div>
 
                             <div className="space-y-4 pt-6 border-t border-white/5">
@@ -289,13 +293,15 @@ const ViewJobApplicationDetail: React.FC = () => {
                                 "{job.companyRecruiter.industry}"
                             </p>
 
-                            <Button
-                                variant="outline"
-                                className="w-full mt-8 border-white/10 hover:bg-white/5 text-slate-300 gap-2 h-11 cursor-pointer"
-                                onClick={() => window.open(job.companyRecruiter.website, '_blank')}
-                            >
-                                <Globe size={16} /> Xem trang công ty
-                            </Button>
+                            {job.companyRecruiter.website && (
+                                <Button
+                                    variant="outline"
+                                    className="w-full mt-8 border-white/10 hover:bg-white/5 text-slate-300 gap-2 h-11 cursor-pointer"
+                                    onClick={() => window.open(job.companyRecruiter.website, '_blank')}
+                                >
+                                    <Globe size={16} /> Xem trang công ty
+                                </Button>
+                            )}
                         </div>
                     </div>
                 </div>
