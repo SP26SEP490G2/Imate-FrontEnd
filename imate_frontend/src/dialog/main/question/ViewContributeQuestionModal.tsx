@@ -50,6 +50,7 @@ interface ViewContributeQuestionModalProps {
     onOpenChange: (open: boolean) => void;
     isSaved?: boolean;
     onSaveToggle?: () => void;
+    approvalStatus?: string;
 }
 
 type VoteType = 'upvote' | 'downvote' | null;
@@ -77,6 +78,7 @@ export function ViewContributeQuestionModal({
     onOpenChange,
     isSaved = false,
     onSaveToggle,
+    approvalStatus,
 }: ViewContributeQuestionModalProps) {
     const [loadingData, setLoadingData] = useState(true);
     const [questionData, setQuestionData] = useState<ContributedQuestionDetail | null>(null);
@@ -412,7 +414,7 @@ export function ViewContributeQuestionModal({
                     <div className="space-y-6">
                         {/* Contributor Info */}
                         <div className="bg-slate-800/40 border border-slate-700 rounded-lg p-4">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                 <div>
                                     <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">
                                         Người đóng góp
@@ -427,14 +429,54 @@ export function ViewContributeQuestionModal({
                                 </div>
                                 <div>
                                     <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">
-                                        Trạng thái
+                                        Hoạt động
                                     </label>
                                     <StatusBadge status={questionData.isActive ? "active" : "inactive"}>
                                         {questionData.isActive ? "Hoạt động" : "Vô hiệu"}
                                     </StatusBadge>
                                 </div>
+                                {approvalStatus && (
+                                    <div>
+                                        <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">
+                                            Duyệt bởi Admin
+                                        </label>
+                                        <StatusBadge 
+                                            status={
+                                                approvalStatus.toLowerCase() === 'approved' ? 'active' : 
+                                                approvalStatus.toLowerCase() === 'pending' ? 'pending' : 
+                                                'error'
+                                            }
+                                        >
+                                            {approvalStatus}
+                                        </StatusBadge>
+                                    </div>
+                                )}
                             </div>
                         </div>
+
+                        {approvalStatus && (approvalStatus.toLowerCase() === 'pending' || approvalStatus.toLowerCase() === 'rejected') && (
+                            <div className={`p-4 rounded-lg border ${
+                                approvalStatus.toLowerCase() === 'pending' 
+                                    ? 'bg-amber-500/10 border-amber-500/50 text-amber-200' 
+                                    : 'bg-rose-500/10 border-rose-500/50 text-rose-200'
+                            }`}>
+                                <div className="flex items-center gap-3">
+                                    <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+                                    <div>
+                                        <p className="text-sm font-bold">
+                                            {approvalStatus.toLowerCase() === 'pending' 
+                                                ? 'Câu hỏi đang chờ xét duyệt' 
+                                                : 'Câu hỏi đã bị từ chối'}
+                                        </p>
+                                        <p className="text-xs opacity-80 mt-1">
+                                            {approvalStatus.toLowerCase() === 'pending'
+                                                ? 'Bình luận chỉ hiển thị sau khi câu hỏi được quản trị viên phê duyệt.'
+                                                : 'Câu hỏi này không đủ điều kiện để công khai và nhận bình luận.'}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Question Content */}
                         <div className="space-y-2">
@@ -528,187 +570,189 @@ export function ViewContributeQuestionModal({
                         )}
 
                         {/* Comments Section */}
-                        <div className="space-y-3 pt-2">
-                            <div className="flex items-center justify-between">
-                                <label className="block text-sm font-medium text-slate-200">Bình luận</label>
-                                <span className="text-xs text-slate-400">{sortedComments.length} bình luận</span>
-                            </div>
-
-                            {isLoggedIn ? (
-                                <div className="rounded-lg border border-slate-700 bg-slate-800/30 p-3 space-y-2">
-                                    <Textarea
-                                        value={newCommentContent}
-                                        onChange={(e) => setNewCommentContent(e.target.value)}
-                                        placeholder="Viết bình luận của bạn..."
-                                        className="min-h-24 bg-slate-900/60 border-slate-700 text-slate-100"
-                                    />
-                                    <div className="flex justify-end">
-                                        <Button
-                                            type="button"
-                                            variant="primary"
-                                            size="sm"
-                                            onClick={handleCreateComment}
-                                            disabled={isCreatingComment || !newCommentContent.trim()}
-                                        >
-                                            <Send className="w-4 h-4" />
-                                            {isCreatingComment ? 'Đang gửi...' : 'Gửi bình luận'}
-                                        </Button>
-                                    </div>
+                        {(!approvalStatus || approvalStatus.toLowerCase() === 'approved') && (
+                            <div className="space-y-3 pt-2">
+                                <div className="flex items-center justify-between">
+                                    <label className="block text-sm font-medium text-slate-200">Bình luận</label>
+                                    <span className="text-xs text-slate-400">{sortedComments.length} bình luận</span>
                                 </div>
-                            ) : (
-                                <div className="rounded-lg border border-slate-700 bg-slate-800/30 p-3 text-sm text-slate-300">
-                                    Vui lòng đăng nhập để sử dụng chức năng bình luận.
-                                </div>
-                            )}
 
-                            <div className="space-y-3">
-                                {sortedComments.length === 0 ? (
-                                    <div className="rounded-lg border border-dashed border-slate-700 p-4 text-sm text-slate-400 text-center">
-                                        Chưa có bình luận nào. Hãy là người đầu tiên bình luận.
+                                {isLoggedIn ? (
+                                    <div className="rounded-lg border border-slate-700 bg-slate-800/30 p-3 space-y-2">
+                                        <Textarea
+                                            value={newCommentContent}
+                                            onChange={(e) => setNewCommentContent(e.target.value)}
+                                            placeholder="Viết bình luận của bạn..."
+                                            className="min-h-24 bg-slate-900/60 border-slate-700 text-slate-100"
+                                        />
+                                        <div className="flex justify-end">
+                                            <Button
+                                                type="button"
+                                                variant="primary"
+                                                size="sm"
+                                                onClick={handleCreateComment}
+                                                disabled={isCreatingComment || !newCommentContent.trim()}
+                                            >
+                                                <Send className="w-4 h-4" />
+                                                {isCreatingComment ? 'Đang gửi...' : 'Gửi bình luận'}
+                                            </Button>
+                                        </div>
                                     </div>
                                 ) : (
-                                    sortedComments.map((comment) => {
-                                        const isOwn = isOwnComment(comment.userId);
-                                        const isEditing = editingCommentId === comment.id;
-                                        const isPending = Boolean(pendingCommentIds[comment.id]);
-                                        const currentVote = localVoteByCommentId[comment.id] ?? getInitialVoteType(comment);
-                                        const createdLabel = formatCommentDate(comment.createdAt);
-                                        const updatedLabel = formatCommentDate(comment.updatedAt);
-                                        const displayLabel = createdLabel || updatedLabel;
-                                        const showEdited = Boolean(createdLabel && updatedLabel && updatedLabel !== createdLabel);
+                                    <div className="rounded-lg border border-slate-700 bg-slate-800/30 p-3 text-sm text-slate-300">
+                                        Vui lòng đăng nhập để sử dụng chức năng bình luận.
+                                    </div>
+                                )}
 
-                                        return (
-                                            <div
-                                                key={comment.id}
-                                                className="rounded-lg border border-slate-700 bg-slate-800/30 p-3"
-                                            >
-                                                <div className="flex items-start gap-4">
-                                                    {!isPending && (
-                                                        <div className="flex flex-col items-center gap-2 pt-1">
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => handleVoteComment(comment, true)}
-                                                                disabled={!isLoggedIn || votingCommentId === comment.id}
-                                                                className={`w-10 h-10 rounded-lg flex items-center justify-center hover:bg-white/5 transition-all ${
-                                                                    currentVote === 'upvote' ? 'text-emerald-300' : 'text-slate-500'
-                                                                } disabled:opacity-60`}
-                                                            >
-                                                                <ArrowBigUp className="w-6 h-6" />
-                                                            </button>
-                                                            <span className={`text-lg font-bold ${comment.totalVotes >= 0 ? 'text-emerald-300' : 'text-rose-300'}`}>
-                                                                {comment.totalVotes >= 0 ? '+' : ''}{comment.totalVotes}
-                                                            </span>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => handleVoteComment(comment, false)}
-                                                                disabled={!isLoggedIn || votingCommentId === comment.id}
-                                                                className={`w-10 h-10 rounded-lg flex items-center justify-center hover:bg-white/5 transition-all ${
-                                                                    currentVote === 'downvote' ? 'text-rose-300' : 'text-slate-500'
-                                                                } disabled:opacity-60`}
-                                                            >
-                                                                <ArrowBigDown className="w-6 h-6" />
-                                                            </button>
-                                                        </div>
-                                                    )}
+                                <div className="space-y-3">
+                                    {sortedComments.length === 0 ? (
+                                        <div className="rounded-lg border border-dashed border-slate-700 p-4 text-sm text-slate-400 text-center">
+                                            Chưa có bình luận nào. Hãy là người đầu tiên bình luận.
+                                        </div>
+                                    ) : (
+                                        sortedComments.map((comment) => {
+                                            const isOwn = isOwnComment(comment.userId);
+                                            const isEditing = editingCommentId === comment.id;
+                                            const isPending = Boolean(pendingCommentIds[comment.id]);
+                                            const currentVote = localVoteByCommentId[comment.id] ?? getInitialVoteType(comment);
+                                            const createdLabel = formatCommentDate(comment.createdAt);
+                                            const updatedLabel = formatCommentDate(comment.updatedAt);
+                                            const displayLabel = createdLabel || updatedLabel;
+                                            const showEdited = Boolean(createdLabel && updatedLabel && updatedLabel !== createdLabel);
 
-                                                    <div className="flex-1 space-y-3">
-                                                        <div className="flex items-start justify-between gap-3">
-                                                            <div className="group">
-                                                                <p className="text-sm font-medium text-slate-200">
-                                                                    {comment.userName || 'Ẩn danh'}
-                                                                </p>
-                                                                {displayLabel && (
-                                                                    <p className="text-xs text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                        {displayLabel}
-                                                                        {showEdited ? ' (đã chỉnh sửa)' : ''}
-                                                                        {isPending ? ' • Đang chờ AI duyệt...' : ''}
-                                                                    </p>
-                                                                )}
-                                                            </div>
-
-                                                            {/* Nút hành động: Report + Edit + Delete */}
-                                                            <div className="flex items-center gap-3">
-                                                                {/* Nút Báo cáo */}
-                                                                {!isOwn && isLoggedIn && !isPending && (
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => {
-                                                                            setSelectedCommentIdForReport(comment.id);
-                                                                            setIsReportDialogOpen(true);
-                                                                        }}
-                                                                        className="text-slate-400 hover:text-red-400 transition-colors p-1 rounded-md hover:bg-slate-700"
-                                                                        title="Báo cáo bình luận"
-                                                                    >
-                                                                        <AlertTriangle className="w-4 h-4" />
-                                                                    </button>
-                                                                )}
-
-                                                                {/* Nút chỉnh sửa & xoá của chủ bình luận */}
-                                                                {isLoggedIn && isOwn && !isPending && !isEditing && (
-                                                                    <div className="flex items-center gap-2">
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => handleStartEditComment(comment)}
-                                                                            className="text-xs text-slate-400 hover:text-sky-300 transition-colors"
-                                                                        >
-                                                                            Chỉnh sửa
-                                                                        </button>
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => setCommentToDeleteId(comment.id)}
-                                                                            disabled={deletingCommentId === comment.id}
-                                                                            className="text-xs text-slate-400 hover:text-red-300 transition-colors disabled:opacity-60"
-                                                                        >
-                                                                            Xoá
-                                                                        </button>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </div>
-
-                                                        {!isEditing ? (
-                                                            <p className="text-sm text-slate-100 whitespace-pre-wrap">
-                                                                {comment.content}
-                                                            </p>
-                                                        ) : (
-                                                            <div className="space-y-2">
-                                                                <Textarea
-                                                                    value={editingCommentContent}
-                                                                    onChange={(e) => setEditingCommentContent(e.target.value)}
-                                                                    className="min-h-20 bg-slate-900/60 border-slate-700 text-slate-100"
-                                                                />
-                                                                <div className="flex items-center justify-end gap-2">
-                                                                    <Button
-                                                                        type="button"
-                                                                        variant="outline"
-                                                                        size="sm"
-                                                                        onClick={handleCancelEditComment}
-                                                                        disabled={isSavingEdit}
-                                                                    >
-                                                                        <X className="w-4 h-4" />
-                                                                        Huỷ
-                                                                    </Button>
-                                                                    <Button
-                                                                        type="button"
-                                                                        variant="primary"
-                                                                        size="sm"
-                                                                        onClick={() => handleSaveEditComment(comment.id)}
-                                                                        disabled={isSavingEdit || !editingCommentContent.trim()}
-                                                                    >
-                                                                        <Save className="w-4 h-4" />
-                                                                        {isSavingEdit ? 'Đang lưu...' : 'Lưu'}
-                                                                    </Button>
-                                                                </div>
+                                            return (
+                                                <div
+                                                    key={comment.id}
+                                                    className="rounded-lg border border-slate-700 bg-slate-800/30 p-3"
+                                                >
+                                                    <div className="flex items-start gap-4">
+                                                        {!isPending && (
+                                                            <div className="flex flex-col items-center gap-2 pt-1">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleVoteComment(comment, true)}
+                                                                    disabled={!isLoggedIn || votingCommentId === comment.id}
+                                                                    className={`w-10 h-10 rounded-lg flex items-center justify-center hover:bg-white/5 transition-all ${
+                                                                        currentVote === 'upvote' ? 'text-emerald-300' : 'text-slate-500'
+                                                                    } disabled:opacity-60`}
+                                                                >
+                                                                    <ArrowBigUp className="w-6 h-6" />
+                                                                </button>
+                                                                <span className={`text-lg font-bold ${comment.totalVotes >= 0 ? 'text-emerald-300' : 'text-rose-300'}`}>
+                                                                    {comment.totalVotes >= 0 ? '+' : ''}{comment.totalVotes}
+                                                                </span>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleVoteComment(comment, false)}
+                                                                    disabled={!isLoggedIn || votingCommentId === comment.id}
+                                                                    className={`w-10 h-10 rounded-lg flex items-center justify-center hover:bg-white/5 transition-all ${
+                                                                        currentVote === 'downvote' ? 'text-rose-300' : 'text-slate-500'
+                                                                    } disabled:opacity-60`}
+                                                                >
+                                                                    <ArrowBigDown className="w-6 h-6" />
+                                                                </button>
                                                             </div>
                                                         )}
+
+                                                        <div className="flex-1 space-y-3">
+                                                            <div className="flex items-start justify-between gap-3">
+                                                                <div className="group">
+                                                                    <p className="text-sm font-medium text-slate-200">
+                                                                        {comment.userName || 'Ẩn danh'}
+                                                                    </p>
+                                                                    {displayLabel && (
+                                                                        <p className="text-xs text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                            {displayLabel}
+                                                                            {showEdited ? ' (đã chỉnh sửa)' : ''}
+                                                                            {isPending ? ' • Đang chờ AI duyệt...' : ''}
+                                                                        </p>
+                                                                    )}
+                                                                </div>
+
+                                                                {/* Nút hành động: Report + Edit + Delete */}
+                                                                <div className="flex items-center gap-3">
+                                                                    {/* Nút Báo cáo */}
+                                                                    {!isOwn && isLoggedIn && !isPending && (
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => {
+                                                                                setSelectedCommentIdForReport(comment.id);
+                                                                                setIsReportDialogOpen(true);
+                                                                            }}
+                                                                            className="text-slate-400 hover:text-red-400 transition-colors p-1 rounded-md hover:bg-slate-700"
+                                                                            title="Báo cáo bình luận"
+                                                                        >
+                                                                            <AlertTriangle className="w-4 h-4" />
+                                                                        </button>
+                                                                    )}
+
+                                                                    {/* Nút chỉnh sửa & xoá của chủ bình luận */}
+                                                                    {isLoggedIn && isOwn && !isPending && !isEditing && (
+                                                                        <div className="flex items-center gap-2">
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => handleStartEditComment(comment)}
+                                                                                className="text-xs text-slate-400 hover:text-sky-300 transition-colors"
+                                                                            >
+                                                                                Chỉnh sửa
+                                                                            </button>
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => setCommentToDeleteId(comment.id)}
+                                                                                disabled={deletingCommentId === comment.id}
+                                                                                className="text-xs text-slate-400 hover:text-red-300 transition-colors disabled:opacity-60"
+                                                                            >
+                                                                                Xoá
+                                                                            </button>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+
+                                                            {!isEditing ? (
+                                                                <p className="text-sm text-slate-100 whitespace-pre-wrap">
+                                                                    {comment.content}
+                                                                </p>
+                                                            ) : (
+                                                                <div className="space-y-2">
+                                                                    <Textarea
+                                                                        value={editingCommentContent}
+                                                                        onChange={(e) => setEditingCommentContent(e.target.value)}
+                                                                        className="min-h-20 bg-slate-900/60 border-slate-700 text-slate-100"
+                                                                    />
+                                                                    <div className="flex items-center justify-end gap-2">
+                                                                        <Button
+                                                                            type="button"
+                                                                            variant="outline"
+                                                                            size="sm"
+                                                                            onClick={handleCancelEditComment}
+                                                                            disabled={isSavingEdit}
+                                                                        >
+                                                                            <X className="w-4 h-4" />
+                                                                            Huỷ
+                                                                        </Button>
+                                                                        <Button
+                                                                            type="button"
+                                                                            variant="primary"
+                                                                            size="sm"
+                                                                            onClick={() => handleSaveEditComment(comment.id)}
+                                                                            disabled={isSavingEdit || !editingCommentContent.trim()}
+                                                                        >
+                                                                            <Save className="w-4 h-4" />
+                                                                            {isSavingEdit ? 'Đang lưu...' : 'Lưu'}
+                                                                        </Button>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        );
-                                    })
-                                )}
+                                            );
+                                        })
+                                    )}
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         {/* Footer */}
                         <div className="flex justify-between items-center pt-4 border-t border-slate-700">
