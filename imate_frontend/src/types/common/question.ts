@@ -237,9 +237,10 @@ export type Level = 0 | 1 | 2 | 3 | 4 | 5; // 0 = Intern, 1 = Junior, 2 = Middle
 export interface StaffSystemQuestionItem {
   id: number;
   content: string;
-  positionsName?: string;
-  skillsName?: string;
-  categoriesName?: string;
+  positionsName?: string[];
+  skillsName?: string[];
+  categoriesName?: string[];
+  creatorName?: string;
   difficulty: DifficultyLevel;
   isActive: boolean;
   createdAt: string;

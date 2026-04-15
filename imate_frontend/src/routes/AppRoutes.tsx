@@ -85,6 +85,7 @@ import Wallet from "@/pages/management/payment/Wallet";
 import SystemConfigManagement from "@/pages/management/config/SystemConfigManagement";
 import RecruiterCompanyProfile from "@/pages/recruiter/RecruiterCompanyProfile";
 import StaffApplicationManagement from "@/pages/management/reportApplication/StaffApplicationManagement";
+import PracticeWithAI from "@/pages/main/public/PracticeWithAI";
 
 /**
  * Route Configuration Type
@@ -124,6 +125,7 @@ const routeConfigs: RouteConfig[] = [
   { path: "/pricing", element: <ViewSubscriptionPage />, layout: LAYOUT.MAIN },
   { path: "/view-mentor", element: <MentorList />, layout: LAYOUT.MAIN },
   { path: "/view-mentor/:id", element: <MentorDetail />, layout: LAYOUT.MAIN },
+  { path: "/practice-with-ai", element: <PracticeWithAI />, layout: LAYOUT.MAIN },
 
   // ===== MAIN LAYOUT ROUTES =====
   { path: "/profile", element: <ViewProfile />, layout: LAYOUT.MAIN, requireAuth: true, accountStatus: ACCOUNT_STATUS.Active },

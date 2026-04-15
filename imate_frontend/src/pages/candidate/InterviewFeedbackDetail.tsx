@@ -29,7 +29,6 @@ import {
 import { MSG24 } from "@/constants/messages";
 import {
   USE_MOCK,
-  MOCK_QUESTIONS,
 } from "@/mocks/interviewMockData";
 
 /* ------------------------------------------------------------------ */
@@ -200,11 +199,28 @@ function QuestionCard({
         </div>
       </div>
 
-      {/* Score Metrics */}
-      <div className="mb-5 grid gap-4 md:grid-cols-2">
-        <ScoreBar label="Cách diễn đạt" value={response.communicationScore} />
-        <ScoreBar label="Kiến thức" value={response.technicalDepthScore} />
-      </div>
+      {/* Score Metrics or Loading */}
+      {!response.structuredFeedbackJson ? (
+        <div className="mb-5 grid gap-4 md:grid-cols-2">
+          <div className="space-y-2 animate-pulse">
+            <div className="h-4 w-24 rounded bg-slate-700" />
+            <div className="h-2 w-full rounded bg-slate-700" />
+          </div>
+          <div className="space-y-2 animate-pulse">
+            <div className="h-4 w-24 rounded bg-slate-700" />
+            <div className="h-2 w-full rounded bg-slate-700" />
+          </div>
+          <div className="col-span-2 mt-2 flex items-center gap-2 text-xs text-purple-400">
+             <Loader2 className="h-3 w-3 animate-spin" />
+             Đang phân tích phản hồi...
+          </div>
+        </div>
+      ) : (
+        <div className="mb-5 grid gap-4 md:grid-cols-2">
+          <ScoreBar label="Cách diễn đạt" value={response.communicationScore} />
+          <ScoreBar label="Kiến thức" value={response.technicalDepthScore} />
+        </div>
+      )}
 
       {/* Expand/Collapse for detailed feedback */}
       <div className="border-t border-slate-700/40 pt-4">
@@ -335,55 +351,6 @@ function QuestionCard({
 /* ------------------------------------------------------------------ */
 /*  Mock: kết quả phỏng vấn giả cho session 999                       */
 /* ------------------------------------------------------------------ */
-const MOCK_RESULT: InterviewResultDetail = {
-  session: {
-    id: 999,
-    positionName: "Backend Developer",
-    skillName: "Node.js, TypeScript, PostgreSQL",
-    levelName: "Junior",
-    companyName: "FPT Software",
-    startTime: new Date().toISOString(),
-    endTime: new Date().toISOString(),
-    status: "Completed",
-    totalQuestions: MOCK_QUESTIONS.length,
-    totalQuestionsAnswered: MOCK_QUESTIONS.length,
-    overallFeedback: JSON.stringify({
-      overall_comment: "Bạn đã hoàn thành " + MOCK_QUESTIONS.length + " câu hỏi. Điểm trung bình: 0.72/1.00.",
-      strengths: ["Trả lời rõ ràng, mạch lạc", "Có kiến thức nền tảng tốt"],
-      improvements: ["Cần đưa thêm ví dụ thực tế", "Nên giải thích sâu hơn về kiến trúc hệ thống"]
-    }),
-    estimatedAbility: 0.72,
-  },
-  responses: MOCK_QUESTIONS.map((q, i) => ({
-    id: q.interviewResponseId,
-    questionNumber: i + 1,
-    turnNumber: i + 1,
-    questionContent: q.questionText,
-    userAnswer: "(Mock) Câu trả lời mẫu cho câu hỏi " + (i + 1),
-    answerTimestamp: new Date().toISOString(),
-    expectedBloomLevel: 3,
-    demonstratedBloomLevel: 2,
-    bloomScore: 0.7,
-    difficultyScore: 0.5 + i * 0.05,
-    cognitiveLoadScore: 0.4,
-    technicalDepthScore: 0.65 + Math.random() * 0.2,
-    problemSolvingScore: 0.6 + Math.random() * 0.2,
-    communicationScore: 0.7 + Math.random() * 0.15,
-    practicalExperienceScore: 0.55 + Math.random() * 0.2,
-    starSituationScore: null,
-    starTaskScore: null,
-    starActionScore: null,
-    starResultScore: null,
-    structuredFeedbackJson: JSON.stringify({
-      overall_comment: "Câu trả lời đạt yêu cầu cơ bản.",
-      strengths: ["Trình bày rõ ràng", "Có kiến thức nền tảng"],
-      improvements: ["Cần ví dụ thực tế hơn"],
-      suggested_answer: "Đáp án mẫu chi tiết cho câu hỏi " + q.topic,
-    }),
-    aiFeedback: "Bạn có hiểu biết cơ bản về " + q.topic + ". Nên bổ sung thêm kinh nghiệm thực tế.",
-    expectedAnswerOutline: "Đáp án mẫu cho " + q.topic,
-  })),
-};
 
 /* ------------------------------------------------------------------ */
 /*  Main Page                                                          */
@@ -396,26 +363,39 @@ export default function InterviewFeedbackDetail() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
   useEffect(() => {
-    const fetchDetail = async () => {
+    let pollInterval: any;
+
+    const fetchDetail = async (isSilent = false) => {
       if (!id) return;
       try {
-        setLoading(true);
-        // Mock mode: dùng data giả cho session 999
-        if (USE_MOCK && id === "999") {
-          await new Promise((r) => setTimeout(r, 500));
-          setDetail(MOCK_RESULT);
-          return;
-        }
+        if (!isSilent) setLoading(true);
         const data = await getInterviewResult(parseInt(id));
         setDetail(data);
-      } catch {
-        toast.error(MSG24);
+
+        // Nếu đã hoàn thành thì không cần poll nữa
+        if (data.session.status === "Completed") {
+          if (pollInterval) clearInterval(pollInterval);
+        }
+      } catch (err) {
+        if (!isSilent) toast.error(MSG24);
       } finally {
-        setLoading(false);
+        if (!isSilent) setLoading(false);
       }
     };
 
     fetchDetail();
+
+    // Thiết lập polling nếu session chưa hoàn thành
+    // Chỉ poll nếu không phải đang dùng Mock data
+    if (!(USE_MOCK && id === "999")) {
+      pollInterval = setInterval(() => {
+        fetchDetail(true);
+      }, 3000);
+    }
+
+    return () => {
+      if (pollInterval) clearInterval(pollInterval);
+    };
   }, [id]);
 
   if (loading) {
@@ -494,9 +474,17 @@ export default function InterviewFeedbackDetail() {
 
       {/* Session Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white md:text-3xl">
-          Phiên phỏng vấn {session.id}
-        </h1>
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="text-2xl font-bold text-white md:text-3xl">
+            Phiên phỏng vấn {session.id}
+          </h1>
+          {session.status !== "Completed" && (
+            <div className="flex items-center gap-2 rounded-full bg-purple-500/10 px-4 py-1.5 text-sm font-medium text-purple-400 border border-purple-500/20">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Đang tạo báo cáo...
+            </div>
+          )}
+        </div>
         <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-slate-400">
           <span className="flex items-center gap-1.5">
             <Calendar className="h-4 w-4" />
@@ -556,7 +544,12 @@ export default function InterviewFeedbackDetail() {
             </h3>
           </div>
           <p className="text-sm leading-relaxed text-slate-300">
-            {overallSections.overview || "Chưa có nhận xét tổng quan."}
+            {overallSections.overview || (session.status !== "Completed" ? (
+              <span className="flex items-center gap-2 text-slate-500">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Đang tổng hợp nhận xét...
+              </span>
+            ) : "Chưa có nhận xét tổng quan.")}
           </p>
         </div>
 

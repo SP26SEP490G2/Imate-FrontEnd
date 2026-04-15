@@ -23,7 +23,7 @@ export const CANDIDATE_MENU_ITEMS: MenuItem[] = [
   },
   {
     label: "Luyện tập với AI",
-    href: "/interview-setup",
+    href: "/practice-with-ai",
     hasDropdown: true,
     subItems: [
       { label: "Phỏng vấn với AI", href: "/interview-setup", icon: Sparkles },
