@@ -17,6 +17,7 @@ import SignUp from "@/pages/auth/SignUp";
 import VerifyEmail from "@/pages/auth/VerifyEmail";
 import ForgotPassword from "@/pages/auth/ForgotPassword";
 import ResetPassword from "@/pages/auth/ResetPassword";
+import SuspendedPage from "@/pages/auth/SuspendedPage";
 
 // Pages - Guest
 import HomePage from "@/pages/main/public/HomePage";
@@ -117,6 +118,7 @@ const routeConfigs: RouteConfig[] = [
   { path: "/verify-email", element: <VerifyEmail />, layout: LAYOUT.NONE },
   { path: "/forgot-password", element: <ForgotPassword />, layout: LAYOUT.NONE },
   { path: "/reset-password", element: <ResetPassword />, layout: LAYOUT.NONE },
+  { path: "/suspended", element: <SuspendedPage />, layout: LAYOUT.NONE },
 
   // ===== MAIN LAYOUT ROUTES =====
   { path: "/home", element: <HomePage />, layout: LAYOUT.MAIN },
