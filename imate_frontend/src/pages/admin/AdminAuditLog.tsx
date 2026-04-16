@@ -21,7 +21,7 @@ import { AppTabs } from "@/components/ui/tabs";
 import type { PaginatedAuditLogResponse } from "@/types/response/audit-log.response";
 // ...existing code...
 
-const PAGE_SIZE = 10;
+const DEFAULT_PAGE_SIZE = 10;
 
 const AdminAuditLog: React.FC = () => {
   //==========STATE==========
@@ -45,6 +45,7 @@ const AdminAuditLog: React.FC = () => {
   });
 
   // DATA STATE
+  const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
   const [data, setData] = useState<PaginatedAuditLogResponse | null>(null);
   const [loadingData, setLoadingData] = useState<boolean>(false);
   const [filterOptions, setFilterOptions] = useState<{
@@ -92,7 +93,7 @@ const AdminAuditLog: React.FC = () => {
 
         const requestParams = {
           pageNumber: currentPage,
-          pageSize: PAGE_SIZE,
+          pageSize: pageSize,
           staffName: staffName && staffName !== "all" ? staffName : undefined,
           entityType: entityType && entityType !== "all" ? entityType : undefined,
           searchTerm: searchTerm || undefined,
@@ -113,7 +114,7 @@ const AdminAuditLog: React.FC = () => {
     };
 
     fetchListData();
-  }, [currentPage, currentTab, searchParams]);
+  }, [currentPage, currentTab, searchParams, pageSize]);
 
   // Fetch filter options on mount
   useEffect(() => {
@@ -135,6 +136,14 @@ const AdminAuditLog: React.FC = () => {
   const handlePageChange = (page: number) => {
     const newParams = new URLSearchParams(searchParams);
     newParams.set("page", page.toString());
+    setSearchParams(newParams);
+  };
+
+  // 1b. PAGE SIZE HANDLE
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("page", "1"); // Reset to page 1 when page size changes
     setSearchParams(newParams);
   };
 
@@ -183,7 +192,7 @@ const AdminAuditLog: React.FC = () => {
   };
 
   const renderValue = (value: any) => {
-    if (value === null || value === undefined || value === "") 
+    if (value === null || value === undefined || value === "")
       return <span className="text-slate-500 italic">Không có dữ liệu</span>;
 
     let parsedValue = value;
@@ -204,7 +213,7 @@ const AdminAuditLog: React.FC = () => {
         </div>
       );
     }
-    
+
     return (
       <div className="max-w-[300px] overflow-hidden">
         <span className="text-slate-300 font-mono text-[11px] bg-slate-900/50 px-2 py-1 rounded border border-white/5 break-words">
@@ -330,9 +339,9 @@ const AdminAuditLog: React.FC = () => {
             <Table
               page={currentPage}
               totalPages={totalPage}
-              totalCount = {totalCount}
-              pageSize={PAGE_SIZE}
-              onPageSizeChange={() => {}}
+              totalCount={totalCount}
+              pageSize={pageSize}
+              onPageSizeChange={handlePageSizeChange}
               onPageChange={handlePageChange}
               maxHeight="55vh"
             >
@@ -351,7 +360,7 @@ const AdminAuditLog: React.FC = () => {
               <TableBody>
                 {data?.items.map((item, index) => (
                   <TableRow key={item.id}>
-                    <TableCell>{String((currentPage - 1) * PAGE_SIZE + (index + 1)).padStart(2, '0')}</TableCell>
+                    <TableCell>{String((currentPage - 1) * pageSize + (index + 1)).padStart(2, '0')}</TableCell>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8">
