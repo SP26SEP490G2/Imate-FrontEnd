@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSearchParams } from "react-router-dom";
 import {
-  ChevronRight,
   Loader2,
   History,
   Eye,
@@ -27,7 +26,6 @@ import {
 import { getCandidateBookings } from "@/services/bookingCandidateService";
 import type { BookingDetailResponse } from "@/types/response/booking.response";
 import { MSG07, MSG31 } from "@/constants/messages";
-import ReviewModal from "./ReviewModal";
 
 /* ------------------------------------------------------------------ */
 /*  Score Badge                                                        */
@@ -37,8 +35,8 @@ function ScoreBadge({ score }: { score: number }) {
     score >= 80
       ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-400"
       : score >= 50
-      ? "border-amber-500/40 bg-amber-500/15 text-amber-400"
-      : "border-red-500/40 bg-red-500/15 text-red-400";
+        ? "border-amber-500/40 bg-amber-500/15 text-amber-400"
+        : "border-red-500/40 bg-red-500/15 text-red-400";
 
   return (
     <span
@@ -56,11 +54,10 @@ function CategoryTag({ testType }: { testType: string }) {
   const isLang = testType === "Language";
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold ${
-        isLang
-          ? "bg-cyan-500/15 text-cyan-400"
-          : "bg-purple-500/15 text-purple-400"
-      }`}
+      className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold ${isLang
+        ? "bg-cyan-500/15 text-cyan-400"
+        : "bg-purple-500/15 text-purple-400"
+        }`}
     >
       {isLang ? (
         <Languages className="h-3 w-3" />
@@ -146,9 +143,6 @@ export default function TestHistory() {
   const [interviewLoading, setInterviewLoading] = useState(false);
   const [mentorLoading, setMentorLoading] = useState(false);
 
-  // Review Modal State
-  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
-  const [selectedBooking, setSelectedBooking] = useState<BookingDetailResponse | null>(null);
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
@@ -216,29 +210,9 @@ export default function TestHistory() {
     });
   };
 
-  const handleOpenReview = (booking: BookingDetailResponse) => {
-    setSelectedBooking(booking);
-    setIsReviewModalOpen(true);
-  };
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
-      {/* Breadcrumb */}
-      <nav className="mb-6 flex items-center gap-1.5 text-sm text-slate-500">
-        <span
-          className="cursor-pointer transition-colors hover:text-slate-300"
-          onClick={() => navigate("/home")}
-        >
-          Trang chủ
-        </span>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span className="transition-colors hover:text-slate-300 cursor-pointer">
-          Luyện tập AI
-        </span>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span className="font-medium text-purple-400">Lịch sử bài test</span>
-      </nav>
-
       {/* Title */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-white md:text-3xl">
@@ -256,11 +230,10 @@ export default function TestHistory() {
           <button
             key={tab.id}
             onClick={() => handleTabChange(tab.id)}
-            className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${
-              activeTab === tab.id
-                ? "bg-slate-700 text-white shadow-sm"
-                : "text-slate-400 hover:text-slate-300"
-            }`}
+            className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${activeTab === tab.id
+              ? "bg-slate-700 text-white shadow-sm"
+              : "text-slate-400 hover:text-slate-300"
+              }`}
           >
             {tab.label}
           </button>
@@ -291,11 +264,10 @@ export default function TestHistory() {
               {history.map((item, idx) => (
                 <div
                   key={item.id}
-                  className={`grid grid-cols-12 items-center gap-4 px-6 py-4 transition-colors hover:bg-slate-800/50 ${
-                    idx < history.length - 1
-                      ? "border-b border-slate-700/30"
-                      : ""
-                  }`}
+                  className={`grid grid-cols-12 items-center gap-4 px-6 py-4 transition-colors hover:bg-slate-800/50 ${idx < history.length - 1
+                    ? "border-b border-slate-700/30"
+                    : ""
+                    }`}
                 >
                   <div className="col-span-4 flex items-center gap-3">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-purple-500/15">
@@ -360,9 +332,8 @@ export default function TestHistory() {
               {interviewHistory.map((item, idx) => (
                 <div
                   key={item.id}
-                  className={`grid grid-cols-12 items-center gap-4 px-6 py-4 transition-colors hover:bg-slate-800/50 ${
-                    idx < interviewHistory.length - 1 ? "border-b border-slate-700/30" : ""
-                  }`}
+                  className={`grid grid-cols-12 items-center gap-4 px-6 py-4 transition-colors hover:bg-slate-800/50 ${idx < interviewHistory.length - 1 ? "border-b border-slate-700/30" : ""
+                    }`}
                 >
                   <div className="col-span-3 flex items-center gap-3">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-purple-500/15">
@@ -431,13 +402,12 @@ export default function TestHistory() {
               {mentorHistory.map((item, idx) => (
                 <div
                   key={item.bookingId}
-                  className={`grid grid-cols-12 items-center gap-4 px-6 py-4 transition-colors hover:bg-slate-800/50 ${
-                    idx < mentorHistory.length - 1 ? "border-b border-slate-700/30" : ""
-                  }`}
+                  className={`grid grid-cols-12 items-center gap-4 px-6 py-4 transition-colors hover:bg-slate-800/50 ${idx < mentorHistory.length - 1 ? "border-b border-slate-700/30" : ""
+                    }`}
                 >
                   <div className="col-span-4 flex items-center gap-3">
-                    <img 
-                      src={item.profileAvatarUrl || "https://i.pravatar.cc/150"} 
+                    <img
+                      src={item.profileAvatarUrl || "https://i.pravatar.cc/150"}
                       alt={item.profileName}
                       className="h-10 w-10 rounded-full object-cover border border-slate-700"
                     />
@@ -456,16 +426,6 @@ export default function TestHistory() {
                     <InterviewStatusBadge status={item.status === 2 ? "Completed" : item.status === 3 ? "Cancelled" : "InProgress"} />
                   </div>
                   <div className="col-span-3 flex justify-center gap-2">
-                    {item.status === 2 && !item.ratingScore && (
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={() => handleOpenReview(item)}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-xs h-8 px-3"
-                      >
-                        Đánh giá
-                      </Button>
-                    )}
                     {item.ratingScore && (
                       <div className="flex items-center gap-1 text-yellow-400 text-sm font-bold bg-yellow-400/10 px-2 py-1 rounded-lg">
                         <Star className="w-3.5 h-3.5 fill-yellow-400" />
@@ -477,7 +437,7 @@ export default function TestHistory() {
                       size="sm"
                       icon={<Eye className="h-4 w-4" />}
                       className="text-xs h-8 px-2"
-                      onClick={() => navigate(`/interview-history/${item.bookingId}`)}
+                      onClick={() => navigate(`/candidate/interview-history/${item.bookingId}`)}
                     >
                       Chi tiết
                     </Button>
@@ -489,15 +449,6 @@ export default function TestHistory() {
         </>
       )}
 
-      {selectedBooking && (
-        <ReviewModal
-          isOpen={isReviewModalOpen}
-          onClose={() => setIsReviewModalOpen(false)}
-          bookingId={selectedBooking.bookingId}
-          mentorName={selectedBooking.profileName}
-          onSuccess={fetchMentorHistory}
-        />
-      )}
     </div>
   );
 }

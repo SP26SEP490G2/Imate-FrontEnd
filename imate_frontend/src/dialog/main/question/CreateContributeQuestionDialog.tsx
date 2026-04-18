@@ -245,7 +245,7 @@ export function CreateContributeQuestionDialog({
               {/* User Answer (Optional) */}
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-slate-200">
-                  Câu trả lời của bạn (Tùy chọn)
+                  Câu trả lời của bạn <span className="text-red-400">*</span>
                 </label>
                 <textarea
                   value={formData.userAnswer}

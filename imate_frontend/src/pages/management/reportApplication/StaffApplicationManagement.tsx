@@ -392,9 +392,12 @@ export default function StaffApplicationManagement() {
                 {/* Người gửi */}
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    <Avatar className="w-7 h-7 shrink-0">
-                      <AvatarImage src={app.avatarUrl ?? undefined} alt={app.fullName} />
-                      <AvatarFallback>{app.fullName?.charAt(0) ?? "?"}</AvatarFallback>
+                    <Avatar size="lg">
+                      <AvatarImage src={app?.avatarUrl || ""} />
+                      <AvatarFallback
+                        name={app?.fullName}
+                        className="bg-slate-700"
+                      />
                     </Avatar>
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-slate-200 truncate max-w-[130px]">

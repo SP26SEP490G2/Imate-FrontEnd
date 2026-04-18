@@ -142,8 +142,8 @@ export function ViewPendingContributeQuestionModal({
                                             type="button"
                                             disabled
                                             className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all cursor-not-allowed ${questionData.difficulty === level
-                                                    ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                                                    : 'border-slate-700 bg-slate-800 text-slate-400'
+                                                ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
+                                                : 'border-slate-700 bg-slate-800 text-slate-400'
                                                 }`}
                                         >
                                             {DIFFICULTY_MAP[level]}
@@ -218,7 +218,7 @@ export function ViewPendingContributeQuestionModal({
                                 onClick={() => handleChangeStatus(false)}
                                 disabled={loadingData || loadingAction}
                             >
-                                {loadingAction ? 'Đang xử lý...' : 'Reject'}
+                                {loadingAction ? 'Đang xử lý...' : 'Từ chối'}
                             </Button>
                             <Button
                                 type="button"
@@ -226,7 +226,7 @@ export function ViewPendingContributeQuestionModal({
                                 onClick={() => handleChangeStatus(true)}
                                 disabled={loadingData || loadingAction}
                             >
-                                {loadingAction ? 'Đang xử lý...' : 'Approve'}
+                                {loadingAction ? 'Đang xử lý...' : 'Duyệt'}
                             </Button>
                             <DialogClose asChild>
                                 <Button

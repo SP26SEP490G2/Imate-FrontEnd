@@ -56,6 +56,7 @@ const ViewQuestionBank: React.FC = () => {
   const [viewModalId, setViewModalId] = useState<number>(0);
   const [viewModalType, setViewModalType] = useState<'system' | 'contributed'>('system');
   const [viewModalEnableSave, setViewModalEnableSave] = useState(true);
+  const [viewModalStatus, setViewModalStatus] = useState<string | undefined>(undefined);
   const [savedTab, setSavedTab] = useState<SavedTabType>('system');
 
   // Saved overrides (optimistic toggle on top of API-returned isSaved)
@@ -107,6 +108,7 @@ const ViewQuestionBank: React.FC = () => {
     categoryId,
     companyId,
     companyName,
+    approvalStatus,
     level,
     difficulty,
     sortBy,
@@ -288,10 +290,11 @@ const ViewQuestionBank: React.FC = () => {
     }
   };
 
-  const handleView = (id: number, type: 'system' | 'contributed', currentSaved: boolean, enableSave = true) => {
+  const handleView = (id: number, type: 'system' | 'contributed', currentSaved: boolean, enableSave = true, status?: string) => {
     setViewModalId(id);
     setViewModalType(type);
     setViewModalEnableSave(enableSave && isLoggedIn);
+    setViewModalStatus(status);
     setViewModalOpen(true);
     // Seed the override map so the modal has the correct initial value
     const questionKey = getQuestionKey(type, id);
@@ -339,7 +342,8 @@ const ViewQuestionBank: React.FC = () => {
       timeAgo: formatDate(question.createdAt),
       skills: question.skills.map((item) => item.name),
       position: question.positions.map((item) => item.name).join(', ') || 'N/A',
-      level: difficultyText,
+      level: "",
+      difficulty: difficultyText,
       rating,
     };
   };
@@ -362,6 +366,7 @@ const ViewQuestionBank: React.FC = () => {
       skills: question.skills.map((item) => item.name),
       position: question.positions.map((item) => item.name).join(', ') || 'N/A',
       level: question.contributedDetail?.level || 'N/A',
+      difficulty: difficultyText,
       rating,
     };
   };
@@ -384,6 +389,7 @@ const ViewQuestionBank: React.FC = () => {
       skills: question.skillsName || [],
       position: question.positionsName?.join(', ') || 'N/A',
       level: question.contributedDetail?.level || difficultyText,
+      difficulty: difficultyText,
       rating,
       status: question.approvalStatus || 'Pending',
     };
@@ -538,6 +544,7 @@ const ViewQuestionBank: React.FC = () => {
                   onClick={() => {
                     setActiveTab('myContributed');
                     setPageNumber(1);
+                    setApprovalStatus(1); // Default to Approved
                   }}
                   className={`pb-4 font-bold text-xs uppercase tracking-widest border-b-2 transition-colors ${activeTab === 'myContributed'
                     ? 'text-indigo-400 border-indigo-500'
@@ -570,7 +577,7 @@ const ViewQuestionBank: React.FC = () => {
                       ? 'Nơi các ứng viên chia sẻ trải nghiệm phỏng vấn thực tế từ các công ty.'
                       : activeTab === 'myContributed'
                         ? 'Danh sách các câu hỏi bạn đã gửi đóng góp và trạng thái xét duyệt của từng câu hỏi.'
-                        : 'Tổng hợp các câu hỏi bạn đã đánh dấu lưu, gom chung trong một không gian nhưng vẫn tách rõ hệ thống và đóng góp.'}
+                        : 'Tổng hợp các câu hỏi bạn đã đánh dấu lưu, gom chung trong một không gian.'}
                 </p>
               </div>
 
@@ -590,235 +597,236 @@ const ViewQuestionBank: React.FC = () => {
 
           {/* Filter Section */}
           {activeTab !== 'saved' && (
-            <section className="bg-[#1e293b]/40 backdrop-blur-sm p-6 rounded-2xl border border-white/5 mb-8 flex flex-col lg:flex-row gap-4 items-end">
-              <div className="flex-1 w-full space-y-2">
+            <section className="bg-[#1e293b]/40 backdrop-blur-sm p-6 rounded-2xl border border-white/5 mb-8 flex flex-col gap-4">
+              <div className="w-full space-y-2">
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Tìm kiếm</label>
-                <div className="relative group">
-                  <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-500 transition-colors">
-                    search
-                  </span>
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                      setPageNumber(1);
-                    }}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition-all outline-none text-white"
-                    placeholder="Tìm kiếm câu hỏi (ví dụ: Microservices, React Hooks...)"
-                  />
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="relative group flex-1">
+                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-500 transition-colors">
+                      search
+                    </span>
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setPageNumber(1);
+                      }}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition-all outline-none text-white"
+                      placeholder="Tìm kiếm câu hỏi (ví dụ: Microservices, React Hooks...)"
+                    />
+                  </div>
+                  <button
+                    onClick={handleReset}
+                    className="px-6 py-3 rounded-xl border border-white/10 font-bold text-sm hover:bg-white/5 transition-all flex items-center justify-center text-slate-300"
+                  >
+                    <span className="material-symbols-outlined text-sm">restart_alt</span>
+                  </button>
                 </div>
               </div>
 
-              <div className="w-full lg:w-48 space-y-2">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Vị trí</label>
-                <select
-                  value={positionId || ''}
-                  onChange={(e) => {
-                    setPositionId(e.target.value ? Number(e.target.value) : undefined);
-                    setPageNumber(1);
-                  }}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none"
-                >
-                  <option value="">Tất cả</option>
-                  {positions.map((position) => (
-                    <option key={position.id} value={position.id}>
-                      {position.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="w-full lg:w-48 space-y-2">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Kỹ năng</label>
-                <select
-                  value={skillId || ''}
-                  onChange={(e) => {
-                    setSkillId(e.target.value ? Number(e.target.value) : undefined);
-                    setPageNumber(1);
-                  }}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none"
-                >
-                  <option value="">Tất cả</option>
-                  {skills.map((skill) => (
-                    <option key={skill.id} value={skill.id}>
-                      {skill.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="w-full lg:w-48 space-y-2">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Lĩnh vực</label>
-                <select
-                  value={categoryId || ''}
-                  onChange={(e) => {
-                    setCategoryId(e.target.value ? Number(e.target.value) : undefined);
-                    setPageNumber(1);
-                  }}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none"
-                >
-                  <option value="">Tất cả</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {activeTab !== 'myContributed' && (
-                <div className="w-full lg:w-48 space-y-2">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Độ khó</label>
+              <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 items-end">
+                <div className="w-full space-y-2">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Vị trí</label>
                   <select
-                    value={difficulty || ''}
+                    value={positionId || ''}
                     onChange={(e) => {
-                      setDifficulty(e.target.value ? Number(e.target.value) : undefined);
+                      setPositionId(e.target.value ? Number(e.target.value) : undefined);
                       setPageNumber(1);
                     }}
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none"
                   >
-                    <option value="">Mọi cấp độ</option>
-                    <option value={DIFFICULTY_LEVEL.EASY}>Easy</option>
-                    <option value={DIFFICULTY_LEVEL.MEDIUM}>Medium</option>
-                    <option value={DIFFICULTY_LEVEL.HARD}>Hard</option>
+                    <option value="">Tất cả</option>
+                    {positions.map((position) => (
+                      <option key={position.id} value={position.id}>
+                        {position.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
-              )}
 
-              {activeTab === 'contributed' && (
-                <>
-                  <div className="w-full lg:w-48 space-y-2">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Công ty</label>
+                <div className="w-full space-y-2">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Kỹ năng</label>
+                  <select
+                    value={skillId || ''}
+                    onChange={(e) => {
+                      setSkillId(e.target.value ? Number(e.target.value) : undefined);
+                      setPageNumber(1);
+                    }}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none"
+                  >
+                    <option value="">Tất cả</option>
+                    {skills.map((skill) => (
+                      <option key={skill.id} value={skill.id}>
+                        {skill.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="w-full space-y-2">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Lĩnh vực</label>
+                  <select
+                    value={categoryId || ''}
+                    onChange={(e) => {
+                      setCategoryId(e.target.value ? Number(e.target.value) : undefined);
+                      setPageNumber(1);
+                    }}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none"
+                  >
+                    <option value="">Tất cả</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {activeTab !== 'myContributed' && (
+                  <div className="w-full space-y-2">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Độ khó</label>
                     <select
-                      value={companyId || ''}
+                      value={difficulty || ''}
                       onChange={(e) => {
-                        setCompanyId(e.target.value ? Number(e.target.value) : undefined);
+                        setDifficulty(e.target.value ? Number(e.target.value) : undefined);
                         setPageNumber(1);
                       }}
                       className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none"
                     >
-                      <option value="">Tất cả</option>
-                      {companies.map((company) => (
-                        <option key={company.id} value={company.id}>
-                          {company.name}
-                        </option>
-                      ))}
+                      <option value="">Mọi cấp độ</option>
+                      <option value={DIFFICULTY_LEVEL.EASY}>Easy</option>
+                      <option value={DIFFICULTY_LEVEL.MEDIUM}>Medium</option>
+                      <option value={DIFFICULTY_LEVEL.HARD}>Hard</option>
                     </select>
                   </div>
+                )}
 
-                  <div className="w-full lg:w-48 space-y-2">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Level</label>
-                    <select
-                      value={level ?? ''}
-                      onChange={(e) => {
-                        setLevel(e.target.value ? Number(e.target.value) : undefined);
-                        setPageNumber(1);
-                      }}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none"
-                    >
-                      <option value="">Tất cả</option>
-                      {Object.entries(LEVEL_MAP).map(([key, label]) => (
-                        <option key={key} value={key}>
-                          {label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                {activeTab === 'contributed' && (
+                  <>
+                    <div className="w-full space-y-2">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Công ty</label>
+                      <select
+                        value={companyId || ''}
+                        onChange={(e) => {
+                          setCompanyId(e.target.value ? Number(e.target.value) : undefined);
+                          setPageNumber(1);
+                        }}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none"
+                      >
+                        <option value="">Tất cả</option>
+                        {companies.map((company) => (
+                          <option key={company.id} value={company.id}>
+                            {company.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-                  <div className="w-full lg:w-48 space-y-2">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Tên công ty</label>
-                    <input
-                      type="text"
-                      value={companyName}
-                      onChange={(e) => {
-                        setCompanyName(e.target.value);
-                        setPageNumber(1);
-                      }}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition-all outline-none text-white"
-                      placeholder="Ví dụ: FPT"
-                    />
-                  </div>
-                </>
-              )}
+                    <div className="w-full space-y-2">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Level</label>
+                      <select
+                        value={level ?? ''}
+                        onChange={(e) => {
+                          setLevel(e.target.value ? Number(e.target.value) : undefined);
+                          setPageNumber(1);
+                        }}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none"
+                      >
+                        <option value="">Tất cả</option>
+                        {Object.entries(LEVEL_MAP).map(([key, label]) => (
+                          <option key={key} value={key}>
+                            {label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-              {activeTab === 'myContributed' && (
-                <>
-                  <div className="w-full lg:w-48 space-y-2">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Trạng thái duyệt</label>
-                    <select
-                      value={approvalStatus ?? ''}
-                      onChange={(e) => {
-                        setApprovalStatus(e.target.value ? Number(e.target.value) : undefined);
-                        setPageNumber(1);
-                      }}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none"
-                    >
-                      <option value="">Tất cả</option>
-                      <option value={0}>Pending</option>
-                      <option value={1}>Approved</option>
-                      <option value={2}>Rejected</option>
-                    </select>
-                  </div>
+                    <div className="w-full space-y-2">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Tên công ty</label>
+                      <input
+                        type="text"
+                        value={companyName}
+                        onChange={(e) => {
+                          setCompanyName(e.target.value);
+                          setPageNumber(1);
+                        }}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition-all outline-none text-white"
+                        placeholder="Ví dụ: FPT"
+                      />
+                    </div>
+                  </>
+                )}
 
-                  <div className="w-full lg:w-48 space-y-2">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Level</label>
-                    <select
-                      value={level ?? ''}
-                      onChange={(e) => {
-                        setLevel(e.target.value ? Number(e.target.value) : undefined);
-                        setPageNumber(1);
-                      }}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none"
-                    >
-                      <option value="">Tất cả</option>
-                      {Object.entries(LEVEL_MAP).map(([key, label]) => (
-                        <option key={key} value={key}>
-                          {label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </>
-              )}
+                {activeTab === 'myContributed' && (
+                  <>
+                    <div className="w-full space-y-2">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Trạng thái duyệt</label>
+                      <select
+                        value={approvalStatus ?? ''}
+                        onChange={(e) => {
+                          setApprovalStatus(e.target.value ? Number(e.target.value) : undefined);
+                          setPageNumber(1);
+                        }}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none"
+                      >
+                        <option value={1}>Approved</option>
+                        <option value={0}>Pending</option>
+                        <option value={2}>Rejected</option>
+                      </select>
+                    </div>
 
-              <div className="w-full lg:w-44 space-y-2">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Sắp xếp theo</label>
-                <select
-                  value={sortBy}
-                  onChange={(e) => {
-                    setSortBy(e.target.value);
-                    setPageNumber(1);
-                  }}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none"
-                >
-                  <option value="createdAt">Ngày tạo</option>
-                  <option value="difficulty">Độ khó</option>
-                </select>
-              </div>
+                    <div className="w-full space-y-2">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Level</label>
+                      <select
+                        value={level ?? ''}
+                        onChange={(e) => {
+                          setLevel(e.target.value ? Number(e.target.value) : undefined);
+                          setPageNumber(1);
+                        }}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none"
+                      >
+                        <option value="">Tất cả</option>
+                        {Object.entries(LEVEL_MAP).map(([key, label]) => (
+                          <option key={key} value={key}>
+                            {label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </>
+                )}
 
-              <div className="w-full lg:w-44 space-y-2">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Thứ tự</label>
-                <select
-                  value={sortOrder}
-                  onChange={(e) => {
-                    setSortOrder((e.target.value as 'asc' | 'desc') || 'desc');
-                    setPageNumber(1);
-                  }}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none"
-                >
-                  <option value="desc">Mới nhất</option>
-                  <option value="asc">Cũ nhất</option>
-                </select>
-              </div>
+                <div className="w-full space-y-2">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Sắp xếp theo</label>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => {
+                      setSortBy(e.target.value);
+                      setPageNumber(1);
+                    }}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none"
+                  >
+                    <option value="createdAt">Ngày tạo</option>
+                    <option value="difficulty">Độ khó</option>
+                  </select>
+                </div>
 
-              <div className="flex gap-3 w-full lg:w-auto">
-                <button
-                  onClick={handleReset}
-                  className="px-6 py-3 rounded-xl border border-white/10 font-bold text-sm hover:bg-white/5 transition-all flex items-center justify-center text-slate-300"
-                >
-                  <span className="material-symbols-outlined text-sm">restart_alt</span>
-                </button>
+                <div className="w-full space-y-2">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Thứ tự</label>
+                  <select
+                    value={sortOrder}
+                    onChange={(e) => {
+                      setSortOrder((e.target.value as 'asc' | 'desc') || 'desc');
+                      setPageNumber(1);
+                    }}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none"
+                  >
+                    <option value="desc">Mới nhất</option>
+                    <option value="asc">Cũ nhất</option>
+                  </select>
+                </div>
+
               </div>
             </section>
           )}
@@ -867,6 +875,7 @@ const ViewQuestionBank: React.FC = () => {
                         skills={card.skills}
                         position={card.position}
                         level={card.level}
+                        difficulty={card.difficulty}
                         rating={card.rating}
                         isSaved={saved}
                         onView={() => handleView(question.id, 'system', saved)}
@@ -955,9 +964,10 @@ const ViewQuestionBank: React.FC = () => {
                         skills={card.skills}
                         position={card.position}
                         level={card.level}
+                        difficulty={card.difficulty}
                         rating={card.rating}
                         isSaved={saved}
-                        onView={() => handleView(question.id, 'contributed', saved)}
+                        onView={() => handleView(question.id, 'contributed', saved, true, 'Approved')}
                         onSave={isLoggedIn ? () => handleSave('contributed', question.id, saved) : undefined}
                       />
                     );
@@ -1043,11 +1053,12 @@ const ViewQuestionBank: React.FC = () => {
                         skills={card.skills}
                         position={card.position}
                         level={card.level}
+                        difficulty={card.difficulty}
                         rating={card.rating}
                         isSaved={saved}
                         statusLabel={card.status}
                         statusType={getApprovalStatusBadge(card.status)}
-                        onView={() => handleView(question.id, 'contributed', saved)}
+                        onView={() => handleView(question.id, 'contributed', saved, false, card.status)}
                         onSave={isLoggedIn ? () => handleSave('contributed', question.id, saved) : undefined}
                       />
                     );
@@ -1092,16 +1103,38 @@ const ViewQuestionBank: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-6">
-              <section className="bg-[#1e293b]/40 backdrop-blur-sm p-6 rounded-2xl border border-white/5">
-                <div className="flex flex-col lg:flex-row lg:items-end gap-4 justify-between">
-                  <div className="space-y-3">
-                    <div className="flex border border-white/10 rounded-xl p-1 bg-black/10 w-fit">
+              <section className="bg-[#1e293b]/40 backdrop-blur-sm p-6 rounded-2xl border border-white/5 flex flex-col gap-4">
+                <div className="w-full space-y-2">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Tìm trong câu hỏi đã lưu</label>
+                  <div className="relative group">
+                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-500 transition-colors">
+                      search
+                    </span>
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setPageNumber(1);
+                      }}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition-all outline-none text-white"
+                      placeholder="Tìm theo nội dung, kỹ năng, công ty..."
+                    />
+                  </div>
+                </div>
+
+                <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 items-end">
+                  <div className="w-full space-y-2">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Loại câu hỏi</label>
+                    <div className="flex flex-wrap gap-3">
                       <button
                         onClick={() => {
                           setSavedTab('system');
                           setPageNumber(1);
                         }}
-                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${savedTab === 'system' ? 'bg-indigo-500 text-white' : 'text-slate-400 hover:text-white'
+                        className={`rounded-xl px-4 py-3 text-sm font-semibold border transition-all ${savedTab === 'system'
+                          ? 'border-indigo-500 bg-indigo-500/10 text-white'
+                          : 'border-white/10 bg-white/5 text-slate-300 hover:text-white'
                           }`}
                       >
                         Câu hỏi hệ thống ({savedSystemData.length})
@@ -1111,33 +1144,13 @@ const ViewQuestionBank: React.FC = () => {
                           setSavedTab('contributed');
                           setPageNumber(1);
                         }}
-                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${savedTab === 'contributed' ? 'bg-indigo-500 text-white' : 'text-slate-400 hover:text-white'
+                        className={`rounded-xl px-4 py-3 text-sm font-semibold border transition-all ${savedTab === 'contributed'
+                          ? 'border-indigo-500 bg-indigo-500/10 text-white'
+                          : 'border-white/10 bg-white/5 text-slate-300 hover:text-white'
                           }`}
                       >
                         Câu hỏi đóng góp ({savedContributedData.length})
                       </button>
-                    </div>
-                    <p className="text-sm text-slate-400">
-                      Giữ chung một tab để gọn giao diện, còn tách dữ liệu bằng switch con vì backend đang trả về 2 API khác nhau.
-                    </p>
-                  </div>
-
-                  <div className="w-full lg:w-80 space-y-2">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Tìm trong câu hỏi đã lưu</label>
-                    <div className="relative group">
-                      <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-500 transition-colors">
-                        search
-                      </span>
-                      <input
-                        type="text"
-                        value={searchTerm}
-                        onChange={(e) => {
-                          setSearchTerm(e.target.value);
-                          setPageNumber(1);
-                        }}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition-all outline-none text-white"
-                        placeholder="Tìm theo nội dung, kỹ năng, công ty..."
-                      />
                     </div>
                   </div>
                 </div>
@@ -1184,6 +1197,7 @@ const ViewQuestionBank: React.FC = () => {
                         skills={card.skills}
                         position={card.position}
                         level={card.level}
+                        difficulty={card.difficulty}
                         rating={card.rating}
                         isSaved={saved}
                         onView={() => handleView(question.id, 'system', saved)}
@@ -1240,9 +1254,10 @@ const ViewQuestionBank: React.FC = () => {
                         skills={card.skills}
                         position={card.position}
                         level={card.level}
+                        difficulty={card.difficulty}
                         rating={card.rating}
                         isSaved={saved}
-                        onView={() => handleView(question.id, 'contributed', saved)}
+                        onView={() => handleView(question.id, 'contributed', saved, true, 'Approved')}
                         onSave={isLoggedIn ? () => handleSave('contributed', question.id, saved) : undefined}
                       />
                     );
@@ -1324,6 +1339,7 @@ const ViewQuestionBank: React.FC = () => {
           onOpenChange={setViewModalOpen}
           questionId={viewModalId}
           isSaved={isSavedFor('contributed', viewModalId, false)}
+          approvalStatus={viewModalStatus}
           onSaveToggle={viewModalEnableSave ? () => {
             const currentSaved = isSavedFor('contributed', viewModalId, false);
             handleSave('contributed', viewModalId, currentSaved);

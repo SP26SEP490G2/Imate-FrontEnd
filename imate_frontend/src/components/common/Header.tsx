@@ -17,6 +17,7 @@ import UserMenu from "@/components/custom/UserMenu";
 import type { MenuItem } from '@/types/common/menu';
 import { ROLES } from '@/constants/role';
 import { useSignalR } from '@/store/SignalRContext';
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 type HeaderNotification = {
   id: number;
@@ -59,8 +60,8 @@ function Header() {
   };
   const notifications = signalRContext.notifications ?? [];
   const unreadCount = signalRContext.unreadCount ?? notifications.filter((notification) => !notification.isRead).length;
-  const markNotificationAsRead = signalRContext.markNotificationAsRead ?? (async () => {});
-  const markAllNotificationsAsRead = signalRContext.markAllNotificationsAsRead ?? (async () => {});
+  const markNotificationAsRead = signalRContext.markNotificationAsRead ?? (async () => { });
+  const markAllNotificationsAsRead = signalRContext.markAllNotificationsAsRead ?? (async () => { });
   const unreadBadgeLabel = unreadCount > 99 ? "99+" : String(unreadCount);
   const navigate = useNavigate();
 
@@ -69,6 +70,7 @@ function Header() {
   const [isOpenNotificationMenu, setIsOpenNotificationMenu] = useState(false);
   const [showAllNotifications, setShowAllNotifications] = useState(false);
   const [expandedNotificationId, setExpandedNotificationId] = useState<number | null>(null);
+  const [isCompactNav, setIsCompactNav] = useState(false);
 
   const userMenuRef = useRef<HTMLDivElement>(null);
   const notificationMenuRef = useRef<HTMLDivElement>(null);
@@ -91,6 +93,19 @@ function Header() {
       menuItems = CANDIDATE_MENU_ITEMS;
     }
   }
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 1279px)");
+
+    const handleChange = (event: MediaQueryListEvent) => {
+      setIsCompactNav(event.matches);
+    };
+
+    setIsCompactNav(mediaQuery.matches);
+
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -308,9 +323,10 @@ function Header() {
                   className="flex items-center gap-2 cursor-pointer"
                   onClick={() => setIsOpenUserMenu(!isOpenUserMenu)}
                 >
-                  <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center text-white font-semibold">
-                    {user?.fullName?.charAt(0)}
-                  </div>
+                  <Avatar>
+                    <AvatarImage src={user?.avatarUrl} />
+                    <AvatarFallback name={user?.fullName} />
+                  </Avatar>
 
                   <span className="text-sm text-white">
                     {user?.fullName}
@@ -323,6 +339,7 @@ function Header() {
                   isOpenUserMenu={isOpenUserMenu}
                   onClose={() => setIsOpenUserMenu(false)}
                   anchorRef={userMenuRef}
+                  extraMenuItems={isCompactNav ? menuItems : undefined}
                 />
               </div>
             </div>

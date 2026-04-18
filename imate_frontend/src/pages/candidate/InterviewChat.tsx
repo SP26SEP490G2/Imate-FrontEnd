@@ -66,6 +66,7 @@ export default function InterviewChat() {
     } catch { return 0; }
   });
   const [totalQuestions] = useState(10);
+  const MAX_SESSION_SECONDS = 30 * 60; // 30 minutes
   const mockQuestionIndex = useRef(0);
   const initCalledRef = useRef(false);
 
@@ -97,26 +98,26 @@ export default function InterviewChat() {
   //  - Cắt đúng tại điểm nối frame cuối/đầu → tuyệt đối không giật.
   //  - Khi có audio mới → pendingToOn; khi hết audio → pendingToOff.
   // ----------------------------------------------------------------
-  const videoOnRef  = useRef<HTMLVideoElement>(null);
+  const videoOnRef = useRef<HTMLVideoElement>(null);
   const videoOffRef = useRef<HTMLVideoElement>(null);
 
-  const isOnRef          = useRef(false);  // video đang hiện: false=Off, true=On
-  const pendingToOnRef   = useRef(false);  // chờ voiceOff hết lượt để switch → On
-  const pendingToOffRef  = useRef(false);  // chờ voiceOn  hết lượt để switch → Off
+  const isOnRef = useRef(false);  // video đang hiện: false=Off, true=On
+  const pendingToOnRef = useRef(false);  // chờ voiceOff hết lượt để switch → On
+  const pendingToOffRef = useRef(false);  // chờ voiceOn  hết lượt để switch → Off
 
   const [showingOn, setShowingOn] = useState(false);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
 
   // Audio queue
-  const audioQueueRef        = useRef<AudioQueueItem[]>([]);
+  const audioQueueRef = useRef<AudioQueueItem[]>([]);
   const isProcessingQueueRef = useRef(false);
-  const audioElRef           = useRef<HTMLAudioElement | null>(null);
+  const audioElRef = useRef<HTMLAudioElement | null>(null);
 
   // Dùng ref để startPlayingAudio có thể tự gọi lại mà không bị stale closure
-  const startPlayingAudioRef = useRef<() => void>(() => {});
+  const startPlayingAudioRef = useRef<() => void>(() => { });
 
   // Refs
-  const chatEndRef  = useRef<HTMLDivElement>(null);
+  const chatEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-scroll
@@ -129,6 +130,17 @@ export default function InterviewChat() {
     const timer = setInterval(() => setElapsedSeconds((s) => s + 1), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Auto-end when time limit reached
+  useEffect(() => {
+    if (elapsedSeconds >= MAX_SESSION_SECONDS && !ending && !initializing) {
+      const autoEnd = async () => {
+        toast.warning("Hết thời gian 30 phút! Buổi phỏng vấn sẽ tự động kết thúc.");
+        await handleEndInterview();
+      };
+      autoEnd();
+    }
+  }, [elapsedSeconds, ending, initializing]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60).toString().padStart(2, "0");
@@ -181,11 +193,11 @@ export default function InterviewChat() {
   //  Initialize video + gắn onEnded handlers
   // ----------------------------------------------------------------
   useEffect(() => {
-    const vidOn  = videoOnRef.current;
+    const vidOn = videoOnRef.current;
     const vidOff = videoOffRef.current;
     if (!vidOn || !vidOff) return;
 
-    vidOn.src  = voiceOnVideo;
+    vidOn.src = voiceOnVideo;
     vidOff.src = voiceOffVideo;
 
     // voiceOff onEnded: kiểm tra có cần switch sang voiceOn không
@@ -196,12 +208,12 @@ export default function InterviewChat() {
         setShowingOn(true);
         vidOn.currentTime = 0;
         vidOn.loop = true;
-        vidOn.play().catch(() => {});
+        vidOn.play().catch(() => { });
         // Video On đã hiện → bắt đầu phát audio
         startPlayingAudioRef.current();
       } else {
         // Không cần switch → loop lại voiceOff
-        vidOff.play().catch(() => {});
+        vidOff.play().catch(() => { });
       }
     };
 
@@ -213,22 +225,22 @@ export default function InterviewChat() {
         setShowingOn(false);
         vidOff.currentTime = 0;
         vidOff.loop = true;
-        vidOff.play().catch(() => {});
+        vidOff.play().catch(() => { });
       } else {
         // Không cần switch → loop lại voiceOn
-        vidOn.play().catch(() => {});
+        vidOn.play().catch(() => { });
       }
     };
 
     // Bắt đầu với voiceOff loop, preload voiceOn sẵn
     vidOff.loop = true;
-    vidOff.play().catch(() => {});
+    vidOff.play().catch(() => { });
     vidOn.preload = "auto";
     vidOn.load();
 
     return () => {
       vidOff.onended = null;
-      vidOn.onended  = null;
+      vidOn.onended = null;
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -272,15 +284,15 @@ export default function InterviewChat() {
       audioElRef.current.pause();
       audioElRef.current = null;
     }
-    audioQueueRef.current       = [];
+    audioQueueRef.current = [];
     isProcessingQueueRef.current = false;
-    pendingToOnRef.current      = false;
-    pendingToOffRef.current     = false;
+    pendingToOnRef.current = false;
+    pendingToOffRef.current = false;
 
-    const vidOn  = videoOnRef.current;
+    const vidOn = videoOnRef.current;
     const vidOff = videoOffRef.current;
-    if (vidOn)  { vidOn.pause(); vidOn.loop = false; }
-    if (vidOff) { vidOff.loop = true; vidOff.play().catch(() => {}); }
+    if (vidOn) { vidOn.pause(); vidOn.loop = false; }
+    if (vidOff) { vidOff.loop = true; vidOff.play().catch(() => { }); }
 
     isOnRef.current = false;
     setShowingOn(false);
@@ -593,9 +605,8 @@ export default function InterviewChat() {
             />
 
             {/* Status badge */}
-            <div className={`absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 rounded-full px-4 py-1.5 backdrop-blur-sm transition-all z-10 ${
-              isPlayingAudio ? "bg-purple-600/80 opacity-100" : "bg-slate-800/60 opacity-60"
-            }`}>
+            <div className={`absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 rounded-full px-4 py-1.5 backdrop-blur-sm transition-all z-10 ${isPlayingAudio ? "bg-purple-600/80 opacity-100" : "bg-slate-800/60 opacity-60"
+              }`}>
               {isPlayingAudio ? (
                 <>
                   <div className="flex items-end gap-[3px] h-4">
@@ -644,11 +655,10 @@ export default function InterviewChat() {
                       <Bot className="h-3.5 w-3.5 text-purple-400" />
                     </div>
                   )}
-                  <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-                    msg.role === "ai"
-                      ? "rounded-tl-md bg-slate-800/80 text-slate-200"
-                      : "rounded-tr-md bg-purple-600/20 text-white"
-                  }`}>
+                  <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${msg.role === "ai"
+                    ? "rounded-tl-md bg-slate-800/80 text-slate-200"
+                    : "rounded-tr-md bg-purple-600/20 text-white"
+                    }`}>
                     {msg.text.split("\n").map((line, i) => (
                       <p key={i} className={i > 0 ? "mt-1.5" : ""}>{line}</p>
                     ))}
@@ -681,13 +691,12 @@ export default function InterviewChat() {
               <button
                 onClick={isRecording ? stopRecording : startRecording}
                 disabled={isBusy || isTranscribing}
-                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${
-                  isRecording
-                    ? "animate-pulse bg-red-500 text-white"
-                    : isTranscribing
-                      ? "bg-purple-500/20 text-purple-400"
-                      : "bg-purple-600/20 text-purple-400 hover:bg-purple-600/30"
-                } disabled:opacity-50`}
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${isRecording
+                  ? "animate-pulse bg-red-500 text-white"
+                  : isTranscribing
+                    ? "bg-purple-500/20 text-purple-400"
+                    : "bg-purple-600/20 text-purple-400 hover:bg-purple-600/30"
+                  } disabled:opacity-50`}
                 title={isRecording ? "Dừng ghi âm" : isTranscribing ? "Đang chuyển giọng nói..." : "Ghi âm giọng nói"}
               >
                 {isTranscribing ? <Loader2 className="h-4 w-4 animate-spin" /> : isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}

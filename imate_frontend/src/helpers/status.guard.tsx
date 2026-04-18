@@ -1,6 +1,7 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { ACCOUNT_STATUS } from "@/constants/accountStatus";
 
 interface StatusGuardProps {
   children: React.ReactNode;
@@ -32,6 +33,11 @@ export const StatusGuard: React.FC<StatusGuardProps> = ({
   try {
     const userData = JSON.parse(userDataString);
     const userStatus = userData.accountStatus || userData.verificationStatus;
+
+    // Check if account is suspended - Global redirect
+    if (userStatus === ACCOUNT_STATUS.Suspended) {
+      return <Navigate to="/suspended" replace />;
+    }
 
     if (userStatus === requiredStatus) {
       return <>{children}</>;
