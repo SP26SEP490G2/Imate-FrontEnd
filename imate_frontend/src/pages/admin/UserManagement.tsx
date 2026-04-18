@@ -239,17 +239,6 @@ export default function UserManagement() {
                 <option value="Staff">Nhân viên</option>
               </select>
             </div>
-            <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger className="w-[160px] bg-slate-900 border-slate-800 text-sm">
-                <SelectValue placeholder="Vai trò" />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
-                <SelectItem value="all">Vai trò: Tất cả</SelectItem>
-                <SelectItem value={ROLES.CANDIDATE}>Ứng viên</SelectItem>
-                <SelectItem value={ROLES.MENTOR}>Mentor</SelectItem>
-                <SelectItem value={ROLES.STAFF}>Nhân viên</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </div>
 

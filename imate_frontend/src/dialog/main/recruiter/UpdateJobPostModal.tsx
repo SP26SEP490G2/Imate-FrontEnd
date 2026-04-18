@@ -340,6 +340,7 @@ const UpdateJobPostModal: React.FC<UpdateJobPostModalProps> = ({ open, onClose, 
                 <input
                   name="applicationDeadline"
                   type="date"
+                  min={new Date().toISOString().split("T")[0]}
                   value={form.applicationDeadline}
                   onChange={handleChange}
                   className={`w-full h-12 px-4 rounded-xl bg-[#0F1333] border ${errors.applicationDeadline ? "border-red-500" : "border-white/10"} focus:border-indigo-500 outline-none text-white`}
