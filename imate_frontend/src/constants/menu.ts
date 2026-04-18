@@ -2,7 +2,6 @@ import { FolderOpen, CircleUser, CreditCard, FileUser, LogOut, Wallet, History, 
 import type { MenuItem } from "@/types/common/menu";
 
 export const MENTOR_MENU_ITEMS: MenuItem[] = [
-  { label: "Ngân hàng câu hỏi", href: "/view-question-bank" },
   { label: "Lịch làm việc", href: "/mentor/interview-schedule" },
   { label: "Quản lý lịch lặp lại", href: "/mentor/manage-slots" },
   { label: "Đánh giá từ ứng viên", href: "/mentor/ratings" },
