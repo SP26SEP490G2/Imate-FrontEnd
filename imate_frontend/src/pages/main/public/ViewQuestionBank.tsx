@@ -32,11 +32,14 @@ import { CreateContributeQuestionDialog } from '@/dialog/main/question/CreateCon
 import { ViewSystemQuestionModal } from '@/dialog/main/question/ViewSystemQuestionModal';
 import { ViewContributeQuestionModal } from '@/dialog/main/question/ViewContributeQuestionModal';
 import { toast } from 'react-toastify';
+import { useAuth } from '@/store/AuthContext';
+import { ROLES } from '@/constants/role';
 
 type TabType = 'system' | 'contributed' | 'myContributed' | 'saved';
 type SavedTabType = 'system' | 'contributed';
 
 const ViewQuestionBank: React.FC = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('system');
   const [data, setData] = useState<QuestionBankListResponse | null>(null);
   const [contributedData, setContributedData] = useState<PublicContributedQuestionBankListResponse | null>(null);
@@ -77,6 +80,7 @@ const ViewQuestionBank: React.FC = () => {
   const [pageNumber, setPageNumber] = useState(1);
   const pageSize = 10;
   const isLoggedIn = Boolean(localStorage.getItem('authToken'));
+  const isCandidate = isLoggedIn && user?.role === ROLES.CANDIDATE;
 
   useEffect(() => {
     fetchLookupData();
@@ -126,7 +130,12 @@ const ViewQuestionBank: React.FC = () => {
       setActiveTab('system');
       setPageNumber(1);
     }
-  }, [activeTab, isLoggedIn]);
+
+    if (isLoggedIn && user && user.role !== ROLES.CANDIDATE && (activeTab === 'saved' || activeTab === 'myContributed')) {
+      setActiveTab('system');
+      setPageNumber(1);
+    }
+  }, [activeTab, isLoggedIn, user]);
 
   const fetchLookupData = async () => {
     try {
@@ -293,7 +302,7 @@ const ViewQuestionBank: React.FC = () => {
   const handleView = (id: number, type: 'system' | 'contributed', currentSaved: boolean, enableSave = true, status?: string) => {
     setViewModalId(id);
     setViewModalType(type);
-    setViewModalEnableSave(enableSave && isLoggedIn);
+    setViewModalEnableSave(enableSave && isCandidate);
     setViewModalStatus(status);
     setViewModalOpen(true);
     // Seed the override map so the modal has the correct initial value
@@ -525,7 +534,7 @@ const ViewQuestionBank: React.FC = () => {
               >
                 Câu hỏi đóng góp
               </button>
-              {isLoggedIn && (
+              {isCandidate && (
                 <button
                   onClick={() => {
                     setActiveTab('saved');
@@ -539,7 +548,7 @@ const ViewQuestionBank: React.FC = () => {
                   Câu hỏi đã lưu
                 </button>
               )}
-              {isLoggedIn && (
+              {isCandidate && (
                 <button
                   onClick={() => {
                     setActiveTab('myContributed');
@@ -581,7 +590,7 @@ const ViewQuestionBank: React.FC = () => {
                 </p>
               </div>
 
-              {activeTab === 'contributed' && isLoggedIn && (
+              {activeTab === 'contributed' && isCandidate && (
                 <button
                   onClick={() => setContributeModalOpen(true)}
                   className="bg-linear-to-r from-indigo-500 to-purple-500 text-white px-6 py-3 rounded-xl font-bold text-sm hover:opacity-90 transition-all flex items-center gap-2 shadow-lg shadow-indigo-500/20 self-start md:self-auto"
@@ -879,7 +888,7 @@ const ViewQuestionBank: React.FC = () => {
                         rating={card.rating}
                         isSaved={saved}
                         onView={() => handleView(question.id, 'system', saved)}
-                        onSave={isLoggedIn ? () => handleSave('system', question.id, saved) : undefined}
+                        onSave={isCandidate ? () => handleSave('system', question.id, saved) : undefined}
                       />
                     );
                   })}
@@ -968,7 +977,7 @@ const ViewQuestionBank: React.FC = () => {
                         rating={card.rating}
                         isSaved={saved}
                         onView={() => handleView(question.id, 'contributed', saved, true, 'Approved')}
-                        onSave={isLoggedIn ? () => handleSave('contributed', question.id, saved) : undefined}
+                        onSave={isCandidate ? () => handleSave('contributed', question.id, saved) : undefined}
                       />
                     );
                   })}
@@ -1059,7 +1068,7 @@ const ViewQuestionBank: React.FC = () => {
                         statusLabel={card.status}
                         statusType={getApprovalStatusBadge(card.status)}
                         onView={() => handleView(question.id, 'contributed', saved, false, card.status)}
-                        onSave={isLoggedIn ? () => handleSave('contributed', question.id, saved) : undefined}
+                        onSave={isCandidate ? () => handleSave('contributed', question.id, saved) : undefined}
                       />
                     );
                   })}
@@ -1201,7 +1210,7 @@ const ViewQuestionBank: React.FC = () => {
                         rating={card.rating}
                         isSaved={saved}
                         onView={() => handleView(question.id, 'system', saved)}
-                        onSave={isLoggedIn ? () => handleSave('system', question.id, saved) : undefined}
+                        onSave={isCandidate ? () => handleSave('system', question.id, saved) : undefined}
                       />
                     );
                   })}
@@ -1258,7 +1267,7 @@ const ViewQuestionBank: React.FC = () => {
                         rating={card.rating}
                         isSaved={saved}
                         onView={() => handleView(question.id, 'contributed', saved, true, 'Approved')}
-                        onSave={isLoggedIn ? () => handleSave('contributed', question.id, saved) : undefined}
+                        onSave={isCandidate ? () => handleSave('contributed', question.id, saved) : undefined}
                       />
                     );
                   })}

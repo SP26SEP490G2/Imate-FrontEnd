@@ -19,16 +19,16 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { 
+import {
     AlertTriangle,
-    ArrowBigDown, 
-    ArrowBigUp, 
-    Bookmark, 
-    Eye, 
-    EyeOff, 
-    Save, 
-    Send, 
-    X 
+    ArrowBigDown,
+    ArrowBigUp,
+    Bookmark,
+    Eye,
+    EyeOff,
+    Save,
+    Send,
+    X
 } from 'lucide-react';
 import {
     createComment,
@@ -395,9 +395,8 @@ export function ViewContributeQuestionModal({
                     {onSaveToggle && (
                         <button
                             onClick={onSaveToggle}
-                            className={`p-2 rounded-lg transition-colors mt-1 ${
-                                isSaved ? 'text-yellow-400 hover:text-yellow-300' : 'text-slate-500 hover:text-yellow-400'
-                            }`}
+                            className={`p-2 rounded-lg transition-colors mt-1 ${isSaved ? 'text-yellow-400 hover:text-yellow-300' : 'text-slate-500 hover:text-yellow-400'
+                                }`}
                             title={isSaved ? 'Bỏ lưu' : 'Lưu câu hỏi'}
                         >
                             <Bookmark className={`w-5 h-5 ${isSaved ? 'fill-current' : ''}`} />
@@ -440,11 +439,11 @@ export function ViewContributeQuestionModal({
                                         <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">
                                             Duyệt bởi Admin
                                         </label>
-                                        <StatusBadge 
+                                        <StatusBadge
                                             status={
-                                                approvalStatus.toLowerCase() === 'approved' ? 'active' : 
-                                                approvalStatus.toLowerCase() === 'pending' ? 'pending' : 
-                                                'error'
+                                                approvalStatus.toLowerCase() === 'approved' ? 'active' :
+                                                    approvalStatus.toLowerCase() === 'pending' ? 'pending' :
+                                                        'error'
                                             }
                                         >
                                             {approvalStatus}
@@ -455,17 +454,16 @@ export function ViewContributeQuestionModal({
                         </div>
 
                         {approvalStatus && (approvalStatus.toLowerCase() === 'pending' || approvalStatus.toLowerCase() === 'rejected') && (
-                            <div className={`p-4 rounded-lg border ${
-                                approvalStatus.toLowerCase() === 'pending' 
-                                    ? 'bg-amber-500/10 border-amber-500/50 text-amber-200' 
+                            <div className={`p-4 rounded-lg border ${approvalStatus.toLowerCase() === 'pending'
+                                    ? 'bg-amber-500/10 border-amber-500/50 text-amber-200'
                                     : 'bg-rose-500/10 border-rose-500/50 text-rose-200'
-                            }`}>
+                                }`}>
                                 <div className="flex items-center gap-3">
                                     <AlertTriangle className="w-5 h-5 flex-shrink-0" />
                                     <div>
                                         <p className="text-sm font-bold">
-                                            {approvalStatus.toLowerCase() === 'pending' 
-                                                ? 'Câu hỏi đang chờ xét duyệt' 
+                                            {approvalStatus.toLowerCase() === 'pending'
+                                                ? 'Câu hỏi đang chờ xét duyệt'
                                                 : 'Câu hỏi đã bị từ chối'}
                                         </p>
                                         <p className="text-xs opacity-80 mt-1">
@@ -632,9 +630,8 @@ export function ViewContributeQuestionModal({
                                                                     type="button"
                                                                     onClick={() => handleVoteComment(comment, true)}
                                                                     disabled={!isLoggedIn || votingCommentId === comment.id}
-                                                                    className={`w-10 h-10 rounded-lg flex items-center justify-center hover:bg-white/5 transition-all ${
-                                                                        currentVote === 'upvote' ? 'text-emerald-300' : 'text-slate-500'
-                                                                    } disabled:opacity-60`}
+                                                                    className={`w-10 h-10 rounded-lg flex items-center justify-center hover:bg-white/5 transition-all ${currentVote === 'upvote' ? 'text-emerald-300' : 'text-slate-500'
+                                                                        } disabled:opacity-60`}
                                                                 >
                                                                     <ArrowBigUp className="w-6 h-6" />
                                                                 </button>
@@ -645,9 +642,8 @@ export function ViewContributeQuestionModal({
                                                                     type="button"
                                                                     onClick={() => handleVoteComment(comment, false)}
                                                                     disabled={!isLoggedIn || votingCommentId === comment.id}
-                                                                    className={`w-10 h-10 rounded-lg flex items-center justify-center hover:bg-white/5 transition-all ${
-                                                                        currentVote === 'downvote' ? 'text-rose-300' : 'text-slate-500'
-                                                                    } disabled:opacity-60`}
+                                                                    className={`w-10 h-10 rounded-lg flex items-center justify-center hover:bg-white/5 transition-all ${currentVote === 'downvote' ? 'text-rose-300' : 'text-slate-500'
+                                                                        } disabled:opacity-60`}
                                                                 >
                                                                     <ArrowBigDown className="w-6 h-6" />
                                                                 </button>
@@ -664,7 +660,7 @@ export function ViewContributeQuestionModal({
                                                                         <p className="text-xs text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
                                                                             {displayLabel}
                                                                             {showEdited ? ' (đã chỉnh sửa)' : ''}
-                                                                            {isPending ? ' • Đang chờ AI duyệt...' : ''}
+                                                                            {isPending ? ' • Đang gửi...' : ''}
                                                                         </p>
                                                                     )}
                                                                 </div>
@@ -759,11 +755,10 @@ export function ViewContributeQuestionModal({
                             {onSaveToggle ? (
                                 <button
                                     onClick={onSaveToggle}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors text-sm font-medium ${
-                                        isSaved
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors text-sm font-medium ${isSaved
                                             ? 'border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10'
                                             : 'border-slate-600 text-slate-400 hover:border-yellow-500/50 hover:text-yellow-400'
-                                    }`}
+                                        }`}
                                 >
                                     <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
                                     {isSaved ? 'Đã lưu' : 'Lưu câu hỏi'}
