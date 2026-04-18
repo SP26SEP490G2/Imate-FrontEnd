@@ -696,7 +696,7 @@ const ViewQuestionBank: React.FC = () => {
                   <div className="w-full space-y-2">
                     <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Độ khó</label>
                     <select
-                      value={difficulty || ''}
+                      value={difficulty ?? ''}
                       onChange={(e) => {
                         setDifficulty(e.target.value ? Number(e.target.value) : undefined);
                         setPageNumber(1);
@@ -743,11 +743,13 @@ const ViewQuestionBank: React.FC = () => {
                         className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none"
                       >
                         <option value="">Tất cả</option>
-                        {Object.entries(LEVEL_MAP).map(([key, label]) => (
-                          <option key={key} value={key}>
-                            {label}
-                          </option>
-                        ))}
+                        {Object.entries(LEVEL_MAP)
+                          .filter(([key]) => Number(key) < 4)
+                          .map(([key, label]) => (
+                            <option key={key} value={key}>
+                              {label}
+                            </option>
+                          ))}
                       </select>
                     </div>
 
@@ -796,11 +798,13 @@ const ViewQuestionBank: React.FC = () => {
                         className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none"
                       >
                         <option value="">Tất cả</option>
-                        {Object.entries(LEVEL_MAP).map(([key, label]) => (
-                          <option key={key} value={key}>
-                            {label}
-                          </option>
-                        ))}
+                        {Object.entries(LEVEL_MAP)
+                          .filter(([key]) => Number(key) < 4)
+                          .map(([key, label]) => (
+                            <option key={key} value={key}>
+                              {label}
+                            </option>
+                          ))}
                       </select>
                     </div>
                   </>
@@ -817,7 +821,7 @@ const ViewQuestionBank: React.FC = () => {
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none"
                   >
                     <option value="createdAt">Ngày tạo</option>
-                    <option value="difficulty">Độ khó</option>
+                    <option value="content">Nội dung</option>
                   </select>
                 </div>
 
