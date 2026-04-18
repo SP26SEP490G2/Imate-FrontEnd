@@ -29,8 +29,6 @@ const QuestionContributedCard: React.FC<QuestionContributedCardProps> = ({
   timeAgo,
   skills,
   position,
-  level,
-  difficulty = 'N/A',
   rating,
   isSaved = false,
   statusLabel,
