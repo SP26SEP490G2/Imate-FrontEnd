@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link, useParams, useLocation } from "react-router-dom";
-import BookMentorDialog from "@/dialog/main/mentor/BookMentorDialog";
+import BookMentorDialog from "@/pages/dialog/main/mentor/BookMentorDialog";
 import { getMentorApplicationById } from "@/services/staffReviewService";
 import type { StaffMentorApplication } from "@/types/response/staffReview.response";
 import {

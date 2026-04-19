@@ -11,7 +11,7 @@ import {
   getCurrentPackage,
   getUpgradePreview,
 } from "@/services/userSubscriptionService";
-import { PreviewPackageDialog } from "@/dialog/main/payment/PreviewPackageDialog";
+import { PreviewPackageDialog } from "@/pages/dialog/main/payment/PreviewPackageDialog";
 
 const formatPrice = (price: number) => {
   if (price === 0) return "Miễn phí";

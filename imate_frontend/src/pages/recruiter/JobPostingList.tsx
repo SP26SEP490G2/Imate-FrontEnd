@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 
 import type { JobItem, JobResponse } from "@/types/common/recruiter";
 import { getRecruiterJobApplications, CloseJob } from "@/services/recruiterService";
-import UpdateJobPostModal from "@/dialog/main/recruiter/UpdateJobPostModal";
+import UpdateJobPostModal from "@/pages/dialog/main/recruiter/UpdateJobPostModal";
 import { toast } from "react-toastify";
 import {
     AlertDialog,

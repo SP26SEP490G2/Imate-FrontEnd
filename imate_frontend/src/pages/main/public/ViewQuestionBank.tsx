@@ -28,9 +28,9 @@ import type {
 import { COMMON_DATE, DIFFICULTY_LEVEL, LEVEL_MAP } from '@/constants/common';
 import { getAllCategories, getAllCompanies, getAllPositions, getAllSkills } from '@/services/commonService';
 import QuestionContributedCard from '@/components/custom/QuestionContributedCard';
-import { CreateContributeQuestionDialog } from '@/dialog/main/question/CreateContributeQuestionDialog';
-import { ViewSystemQuestionModal } from '@/dialog/main/question/ViewSystemQuestionModal';
-import { ViewContributeQuestionModal } from '@/dialog/main/question/ViewContributeQuestionModal';
+import { CreateContributeQuestionDialog } from '@/pages/dialog/main/question/CreateContributeQuestionDialog';
+import { ViewSystemQuestionModal } from '@/pages/dialog/main/question/ViewSystemQuestionModal';
+import { ViewContributeQuestionModal } from '@/pages/dialog/main/question/ViewContributeQuestionModal';
 import { toast } from 'react-toastify';
 import { useAuth } from '@/store/AuthContext';
 import { ROLES } from '@/constants/role';

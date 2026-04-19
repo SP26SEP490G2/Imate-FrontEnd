@@ -17,7 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import BookingDetailDialog from "@/dialog/main/booking/BookingDetailDialog";
+import BookingDetailDialog from "@/pages/dialog/main/booking/BookingDetailDialog";
 
 const MOCK_AVATAR = "https://i.pravatar.cc/150?img=11";
 

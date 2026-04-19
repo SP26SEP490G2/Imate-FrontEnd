@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  BookOpen,
   History,
   ChevronRight,
   Loader2,
@@ -30,17 +29,6 @@ import { getAllSkills } from "@/services/commonService";
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
 /* ------------------------------------------------------------------ */
-const TEST_TYPES = [
-  {
-    id: "Technical",
-    label: "Kiến thức chuyên môn",
-    desc: "Đánh giá kiến thức chuyên môn, thuật toán và tư duy lập trình.",
-    icon: BookOpen,
-    gradient: "from-purple-500/20 to-indigo-500/20",
-    border: "border-purple-500/40",
-    iconColor: "text-purple-400",
-  },
-];
 
 const FIELDS = [
   "Frontend Developer",
@@ -65,7 +53,7 @@ function ConfigScreen({
 }: {
   onStart: (params: GeneratePracticeTestParams) => void;
 }) {
-  const [testType, setTestType] = useState("Technical");
+  const [testType] = useState("Technical");
   const [field, setField] = useState("Frontend Developer");
   const [skill, setSkill] = useState("");
   const [skills, setSkills] = useState<{ id: number; name: string }[]>([]);
