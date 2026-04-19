@@ -81,7 +81,7 @@ const QuestionContributedCard: React.FC<QuestionContributedCardProps> = ({
   };
 
   return (
-    <div className="bg-[#1e293b]/40 backdrop-blur-sm p-6 rounded-2xl border border-white/5 hover:border-indigo-500/30 transition-all group">
+    <div className="bg-[#1e293b]/40 backdrop-blur-sm p-6 rounded-2xl border border-white/5 hover:border-indigo-500/40 hover:-translate-y-1 transition-all duration-300 group">
       {/* Header: Author & Company */}
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
