@@ -20,15 +20,12 @@ import {
 import BookingDetailDialog from "@/pages/dialog/main/booking/BookingDetailDialog";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
-type ViewMode = "Ngày" | "Tuần" | "Tháng";
-
 const InterviewSchedule = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<ViewMode>("Tuần");
   
   const [bookings, setBookings] = useState<BookingDetailResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -109,10 +106,10 @@ const InterviewSchedule = () => {
     navigate(`/video-call/${bookingId}`);
   };
 
-  const isJoinable = (startTime: string) => {
+  const isJoinable = (startTime: string, status: number) => {
+    if (status === 3) return false; // Cancelled
     const start = new Date(startTime);
     const now = new Date();
-    // Tạm thời cho phép tham gia bất cứ lúc nào trước khi kết thúc (giả sử 1 tiếng sau start)
     const oneHourAfter = new Date(start.getTime() + 60 * 60 * 1000);
     
     return now <= oneHourAfter;
@@ -170,20 +167,6 @@ const InterviewSchedule = () => {
             Hôm nay
           </button>
         </div>
-
-        <div className="flex bg-gray-800/50 p-1 rounded-lg border border-gray-700">
-          {(["Ngày", "Tuần", "Tháng"] as ViewMode[]).map((mode) => (
-            <button
-              key={mode}
-              onClick={() => setViewMode(mode)}
-              className={`px-4 py-1.5 text-sm rounded-md transition ${
-                viewMode === mode ? "bg-indigo-600 text-white" : "text-gray-400 hover:text-white"
-              }`}
-            >
-              {mode}
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* WEEK DAYS SELECTOR */}
@@ -199,7 +182,7 @@ const InterviewSchedule = () => {
               className="flex flex-col items-center cursor-pointer group"
             >
               <span className={`text-sm mb-2 font-medium ${isSelected ? "text-indigo-400" : "text-gray-400 group-hover:text-gray-200"}`}>
-                {format(day, "E", { locale: vi })} {format(day, "d")}
+                {format(day, "EEEE", { locale: vi })}
               </span>
               <div 
                 className={`w-12 h-12 flex items-center justify-center rounded-full text-lg font-bold transition-all relative
@@ -254,11 +237,10 @@ const InterviewSchedule = () => {
                      
                      {/* Left: Info */}
                      <div className="flex items-center gap-4">
-                       <img 
-                         src={booking.profileAvatarUrl || undefined} 
-                         alt={booking.profileName} 
-                         className="w-14 h-14 rounded-full object-cover border-2 border-indigo-500/30"
-                       />
+                        <Avatar className="w-14 h-14 border-2 border-indigo-500/30">
+                          <AvatarImage src={booking.profileAvatarUrl || undefined} alt={booking.profileName} />
+                          <AvatarFallback name={booking.profileName} />
+                        </Avatar>
                        <div>
                          <h3 className="font-bold text-lg text-white flex items-center gap-2">
                             {booking.profileName}
@@ -284,9 +266,10 @@ const InterviewSchedule = () => {
                      <div className="flex flex-wrap gap-2 md:justify-end mt-4 md:mt-0 pt-4 md:pt-0 border-t md:border-t-0 border-gray-800">
                        <button 
                          onClick={() => handleCancelClick(booking.bookingId)}
-                         className="px-4 py-2 text-sm font-medium text-gray-300 bg-transparent hover:bg-gray-800 border border-gray-700 rounded-xl transition-all"
+                         disabled={booking.status === 3 || booking.status === 2}
+                         className="px-4 py-2 text-sm font-medium text-gray-300 bg-transparent hover:bg-gray-800 border border-gray-700 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                        >
-                         Hủy lịch
+                         {booking.status === 3 ? "Đã hủy" : "Hủy lịch"}
                        </button>
                         <button 
                           onClick={() => handleViewDetail(booking)}
@@ -296,9 +279,9 @@ const InterviewSchedule = () => {
                         </button>
                        <button 
                          onClick={() => handleJoinMeeting(booking.bookingId)}
-                         disabled={!isJoinable(booking.startTime)}
+                         disabled={!isJoinable(booking.startTime, booking.status)}
                          className={`px-5 py-2 text-sm font-bold text-white rounded-xl shadow-[0_0_15px_rgba(79,70,229,0.3)] transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
-                           isJoinable(booking.startTime) 
+                           isJoinable(booking.startTime, booking.status) 
                              ? "bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-400 hover:to-indigo-500 hover:shadow-[0_0_20px_rgba(79,70,229,0.5)]" 
                              : "bg-gray-600 cursor-not-allowed shadow-none"
                          }`}

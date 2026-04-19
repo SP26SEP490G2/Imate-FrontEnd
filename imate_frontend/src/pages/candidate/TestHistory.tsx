@@ -13,6 +13,7 @@ import {
   Star,
 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "react-toastify";
 
 import { Button } from "@/components/ui/button";
@@ -143,11 +144,18 @@ export default function TestHistory() {
   const [loading, setLoading] = useState(true);
   const [interviewLoading, setInterviewLoading] = useState(false);
   const [mentorLoading, setMentorLoading] = useState(false);
+  
+  // Pagination for Mentor Tab
+  const [mentorPage, setMentorPage] = useState(1);
+  const [mentorPageSize, setMentorPageSize] = useState(10);
 
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
     setSearchParams({ tab: tabId });
+    if (tabId === "mentor") {
+      setMentorPage(1);
+    }
   };
 
   useEffect(() => {
@@ -209,6 +217,19 @@ export default function TestHistory() {
       month: "2-digit",
       year: "numeric",
     });
+  };
+
+  // Client-side pagination logic for Mentor History
+  const mentorTotalCount = mentorHistory.length;
+  const mentorTotalPages = Math.ceil(mentorTotalCount / mentorPageSize);
+  const paginatedMentorHistory = mentorHistory.slice(
+    (mentorPage - 1) * mentorPageSize,
+    mentorPage * mentorPageSize
+  );
+
+  const handleMentorPageSizeChange = (size: number) => {
+    setMentorPageSize(size);
+    setMentorPage(1);
   };
 
 
@@ -393,58 +414,72 @@ export default function TestHistory() {
               </p>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-2xl border border-slate-700/60 bg-gradient-to-br from-slate-800/80 to-slate-900/80">
-              <div className="grid grid-cols-12 gap-4 border-b border-slate-700/40 px-6 py-3.5 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                <div className="col-span-4">Mentor</div>
-                <div className="col-span-3">Thời gian</div>
-                <div className="col-span-2 text-center">Trạng thái</div>
-                <div className="col-span-3 text-center">Thao tác</div>
-              </div>
-              {mentorHistory.map((item, idx) => (
-                <div
-                  key={item.bookingId}
-                  className={`grid grid-cols-12 items-center gap-4 px-6 py-4 transition-colors hover:bg-slate-800/50 ${idx < mentorHistory.length - 1 ? "border-b border-slate-700/30" : ""
-                    }`}
-                >
-                  <div className="col-span-4 flex items-center gap-3">
-                    <Avatar className="h-10 w-10 border border-slate-700">
-                      <AvatarImage src={item.profileAvatarUrl} alt={item.profileName} />
-                      <AvatarFallback name={item.profileName} />
-                    </Avatar>
-                    <div>
-                      <span className="font-medium text-white block truncate">{item.profileName}</span>
-                      <span className="text-xs text-slate-500">{item.jobTitle || "Mentor"}</span>
-                    </div>
-                  </div>
-                  <div className="col-span-3 text-sm text-slate-400">
-                    <div>{formatDate(item.bookDate)}</div>
-                    <div className="text-xs text-slate-500">
-                      {new Date(item.startTime).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
-                    </div>
-                  </div>
-                  <div className="col-span-2 text-center">
-                    <InterviewStatusBadge status={item.status === 2 ? "Completed" : item.status === 3 ? "Cancelled" : "InProgress"} />
-                  </div>
-                  <div className="col-span-3 flex justify-center gap-2">
-                    {item.ratingScore && (
-                      <div className="flex items-center gap-1 text-yellow-400 text-sm font-bold bg-yellow-400/10 px-2 py-1 rounded-lg">
-                        <Star className="w-3.5 h-3.5 fill-yellow-400" />
-                        {item.ratingScore}
+            <Table
+              page={mentorPage}
+              totalPages={mentorTotalPages}
+              totalCount={mentorTotalCount}
+              pageSize={mentorPageSize}
+              onPageChange={setMentorPage}
+              onPageSizeChange={handleMentorPageSizeChange}
+              maxHeight="60vh"
+            >
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-1/3">Mentor</TableHead>
+                  <TableHead>Thời gian</TableHead>
+                  <TableHead className="text-center">Trạng thái</TableHead>
+                  <TableHead className="text-center">Thao tác</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedMentorHistory.map((item) => (
+                  <TableRow key={item.bookingId}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-10 w-10 border border-slate-700">
+                          <AvatarImage src={item.profileAvatarUrl} alt={item.profileName} />
+                          <AvatarFallback name={item.profileName} />
+                        </Avatar>
+                        <div>
+                          <span className="font-medium text-white block truncate">{item.profileName}</span>
+                          <span className="text-xs text-slate-500">{item.jobTitle || "Mentor"}</span>
+                        </div>
                       </div>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      icon={<Eye className="h-4 w-4" />}
-                      className="text-xs h-8 px-2"
-                      onClick={() => navigate(`/candidate/interview-history/${item.bookingId}`)}
-                    >
-                      Chi tiết
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm text-slate-400">
+                        <div>{formatDate(item.bookDate)}</div>
+                        <div className="text-xs text-slate-500">
+                          {new Date(item.startTime).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <InterviewStatusBadge status={item.status === 2 ? "Completed" : item.status === 3 ? "Cancelled" : "InProgress"} />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex justify-center gap-2">
+                        {item.ratingScore && (
+                          <div className="flex items-center gap-1 text-yellow-400 text-sm font-bold bg-yellow-400/10 px-2 py-1 rounded-lg">
+                            <Star className="w-3.5 h-3.5 fill-yellow-400" />
+                            {item.ratingScore}
+                          </div>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          icon={<Eye className="h-4 w-4" />}
+                          className="text-xs h-8 px-2"
+                          onClick={() => navigate(`/candidate/interview-history/${item.bookingId}`)}
+                        >
+                          Chi tiết
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           )}
         </>
       )}
