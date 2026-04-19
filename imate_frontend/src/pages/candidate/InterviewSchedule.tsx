@@ -18,8 +18,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import BookingDetailDialog from "@/pages/dialog/main/booking/BookingDetailDialog";
-
-const MOCK_AVATAR = "https://i.pravatar.cc/150?img=11";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 type ViewMode = "Ngày" | "Tuần" | "Tháng";
 
@@ -256,7 +255,7 @@ const InterviewSchedule = () => {
                      {/* Left: Info */}
                      <div className="flex items-center gap-4">
                        <img 
-                         src={booking.profileAvatarUrl || MOCK_AVATAR} 
+                         src={booking.profileAvatarUrl || undefined} 
                          alt={booking.profileName} 
                          className="w-14 h-14 rounded-full object-cover border-2 border-indigo-500/30"
                        />

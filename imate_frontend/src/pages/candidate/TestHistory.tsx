@@ -12,6 +12,7 @@ import {
   MessageSquare,
   Star,
 } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "react-toastify";
 
 import { Button } from "@/components/ui/button";
@@ -406,11 +407,10 @@ export default function TestHistory() {
                     }`}
                 >
                   <div className="col-span-4 flex items-center gap-3">
-                    <img
-                      src={item.profileAvatarUrl || "https://i.pravatar.cc/150"}
-                      alt={item.profileName}
-                      className="h-10 w-10 rounded-full object-cover border border-slate-700"
-                    />
+                    <Avatar className="h-10 w-10 border border-slate-700">
+                      <AvatarImage src={item.profileAvatarUrl} alt={item.profileName} />
+                      <AvatarFallback name={item.profileName} />
+                    </Avatar>
                     <div>
                       <span className="font-medium text-white block truncate">{item.profileName}</span>
                       <span className="text-xs text-slate-500">{item.jobTitle || "Mentor"}</span>

@@ -5,6 +5,7 @@ import { getAllPositions, getAllSkills, getAllCompanies } from '@/services/commo
 import type { ListPreviewMentorResponse } from '@/types/common/mentor';
 import type { PositionItem, SkillItem, CompanyItem } from '@/types/common/question';
 import { Search, Star } from 'lucide-react';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 const PAGE_SIZE = 8;
 
@@ -89,12 +90,6 @@ const MentorList: React.FC = () => {
     setPageNumber(1);
   };
 
-  const getAvatarUrl = (mentor: ListPreviewMentorResponse) => {
-    if (mentor.avatarUrl) return mentor.avatarUrl;
-    const seed = mentor.accountId ?? mentor.fullName ?? 'mentor';
-    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(String(seed))}`;
-  };
-
   const displayBio = (mentor: ListPreviewMentorResponse) => {
     return mentor.bio?.trim() || '—';
   };
@@ -128,7 +123,7 @@ const MentorList: React.FC = () => {
         </section>
 
         {/* Filters */}
-        <section className="px-6 pb-8 -mt-4">
+        <section className="px-6 pb-8 pt-4">
           <div className="max-w-7xl mx-auto">
             <form onSubmit={handleSearch} className="flex flex-wrap items-center gap-3 mb-4">
               <select
@@ -225,13 +220,10 @@ const MentorList: React.FC = () => {
                             <span className="absolute top-0 left-0 z-10 rounded-md bg-amber-500/90 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#0a0b14]">
                               Mentor hàng đầu
                             </span>
-                            <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-white/10 mx-auto mt-2">
-                              <img
-                                src={getAvatarUrl(mentor)}
-                                alt={mentor.fullName}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
+                            <Avatar className="w-20 h-20 border-2 border-white/10 mx-auto mt-2">
+                              <AvatarImage src={mentor.avatarUrl} alt={mentor.fullName} />
+                              <AvatarFallback name={mentor.fullName} />
+                            </Avatar>
                           </div>
                           <h3 className="text-lg font-bold text-white text-center mb-1 hover:text-indigo-300 transition-colors">{mentor.fullName}</h3>
                           <div className="flex items-center justify-center gap-1 text-amber-400 mb-2">

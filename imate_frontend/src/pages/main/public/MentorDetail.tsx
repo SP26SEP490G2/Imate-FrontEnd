@@ -14,16 +14,7 @@ import {
   Award,
   Heart,
 } from "lucide-react";
-
-function getInitials(fullName: string): string {
-  return fullName
-    .trim()
-    .split(/\s+/)
-    .map((s) => s[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase() || "?";
-}
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const BENEFITS = [
   { icon: Route, text: "Lộ trình cá nhân hóa theo kỹ năng và mục tiêu của bạn" },
@@ -122,15 +113,10 @@ const MentorDetail: React.FC = () => {
           <div className="flex flex-col lg:flex-row lg:items-start gap-6 lg:gap-8">
             {/* Avatar + badge */}
             <div className="flex flex-col items-center lg:items-start flex-shrink-0">
-              <div className="w-28 h-28 md:w-32 md:h-32 rounded-full overflow-hidden border-2 border-white/10 bg-white/5">
-                {mentor.avatarUrl ? (
-                  <img src={mentor.avatarUrl} alt={mentor.fullName} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-indigo-400">
-                    {getInitials(mentor.fullName)}
-                  </div>
-                )}
-              </div>
+              <Avatar className="w-28 h-28 md:w-32 md:h-32 border-2 border-white/10 bg-white/5">
+                <AvatarImage src={mentor.avatarUrl || undefined} alt={mentor.fullName} />
+                <AvatarFallback name={mentor.fullName} />
+              </Avatar>
               <span className="mt-3 rounded-lg bg-amber-500/90 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#0a0b14]">
                 Mentor hàng đầu
               </span>
