@@ -6,8 +6,20 @@ import { Badge } from "@/components/ui/badge";
 import { CreateJobPost } from "@/services/recruiterService";
 import { toast } from "react-toastify";
 import { MSG52, MSG53 } from "@/constants/messages";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/store/AuthContext";
 
 const CreateJobApplication: React.FC = () => {
+  const navigate = useNavigate();
+  const { user, isLoading: isAuthLoading } = useAuth();
+
+  useEffect(() => {
+    if (isAuthLoading) return;
+    if (user && user.accountStatus === "PendingVerification" && user.verificationStatus !== "Rejected" && user.companyName) {
+      navigate("/recruiter-pending-application", { replace: true });
+    }
+  }, [user, isAuthLoading, navigate]);
+
   const [form, setForm] = useState({
     title: "",
     employmentType: "Full-time",
