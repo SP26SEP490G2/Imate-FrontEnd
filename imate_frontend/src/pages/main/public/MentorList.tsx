@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getListPreviewMentors } from '@/services/mentorService';
 import { getAllPositions, getAllSkills, getAllCompanies } from '@/services/commonService';
@@ -21,21 +21,22 @@ const MentorList: React.FC = () => {
   const [companies, setCompanies] = useState<CompanyItem[]>([]);
   const [filtersLoading, setFiltersLoading] = useState(true);
 
+  const [searchTerm, setSearchTerm] = useState('');
   const [filterPosition, setFilterPosition] = useState<string>('');
   const [filterSkill, setFilterSkill] = useState<string>('');
   const [filterCompany, setFilterCompany] = useState<string>('');
-  const [activeTag, setActiveTag] = useState<string | null>(null);
 
   const fetchMentors = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await getListPreviewMentors({ 
-        pageNumber, 
+      const res = await getListPreviewMentors({
+        pageNumber,
         pageSize: PAGE_SIZE,
-        positionName: activeTag || filterPosition,
+        searchTerm: searchTerm || undefined,
+        positionName: filterPosition,
         skillName: filterSkill,
-        companyName: filterCompany
+        companyName: filterCompany,
       });
       setMentors(res.data);
       setTotalPages(res.totalPages);
@@ -46,7 +47,7 @@ const MentorList: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [pageNumber, filterPosition, filterSkill, filterCompany, activeTag]);
+  }, [pageNumber, filterPosition, filterSkill, filterCompany, searchTerm]);
 
   const fetchFilters = useCallback(async () => {
     setFiltersLoading(true);
@@ -77,16 +78,18 @@ const MentorList: React.FC = () => {
     fetchFilters();
   }, [fetchFilters]);
 
-  // Server handles filtering now, so we just return the fetched mentors.
-  // We keep this useMemo to maintain compatibility with the rest of the component.
-  const filteredMentors = useMemo(() => {
-    return mentors;
-  }, [mentors]);
-
-  const visibleMentors = filteredMentors;
+  const visibleMentors = mentors;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    setPageNumber(1);
+  };
+
+  const handleReset = () => {
+    setSearchTerm('');
+    setFilterPosition('');
+    setFilterSkill('');
+    setFilterCompany('');
     setPageNumber(1);
   };
 
@@ -94,103 +97,117 @@ const MentorList: React.FC = () => {
     return mentor.bio?.trim() || '—';
   };
 
-  const popularPositionNames = useMemo(() => positions.slice(0, 6).map((p) => p.name), [positions]);
-
   return (
-    <div className="font-sans min-h-screen bg-[#0a0b14]">
+    <div className="font-sans min-h-screen bg-[#020617]">
       <main>
         {/* Hero */}
-        <section className="relative pt-16 pb-20 px-6 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-indigo-950/40 via-transparent to-purple-950/30" />
-          <div className="max-w-7xl mx-auto relative z-10 grid lg:grid-cols-2 gap-12 items-center">
+        <section className="relative pt-16 pb-20 px-6">
+          <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4 leading-tight tracking-tight">
+              <h1 className="text-4xl md:text-5xl font-extrabold mb-4 leading-tight tracking-tight bg-linear-to-r from-white to-slate-400 bg-clip-text text-transparent">
                 Kết nối với chuyên gia hàng đầu
               </h1>
-              <p className="text-lg text-slate-400 mb-8 max-w-xl leading-relaxed">
+              <p className="text-slate-400 mb-8 max-w-2xl leading-relaxed">
                 Học hỏi từ những người đi trước để bứt phá sự nghiệp IT của bạn thông qua các buổi cố vấn 1:1 chuyên sâu.
               </p>
-              {!loading && mentors.length > 0 && (
-                <p className="text-sm text-slate-400">{mentors.length} mentor sẵn sàng đồng hành</p>
-              )}
             </div>
-            <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-[#11142D]">
-              <div className="w-full h-80 flex items-center justify-center text-slate-500">
-                <span className="text-sm">Kết nối Mentor</span>
+            <div className="relative rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-[#11142D]">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,_rgba(99,102,241,0.25),_transparent_55%)]" />
+              <div className="w-full h-80 flex flex-col items-start justify-start text-slate-400 relative p-8">
+                <span className="text-2xl md:text-3xl font-bold text-white">Kết nối Mentor</span>
+                <span className="text-base md:text-lg text-slate-300 mt-2">Lộ trình cá nhân hóa theo mục tiêu</span>
+
               </div>
             </div>
           </div>
         </section>
 
         {/* Filters */}
-        <section className="px-6 pb-8 pt-4">
+        <section className="px-6 pb-10">
           <div className="max-w-7xl mx-auto">
-            <form onSubmit={handleSearch} className="flex flex-wrap items-center gap-3 mb-4">
-              <select
-                value={filterPosition}
-                onChange={(e) => setFilterPosition(e.target.value)}
-                className="h-11 px-4 rounded-xl bg-[#11142D] border border-white/10 text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none min-w-[160px]"
-                disabled={filtersLoading}
-              >
-                <option value="">{filtersLoading && positions.length === 0 ? 'Đang tải...' : 'Vị trí'}</option>
-                {positions.map((p) => (
-                  <option key={p.id} value={p.name}>{p.name}</option>
-                ))}
-              </select>
-              <select
-                value={filterSkill}
-                onChange={(e) => setFilterSkill(e.target.value)}
-                className="h-11 px-4 rounded-xl bg-[#11142D] border border-white/10 text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none min-w-[160px]"
-                disabled={filtersLoading}
-              >
-                <option value="">{filtersLoading && skills.length === 0 ? 'Đang tải...' : 'Kỹ năng'}</option>
-                {skills.map((s) => (
-                  <option key={s.id} value={s.name}>{s.name}</option>
-                ))}
-              </select>
-              <select
-                value={filterCompany}
-                onChange={(e) => setFilterCompany(e.target.value)}
-                className="h-11 px-4 rounded-xl bg-[#11142D] border border-white/10 text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none min-w-[160px]"
-                disabled={filtersLoading}
-              >
-                <option value="">{filtersLoading && companies.length === 0 ? 'Đang tải...' : 'Công ty'}</option>
-                {companies.map((c) => (
-                  <option key={c.id} value={c.name}>{c.name}</option>
-                ))}
-              </select>
-              <button
-                type="submit"
-                className="h-11 px-5 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white font-semibold flex items-center gap-2 transition-colors"
-              >
-                <Search className="w-4 h-4" />
-                Tìm kiếm
-              </button>
+            <form
+              onSubmit={handleSearch}
+              className="bg-[#1e293b]/40 backdrop-blur-sm p-6 rounded-2xl border border-white/5 flex flex-col gap-4"
+            >
+              <div className="w-full space-y-2">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Tìm kiếm</label>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="relative group flex-1">
+                    <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-500 transition-colors" />
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setPageNumber(1);
+                      }}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition-all outline-none text-white"
+                      placeholder="Tìm theo tên mentor, vị trí, công ty..."
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleReset}
+                    className="px-6 py-3 rounded-xl border border-white/10 font-bold text-sm hover:bg-white/5 transition-all flex items-center justify-center text-slate-300"
+                  >
+                    <span className="material-symbols-outlined text-sm">restart_alt</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                <div className="w-full space-y-2">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Vị trí</label>
+                  <select
+                    value={filterPosition}
+                    onChange={(e) => setFilterPosition(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none"
+                    disabled={filtersLoading}
+                  >
+                    <option value="">{filtersLoading && positions.length === 0 ? 'Đang tải...' : 'Tất cả'}</option>
+                    {positions.map((p) => (
+                      <option key={p.id} value={p.name}>{p.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="w-full space-y-2">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Kỹ năng</label>
+                  <select
+                    value={filterSkill}
+                    onChange={(e) => setFilterSkill(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none"
+                    disabled={filtersLoading}
+                  >
+                    <option value="">{filtersLoading && skills.length === 0 ? 'Đang tải...' : 'Tất cả'}</option>
+                    {skills.map((s) => (
+                      <option key={s.id} value={s.name}>{s.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="w-full space-y-2">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Công ty</label>
+                  <select
+                    value={filterCompany}
+                    onChange={(e) => setFilterCompany(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none"
+                    disabled={filtersLoading}
+                  >
+                    <option value="">{filtersLoading && companies.length === 0 ? 'Đang tải...' : 'Tất cả'}</option>
+                    {companies.map((c) => (
+                      <option key={c.id} value={c.name}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+              </div>
             </form>
-            {popularPositionNames.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider mr-1">Vị trí:</span>
-              {popularPositionNames.map((tag) => (
-                <button
-                  key={tag}
-                  type="button"
-                  onClick={() => setActiveTag(activeTag === tag ? null : tag)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    activeTag === tag
-                      ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/50'
-                      : 'bg-white/5 border border-white/10 text-slate-300 hover:border-white/20'
-                  }`}
-                >
-                  {tag}
-                </button>
-              ))}
-            </div>
-            )}
           </div>
         </section>
 
         {/* Mentor grid */}
-        <section className="px-6 pb-16">
+        <section className="px-6 pb-20">
           <div className="max-w-7xl mx-auto">
             {loading && (
               <div className="flex justify-center py-20">
@@ -210,7 +227,7 @@ const MentorList: React.FC = () => {
                     return (
                       <div
                         key={`${mentor.fullName}-${index}`}
-                        className="rounded-2xl border border-white/10 bg-[#11142D] p-5 flex flex-col hover:border-indigo-500/30 transition-all duration-300"
+                        className="rounded-3xl border border-white/5 bg-[#1e293b]/40 backdrop-blur-sm p-5 flex flex-col hover:border-indigo-500/40 hover:-translate-y-1 transition-all duration-300"
                       >
                         <Link
                           to={detailHref}
@@ -245,7 +262,7 @@ const MentorList: React.FC = () => {
                     );
                   })}
                 </div>
-                {filteredMentors.length === 0 && (
+                {mentors.length === 0 && (
                   <div className="text-center py-16 text-slate-400">
                     Không tìm thấy mentor nào phù hợp với bộ lọc.
                   </div>
@@ -257,11 +274,10 @@ const MentorList: React.FC = () => {
                         key={page}
                         type="button"
                         onClick={() => setPageNumber(page)}
-                        className={`px-3 py-2 rounded-lg text-sm font-medium ${
-                          pageNumber === page
-                            ? 'bg-indigo-500 text-white'
-                            : 'bg-white/5 text-slate-300 hover:bg-white/10'
-                        }`}
+                        className={`px-3 py-2 rounded-lg text-sm font-medium ${pageNumber === page
+                          ? 'bg-indigo-500 text-white'
+                          : 'bg-white/5 text-slate-300 hover:bg-white/10'
+                          }`}
                       >
                         {page}
                       </button>
