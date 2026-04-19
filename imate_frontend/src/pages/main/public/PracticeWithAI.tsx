@@ -38,7 +38,7 @@ const PracticeWithAI: React.FC = () => {
           {/* TEST */}
           <div
             onClick={() => handleClick("/practice-test")}
-            className="cursor-pointer rounded-3xl border border-white/10 bg-[#1e293b]/40 hover:opacity-90 transition"
+            className="cursor-pointer rounded-3xl border border-white/10 bg-[#1e293b]/40 hover:border-indigo-500/40 hover:-translate-y-1 transition-all duration-300"
           >
             {/* IMAGE */}
             <div className="p-4">
@@ -69,7 +69,7 @@ const PracticeWithAI: React.FC = () => {
           {/* INTERVIEW */}
           <div
             onClick={() => handleClick("/interview-setup")}
-            className="cursor-pointer rounded-3xl border border-white/10 bg-[#1e293b]/40 hover:opacity-90 transition"
+            className="cursor-pointer rounded-3xl border border-white/10 bg-[#1e293b]/40 hover:border-indigo-500/40 hover:-translate-y-1 transition-all duration-300"
           >
             {/* IMAGE */}
             <div className="p-4">

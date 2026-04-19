@@ -9,12 +9,12 @@ import {
 import { getListPosition } from '@/services/positionService';
 import { getAllSkill } from '@/services/skillService';
 import { DIFFICULTY_OPTIONS } from '@/constants/enum';
-import { ImportSystemQuestionDialog } from '@/dialog/management/question/ImportSystemQuestionDialog';
-import { UpdateSystemQuestionModal } from '@/dialog/management/question/UpdateSystemQuestionModal';
-import { CreateSystemQuestionDialog } from '@/dialog/management/question/CreateSystemQuestionDialog';
-import { CreateContributeQuestionDialog } from '@/dialog/main/question/CreateContributeQuestionDialog';
-import { ViewContributeQuestionModal } from '@/dialog/management/question/ViewContributeQuestionModal';
-import { ViewPendingContributeQuestionModal } from '@/dialog/management/question/ViewPendingContributeQuestionModal';
+import { ImportSystemQuestionDialog } from '@/pages/dialog/management/question/ImportSystemQuestionDialog';
+import { UpdateSystemQuestionModal } from '@/pages/dialog/management/question/UpdateSystemQuestionModal';
+import { CreateSystemQuestionDialog } from '@/pages/dialog/management/question/CreateSystemQuestionDialog';
+import { CreateContributeQuestionDialog } from '@/pages/dialog/main/question/CreateContributeQuestionDialog';
+import { ViewContributeQuestionModal } from '@/pages/dialog/management/question/ViewContributeQuestionModal';
+import { ViewPendingContributeQuestionModal } from '@/pages/dialog/management/question/ViewPendingContributeQuestionModal';
 import type {
   StaffSystemQuestionItem,
   StaffContributedQuestionItem,

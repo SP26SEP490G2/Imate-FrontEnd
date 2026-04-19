@@ -11,20 +11,17 @@ import {
 import { getOverviewAccount, getAccountList, updateAccountState } from "@/services/accountService";
 import type { OverviewChartAccountResponse, AccountResponse } from "@/types/response/account.response";
 import { MSG09, MSG10 } from "@/constants/messages";
-import { ROLES } from "@/constants/role";
 import { ACCOUNT_STATUS, ACCOUNT_STATUS_STRING, ROLE_LABELS, ROLE_BADGE_COLORS, DEFAULT_BADGE_COLOR } from "@/constants/common";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-// ...existing code...
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "react-toastify";
 import { cn } from "@/lib/utils";
-import UserAccountDetailModal from "@/dialog/management/account/UserAccountDetailModal";
-import CreateStaffModal from "@/dialog/management/account/CreateStaffModal";
+import UserAccountDetailModal from "@/pages/dialog/management/account/UserAccountDetailModal";
+import CreateStaffModal from "@/pages/dialog/management/account/CreateStaffModal";
 
 // This layout replicates the mockup
 
@@ -239,17 +236,6 @@ export default function UserManagement() {
                 <option value="Staff">Nhân viên</option>
               </select>
             </div>
-            <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger className="w-[160px] bg-slate-900 border-slate-800 text-sm">
-                <SelectValue placeholder="Vai trò" />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
-                <SelectItem value="all">Vai trò: Tất cả</SelectItem>
-                <SelectItem value={ROLES.CANDIDATE}>Ứng viên</SelectItem>
-                <SelectItem value={ROLES.MENTOR}>Mentor</SelectItem>
-                <SelectItem value={ROLES.STAFF}>Nhân viên</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </div>
 

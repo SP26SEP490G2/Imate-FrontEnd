@@ -32,14 +32,14 @@ import type { Company } from "@/types/model/company.model";
 import { getListPosition } from "@/services/positionService";
 import type {PositionResponse } from "@/types/response/position.response";
 
-import { CreateCategoryDialog } from "@/pages/management/dialog/CreateCategoryDialog";
-import { UpdateCategoryDialog } from "../dialog/UpdateCategoryDialog";
-import { CreateSkillDialog } from "../dialog/CreateSkillDialog";
-import { UpdateSkillDialog } from "../dialog/UpdateSkillDialog";
-import { CreatePositionDialog } from "../dialog/CreatePositionDialog";
-import { UpdatePositionDialog } from "../dialog/UpdatePositionDialog";
-import { CreateCompanyDialog } from "@/pages/management/dialog/CreateCompanyDialog";
-import { UpdateCompanyDialog } from "@/pages/management/dialog/UpdateCompanyDialog";
+import { CreateCategoryDialog } from "@/pages/dialog/management/classification/CreateCategoryDialog";
+import { UpdateCategoryDialog } from "../../dialog/management/classification/UpdateCategoryDialog";
+import { CreateSkillDialog } from "../../dialog/management/classification/CreateSkillDialog";
+import { UpdateSkillDialog } from "../../dialog/management/classification/UpdateSkillDialog";
+import { CreatePositionDialog } from "../../dialog/management/classification/CreatePositionDialog";
+import { UpdatePositionDialog } from "../../dialog/management/classification/UpdatePositionDialog";
+import { CreateCompanyDialog } from "@/pages/dialog/management/classification/CreateCompanyDialog";
+import { UpdateCompanyDialog } from "@/pages/dialog/management/classification/UpdateCompanyDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 // ...existing code...
 

@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  BookOpen,
   History,
-  Languages,
   ChevronRight,
   Loader2,
   CheckCircle2,
@@ -31,26 +29,6 @@ import { getAllSkills } from "@/services/commonService";
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
 /* ------------------------------------------------------------------ */
-const TEST_TYPES = [
-  {
-    id: "Technical",
-    label: "Kiến thức chuyên môn",
-    desc: "Đánh giá kiến thức chuyên môn, thuật toán và tư duy lập trình.",
-    icon: BookOpen,
-    gradient: "from-purple-500/20 to-indigo-500/20",
-    border: "border-purple-500/40",
-    iconColor: "text-purple-400",
-  },
-  {
-    id: "Language",
-    label: "Đánh giá ngoại ngữ",
-    desc: "Kiểm tra khả năng ngoại ngữ (Tiếng Anh/Nhật) trong bối cảnh IT.",
-    icon: Languages,
-    gradient: "from-cyan-500/20 to-blue-500/20",
-    border: "border-cyan-500/40",
-    iconColor: "text-cyan-400",
-  },
-];
 
 const FIELDS = [
   "Frontend Developer",
@@ -75,12 +53,12 @@ function ConfigScreen({
 }: {
   onStart: (params: GeneratePracticeTestParams) => void;
 }) {
-  const [testType, setTestType] = useState("Technical");
+  const [testType] = useState("Technical");
   const [field, setField] = useState("Frontend Developer");
   const [skill, setSkill] = useState("");
   const [skills, setSkills] = useState<{ id: number; name: string }[]>([]);
   const [level, setLevel] = useState("Junior");
-  const [useCV, setUseCV] = useState(false);
+
   const [loading, setLoading] = useState(false);
 
   // Fetch skills từ DB
@@ -102,7 +80,7 @@ function ConfigScreen({
   const handleStart = async () => {
     setLoading(true);
     try {
-      await onStart({ testType, field, skill, level, useCV, numberOfQuestions: 10 });
+      await onStart({ testType, field, skill, level, useCV: false, numberOfQuestions: 10 });
     } finally {
       setLoading(false);
     }
@@ -122,7 +100,7 @@ function ConfigScreen({
       {/* Title */}
       <div className="mb-8 text-center">
         <h1 className="text-2xl font-bold text-white md:text-3xl">
-          Luyện tập bài test với AI
+          Luyện tập bài test trắc nghiệm
         </h1>
         <p className="mt-2 text-sm text-slate-400">
           Tạo bài đánh giá năng lực cá nhân hóa dựa trên CV và mục tiêu nghề nghiệp của bạn
@@ -131,41 +109,7 @@ function ConfigScreen({
 
       {/* Config Card */}
       <div className="rounded-2xl border border-slate-700/60 bg-gradient-to-br from-slate-800/80 to-slate-900/80 p-6 md:p-8">
-        {/* Test Type */}
-        <div className="mb-6">
-          <label className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-300">
-            <BookOpen className="h-4 w-4 text-purple-400" />
-            Loại bài test
-          </label>
-          <div className="grid gap-3 md:grid-cols-2">
-            {TEST_TYPES.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setTestType(t.id)}
-                className={`group relative flex items-start gap-3 rounded-xl border p-4 text-left transition-all ${
-                  testType === t.id
-                    ? `bg-gradient-to-r ${t.gradient} ${t.border}`
-                    : "border-slate-700/50 bg-slate-800/30 hover:border-slate-600/60"
-                }`}
-              >
-                <div
-                  className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
-                    testType === t.id ? "bg-white/10" : "bg-slate-700/50"
-                  }`}
-                >
-                  <t.icon className={`h-4 w-4 ${t.iconColor}`} />
-                </div>
-                <div>
-                  <p className="font-semibold text-white">{t.label}</p>
-                  <p className="mt-0.5 text-xs text-slate-400">{t.desc}</p>
-                </div>
-                {testType === t.id && (
-                  <CheckCircle2 className="absolute right-3 top-3 h-5 w-5 text-purple-400" />
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
+
 
         {/* Field */}
         <div className="mb-6">
@@ -231,38 +175,7 @@ function ConfigScreen({
           </div>
         </div>
 
-        {/* CV Toggle */}
-        <div className="mb-8">
-          <button
-            onClick={() => setUseCV(!useCV)}
-            className={`flex w-full items-center justify-between rounded-xl border p-4 transition-all ${
-              useCV
-                ? "border-purple-500/40 bg-purple-500/10"
-                : "border-slate-700/50 bg-slate-800/30"
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <FileText className={`h-5 w-5 ${useCV ? "text-purple-400" : "text-slate-500"}`} />
-              <div className="text-left">
-                <p className="font-semibold text-white">Cá nhân hóa theo CV hiện tại</p>
-                <p className="text-xs text-slate-400">
-                  AI sẽ phân tích CV của bạn để đưa ra câu hỏi phù hợp nhất
-                </p>
-              </div>
-            </div>
-            <div
-              className={`flex h-6 w-11 items-center rounded-full p-0.5 transition-colors ${
-                useCV ? "bg-purple-500" : "bg-slate-600"
-              }`}
-            >
-              <div
-                className={`h-5 w-5 rounded-full bg-white shadow-md transition-transform ${
-                  useCV ? "translate-x-5" : "translate-x-0"
-                }`}
-              />
-            </div>
-          </button>
-        </div>
+
 
         {/* Practice Limit Info */}
         <div className="mb-6 flex items-center gap-2 rounded-lg bg-amber-500/10 px-4 py-2.5 text-sm">

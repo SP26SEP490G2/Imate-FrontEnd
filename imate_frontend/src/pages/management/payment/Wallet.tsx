@@ -2,8 +2,8 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/store/AuthContext";
-import { DepositDialog } from "@/dialog/main/payment/DepositDialog";
-import { WithdrawDialog } from "@/dialog/main/payment/WithdrawDialog";
+import { DepositDialog } from "@/pages/dialog/main/payment/DepositDialog";
+import { WithdrawDialog } from "@/pages/dialog/main/payment/WithdrawDialog";
 import { Wallet as WalletIcon, ArrowDownCircle, ArrowUpCircle, Loader2, Calendar, BookOpen, Shield } from "lucide-react";
 import { getTransactions, cancelTransaction, getWalletSummary } from "@/services/walletService";
 import type { Transaction } from "@/types/response/wallet.response";
@@ -41,54 +41,54 @@ function Wallet() {
   const [typeFilter, setTypeFilter] = useState<string>("");
 
   const params: any = { pageNumber: page, pageSize };
-    if (statusFilter) {
-      params.status = statusFilter;
-    }
+  if (statusFilter) {
+    params.status = statusFilter;
+  }
 
   const handlePageSizeChange = (size: number) => {
     setPageSize(size);
     setPage(1);
   };
   const statusBadgeMap: Record<TransactionStatusType, Status> = {
-      [TransactionStatus.Pending]: "pending",
-      [TransactionStatus.Completed]: "active",
-      [TransactionStatus.Failed]: "inactive",
-      [TransactionStatus.Cancelled]: "error",
-      [TransactionStatus.Escrow]: "draft"
-    };
+    [TransactionStatus.Pending]: "pending",
+    [TransactionStatus.Completed]: "active",
+    [TransactionStatus.Failed]: "inactive",
+    [TransactionStatus.Cancelled]: "error",
+    [TransactionStatus.Escrow]: "draft"
+  };
 
   useEffect(() => {
-  const params = new URLSearchParams(location.search);
-  const paymentStatus = params.get("status"); 
-  const cancel = params.get("cancel");
-  const orderCode = params.get("orderCode");
+    const params = new URLSearchParams(location.search);
+    const paymentStatus = params.get("status");
+    const cancel = params.get("cancel");
+    const orderCode = params.get("orderCode");
 
-  if (paymentStatus === "PAID") {
-    toast.success("Thanh toán thành công");
-    refetchUser();
+    if (paymentStatus === "PAID") {
+      toast.success("Thanh toán thành công");
+      refetchUser();
 
-    navigate("/wallet", { replace: true });
+      navigate("/wallet", { replace: true });
 
-    setTimeout(() => {
-      fetchAll();
-    }, 300);
-    return;
-  }
-
-  if (cancel === "true" || paymentStatus === "CANCELLED") {
-    if (orderCode) {
-      cancelTransaction(Number(orderCode));
+      setTimeout(() => {
+        fetchAll();
+      }, 300);
+      return;
     }
 
-    toast.error("Thanh toán đã bị hủy");
+    if (cancel === "true" || paymentStatus === "CANCELLED") {
+      if (orderCode) {
+        cancelTransaction(Number(orderCode));
+      }
 
-    navigate("/wallet", { replace: true });
+      toast.error("Thanh toán đã bị hủy");
 
-    setTimeout(() => {
-      fetchAll();
-    }, 300);
-  }
-}, [location]);
+      navigate("/wallet", { replace: true });
+
+      setTimeout(() => {
+        fetchAll();
+      }, 300);
+    }
+  }, [location]);
 
   // Fetch wallet summary
   const fetchWalletSummary = async () => {
@@ -138,8 +138,8 @@ function Wallet() {
   };
 
   useEffect(() => {
-      fetchWalletSummary();
-      fetchTransactions();
+    fetchWalletSummary();
+    fetchTransactions();
   }, [page, statusFilter, typeFilter]);
 
   return (
@@ -148,7 +148,7 @@ function Wallet() {
         {/* LEFT COLUMN - Wallet Info & Stats */}
         <div className="lg:col-span-4 space-y-6">
           {/* Wallet Card */}
-          <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#11142D] to-[#0B0E22] p-6 shadow-[0_20px_40px_rgba(0,0,0,0.35)]">
+          <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-[#1e293b]/40 backdrop-blur-sm p-6 shadow-[0_20px_40px_rgba(0,0,0,0.35)]">
             <div className="flex items-center gap-3 mb-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-white/5">
                 <WalletIcon size={18} className="text-white/90" />
@@ -192,7 +192,7 @@ function Wallet() {
               {/* Stats Grid - Always show for all roles */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Tổng thu / Nạp */}
-                <div className="rounded-xl border border-green-500/20 bg-gradient-to-br from-green-950/30 to-[#11142D] p-5 text-center">
+                <div className="rounded-xl border border-white/5 bg-[#1e293b]/40 backdrop-blur-sm p-5 text-center">
                   <p className="text-sm text-green-400/80 mb-1">Tổng thu (Nạp)</p>
                   <p className="text-2xl font-bold text-green-400">
                     +{walletSummary?.totalDeposit?.toLocaleString() ?? "0"}
@@ -201,7 +201,7 @@ function Wallet() {
                 </div>
 
                 {/* Tổng rút */}
-                <div className="rounded-xl border border-red-500/20 bg-gradient-to-br from-red-950/30 to-[#11142D] p-5 text-center">
+                <div className="rounded-xl border border-white/5 bg-[#1e293b]/40 backdrop-blur-sm p-5 text-center">
                   <p className="text-sm text-red-400/80 mb-1">Tổng rút</p>
                   <p className="text-2xl font-bold text-red-400">
                     -{walletSummary?.totalWithdrawal?.toLocaleString() ?? "0"}
@@ -215,7 +215,7 @@ function Wallet() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Max Bookings Can Receive */}
                   {walletSummary?.maxBookingsCanReceive !== null && walletSummary?.maxBookingsCanReceive !== undefined && (
-                    <div className="rounded-xl border border-blue-500/20 bg-gradient-to-br from-blue-950/30 to-[#11142D] p-5 text-center">
+                    <div className="rounded-xl border border-white/5 bg-[#1e293b]/40 backdrop-blur-sm p-5 text-center">
                       <div className="flex items-center justify-center mb-2">
                         <BookOpen size={18} className="text-blue-400" />
                       </div>
@@ -229,7 +229,7 @@ function Wallet() {
 
                   {/* Current Escrow Bookings */}
                   {walletSummary?.currentEscrowBookings !== null && walletSummary?.currentEscrowBookings !== undefined && (
-                    <div className="rounded-xl border border-purple-500/20 bg-gradient-to-br from-purple-950/30 to-[#11142D] p-5 text-center">
+                    <div className="rounded-xl border border-white/5 bg-[#1e293b]/40 backdrop-blur-sm p-5 text-center">
                       <div className="flex items-center justify-center mb-2">
                         <Shield size={18} className="text-purple-400" />
                       </div>
@@ -243,7 +243,7 @@ function Wallet() {
 
                   {/* Price Per Session */}
                   {walletSummary?.pricePerSession !== null && walletSummary?.pricePerSession !== undefined && (
-                    <div className="rounded-xl border border-yellow-500/20 bg-gradient-to-br from-yellow-950/30 to-[#11142D] p-5 text-center">
+                    <div className="rounded-xl border border-white/5 bg-[#1e293b]/40 backdrop-blur-sm p-5 text-center">
                       <p className="text-sm text-yellow-400/80 mb-1">Giá / buổi</p>
                       <p className="text-2xl font-bold text-yellow-400">
                         {walletSummary.pricePerSession.toLocaleString()}
@@ -254,7 +254,7 @@ function Wallet() {
 
                   {/* Required Balance For One Booking */}
                   {walletSummary?.requiredBalanceForOneBooking !== null && walletSummary?.requiredBalanceForOneBooking !== undefined && (
-                    <div className="rounded-xl border border-orange-500/20 bg-gradient-to-br from-orange-950/30 to-[#11142D] p-5 text-center">
+                    <div className="rounded-xl border border-white/5 bg-[#1e293b]/40 backdrop-blur-sm p-5 text-center">
                       <div className="flex items-center justify-center mb-2">
                         <Calendar size={18} className="text-orange-400" />
                       </div>
@@ -273,46 +273,46 @@ function Wallet() {
 
         {/* RIGHT COLUMN - Transaction History */}
         <div className="lg:col-span-8">
-          <div className="h-full bg-gradient-to-br from-[#11142D] to-[#0B0E22] border border-white/10 rounded-2xl p-6 shadow-[0_20px_40px_rgba(0,0,0,0.35)] space-y-4">
+          <div className="h-full bg-[#1e293b]/40 backdrop-blur-sm border border-white/5 rounded-2xl p-6 shadow-[0_20px_40px_rgba(0,0,0,0.35)] space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-white">Lịch sử giao dịch</h2>
 
               <div className="flex items-center gap-2">
                 {/* Filter Type */}
                 <p className="text-slate-400 text-sm">Loại:</p>
-              <select
-                value={typeFilter}
-                onChange={(e) => {
-                  setTypeFilter(e.target.value);
-                  setPage(1);
-                }}
-                className="bg-slate-800 border border-slate-700 text-white text-sm rounded-lg px-3 py-2 w-36"
-              >
-                <option value="">Tất cả</option>
-                {TRANSACTION_TYPE_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-              {/* Filter Status */}
-              <p className="text-slate-400 text-sm">Trạng thái:</p>
-              <select
-                value={statusFilter}
-                onChange={(e) => {
-                  setStatusFilter(e.target.value);
-                  setPage(1);
-                }}
-                className="bg-slate-800 border border-slate-700 text-white text-sm rounded-lg px-3 py-2 w-36"
-              >
-                <option value="">Tất cả</option>
-                {TRANSACTION_STATUS_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+                <select
+                  value={typeFilter}
+                  onChange={(e) => {
+                    setTypeFilter(e.target.value);
+                    setPage(1);
+                  }}
+                  className="bg-slate-800 border border-slate-700 text-white text-sm rounded-lg px-3 py-2 w-36"
+                >
+                  <option value="">Tất cả</option>
+                  {TRANSACTION_TYPE_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+                {/* Filter Status */}
+                <p className="text-slate-400 text-sm">Trạng thái:</p>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => {
+                    setStatusFilter(e.target.value);
+                    setPage(1);
+                  }}
+                  className="bg-slate-800 border border-slate-700 text-white text-sm rounded-lg px-3 py-2 w-36"
+                >
+                  <option value="">Tất cả</option>
+                  {TRANSACTION_STATUS_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {loading ? (
@@ -351,7 +351,7 @@ function Wallet() {
                           <TableCell>{new Date(tx.date).toLocaleString("vi-VN")}</TableCell>
                           <TableCell className="font-medium">
                             {
-                              TRANSACTION_TYPE_OPTIONS.find(opt => opt.value === tx.transactionType)?.label 
+                              TRANSACTION_TYPE_OPTIONS.find(opt => opt.value === tx.transactionType)?.label
                               || tx.transactionType
                             }
                           </TableCell>
@@ -368,7 +368,7 @@ function Wallet() {
                             <StatusBadge status={statusBadgeMap[tx.status as TransactionStatusType] || "inactive"}>
                               {TRANSACTION_STATUS_OPTIONS.find(opt => opt.value === tx.status)?.label || tx.status}
                             </StatusBadge>
-                           </TableCell>
+                          </TableCell>
                           <TableCell className="text-slate-400 text-sm max-w-[200px] truncate">
                             {tx.reason || tx.externalCode || "—"}
                           </TableCell>
@@ -383,7 +383,7 @@ function Wallet() {
         </div>
       </div>
 
-      <DepositDialog open={openDeposit} onOpenChange={setOpenDeposit} onSuccess={fetchAll}/>
+      <DepositDialog open={openDeposit} onOpenChange={setOpenDeposit} onSuccess={fetchAll} />
       <WithdrawDialog open={openWithdraw} onOpenChange={setOpenWithdraw} onSuccess={fetchAll} />
     </div>
   );

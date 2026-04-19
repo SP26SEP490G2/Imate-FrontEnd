@@ -10,6 +10,7 @@ import {
   AlertCircle,
   X,
   File,
+  ArrowLeft,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -159,8 +160,12 @@ export default function InterviewSetup() {
       );
       setSetupResult(result);
       setStep("review");
-    } catch {
-      toast.error(MSG30);
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        MSG30;
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }
@@ -204,24 +209,16 @@ export default function InterviewSetup() {
   if (step === "config") {
     return (
       <div className="mx-auto max-w-2xl px-4 py-10">
-        {/* Breadcrumb */}
-        <nav className="mb-6 flex items-center gap-1.5 text-sm text-slate-500">
-          <span
-            className="cursor-pointer transition-colors hover:text-slate-300"
-            onClick={() => navigate("/home")}
-          >
-            Trang chủ
+        {/* Back button */}
+        <button
+          onClick={() => navigate("/practice-with-ai")}
+          className="mb-6 flex items-center gap-3 text-base text-slate-300 transition-colors hover:text-white"
+        >
+          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-600">
+            <ArrowLeft className="h-5 w-5" />
           </span>
-          <ChevronRight className="h-3.5 w-3.5" />
-          <span
-            className="cursor-pointer transition-colors hover:text-slate-300"
-            onClick={() => navigate("/practice-ai")}
-          >
-            Luyện tập AI
-          </span>
-          <ChevronRight className="h-3.5 w-3.5" />
-          <span className="font-medium text-purple-400">Thiết lập phỏng vấn</span>
-        </nav>
+          Quay lại danh sách
+        </button>
 
         {/* Card */}
         <div className="rounded-2xl border border-slate-700/60 bg-gradient-to-br from-slate-800/90 to-slate-900/90 p-8">

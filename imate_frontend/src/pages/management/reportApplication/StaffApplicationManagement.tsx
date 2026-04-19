@@ -35,7 +35,7 @@ import type {
 } from "@/types/response/application.response";
 import type { Status } from "@/components/ui/status-badge";
 
-import { ViewApplicationDetailDialog } from "@/dialog/main/reportApplication/ViewApplicationDetailDialog";
+import { ViewApplicationDetailDialog } from "@/pages/dialog/main/reportApplication/ViewApplicationDetailDialog";
 
 // ─── Status badge mapping ────────────────────────────────────────────────────
 

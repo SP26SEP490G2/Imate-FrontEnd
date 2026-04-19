@@ -44,24 +44,24 @@ export default function InterviewChat() {
   const sessionId = parseInt(sessionIdParam ?? "0");
   const navigate = useNavigate();
 
-  // Chat state — khôi phục từ sessionStorage nếu có
+  // Chat state — khôi phục từ localStorage nếu có (persist qua tab close)
   const storageKey = `interview-chat-${sessionId}`;
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     try {
-      const saved = sessionStorage.getItem(storageKey);
+      const saved = localStorage.getItem(storageKey);
       return saved ? JSON.parse(saved) : [];
     } catch { return []; }
   });
   const [inputText, setInputText] = useState("");
   const [currentResponseId, setCurrentResponseId] = useState<number | null>(() => {
     try {
-      const saved = sessionStorage.getItem(`${storageKey}-responseId`);
+      const saved = localStorage.getItem(`${storageKey}-responseId`);
       return saved ? JSON.parse(saved) : null;
     } catch { return null; }
   });
   const [questionCount, setQuestionCount] = useState<number>(() => {
     try {
-      const saved = sessionStorage.getItem(`${storageKey}-qCount`);
+      const saved = localStorage.getItem(`${storageKey}-qCount`);
       return saved ? JSON.parse(saved) : 0;
     } catch { return 0; }
   });
@@ -76,8 +76,17 @@ export default function InterviewChat() {
   const [generating, setGenerating] = useState(false);
   const [ending, setEnding] = useState(false);
 
-  // Timer
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  // Timer — khôi phục từ startTime đã lưu
+  const [elapsedSeconds, setElapsedSeconds] = useState(() => {
+    try {
+      const savedStart = localStorage.getItem(`${storageKey}-startTime`);
+      if (savedStart) {
+        const elapsed = Math.floor((Date.now() - parseInt(savedStart)) / 1000);
+        return Math.max(0, elapsed);
+      }
+    } catch { /* ignore */ }
+    return 0;
+  });
 
   // Voice recording
   const [isRecording, setIsRecording] = useState(false);
@@ -322,15 +331,23 @@ export default function InterviewChat() {
     [enqueueAudio]
   );
 
-  // Lưu messages vào sessionStorage
+  // Lưu messages vào localStorage (persist qua tab close)
   useEffect(() => {
     try {
       const toSave = messages.map(({ audioBase64, ...rest }) => rest);
-      sessionStorage.setItem(storageKey, JSON.stringify(toSave));
-      sessionStorage.setItem(`${storageKey}-responseId`, JSON.stringify(currentResponseId));
-      sessionStorage.setItem(`${storageKey}-qCount`, JSON.stringify(questionCount));
+      localStorage.setItem(storageKey, JSON.stringify(toSave));
+      localStorage.setItem(`${storageKey}-responseId`, JSON.stringify(currentResponseId));
+      localStorage.setItem(`${storageKey}-qCount`, JSON.stringify(questionCount));
     } catch { /* quota exceeded */ }
   }, [messages, currentResponseId, questionCount, storageKey]);
+
+  // Lưu startTime khi bắt đầu phỏng vấn (chỉ lưu 1 lần)
+  useEffect(() => {
+    const key = `${storageKey}-startTime`;
+    if (!localStorage.getItem(key)) {
+      localStorage.setItem(key, Date.now().toString());
+    }
+  }, [storageKey]);
 
   // ----------------------------------------------------------------
   //  Fetch next question
@@ -403,7 +420,8 @@ export default function InterviewChat() {
         addMessage("ai", welcomeData.welcomeMessage, undefined, welcomeData.audioBase64, welcomeData.mimeType);
         await fetchNextQuestion();
       } catch {
-        toast.error("Không thể khởi tạo buổi phỏng vấn.");
+        toast.error("Phiên phỏng vấn không hợp lệ hoặc đã kết thúc.");
+        navigate("/practice-with-ai");
       } finally {
         setInitializing(false);
       }
@@ -520,12 +538,21 @@ export default function InterviewChat() {
   // ----------------------------------------------------------------
   //  End interview
   // ----------------------------------------------------------------
+  // Xóa localStorage khi phỏng vấn kết thúc
+  const clearInterviewStorage = useCallback(() => {
+    localStorage.removeItem(storageKey);
+    localStorage.removeItem(`${storageKey}-responseId`);
+    localStorage.removeItem(`${storageKey}-qCount`);
+    localStorage.removeItem(`${storageKey}-startTime`);
+  }, [storageKey]);
+
   const handleEndInterview = async () => {
     try {
       setEnding(true);
       setShowEndConfirm(false);
       if (!USE_MOCK) await endInterview(sessionId);
       else await new Promise((r) => setTimeout(r, 500));
+      clearInterviewStorage();
       toast.success("Buổi phỏng vấn đã kết thúc. Đang chuyển sang trang kết quả...");
       setTimeout(() => { stopAllAudio(); navigate(`/interview-history/${sessionId}`); }, 2000);
     } catch {
