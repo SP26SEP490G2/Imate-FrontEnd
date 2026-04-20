@@ -21,6 +21,7 @@ import {
   viewDetailAccountCandidate,
   viewDetailAccountMentor,
   viewDetailAccountStaff,
+  viewDetailAccountRecruiter,
 } from "@/services/accountService";
 import type {
   AccountDetailCandidateResponse,
@@ -253,6 +254,125 @@ function CandidatePanel({ data }: { data: AccountDetailCandidateResponse }) {
   );
 }
 
+/** Recruiter panel */
+function RecruiterPanel({ data }: { data: any }) {
+  return (
+    <div className="space-y-5">
+      {/* Company info card */}
+      <div className="bg-slate-900/70 rounded-xl p-4 border border-slate-800/60">
+        <div className="flex items-center gap-3">
+          {data.companyLogo && (
+            <img
+              src={data.companyLogo}
+              alt={data.companyName}
+              className="h-12 w-12 rounded-lg object-cover border border-slate-700"
+            />
+          )}
+          <div className="flex-1 min-w-0">
+            <h4 className="text-sm font-semibold text-white truncate">
+              {data.companyName || "Chưa cập nhật"}
+            </h4>
+            <span className="text-xs text-slate-400">{data.industry}</span>
+          </div>
+          {data.verificationStatus && (
+            <Badge
+              variant="outline"
+              className={cn(
+                "text-[10px] px-2 py-0.5 shrink-0",
+                data.verificationStatus === "Approved"
+                  ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                  : data.verificationStatus === "Pending"
+                  ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
+                  : "bg-slate-700/40 text-slate-400 border-slate-600/30"
+              )}
+            >
+              {data.verificationStatus}
+            </Badge>
+          )}
+        </div>
+      </div>
+
+      {/* Metric cards */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-slate-900/70 rounded-xl p-4 flex flex-col items-start gap-1 border border-slate-800/60">
+          <span className="text-xs text-slate-400">Số job đã đăng</span>
+          <div className="flex items-center gap-2">
+            <span className="text-2xl font-bold text-white">
+              {data.jobPostCount ?? 0}
+            </span>
+            <ClipboardList size={18} className="text-emerald-400" />
+          </div>
+        </div>
+        <div className="bg-slate-900/70 rounded-xl p-4 flex flex-col items-start gap-1 border border-slate-800/60">
+          <span className="text-xs text-slate-400">Xác minh</span>
+          <span className={cn(
+            "text-sm font-semibold mt-1",
+            data.verificationStatus === "Verified" ? "text-emerald-400" :
+            data.verificationStatus === "Pending" ? "text-amber-400" : "text-rose-400"
+          )}>
+            {data.verificationStatus === "Verified" ? "✓ Đã xác minh" :
+             data.verificationStatus === "Pending" ? "⏳ Chờ xác minh" :
+             data.verificationStatus === "Rejected" ? "✗ Bị từ chối" : "—"}
+          </span>
+        </div>
+      </div>
+
+      {/* Contact & Details */}
+      <div className="space-y-2">
+        <h4 className="text-xs font-semibold uppercase text-slate-400 tracking-wider">
+          Thông tin liên hệ
+        </h4>
+        <div className="flex items-center gap-2 text-sm">
+          <Mail size={14} className="text-slate-500 shrink-0" />
+          <span className="text-purple-400">{data.email}</span>
+        </div>
+        {data.phone && (
+          <div className="flex items-center gap-2 text-sm text-slate-300">
+            <Phone size={14} className="text-slate-500 shrink-0" />
+            <span>{data.phone}</span>
+          </div>
+        )}
+        {data.website && (
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-slate-500 shrink-0 text-xs">🌐</span>
+            <a
+              href={data.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-purple-400 hover:underline truncate"
+            >
+              {data.website}
+            </a>
+          </div>
+        )}
+      </div>
+
+      {/* Company details */}
+      {(data.companySize || data.address) && (
+        <div className="space-y-2">
+          <h4 className="text-xs font-semibold uppercase text-slate-400 tracking-wider">
+            Chi tiết công ty
+          </h4>
+          <div className="grid grid-cols-2 gap-3">
+            {data.companySize && (
+              <div className="bg-slate-900/70 rounded-xl p-3 border border-slate-800/60">
+                <span className="text-xs text-slate-400">Quy mô</span>
+                <p className="text-sm font-semibold text-white mt-1">{data.companySize}</p>
+              </div>
+            )}
+            {data.address && (
+              <div className="bg-slate-900/70 rounded-xl p-3 border border-slate-800/60">
+                <span className="text-xs text-slate-400">Địa chỉ</span>
+                <p className="text-sm font-semibold text-white mt-1 line-clamp-2">{data.address}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** Staff panel */
 function StaffPanel({ data }: { data: AccountDetailStaffResponse }) {
   const logs: StaffAuditLogResponse[] = data.auditLog ?? [];
@@ -332,12 +452,13 @@ interface UserAccountDetailModalProps {
 type AccountDetailData =
   | { role: "mentor"; data: AccountDetailMentorResponse }
   | { role: "candidate"; data: AccountDetailCandidateResponse }
-  | { role: "staff"; data: AccountDetailStaffResponse };
+  | { role: "staff"; data: AccountDetailStaffResponse }
+  | { role: "recruiter"; data: any };
 
 function getPrimaryRole(roles?: string[]): string {
   if (!roles || roles.length === 0) return "staff";
-  // Check ALL roles with priority: Staff > Mentor > Candidate
   if (roles.some((r) => r.includes("Staff"))) return "staff";
+  if (roles.some((r) => r.includes("Recruiter"))) return "recruiter";
   if (roles.some((r) => r.includes("Mentor"))) return "mentor";
   if (roles.some((r) => r.includes("Candidate"))) return "candidate";
   return "staff";
@@ -346,6 +467,7 @@ function getPrimaryRole(roles?: string[]): string {
 function getUserRoleList(roles?: string[]): string[] {
   const result: string[] = [];
   if (roles?.some((r) => r.includes("Staff"))) result.push("staff");
+  if (roles?.some((r) => r.includes("Recruiter"))) result.push("recruiter");
   if (roles?.some((r) => r.includes("Mentor"))) result.push("mentor");
   if (roles?.some((r) => r.includes("Candidate"))) result.push("candidate");
   return result.length > 0 ? result : ["staff"];
@@ -359,6 +481,10 @@ async function fetchSingleRole(id: number, role: string): Promise<AccountDetailD
   if (role === "candidate") {
     const data = await viewDetailAccountCandidate(id);
     return { role: "candidate", data };
+  }
+  if (role === "recruiter") {
+    const data = await viewDetailAccountRecruiter(id);
+    return { role: "recruiter", data };
   }
   const data = await viewDetailAccountStaff(id);
   return { role: "staff", data };
@@ -383,11 +509,14 @@ function roleBadgeClass(role: string) {
     return "bg-indigo-500/20 text-indigo-300 border-indigo-500/30";
   if (role.includes("Mentor"))
     return "bg-purple-500/20 text-purple-300 border-purple-500/30";
+  if (role.includes("Recruiter"))
+    return "bg-emerald-500/20 text-emerald-300 border-emerald-500/30";
   return "bg-amber-500/20 text-amber-300 border-amber-500/30";
 }
 function roleLabel(role: string) {
   if (role.includes("Candidate")) return "ỨNG VIÊN";
   if (role.includes("Mentor")) return "MENTOR";
+  if (role.includes("Recruiter")) return "NTD";
   return "NHÂN VIÊN";
 }
 
@@ -535,6 +664,7 @@ export default function UserAccountDetailModal({
           {detail?.role === "mentor" && <MentorPanel data={detail.data} />}
           {detail?.role === "candidate" && <CandidatePanel data={detail.data} />}
           {detail?.role === "staff" && <StaffPanel data={detail.data} />}
+          {detail?.role === "recruiter" && <RecruiterPanel data={detail.data} />}
         </div>
 
         {/* ── footer */}
