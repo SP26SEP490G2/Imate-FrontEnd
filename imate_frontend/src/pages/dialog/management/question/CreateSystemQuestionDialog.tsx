@@ -36,6 +36,7 @@ export function CreateSystemQuestionDialog({
   onOpenChange,
   onSuccess,
 }: CreateSystemQuestionDialogProps) {
+  const MAX_SAMPLE_ANSWER_LENGTH = 1300;
   const [loading, setLoading] = React.useState(false);
   const [loadingData, setLoadingData] = React.useState(false);
 
@@ -94,8 +95,8 @@ export function CreateSystemQuestionDialog({
 
     if (!formData.sampleAnswer.trim()) {
       newErrors.sampleAnswer = 'Câu trả lời mẫu không được để trống.';
-    } else if (formData.sampleAnswer.length > 2000) {
-      newErrors.sampleAnswer = 'Câu trả lời mẫu tối đa 2000 ký tự.';
+    } else if (formData.sampleAnswer.length > MAX_SAMPLE_ANSWER_LENGTH) {
+      newErrors.sampleAnswer = `Câu trả lời mẫu tối đa ${MAX_SAMPLE_ANSWER_LENGTH} ký tự.`;
     }
 
     if (formData.categoryIds.length === 0) {
@@ -233,6 +234,7 @@ export function CreateSystemQuestionDialog({
                     setFormData(prev => ({ ...prev, sampleAnswer: e.target.value }));
                     if (errors.sampleAnswer) setErrors(prev => ({ ...prev, sampleAnswer: '' }));
                   }}
+                  maxLength={MAX_SAMPLE_ANSWER_LENGTH}
                   className={`w-full h-40 rounded-lg px-4 py-3 bg-slate-800 border ${errors.sampleAnswer ? 'border-red-500' : 'border-slate-700'
                     } text-slate-100 text-sm placeholder:text-slate-500 resize-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 outline-none transition-all`}
                   placeholder="Viết câu trả lời gợi ý cho câu hỏi của bạn ở đây..."
@@ -242,7 +244,7 @@ export function CreateSystemQuestionDialog({
                   <p className="text-red-400 text-xs mt-1">{errors.sampleAnswer}</p>
                 )}
                 <p className="text-xs text-slate-500">
-                  {formData.sampleAnswer.length}/2000 ký tự
+                  {formData.sampleAnswer.length}/{MAX_SAMPLE_ANSWER_LENGTH} ký tự
                 </p>
               </div>
 
