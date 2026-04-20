@@ -31,12 +31,12 @@ export default function SubmitRecruiterApplication() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     let { name, value } = e.target;
-    
+
     // Enforce digits only for phone
     if (name === "phone") {
       value = value.replace(/\D/g, "");
     }
-    
+
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (error) setError(null);
   };
@@ -150,11 +150,11 @@ export default function SubmitRecruiterApplication() {
   // Dùng useEffect để redirect, tránh navigate() during render
   useEffect(() => {
     if (isAuthLoading) return;
-    
+
     if (!user || user.role !== "Recruiter") {
       navigate("/", { replace: true });
     } else if (user.accountStatus === "Active") {
-      navigate("/recruiter/dashboard", { replace: true });
+      navigate("/management/recruiter-dashboard/job-applications", { replace: true });
     } else if (user.accountStatus === "PendingVerification" && user.verificationStatus !== "Rejected" && user.companyName) {
       navigate("/recruiter-pending-application", { replace: true });
     }
@@ -220,8 +220,8 @@ export default function SubmitRecruiterApplication() {
               </PopoverTrigger>
               <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 bg-slate-900 border-white/10" align="start">
                 <Command className="bg-slate-900 text-white" shouldFilter={false}>
-                  <CommandInput 
-                    placeholder="Tìm kiếm công ty..." 
+                  <CommandInput
+                    placeholder="Tìm kiếm công ty..."
                     value={searchValue}
                     onValueChange={setSearchValue}
                     className="text-white"

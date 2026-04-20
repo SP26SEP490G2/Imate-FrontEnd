@@ -63,7 +63,7 @@ function VerifyEmail() {
   }, [oobCode, navigate]);
 
   return (
-    // <AuthLayout sideContent={<AuthBanner />}>
+    <div className="flex min-h-screen items-center justify-center p-4 bg-gray-50">
       <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-md">
         {isLoading ? (
           <div className="text-center">
@@ -90,7 +90,7 @@ function VerifyEmail() {
           </div>
         )}
       </div>
-    // </AuthLayout>
+    </div>
   );
 }
 

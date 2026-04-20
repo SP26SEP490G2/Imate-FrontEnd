@@ -14,12 +14,12 @@ import {
   Star,
   Clock
 } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { getCandidateSessionDetail, rateMentor } from "@/services/bookingCandidateService";
 import type { BookingDetailResponse } from "@/types/response/booking.response";
 import ImateLoading from "@/components/custom/imateLoading";
 import { toast } from "react-toastify";
 
-const MOCK_AVATAR = "https://i.pravatar.cc/150?img=11";
 
 const CandidateInterviewHistoryDetailPage = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -137,7 +137,6 @@ const CandidateInterviewHistoryDetailPage = () => {
                     key={session.recordingUrls[selectedVideoIndex]}
                     controls 
                     className="w-full h-full object-contain"
-                    poster={MOCK_AVATAR}
                   >
                     <source src={session.recordingUrls[selectedVideoIndex]} type="video/mp4" />
                     Your browser does not support the video tag.
@@ -245,11 +244,10 @@ const CandidateInterviewHistoryDetailPage = () => {
             
             <div className="relative z-10 mt-4">
               <div className="relative inline-block mb-4">
-                <img 
-                  src={session.profileAvatarUrl || MOCK_AVATAR} 
-                  alt={session.profileName}
-                  className="w-24 h-24 rounded-3xl object-cover border-4 border-[#1A1A2E] shadow-2xl mx-auto"
-                />
+                <Avatar className="w-24 h-24 border-4 border-[#1A1A2E] shadow-2xl mx-auto rounded-3xl">
+                  <AvatarImage src={session.profileAvatarUrl || (session as any).mentorAvatarUrl || undefined} alt={session.profileName} className="object-cover" />
+                  <AvatarFallback name={session.profileName || "Mentor"} className="rounded-3xl text-2xl" />
+                </Avatar>
                 <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-4 border-[#1A1A2E] ${session.status === 2 ? 'bg-emerald-500' : 'bg-rose-500'}`}></div>
               </div>
               <h3 className="text-2xl font-black text-white px-4 truncate">{session.profileName}</h3>

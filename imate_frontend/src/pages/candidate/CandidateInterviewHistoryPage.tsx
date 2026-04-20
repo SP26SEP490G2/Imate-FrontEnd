@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { History, Calendar, Clock, Star, Activity } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { getCandidateSessionHistory } from "@/services/bookingCandidateService";
 import type { CandidateSessionSummaryResponse } from "@/types/response/booking.response";
 import { format, parseISO } from "date-fns";
@@ -8,7 +9,6 @@ import { format, parseISO } from "date-fns";
 import ImateLoading from "@/components/custom/imateLoading";
 import { toast } from "react-toastify";
 
-const MOCK_AVATAR = "https://i.pravatar.cc/150?img=11";
 
 const CandidateInterviewHistoryPage = () => {
   const [history, setHistory] = useState<CandidateSessionSummaryResponse[]>([]);
@@ -72,11 +72,10 @@ const CandidateInterviewHistoryPage = () => {
               >
                 <div className="flex items-start justify-between mb-6">
                   <div className="flex items-center gap-4">
-                    <img 
-                      src={session.mentorAvatarUrl || MOCK_AVATAR} 
-                      alt={session.mentorName}
-                      className="w-14 h-14 rounded-full object-cover border-2 border-transparent group-hover:border-indigo-500 transition-all"
-                    />
+                    <Avatar className="w-14 h-14 border-2 border-transparent group-hover:border-indigo-500 transition-all">
+                      <AvatarImage src={(session as any).profileAvatarUrl || session.mentorAvatarUrl || undefined} alt={session.mentorName} />
+                      <AvatarFallback name={session.mentorName} />
+                    </Avatar>
                     <div>
                       <h3 className="font-bold text-lg text-white">{session.mentorName}</h3>
                       <div className="flex items-center gap-2 mt-1">

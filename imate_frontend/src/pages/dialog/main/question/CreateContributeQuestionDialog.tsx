@@ -39,6 +39,7 @@ export function CreateContributeQuestionDialog({
   onOpenChange,
   onSuccess,
 }: CreateContributeQuestionDialogProps) {
+  const MAX_USER_ANSWER_LENGTH = 1300;
   const [loading, setLoading] = React.useState(false);
   const [loadingData, setLoadingData] = React.useState(false);
 
@@ -122,6 +123,10 @@ export function CreateContributeQuestionDialog({
       if (selectedDate > currentDate) {
         newErrors.interviewDate = 'Ngày phỏng vấn không được chọn ngày trong tương lai.';
       }
+    }
+
+    if (formData.userAnswer && formData.userAnswer.length > MAX_USER_ANSWER_LENGTH) {
+      newErrors.userAnswer = `Câu trả lời tối đa ${MAX_USER_ANSWER_LENGTH} ký tự.`;
     }
 
     setErrors(newErrors);
@@ -251,13 +256,18 @@ export function CreateContributeQuestionDialog({
                   value={formData.userAnswer}
                   onChange={(e) => {
                     setFormData(prev => ({ ...prev, userAnswer: e.target.value }));
+                    if (errors.userAnswer) setErrors(prev => ({ ...prev, userAnswer: '' }));
                   }}
+                  maxLength={MAX_USER_ANSWER_LENGTH}
                   className="w-full h-32 rounded-lg px-4 py-3 bg-slate-800 border border-slate-700 text-slate-100 text-sm placeholder:text-slate-500 resize-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 outline-none transition-all"
                   placeholder="Bạn đã trả lời câu hỏi này như thế nào? (Không bắt buộc)"
                   disabled={loading}
                 />
+                {errors.userAnswer && (
+                  <p className="text-red-400 text-xs mt-1">{errors.userAnswer}</p>
+                )}
                 <p className="text-xs text-slate-500">
-                  {formData.userAnswer?.length || 0}/2000 ký tự
+                  {formData.userAnswer?.length || 0}/{MAX_USER_ANSWER_LENGTH} ký tự
                 </p>
               </div>
 

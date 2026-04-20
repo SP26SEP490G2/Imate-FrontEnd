@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import Footer from "@/components/common/Footer";
 import { useSubscriptionPackages } from "@/hooks/useSubscriptionPackages";
 import { useAuth } from "@/store/AuthContext";
 import {
@@ -106,14 +105,11 @@ const ViewSubscriptionPage: React.FC = () => {
   };
 
   return (
-    <div className="font-sans bg-[#020617] min-h-screen">
-      <main className="px-6 pb-20 pt-16">
+    <div className="font-sans bg-[#020617]">
+      <main className="px-6 pb-6 pt-16">
         <div className="max-w-7xl mx-auto">
           {/* HEADER */}
           <div className="text-center mb-14">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-bold mb-5">
-              BẢNG GIÁ IMATE
-            </div>
             <h1 className="text-4xl md:text-5xl font-extrabold mb-4 bg-gradient-to-r from-white via-indigo-200 to-purple-300 bg-clip-text text-transparent">
               Chọn gói dịch vụ phù hợp với bạn
             </h1>
@@ -192,18 +188,18 @@ const ViewSubscriptionPage: React.FC = () => {
                     className={`relative rounded-3xl border p-8 backdrop-blur-sm transition-all ${cardStyle}`}
                   >
                     {/* GÓI HIỆN TẠI (ưu tiên hiển thị) */}
-                      {user && isCurrent && (
-                        <span className="absolute top-5 right-5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 px-3 py-1 text-[11px] font-bold text-white">
-                          GÓI CỦA BẠN
-                        </span>
-                      )}
+                    {user && isCurrent && (
+                      <span className="absolute top-5 right-5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 px-3 py-1 text-[11px] font-bold text-white">
+                        GÓI CỦA BẠN
+                      </span>
+                    )}
 
-                      {/* CHỈ hiện KHUYÊN DÙNG khi CHƯA login */}
-                      {!user && subscriptionPackage.isRecommended && (
-                        <span className="absolute top-5 right-5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 px-3 py-1 text-[11px] font-bold text-white">
-                          KHUYÊN DÙNG
-                        </span>
-                      )}
+                    {/* CHỈ hiện KHUYÊN DÙNG khi CHƯA login */}
+                    {!user && subscriptionPackage.isRecommended && (
+                      <span className="absolute top-5 right-5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 px-3 py-1 text-[11px] font-bold text-white">
+                        KHUYÊN DÙNG
+                      </span>
+                    )}
 
                     <h2 className="text-white text-2xl font-bold mb-2">
                       {subscriptionPackage.name}
@@ -231,13 +227,12 @@ const ViewSubscriptionPage: React.FC = () => {
 
                     <button
                       onClick={() => handleCtaClick(subscriptionPackage)}
-                      className={`w-full py-3 rounded-xl font-bold transition-all ${
-                        isCurrent
-                          ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white"
-                          : subscriptionPackage.isRecommended && !user
+                      className={`w-full py-3 rounded-xl font-bold transition-all ${isCurrent
+                        ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white"
+                        : subscriptionPackage.isRecommended && !user
                           ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:opacity-90"
                           : "bg-white text-[#0f172a] hover:bg-slate-100"
-                      }`}
+                        }`}
                     >
                       {buttonText}
                     </button>
@@ -258,8 +253,6 @@ const ViewSubscriptionPage: React.FC = () => {
         cancelPreview={cancelPreview}
         onConfirm={handleConfirm}
       />
-
-      <Footer />
     </div>
   );
 };

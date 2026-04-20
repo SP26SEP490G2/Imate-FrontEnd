@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Search, ArrowLeft, Check, X } from "lucide-react";
+import { useAuth } from "@/store/AuthContext";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -22,6 +23,14 @@ import { Loader2 } from "lucide-react";
 const AppliedCandidateList: React.FC = () => {
     const { jobId } = useParams<{ jobId: string }>();
     const navigate = useNavigate();
+    const { user, isLoading: isAuthLoading } = useAuth();
+
+    useEffect(() => {
+        if (isAuthLoading) return;
+        if (user && user.accountStatus === "PendingVerification" && user.verificationStatus !== "Rejected" && user.companyName) {
+            navigate("/recruiter-pending-application", { replace: true });
+        }
+    }, [user, isAuthLoading, navigate]);
 
     const [data, setData] = useState<AppliedCandidateResponse | null>(null);
     const [loading, setLoading] = useState(true);
