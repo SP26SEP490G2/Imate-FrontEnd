@@ -148,7 +148,11 @@ export function CreateSystemQuestionDialog({
       onSuccess?.();
     } catch (error: any) {
       console.error('Failed to create question:', error);
-      toast.error(error?.response?.data?.message || 'Không thể tạo câu hỏi. Vui lòng thử lại sau.');
+      const serverMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.detail ||
+        error?.response?.detail;
+      toast.error(serverMessage || 'Không thể tạo câu hỏi. Vui lòng thử lại sau.');
     } finally {
       setLoading(false);
     }
