@@ -30,6 +30,10 @@ const passwordSchema = z
   .refine((data) => data.newPassword === data.confirmPassword, {
     message: MSG58,
     path: ["confirmPassword"], // Gắn lỗi vào trường confirmPassword
+  })
+  .refine((data) => data.currentPassword !== data.newPassword, {
+    message: "Mật khẩu mới không được trùng với mật khẩu hiện tại",
+    path: ["newPassword"],
   });
 
 type PasswordFormData = z.infer<typeof passwordSchema>;
@@ -94,6 +98,7 @@ const SettingTab = () => {
 
       // BƯỚC 4: Gọi API backend đã tạo
       await changePasswordService({
+        currentPassword: data.currentPassword,
         newPassword: data.newPassword,
         firebaseIdToken: firebaseIdToken,
       });
