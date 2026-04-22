@@ -1,6 +1,6 @@
 import { Eye, EyeOff, CheckCircle2, Quote, Banknote } from "lucide-react";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { registerWithEmail, generateActionCode, sendActionEmail } from "@/services/authService";
 import type { RegisterEmailData, UserRole, User } from "@/types/common/auth";
 import { toast } from "react-toastify";
@@ -8,10 +8,14 @@ import { useAuth } from "@/store/AuthContext";
 import { managementRoutes } from "@/config/managementRoutes";
 import { MSG01, MSG56, MSG57, MSG58, MSG59, MSG60, MSG61 } from "@/constants/messages";
 function SignUp() {
-  var navigate = useNavigate();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const initialRole = (queryParams.get("role") as UserRole) || "Candidate";
+
   const { loginWithGoogle, refetchUser } = useAuth();
-  // Khởi tạo role với giá trị "Candidate" (Ứng viên)
-  const [role, setRole] = useState<UserRole>("Candidate");
+  // Khởi tạo role từ URL query parameter hoặc mặc định là "Candidate" (Ứng viên)
+  const [role, setRole] = useState<UserRole>(["Candidate", "Mentor", "Recruiter"].includes(initialRole) ? initialRole : "Candidate");
   const [viewPassword, setViewPassword] = useState(false);
   const [viewConfirmPassword, setViewConfirmPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);

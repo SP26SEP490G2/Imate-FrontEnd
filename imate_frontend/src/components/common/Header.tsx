@@ -196,12 +196,12 @@ function Header() {
               <a className="text-sm font-bold text-[#020617] bg-white hover:bg-slate-100 px-5 py-2.5 rounded-full transition-all" href="/sign-up">
                 Đăng ký
               </a>
-              <a className="text-sm font-bold text-white px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full shadow-lg shadow-indigo-500/20 hover:scale-105 transition-transform" href="#">
+              <Link className="text-sm font-bold text-white px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full shadow-lg shadow-indigo-500/20 hover:scale-105 transition-transform" to="/sign-up?role=Mentor">
                 Trở thành Mentor
-              </a>
-              <a className="text-sm font-bold text-white px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full shadow-lg shadow-indigo-500/20 hover:scale-105 transition-transform" href="#">
+              </Link>
+              <Link className="text-sm font-bold text-white px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full shadow-lg shadow-indigo-500/20 hover:scale-105 transition-transform" to="/sign-up?role=Recruiter">
                 Liên kết với chúng tôi
-              </a>
+              </Link>
             </div>
           ) : (
             <div className="flex items-center gap-4">
