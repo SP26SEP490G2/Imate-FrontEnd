@@ -98,6 +98,15 @@ export const viewDetailAccountStaff = async (id: number) => {
     throw error;
   }
 };
+export const viewDetailAccountRecruiter = async (id: number) => {
+  try {
+    const res = await apiClient.get(`/accounts/recruiter/${id}`);
+    return res.data;
+  } catch (error) {
+    console.log("error fetch account recruiter detail : ", error);
+    throw error;
+  }
+};
 export const getOverviewAccount = async () => {
   try {
     const res = await apiClient.get(`/accounts/overview`);
