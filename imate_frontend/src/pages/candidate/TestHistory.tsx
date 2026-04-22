@@ -232,12 +232,12 @@ export default function TestHistory() {
     setMentorPage(1);
   };
 
-  const activeCount =
-    activeTab === "test"
-      ? history.length
-      : activeTab === "interview"
-        ? interviewHistory.length
-        : mentorHistory.length;
+  // const activeCount =
+  //   activeTab === "test"
+  //     ? history.length
+  //     : activeTab === "interview"
+  //       ? interviewHistory.length
+  //       : mentorHistory.length;
 
 
   return (
