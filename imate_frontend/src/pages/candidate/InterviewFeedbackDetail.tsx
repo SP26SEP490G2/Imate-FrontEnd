@@ -21,19 +21,22 @@ import { toast } from "react-toastify";
 
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   getInterviewResult,
   type InterviewResultDetail,
   type InterviewResponseDetail,
   type StructuredFeedback,
 } from "@/services/interviewService";
+import { getListCV } from "@/services/cvService";
 import { MSG24 } from "@/constants/messages";
-import {
-  USE_MOCK,
-} from "@/mocks/interviewMockData";
+import { USE_MOCK } from "@/mocks/interviewMockData";
 
-/* ------------------------------------------------------------------ */
-/*  Helper: parse structuredFeedbackJson                               */
-/* ------------------------------------------------------------------ */
+/*  Helper: parse structuredFeedbackJson  */
 function parseFeedback(json: string | null): StructuredFeedback | null {
   if (!json) return null;
   try {
@@ -43,9 +46,7 @@ function parseFeedback(json: string | null): StructuredFeedback | null {
   }
 }
 
-/* ------------------------------------------------------------------ */
-/*  Helper: parse overallFeedback into sections                        */
-/* ------------------------------------------------------------------ */
+/*  Helper: parse overallFeedback into sections */
 interface OverallFeedbackSections {
   overview: string;
   strengths: string[];
@@ -57,7 +58,6 @@ function parseOverallFeedback(text: string | null): OverallFeedbackSections {
     return { overview: "", strengths: [], improvements: [] };
   }
 
-  // Try to parse as JSON first (backend might send structured data)
   try {
     const parsed = JSON.parse(text);
     return {
@@ -66,7 +66,6 @@ function parseOverallFeedback(text: string | null): OverallFeedbackSections {
       improvements: parsed.improvements || [],
     };
   } catch {
-    // Parse text-based feedback with sections
     const sections: OverallFeedbackSections = {
       overview: "",
       strengths: [],
@@ -108,7 +107,6 @@ function parseOverallFeedback(text: string | null): OverallFeedbackSections {
       }
     }
 
-    // If no sections were found, put everything in overview
     if (!sections.strengths.length && !sections.improvements.length) {
       sections.overview = text;
     }
@@ -117,12 +115,9 @@ function parseOverallFeedback(text: string | null): OverallFeedbackSections {
   }
 }
 
-/* ------------------------------------------------------------------ */
-/*  Score Bar (scaled /5)                                              */
-/* ------------------------------------------------------------------ */
+/*  Score Bar (scaled /5)  */
 function ScoreBar({ label, value }: { label: string; value: number | null }) {
   const v = value ?? 0;
-  // Backend scores are 0-1 (double), scale to 0-5
   const scaled = Math.round(v * 5 * 10) / 10;
   const displayValue = Math.round(scaled);
   const percent = (scaled / 5) * 100;
@@ -157,14 +152,112 @@ function ScoreBar({ label, value }: { label: string; value: number | null }) {
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  Question Detail Card                                               */
-/* ------------------------------------------------------------------ */
-function QuestionCard({
-  response,
+/*  Dialog: Xem CV đã dùng */
+function CvPreviewDialog({
+  open,
+  onOpenChange,
+  cvUrl,
+  cvName,
+  loading,
 }: {
-  response: InterviewResponseDetail;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  cvUrl: string | null;
+  cvName: string | null;
+  loading: boolean;
 }) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-5xl border border-white/10 bg-[#11142D] text-white shadow-2xl rounded-3xl p-8">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-3 text-xl font-bold">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-purple-500/10">
+              <FileText className="h-5 w-5 text-purple-400" />
+            </div>
+            CV đã dùng
+          </DialogTitle>
+          {cvName && (
+            <p className="mt-1 text-sm text-slate-400">{cvName}</p>
+          )}
+        </DialogHeader>
+
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-16 gap-3 text-slate-500">
+            <Loader2 className="h-8 w-8 animate-spin text-purple-400" />
+            <p className="text-sm">Đang tải CV...</p>
+          </div>
+        ) : cvUrl ? (
+          <div className="w-full overflow-hidden rounded-2xl border border-white/10 bg-[#0F1333]">
+            <div className="flex items-center justify-between border-b border-white/10 bg-white/5 px-4 py-2">
+              <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">
+                Xem trước CV
+              </span>
+              <div className="flex gap-1">
+                <div className="h-2 w-2 rounded-full bg-red-500/50" />
+                <div className="h-2 w-2 rounded-full bg-yellow-500/50" />
+                <div className="h-2 w-2 rounded-full bg-emerald-500/50" />
+              </div>
+            </div>
+            <div className="h-[450px] w-full">
+              <iframe
+                src={`${cvUrl}#toolbar=0&navpanes=0&scrollbar=0`}
+                className="h-full w-full border-none"
+                title="CV Preview"
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-16 text-slate-500">
+            <FileText className="mb-3 h-10 w-10 opacity-30" />
+            <p className="text-sm">Không tìm thấy CV.</p>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/*  Dialog: Xem JD yêu cầu  */
+function JdPreviewDialog({
+  open,
+  onOpenChange,
+  jdText,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  jdText: string | null;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-5xl border border-white/10 bg-[#11142D] text-white shadow-2xl rounded-3xl p-8">
+        <DialogHeader className="mb-4">
+          <DialogTitle className="flex items-center gap-3 text-xl font-bold">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-500/10">
+              <Briefcase className="h-5 w-5 text-indigo-400" />
+            </div>
+            JD yêu cầu
+          </DialogTitle>
+        </DialogHeader>
+
+        {jdText ? (
+          <div className="max-h-[60vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#0F1333] p-6 custom-scrollbar">
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-300">
+              {jdText}
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-16 text-slate-500">
+            <Briefcase className="mb-3 h-10 w-10 opacity-30" />
+            <p className="text-sm">Không có mô tả công việc.</p>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/*  Question Detail Card */
+function QuestionCard({ response }: { response: InterviewResponseDetail }) {
   const [expanded, setExpanded] = useState(false);
   const feedback = parseFeedback(response.structuredFeedbackJson);
 
@@ -202,17 +295,17 @@ function QuestionCard({
       {/* Score Metrics or Loading */}
       {!response.structuredFeedbackJson ? (
         <div className="mb-5 grid gap-4 md:grid-cols-2">
-          <div className="space-y-2 animate-pulse">
+          <div className="animate-pulse space-y-2">
             <div className="h-4 w-24 rounded bg-slate-700" />
             <div className="h-2 w-full rounded bg-slate-700" />
           </div>
-          <div className="space-y-2 animate-pulse">
+          <div className="animate-pulse space-y-2">
             <div className="h-4 w-24 rounded bg-slate-700" />
             <div className="h-2 w-full rounded bg-slate-700" />
           </div>
           <div className="col-span-2 mt-2 flex items-center gap-2 text-xs text-purple-400">
-             <Loader2 className="h-3 w-3 animate-spin" />
-             Đang phân tích phản hồi...
+            <Loader2 className="h-3 w-3 animate-spin" />
+            Đang phân tích phản hồi...
           </div>
         </div>
       ) : (
@@ -222,7 +315,7 @@ function QuestionCard({
         </div>
       )}
 
-      {/* Expand/Collapse for detailed feedback */}
+      {/* Expand/Collapse */}
       <div className="border-t border-slate-700/40 pt-4">
         <button
           onClick={() => setExpanded(!expanded)}
@@ -238,7 +331,6 @@ function QuestionCard({
 
         {expanded && (
           <div className="mt-4 space-y-4">
-            {/* Additional Score Metrics */}
             <div className="grid gap-4 md:grid-cols-2">
               <ScoreBar
                 label="Giải quyết vấn đề"
@@ -250,28 +342,26 @@ function QuestionCard({
               />
             </div>
 
-            {/* STAR Scores (if available) */}
             {(response.starSituationScore !== null ||
               response.starTaskScore !== null ||
               response.starActionScore !== null ||
               response.starResultScore !== null) && (
-                <div>
-                  <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                    Điểm STAR
-                  </p>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <ScoreBar
-                      label="Situation"
-                      value={response.starSituationScore}
-                    />
-                    <ScoreBar label="Task" value={response.starTaskScore} />
-                    <ScoreBar label="Action" value={response.starActionScore} />
-                    <ScoreBar label="Result" value={response.starResultScore} />
-                  </div>
+              <div>
+                <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Điểm STAR
+                </p>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <ScoreBar
+                    label="Situation"
+                    value={response.starSituationScore}
+                  />
+                  <ScoreBar label="Task" value={response.starTaskScore} />
+                  <ScoreBar label="Action" value={response.starActionScore} />
+                  <ScoreBar label="Result" value={response.starResultScore} />
                 </div>
-              )}
+              </div>
+            )}
 
-            {/* AI Feedback */}
             {response.aiFeedback && (
               <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/5 px-4 py-3">
                 <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-indigo-400">
@@ -284,7 +374,6 @@ function QuestionCard({
               </div>
             )}
 
-            {/* Structured Feedback Details */}
             {feedback?.strengths && feedback.strengths.length > 0 && (
               <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3">
                 <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-400">
@@ -325,20 +414,17 @@ function QuestionCard({
               </div>
             )}
 
-            {/* Suggested / Expected Answer */}
-            {(response.expectedAnswerOutline ||
-              feedback?.suggested_answer) && (
-                <div className="rounded-xl border border-purple-500/20 bg-purple-500/5 px-4 py-3">
-                  <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-purple-400">
-                    <Star className="h-3.5 w-3.5" />
-                    Đáp án mẫu
-                  </p>
-                  <p className="text-sm leading-relaxed text-slate-300">
-                    {feedback?.suggested_answer ||
-                      response.expectedAnswerOutline}
-                  </p>
-                </div>
-              )}
+            {(response.expectedAnswerOutline || feedback?.suggested_answer) && (
+              <div className="rounded-xl border border-purple-500/20 bg-purple-500/5 px-4 py-3">
+                <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-purple-400">
+                  <Star className="h-3.5 w-3.5" />
+                  Đáp án mẫu
+                </p>
+                <p className="text-sm leading-relaxed text-slate-300">
+                  {feedback?.suggested_answer || response.expectedAnswerOutline}
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -346,21 +432,22 @@ function QuestionCard({
   );
 }
 
-
-
-/* ------------------------------------------------------------------ */
-/*  Mock: kết quả phỏng vấn giả cho session 999                       */
-/* ------------------------------------------------------------------ */
-
-/* ------------------------------------------------------------------ */
-/*  Main Page                                                          */
-/* ------------------------------------------------------------------ */
+/*  Main Page */
 export default function InterviewFeedbackDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [detail, setDetail] = useState<InterviewResultDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+
+  // CV Dialog
+  const [showCvDialog, setShowCvDialog] = useState(false);
+  const [cvUrl, setCvUrl] = useState<string | null>(null);
+  const [cvName, setCvName] = useState<string | null>(null);
+  const [cvLoading, setCvLoading] = useState(false);
+
+  // JD Dialog
+  const [showJdDialog, setShowJdDialog] = useState(false);
 
   useEffect(() => {
     let pollInterval: any;
@@ -370,10 +457,9 @@ export default function InterviewFeedbackDetail() {
       try {
         if (!isSilent) setLoading(true);
         const data = await getInterviewResult(parseInt(id));
-        setDetail(data);
+        setDetail(data as unknown as InterviewResultDetail);
 
-        // Nếu đã hoàn thành thì không cần poll nữa
-        if (data.session.status === "Completed") {
+        if ((data as any).session.status === "Completed") {
           if (pollInterval) clearInterval(pollInterval);
         }
       } catch (err) {
@@ -385,8 +471,6 @@ export default function InterviewFeedbackDetail() {
 
     fetchDetail();
 
-    // Thiết lập polling nếu session chưa hoàn thành
-    // Chỉ poll nếu không phải đang dùng Mock data
     if (!(USE_MOCK && id === "999")) {
       pollInterval = setInterval(() => {
         fetchDetail(true);
@@ -397,6 +481,31 @@ export default function InterviewFeedbackDetail() {
       if (pollInterval) clearInterval(pollInterval);
     };
   }, [id]);
+
+  // Fetch CV info khi mở dialog CV
+  const handleOpenCvDialog = async () => {
+    if (!detail?.session.userCvId) return;
+    setShowCvDialog(true);
+
+    // Nếu đã fetch rồi thì không fetch lại
+    if (cvUrl || cvName) return;
+
+    try {
+      setCvLoading(true);
+      const cvList = await getListCV();
+      const matched = cvList.find(
+        (cv) => String(cv.cvId) === String(detail.session.userCvId)
+      );
+      if (matched) {
+        setCvUrl(matched.fileUrl ?? null);
+        setCvName(matched.fileName ?? null);
+      }
+    } catch {
+      toast.error("Không thể tải thông tin CV.");
+    } finally {
+      setCvLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -410,10 +519,7 @@ export default function InterviewFeedbackDetail() {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
         <p className="text-slate-400">Không tìm thấy phiên phỏng vấn.</p>
-        <Button
-          variant="secondary"
-          onClick={() => navigate("/test-history")}
-        >
+        <Button variant="secondary" onClick={() => navigate("/test-history")}>
           Quay lại
         </Button>
       </div>
@@ -445,7 +551,6 @@ export default function InterviewFeedbackDetail() {
 
   const overallSections = parseOverallFeedback(session.overallFeedback);
   const duration = getDuration();
-
   const totalQuestions = responses.length;
   const currentResponse = responses[currentQuestionIndex];
 
@@ -479,7 +584,7 @@ export default function InterviewFeedbackDetail() {
             Phiên phỏng vấn {session.id}
           </h1>
           {session.status !== "Completed" && (
-            <div className="flex items-center gap-2 rounded-full bg-purple-500/10 px-4 py-1.5 text-sm font-medium text-purple-400 border border-purple-500/20">
+            <div className="flex items-center gap-2 rounded-full border border-purple-500/20 bg-purple-500/10 px-4 py-1.5 text-sm font-medium text-purple-400">
               <Loader2 className="h-4 w-4 animate-spin" />
               Đang tạo báo cáo...
             </div>
@@ -513,19 +618,25 @@ export default function InterviewFeedbackDetail() {
             )}
           </div>
         )}
+
+        {/* Nút xem CV */}
         <Button
           variant="ghost"
           size="sm"
           icon={<FileText className="h-4 w-4" />}
-          onClick={() => navigate("/cv-management")}
+          onClick={handleOpenCvDialog}
+          disabled={!session.userCvId}
         >
           Xem CV đã dùng
         </Button>
+
+        {/* Nút xem JD */}
         <Button
           variant="ghost"
           size="sm"
           icon={<Eye className="h-4 w-4" />}
-          disabled
+          onClick={() => setShowJdDialog(true)}
+          disabled={!session.jobDescriptionText}
         >
           Xem JD yêu cầu
         </Button>
@@ -544,12 +655,15 @@ export default function InterviewFeedbackDetail() {
             </h3>
           </div>
           <p className="text-sm leading-relaxed text-slate-300">
-            {overallSections.overview || (session.status !== "Completed" ? (
-              <span className="flex items-center gap-2 text-slate-500">
-                <Loader2 className="h-3 w-3 animate-spin" />
-                Đang tổng hợp nhận xét...
-              </span>
-            ) : "Chưa có nhận xét tổng quan.")}
+            {overallSections.overview ||
+              (session.status !== "Completed" ? (
+                <span className="flex items-center gap-2 text-slate-500">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Đang tổng hợp nhận xét...
+                </span>
+              ) : (
+                "Chưa có nhận xét tổng quan."
+              ))}
           </p>
         </div>
 
@@ -576,9 +690,7 @@ export default function InterviewFeedbackDetail() {
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-slate-500">
-              Chưa có thông tin ưu điểm.
-            </p>
+            <p className="text-sm text-slate-500">Chưa có thông tin ưu điểm.</p>
           )}
         </div>
 
@@ -668,6 +780,22 @@ export default function InterviewFeedbackDetail() {
           </Button>
         </div>
       </div>
+
+      {/* CV Preview Dialog */}
+      <CvPreviewDialog
+        open={showCvDialog}
+        onOpenChange={setShowCvDialog}
+        cvUrl={cvUrl}
+        cvName={cvName}
+        loading={cvLoading}
+      />
+
+      {/* JD Preview Dialog */}
+      <JdPreviewDialog
+        open={showJdDialog}
+        onOpenChange={setShowJdDialog}
+        jdText={session.jobDescriptionText}
+      />
     </div>
   );
 }
