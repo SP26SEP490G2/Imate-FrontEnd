@@ -16,6 +16,8 @@ import {
   Lightbulb,
   ChevronDown,
   ChevronUp,
+  ArrowLeft,
+  RotateCw,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -31,6 +33,8 @@ import {
   type InterviewResultDetail,
   type InterviewResponseDetail,
   type StructuredFeedback,
+  setupInterview,
+  createInterviewSession,
 } from "@/services/interviewService";
 import { getListCV } from "@/services/cvService";
 import { MSG24 } from "@/constants/messages";
@@ -209,7 +213,12 @@ function CvPreviewDialog({
         ) : (
           <div className="flex flex-col items-center justify-center py-16 text-slate-500">
             <FileText className="mb-3 h-10 w-10 opacity-30" />
-            <p className="text-sm">Không tìm thấy CV.</p>
+            <p className="text-sm font-medium text-slate-400">
+              CV không khả dụng
+            </p>
+            <p className="text-xs text-slate-500 mt-1">
+              CV này có thể đã bị xóa
+            </p>
           </div>
         )}
       </DialogContent>
@@ -225,7 +234,7 @@ function JdPreviewDialog({
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  jdText: string | null;
+  jdText: string | undefined;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -445,6 +454,9 @@ export default function InterviewFeedbackDetail() {
   const [cvUrl, setCvUrl] = useState<string | null>(null);
   const [cvName, setCvName] = useState<string | null>(null);
   const [cvLoading, setCvLoading] = useState(false);
+  const isCvAvailable = !!detail?.session.userCvId;
+
+  const [retryLoading, setRetryLoading] = useState(false);
 
   // JD Dialog
   const [showJdDialog, setShowJdDialog] = useState(false);
@@ -482,20 +494,23 @@ export default function InterviewFeedbackDetail() {
     };
   }, [id]);
 
-  // Fetch CV info khi mở dialog CV
   const handleOpenCvDialog = async () => {
-    if (!detail?.session.userCvId) return;
     setShowCvDialog(true);
+    setCvUrl(null);
+    setCvName(null);
 
-    // Nếu đã fetch rồi thì không fetch lại
-    if (cvUrl || cvName) return;
+    if (!detail?.session.userCvId) {
+      return;
+    }
 
     try {
       setCvLoading(true);
       const cvList = await getListCV();
+
       const matched = cvList.find(
         (cv) => String(cv.cvId) === String(detail.session.userCvId)
       );
+
       if (matched) {
         setCvUrl(matched.fileUrl ?? null);
         setCvName(matched.fileName ?? null);
@@ -506,6 +521,42 @@ export default function InterviewFeedbackDetail() {
       setCvLoading(false);
     }
   };
+
+  const handleRetryInterview = async () => {
+  if (!detail?.session.userCvId) {
+    toast.error("Không thể phỏng vấn lại vì CV đã bị xóa");
+    return;
+  }
+
+  try {
+    setRetryLoading(true);
+
+    // 1. Setup interview (AI phân tích JD)
+    const setupResult = await setupInterview({
+      method: "jd",
+      cvId: detail.session.userCvId,
+      jobDescriptionSourceType: "text",
+      jobDescriptionText: detail.session.jobDescriptionText,
+    });
+
+    const session = await createInterviewSession({
+      positionName: setupResult.position,
+      skillName: setupResult.skill,
+      skillNames: setupResult.skills,
+      levelName: setupResult.level,
+      companyName: setupResult.company ?? undefined,
+      cvId: detail.session.userCvId,
+      jobDescriptionText: detail.session.jobDescriptionText,
+    });
+
+    // 3. Redirect thẳng vào interview
+    navigate(`/interview-chat/${session.sessionId}`);
+  } catch (err: any) {
+    toast.error("Không thể bắt đầu phỏng vấn lại");
+  } finally {
+    setRetryLoading(false);
+  }
+};
 
   if (loading) {
     return (
@@ -556,40 +607,49 @@ export default function InterviewFeedbackDetail() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 pb-28">
-      {/* Breadcrumb */}
-      <nav className="mb-6 flex items-center gap-1.5 text-sm text-slate-500">
-        <span
-          className="cursor-pointer transition-colors hover:text-slate-300"
-          onClick={() => navigate("/home")}
+      {/* Back button */}
+        <button
+          onClick={() => navigate("/test-history?tab=interview")}
+          className="mb-6 flex items-center gap-3 text-base text-slate-300 transition-colors hover:text-white"
         >
-          Trang chủ
-        </span>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span
-          className="cursor-pointer transition-colors hover:text-slate-300"
-          onClick={() => navigate("/test-history")}
-        >
-          Lịch sử phỏng vấn
-        </span>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span className="font-medium text-purple-400">
-          Phiên phỏng vấn {session.id}
-        </span>
-      </nav>
+          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-600">
+            <ArrowLeft className="h-5 w-5" />
+          </span>
+          Quay lại danh sách
+        </button>
 
       {/* Session Header */}
       <div className="mb-6">
         <div className="flex items-center justify-between gap-4">
+          
+          {/* LEFT */}
           <h1 className="text-2xl font-bold text-white md:text-3xl">
             Phiên phỏng vấn {session.id}
           </h1>
-          {session.status !== "Completed" && (
-            <div className="flex items-center gap-2 rounded-full border border-purple-500/20 bg-purple-500/10 px-4 py-1.5 text-sm font-medium text-purple-400">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Đang tạo báo cáo...
-            </div>
-          )}
+
+          {/* RIGHT */}
+          <div className="flex items-center gap-3">
+            <Button
+              variant="primary"
+              onClick={handleRetryInterview}
+              disabled={retryLoading}
+            >
+              {retryLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Đang chuẩn bị...
+                </>
+              ) : (
+                <>
+                  <RotateCw className="h-4 w-4" />
+                  Phỏng vấn lại
+                </>
+              )}
+            </Button>
+            
+          </div>
         </div>
+
         <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-slate-400">
           <span className="flex items-center gap-1.5">
             <Calendar className="h-4 w-4" />
@@ -625,7 +685,6 @@ export default function InterviewFeedbackDetail() {
           size="sm"
           icon={<FileText className="h-4 w-4" />}
           onClick={handleOpenCvDialog}
-          disabled={!session.userCvId}
         >
           Xem CV đã dùng
         </Button>
