@@ -18,7 +18,7 @@ export const CANDIDATE_MENU_ITEMS: MenuItem[] = [
     href: "/practice-with-ai"
   },
   { label: "Mentor", href: "/view-mentor" },
-  { label: "Gói dịch vụ", href: "/view-subscription" },
+  { label: "Bảng giá", href: "/view-subscription" },
   { label: "Cơ hội việc làm", href: "/view-job-applications" }
 ];
 
