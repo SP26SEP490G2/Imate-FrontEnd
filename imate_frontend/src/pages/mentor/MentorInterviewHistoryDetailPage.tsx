@@ -17,7 +17,8 @@ import type { BookingDetailResponse } from "@/types/response/booking.response";
 import ImateLoading from "@/components/custom/imateLoading";
 import { toast } from "react-toastify";
 
-const MOCK_AVATAR = "https://i.pravatar.cc/150?img=11";
+import { getInitials, getAvatarColor } from "@/helpers/common";
+import { cn } from "@/lib/utils";
 
 const MentorInterviewHistoryDetailPage = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -106,7 +107,6 @@ const MentorInterviewHistoryDetailPage = () => {
                     key={session.recordingUrls[selectedVideoIndex]}
                     controls 
                     className="w-full h-full object-contain"
-                    poster={MOCK_AVATAR}
                   >
                     <source src={session.recordingUrls[selectedVideoIndex]} type="video/mp4" />
                     Your browser does not support the video tag.
@@ -205,11 +205,20 @@ const MentorInterviewHistoryDetailPage = () => {
             
             <div className="relative z-10 mt-4">
               <div className="relative inline-block mb-4">
-                <img 
-                  src={session.profileAvatarUrl || MOCK_AVATAR} 
-                  alt={session.profileName}
-                  className="w-24 h-24 rounded-3xl object-cover border-4 border-[#1A1A2E] shadow-2xl mx-auto"
-                />
+                <div className={cn(
+                  "w-24 h-24 rounded-3xl flex items-center justify-center font-bold text-white border-4 border-[#1A1A2E] shadow-2xl mx-auto overflow-hidden",
+                  !session.profileAvatarUrl && getAvatarColor(session.profileName)
+                )}>
+                  {session.profileAvatarUrl ? (
+                    <img 
+                      src={session.profileAvatarUrl} 
+                      alt={session.profileName}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-3xl">{getInitials(session.profileName)}</span>
+                  )}
+                </div>
                 <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-4 border-[#1A1A2E] ${session.status === 2 ? 'bg-emerald-500' : 'bg-rose-500'}`}></div>
               </div>
               <h3 className="text-2xl font-black text-white px-4 truncate">{session.profileName}</h3>

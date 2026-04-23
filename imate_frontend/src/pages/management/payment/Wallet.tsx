@@ -357,12 +357,16 @@ function Wallet() {
                           </TableCell>
                           <TableCell
                             className={cn(
-                              tx.amount > 0 ? "text-green-400" : "text-red-400",
+                              tx.transactionType === "Deposit" || tx.transactionType === "BookingPayout" || tx.transactionType === "Refund"
+                                ? "text-green-400"
+                                : "text-red-400",
                               "font-medium"
                             )}
                           >
-                            {tx.amount > 0 ? "+" : ""}
-                            {tx.amount.toLocaleString("vi-VN")}
+                            {tx.transactionType === "Deposit" || tx.transactionType === "BookingPayout" || tx.transactionType === "Refund"
+                              ? `+${tx.amount.toLocaleString("vi-VN")}`
+                              : `-${Math.abs(tx.amount).toLocaleString("vi-VN")}`
+                            }
                           </TableCell>
                           <TableCell>
                             <StatusBadge status={statusBadgeMap[tx.status as TransactionStatusType] || "inactive"}>

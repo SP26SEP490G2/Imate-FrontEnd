@@ -19,7 +19,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import BookingDetailDialog from "@/pages/dialog/main/booking/BookingDetailDialog";
 
-const MOCK_AVATAR = "https://i.pravatar.cc/150?img=11";
+import { getInitials, getAvatarColor } from "@/helpers/common";
+import { cn } from "@/lib/utils";
 
 type ViewMode = "Ngày" | "Tuần" | "Tháng";
 
@@ -257,11 +258,20 @@ const MentorInterviewSchedule = () => {
                      
                      {/* Left: Info */}
                      <div className="flex items-center gap-4">
-                       <img 
-                         src={booking.profileAvatarUrl || MOCK_AVATAR} 
-                         alt={booking.profileName} 
-                         className="w-14 h-14 rounded-full object-cover border-2 border-indigo-500/30"
-                       />
+                       <div className={cn(
+                         "w-14 h-14 rounded-full flex items-center justify-center font-bold text-white border-2 border-indigo-500/30 overflow-hidden",
+                         !booking.profileAvatarUrl && getAvatarColor(booking.profileName)
+                       )}>
+                         {booking.profileAvatarUrl ? (
+                           <img 
+                             src={booking.profileAvatarUrl} 
+                             alt={booking.profileName} 
+                             className="w-full h-full object-cover"
+                           />
+                         ) : (
+                           <span>{getInitials(booking.profileName)}</span>
+                         )}
+                       </div>
                        <div>
                          <h3 className="font-bold text-lg text-white flex items-center gap-2">
                             {booking.profileName}

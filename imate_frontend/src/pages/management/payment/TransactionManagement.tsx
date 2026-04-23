@@ -55,7 +55,6 @@ type TransactionTab = "all" | "withdrawal" | "booking";
 const tabs = [
   { label: "Tất cả giao dịch", value: "all" },
   { label: "Yêu cầu rút tiền", value: "withdrawal" },
-  { label: "Giao dịch booking cần xử lý", value: "booking" },
 ];
 
 const STATUS_OPTIONS = [
@@ -258,15 +257,15 @@ export default function TransactionManagement() {
     tab === "all"
       ? "Danh sách tất cả giao dịch"
       : tab === "withdrawal"
-      ? "Danh sách yêu cầu rút tiền"
-      : "Danh sách giao dịch booking cần xử lý";
+        ? "Danh sách yêu cầu rút tiền"
+        : "Danh sách giao dịch booking cần xử lý";
 
   const searchPlaceholder =
     tab === "all"
       ? "Tìm theo mã giao dịch, external code, tài khoản..."
       : tab === "withdrawal"
-      ? "Tìm theo mã giao dịch hoặc người rút tiền..."
-      : "Tìm theo booking, tài khoản hoặc external code...";
+        ? "Tìm theo mã giao dịch hoặc người rút tiền..."
+        : "Tìm theo booking, tài khoản hoặc external code...";
 
   return (
     <div className="p-6 space-y-6 min-h-full">
@@ -468,8 +467,8 @@ export default function TransactionManagement() {
               {currentAction?.type === "approve"
                 ? "Duyệt yêu cầu"
                 : currentAction?.type === "reject"
-                ? "Từ chối yêu cầu"
-                : "Chi trả booking"}
+                  ? "Từ chối yêu cầu"
+                  : "Chi trả booking"}
             </DialogTitle>
             <DialogDescription className="text-slate-400">
               Bạn có thể nhập ghi chú phản hồi cho giao dịch này (không bắt buộc).

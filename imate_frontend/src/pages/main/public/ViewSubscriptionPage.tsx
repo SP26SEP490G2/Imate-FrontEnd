@@ -163,13 +163,20 @@ const ViewSubscriptionPage: React.FC = () => {
                   currentPackage?.packageId === subscriptionPackage.id;
 
                 let buttonText = "Mua ngay";
+                let showButton = true;
 
                 if (currentPackage) {
-                  if (subscriptionPackage.id === currentPackage.packageId)
-                    buttonText = "Hủy gói";
-                  else if (subscriptionPackage.rank > currentPackage.rank)
+                  if (subscriptionPackage.id === currentPackage.packageId) {
+                    if (subscriptionPackage.price === 0) {
+                      showButton = false;
+                    } else {
+                      buttonText = "Hủy gói";
+                    }
+                  } else if (subscriptionPackage.rank > currentPackage.rank) {
                     buttonText = "Nâng cấp gói";
-                  else buttonText = "Hạ cấp gói";
+                  } else {
+                    showButton = false;
+                  }
                 }
 
                 let cardStyle = "bg-[#1e293b]/45 border-white/10";
@@ -225,17 +232,20 @@ const ViewSubscriptionPage: React.FC = () => {
                       )}
                     </ul>
 
-                    <button
-                      onClick={() => handleCtaClick(subscriptionPackage)}
-                      className={`w-full py-3 rounded-xl font-bold transition-all ${isCurrent
-                        ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white"
-                        : subscriptionPackage.isRecommended && !user
-                          ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:opacity-90"
-                          : "bg-white text-[#0f172a] hover:bg-slate-100"
+                    {showButton && (
+                      <button
+                        onClick={() => handleCtaClick(subscriptionPackage)}
+                        className={`w-full py-3 rounded-xl font-bold transition-all ${
+                          isCurrent
+                            ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white"
+                            : subscriptionPackage.isRecommended && !user
+                              ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:opacity-90"
+                              : "bg-white text-[#0f172a] hover:bg-slate-100"
                         }`}
-                    >
-                      {buttonText}
-                    </button>
+                      >
+                        {buttonText}
+                      </button>
+                    )}
                   </article>
                 );
               })}
