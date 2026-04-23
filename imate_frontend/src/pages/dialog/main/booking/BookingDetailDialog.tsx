@@ -3,6 +3,8 @@ import { X, Calendar, Clock, Video, CreditCard, Tag, CheckCircle2, XCircle, Aler
 import { format, parseISO } from "date-fns";
 import { vi } from "date-fns/locale";
 import type { BookingDetailResponse } from "@/types/response/booking.response";
+import { getInitials, getAvatarColor } from "@/helpers/common";
+import { cn } from "@/lib/utils";
 
 interface BookingDetailDialogProps {
   open: boolean;
@@ -116,11 +118,20 @@ const BookingDetailDialog: React.FC<BookingDetailDialogProps> = ({
           {/* Participant Info */}
           <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5">
             <div className="relative">
-              <img 
-                src={booking.profileAvatarUrl || `https://i.pravatar.cc/150?u=${booking.profileName}`} 
-                alt={booking.profileName} 
-                className="w-16 h-16 rounded-2xl object-cover border-2 border-indigo-500/20"
-              />
+              <div className={cn(
+                "w-16 h-16 rounded-2xl flex items-center justify-center font-bold text-white border-2 border-indigo-500/20 overflow-hidden",
+                !booking.profileAvatarUrl && getAvatarColor(booking.profileName)
+              )}>
+                {booking.profileAvatarUrl ? (
+                  <img 
+                    src={booking.profileAvatarUrl} 
+                    alt={booking.profileName} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-xl">{getInitials(booking.profileName)}</span>
+                )}
+              </div>
               <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 border-2 border-[#11142D] rounded-full" />
             </div>
             <div>

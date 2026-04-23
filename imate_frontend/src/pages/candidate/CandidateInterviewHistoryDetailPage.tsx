@@ -12,13 +12,16 @@ import {
   MessageSquareText,
   Loader2,
   Star,
-  Clock
+  Clock,
+  Flag
 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { getCandidateSessionDetail, rateMentor } from "@/services/bookingCandidateService";
 import type { BookingDetailResponse } from "@/types/response/booking.response";
 import ImateLoading from "@/components/custom/imateLoading";
 import { toast } from "react-toastify";
+import { CreateApplicationDialog } from "@/pages/dialog/main/reportApplication/CreateApplicationDialog";
+import { ApplicationType } from "@/constants/enum";
 
 
 const CandidateInterviewHistoryDetailPage = () => {
@@ -33,6 +36,9 @@ const CandidateInterviewHistoryDetailPage = () => {
   const [ratingScore, setRatingScore] = useState<number>(5);
   const [reviewText, setReviewText] = useState("");
   const [isSubmittingRating, setIsSubmittingRating] = useState(false);
+
+  // Report Modal States
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -222,14 +228,35 @@ const CandidateInterviewHistoryDetailPage = () => {
                       <Info size={24} />
                       <p>Bạn chưa gửi đánh giá cho buổi học này.</p>
                     </div>
-                    <button 
-                      onClick={() => setIsRatingModalOpen(true)}
-                      className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all shadow-lg flex-shrink-0 flex items-center gap-2"
-                    >
-                      <MessageSquareText size={18} />
-                      Đánh giá Mentor
-                    </button>
+                    <div className="flex flex-wrap gap-2">
+                      <button 
+                        onClick={() => setIsRatingModalOpen(true)}
+                        className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all shadow-lg flex-shrink-0 flex items-center gap-2"
+                      >
+                       <MessageSquareText size={18} />
+                       Đánh giá Mentor
+                      </button>
+                      <button 
+                        onClick={() => setIsReportModalOpen(true)}
+                        className="px-6 py-2.5 bg-rose-600/10 hover:bg-rose-600/20 text-rose-500 border border-rose-500/20 font-bold rounded-xl transition-all flex-shrink-0 flex items-center gap-2"
+                      >
+                       <Flag size={18} />
+                       Báo cáo Mentor
+                      </button>
+                    </div>
                   </div>
+                )}
+                {/* Always show small report button if already rated but user still wants to report */}
+                {session.status === 2 && session.ratingScore && (
+                   <div className="mt-4 flex justify-end">
+                      <button 
+                        onClick={() => setIsReportModalOpen(true)}
+                        className="text-gray-500 hover:text-rose-400 text-xs font-bold flex items-center gap-1 transition-colors"
+                      >
+                        <Flag size={12} />
+                        Bạn gặp vấn đề? Báo cáo Mentor
+                      </button>
+                   </div>
                 )}
               </div>
             </div>
@@ -403,6 +430,14 @@ const CandidateInterviewHistoryDetailPage = () => {
           </div>
         </div>
       )}
+
+      {/* Report Modal */}
+      <CreateApplicationDialog 
+        open={isReportModalOpen} 
+        onOpenChange={setIsReportModalOpen}
+        defaultType={ApplicationType.ReportMentor}
+        defaultBookingId={session.bookingId}
+      />
     </div>
   );
 };

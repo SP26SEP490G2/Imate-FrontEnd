@@ -14,7 +14,8 @@ import { getMentorSessionHistory } from "@/services/bookingCandidateService";
 import type { MentorSessionSummaryResponse } from "@/types/response/booking.response";
 import ImateLoading from "./imateLoading";
 
-const MOCK_AVATAR = "https://i.pravatar.cc/150?img=11";
+import { getInitials, getAvatarColor } from "@/helpers/common";
+import { cn } from "@/lib/utils";
 
 const MentorInterviewHistory = () => {
   const navigate = useNavigate();
@@ -104,11 +105,20 @@ const MentorInterviewHistory = () => {
                 {/* Candidate Info */}
                 <div className="flex items-center gap-4">
                   <div className="relative">
-                    <img 
-                      src={session.candidateAvatarUrl || MOCK_AVATAR} 
-                      alt={session.candidateName}
-                      className="w-14 h-14 rounded-2xl object-cover border border-white/10"
-                    />
+                    <div className={cn(
+                      "w-14 h-14 rounded-2xl flex items-center justify-center font-bold text-white border border-white/10 overflow-hidden",
+                      !session.candidateAvatarUrl && getAvatarColor(session.candidateName)
+                    )}>
+                      {session.candidateAvatarUrl ? (
+                        <img 
+                          src={session.candidateAvatarUrl} 
+                          alt={session.candidateName}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span>{getInitials(session.candidateName)}</span>
+                      )}
+                    </div>
                     <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[#1A1A2E] ${session.status === 2 ? 'bg-emerald-500' : 'bg-rose-500'}`}></div>
                   </div>
                   <div>

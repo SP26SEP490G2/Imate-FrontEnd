@@ -42,20 +42,32 @@ interface CreateApplicationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  defaultType?: ApplicationTypeEnum;
+  defaultBookingId?: string | number;
 }
 
 export function CreateApplicationDialog({
   open,
   onOpenChange,
   onSuccess,
+  defaultType,
+  defaultBookingId,
 }: CreateApplicationDialogProps) {
   const { user } = useAuth();
 
-  const [type, setType] = React.useState<ApplicationTypeEnum>(ApplicationType.TechnicalError);
+  const [type, setType] = React.useState<ApplicationTypeEnum>(defaultType || ApplicationType.TechnicalError);
   const [title, setTitle] = React.useState("");
   const [content, setContent] = React.useState("");
-  const [bookingId, setBookingId] = React.useState("");
+  const [bookingId, setBookingId] = React.useState(defaultBookingId?.toString() || "");
   // ...existing code...
+
+  // Update values if props change (useful when opening for different sessions)
+  React.useEffect(() => {
+    if (open) {
+      if (defaultType) setType(defaultType);
+      if (defaultBookingId) setBookingId(defaultBookingId.toString());
+    }
+  }, [open, defaultType, defaultBookingId]);
 
   const [evidenceFiles, setEvidenceFiles] = React.useState<File[]>([]);
   const [loading, setLoading] = React.useState(false);
@@ -63,11 +75,10 @@ export function CreateApplicationDialog({
   const isReportComment = type === ApplicationType.ReportComment;
 
   const resetForm = () => {
-    setType(ApplicationType.TechnicalError);
+    setType(defaultType || ApplicationType.TechnicalError);
     setTitle("");
     setContent("");
-    setBookingId("");
-    // ...existing code...
+    setBookingId(defaultBookingId?.toString() || "");
     setEvidenceFiles([]);
   };
 
@@ -166,7 +177,7 @@ export function CreateApplicationDialog({
               <Select
                 value={type}
                 onValueChange={(v) => setType(v as ApplicationTypeEnum)}
-                disabled={loading}
+                disabled={loading || !!defaultType}
               >
                 <SelectTrigger className="w-full bg-slate-800 border-slate-700">
                   <SelectValue placeholder="Chọn loại đơn" />
@@ -180,6 +191,22 @@ export function CreateApplicationDialog({
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Booking ID - hiện khi không phải TechnicalError */}
+            {type !== ApplicationType.TechnicalError && (
+              <div className="space-y-2">
+                <Label className="text-slate-200">
+                  Mã Booking <span className="text-red-400">*</span>
+                </Label>
+                <Input
+                  value={bookingId}
+                  onChange={(e) => setBookingId(e.target.value)}
+                  placeholder="Nhập ID buổi học (ví dụ: 101)"
+                  className="bg-slate-800 border-slate-700"
+                  disabled={loading || !!defaultBookingId}
+                />
+              </div>
+            )}
 
             {/* Hướng dẫn khi chọn ReportComment */}
             {isReportComment && (
