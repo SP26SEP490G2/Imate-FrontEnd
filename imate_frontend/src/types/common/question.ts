@@ -43,6 +43,7 @@ export interface PublicSystemQuestionBankItem {
   skills: PublicQuestionLookupItem[];
   positions: PublicQuestionLookupItem[];
   isSaved: boolean;
+  commentCount?: number;
 }
 
 export interface PublicContributedQuestionDetail {
@@ -69,6 +70,7 @@ export interface PublicContributedQuestionBankItem {
   skills: PublicQuestionLookupItem[];
   positions: PublicQuestionLookupItem[];
   isSaved: boolean;
+  commentCount?: number;
 }
 
 export type SavedSystemQuestionItem = PublicSystemQuestionBankItem;
@@ -200,6 +202,7 @@ export interface MyContributedQuestionItem {
   positionsName: string[];
   createdAt?: string;
   updatedAt?: string;
+  commentCount?: number;
 }
 
 export interface MyContributedQuestionListResponse {

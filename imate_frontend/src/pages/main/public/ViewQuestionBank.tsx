@@ -354,6 +354,7 @@ const ViewQuestionBank: React.FC = () => {
       level: "",
       difficulty: difficultyText,
       rating,
+      commentCount: question.commentCount,
     };
   };
 
@@ -377,6 +378,7 @@ const ViewQuestionBank: React.FC = () => {
       level: question.contributedDetail?.level || 'N/A',
       difficulty: difficultyText,
       rating,
+      commentCount: question.commentCount,
     };
   };
 
@@ -401,6 +403,7 @@ const ViewQuestionBank: React.FC = () => {
       difficulty: difficultyText,
       rating,
       status: question.approvalStatus || 'Pending',
+      commentCount: question.commentCount,
     };
   };
 
@@ -822,6 +825,7 @@ const ViewQuestionBank: React.FC = () => {
                   >
                     <option value="createdAt">Ngày tạo</option>
                     <option value="content">Nội dung</option>
+                    <option value="popular">Phổ biến</option>
                   </select>
                 </div>
 
@@ -890,6 +894,7 @@ const ViewQuestionBank: React.FC = () => {
                         level={card.level}
                         difficulty={card.difficulty}
                         rating={card.rating}
+                        commentCount={card.commentCount}
                         isSaved={saved}
                         onView={() => handleView(question.id, 'system', saved)}
                         onSave={isCandidate ? () => handleSave('system', question.id, saved) : undefined}
@@ -979,6 +984,7 @@ const ViewQuestionBank: React.FC = () => {
                         level={card.level}
                         difficulty={card.difficulty}
                         rating={card.rating}
+                        commentCount={card.commentCount}
                         isSaved={saved}
                         onView={() => handleView(question.id, 'contributed', saved, true, 'Approved')}
                         onSave={isCandidate ? () => handleSave('contributed', question.id, saved) : undefined}
@@ -1068,6 +1074,7 @@ const ViewQuestionBank: React.FC = () => {
                         level={card.level}
                         difficulty={card.difficulty}
                         rating={card.rating}
+                        commentCount={card.commentCount}
                         isSaved={saved}
                         statusLabel={card.status}
                         statusType={getApprovalStatusBadge(card.status)}
@@ -1212,6 +1219,7 @@ const ViewQuestionBank: React.FC = () => {
                         level={card.level}
                         difficulty={card.difficulty}
                         rating={card.rating}
+                        commentCount={card.commentCount}
                         isSaved={saved}
                         onView={() => handleView(question.id, 'system', saved)}
                         onSave={isCandidate ? () => handleSave('system', question.id, saved) : undefined}
@@ -1269,6 +1277,7 @@ const ViewQuestionBank: React.FC = () => {
                         level={card.level}
                         difficulty={card.difficulty}
                         rating={card.rating}
+                        commentCount={card.commentCount}
                         isSaved={saved}
                         onView={() => handleView(question.id, 'contributed', saved, true, 'Approved')}
                         onSave={isCandidate ? () => handleSave('contributed', question.id, saved) : undefined}
