@@ -43,6 +43,7 @@ export interface PublicSystemQuestionBankItem {
   skills: PublicQuestionLookupItem[];
   positions: PublicQuestionLookupItem[];
   isSaved: boolean;
+  commentCount?: number;
 }
 
 export interface PublicContributedQuestionDetail {
@@ -69,6 +70,7 @@ export interface PublicContributedQuestionBankItem {
   skills: PublicQuestionLookupItem[];
   positions: PublicQuestionLookupItem[];
   isSaved: boolean;
+  commentCount?: number;
 }
 
 export type SavedSystemQuestionItem = PublicSystemQuestionBankItem;
@@ -200,6 +202,7 @@ export interface MyContributedQuestionItem {
   positionsName: string[];
   createdAt?: string;
   updatedAt?: string;
+  commentCount?: number;
 }
 
 export interface MyContributedQuestionListResponse {
@@ -231,7 +234,7 @@ export interface GetListQuestionCategoriesResponse {
 // Types for Difficulty and Level
 export type DifficultyLevel = 0 | 1 | 2; // 0 = Easy, 1 = Medium, 2 = Hard
 
-export type Level = 0 | 1 | 2 | 3 | 4 | 5; // 0 = Intern, 1 = Junior, 2 = Middle, 3 = Senior, 4 = Lead, 5 = Manager
+export type Level = 0 | 1 | 2 | 3 | 4 | 5 | 6; // 0 = Intern, 1 = Junior, 2 = Middle, 3 = Senior, 4 = Lead, 5 = Manager
 
 // Staff Question Management Types
 export interface StaffSystemQuestionItem {

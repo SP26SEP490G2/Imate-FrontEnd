@@ -36,6 +36,7 @@ import AnalyseCV from "@/pages/candidate/AnalyseCV";
 import PracticeTest from "@/pages/candidate/PracticeTest";
 import TestHistory from "@/pages/candidate/TestHistory";
 import TestHistoryDetail from "@/pages/candidate/TestHistoryDetail";
+import TrainingJourneyDetail from "@/pages/candidate/TrainingJourneyDetail";
 import InterviewFeedbackDetail from "@/pages/candidate/InterviewFeedbackDetail";
 import InterviewSetup from "@/pages/candidate/InterviewSetup";
 import InterviewChat from "@/pages/candidate/InterviewChat";
@@ -136,6 +137,7 @@ const routeConfigs: RouteConfig[] = [
   { path: "/practice-test", element: <PracticeTest />, layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/test-history", element: <TestHistory />, layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/test-history/:id", element: <TestHistoryDetail />, layout: LAYOUT.MAIN, requireAuth: true },
+  { path: "/test-history/journey/:journeyId", element: <TrainingJourneyDetail />, layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/interview-history/:id", element: <InterviewFeedbackDetail />, layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/interview-setup", element: <InterviewSetup />, layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/interview-chat/:sessionId", element: <InterviewChat />, layout: LAYOUT.NONE, requireAuth: true },

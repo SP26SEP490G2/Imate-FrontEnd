@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ChevronRight,
   ChevronLeft,
@@ -7,8 +7,6 @@ import {
   Calendar,
   Clock,
   FileText,
-  Briefcase,
-  Eye,
   Star,
   CheckCircle2,
   AlertTriangle,
@@ -16,6 +14,7 @@ import {
   Lightbulb,
   ChevronDown,
   ChevronUp,
+  ArrowLeft,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -27,13 +26,9 @@ import {
   type StructuredFeedback,
 } from "@/services/interviewService";
 import { MSG24 } from "@/constants/messages";
-import {
-  USE_MOCK,
-} from "@/mocks/interviewMockData";
+import { USE_MOCK } from "@/mocks/interviewMockData";
 
-/* ------------------------------------------------------------------ */
-/*  Helper: parse structuredFeedbackJson                               */
-/* ------------------------------------------------------------------ */
+/*  Helper: parse structuredFeedbackJson  */
 function parseFeedback(json: string | null): StructuredFeedback | null {
   if (!json) return null;
   try {
@@ -43,9 +38,7 @@ function parseFeedback(json: string | null): StructuredFeedback | null {
   }
 }
 
-/* ------------------------------------------------------------------ */
-/*  Helper: parse overallFeedback into sections                        */
-/* ------------------------------------------------------------------ */
+/*  Helper: parse overallFeedback into sections */
 interface OverallFeedbackSections {
   overview: string;
   strengths: string[];
@@ -57,7 +50,6 @@ function parseOverallFeedback(text: string | null): OverallFeedbackSections {
     return { overview: "", strengths: [], improvements: [] };
   }
 
-  // Try to parse as JSON first (backend might send structured data)
   try {
     const parsed = JSON.parse(text);
     return {
@@ -66,7 +58,6 @@ function parseOverallFeedback(text: string | null): OverallFeedbackSections {
       improvements: parsed.improvements || [],
     };
   } catch {
-    // Parse text-based feedback with sections
     const sections: OverallFeedbackSections = {
       overview: "",
       strengths: [],
@@ -108,7 +99,6 @@ function parseOverallFeedback(text: string | null): OverallFeedbackSections {
       }
     }
 
-    // If no sections were found, put everything in overview
     if (!sections.strengths.length && !sections.improvements.length) {
       sections.overview = text;
     }
@@ -117,12 +107,9 @@ function parseOverallFeedback(text: string | null): OverallFeedbackSections {
   }
 }
 
-/* ------------------------------------------------------------------ */
-/*  Score Bar (scaled /5)                                              */
-/* ------------------------------------------------------------------ */
+/*  Score Bar (scaled /5)  */
 function ScoreBar({ label, value }: { label: string; value: number | null }) {
   const v = value ?? 0;
-  // Backend scores are 0-1 (double), scale to 0-5
   const scaled = Math.round(v * 5 * 10) / 10;
   const displayValue = Math.round(scaled);
   const percent = (scaled / 5) * 100;
@@ -157,14 +144,9 @@ function ScoreBar({ label, value }: { label: string; value: number | null }) {
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  Question Detail Card                                               */
-/* ------------------------------------------------------------------ */
-function QuestionCard({
-  response,
-}: {
-  response: InterviewResponseDetail;
-}) {
+
+/*  Question Detail Card */
+function QuestionCard({ response }: { response: InterviewResponseDetail }) {
   const [expanded, setExpanded] = useState(false);
   const feedback = parseFeedback(response.structuredFeedbackJson);
 
@@ -202,17 +184,17 @@ function QuestionCard({
       {/* Score Metrics or Loading */}
       {!response.structuredFeedbackJson ? (
         <div className="mb-5 grid gap-4 md:grid-cols-2">
-          <div className="space-y-2 animate-pulse">
+          <div className="animate-pulse space-y-2">
             <div className="h-4 w-24 rounded bg-slate-700" />
             <div className="h-2 w-full rounded bg-slate-700" />
           </div>
-          <div className="space-y-2 animate-pulse">
+          <div className="animate-pulse space-y-2">
             <div className="h-4 w-24 rounded bg-slate-700" />
             <div className="h-2 w-full rounded bg-slate-700" />
           </div>
           <div className="col-span-2 mt-2 flex items-center gap-2 text-xs text-purple-400">
-             <Loader2 className="h-3 w-3 animate-spin" />
-             Đang phân tích phản hồi...
+            <Loader2 className="h-3 w-3 animate-spin" />
+            Đang phân tích phản hồi...
           </div>
         </div>
       ) : (
@@ -222,7 +204,7 @@ function QuestionCard({
         </div>
       )}
 
-      {/* Expand/Collapse for detailed feedback */}
+      {/* Expand/Collapse */}
       <div className="border-t border-slate-700/40 pt-4">
         <button
           onClick={() => setExpanded(!expanded)}
@@ -238,7 +220,6 @@ function QuestionCard({
 
         {expanded && (
           <div className="mt-4 space-y-4">
-            {/* Additional Score Metrics */}
             <div className="grid gap-4 md:grid-cols-2">
               <ScoreBar
                 label="Giải quyết vấn đề"
@@ -250,7 +231,6 @@ function QuestionCard({
               />
             </div>
 
-            {/* STAR Scores (if available) */}
             {(response.starSituationScore !== null ||
               response.starTaskScore !== null ||
               response.starActionScore !== null ||
@@ -271,7 +251,6 @@ function QuestionCard({
                 </div>
               )}
 
-            {/* AI Feedback */}
             {response.aiFeedback && (
               <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/5 px-4 py-3">
                 <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-indigo-400">
@@ -284,7 +263,6 @@ function QuestionCard({
               </div>
             )}
 
-            {/* Structured Feedback Details */}
             {feedback?.strengths && feedback.strengths.length > 0 && (
               <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3">
                 <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-400">
@@ -325,20 +303,17 @@ function QuestionCard({
               </div>
             )}
 
-            {/* Suggested / Expected Answer */}
-            {(response.expectedAnswerOutline ||
-              feedback?.suggested_answer) && (
-                <div className="rounded-xl border border-purple-500/20 bg-purple-500/5 px-4 py-3">
-                  <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-purple-400">
-                    <Star className="h-3.5 w-3.5" />
-                    Đáp án mẫu
-                  </p>
-                  <p className="text-sm leading-relaxed text-slate-300">
-                    {feedback?.suggested_answer ||
-                      response.expectedAnswerOutline}
-                  </p>
-                </div>
-              )}
+            {(response.expectedAnswerOutline || feedback?.suggested_answer) && (
+              <div className="rounded-xl border border-purple-500/20 bg-purple-500/5 px-4 py-3">
+                <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-purple-400">
+                  <Star className="h-3.5 w-3.5" />
+                  Đáp án mẫu
+                </p>
+                <p className="text-sm leading-relaxed text-slate-300">
+                  {feedback?.suggested_answer || response.expectedAnswerOutline}
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -346,21 +321,16 @@ function QuestionCard({
   );
 }
 
-
-
-/* ------------------------------------------------------------------ */
-/*  Mock: kết quả phỏng vấn giả cho session 999                       */
-/* ------------------------------------------------------------------ */
-
-/* ------------------------------------------------------------------ */
-/*  Main Page                                                          */
-/* ------------------------------------------------------------------ */
+/*  Main Page */
 export default function InterviewFeedbackDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [detail, setDetail] = useState<InterviewResultDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+
+  const [searchParams] = useSearchParams();
+  const fromSource = searchParams.get("from");
 
   useEffect(() => {
     let pollInterval: any;
@@ -370,10 +340,9 @@ export default function InterviewFeedbackDetail() {
       try {
         if (!isSilent) setLoading(true);
         const data = await getInterviewResult(parseInt(id));
-        setDetail(data);
+        setDetail(data as unknown as InterviewResultDetail);
 
-        // Nếu đã hoàn thành thì không cần poll nữa
-        if (data.session.status === "Completed") {
+        if ((data as any).session.status === "Completed") {
           if (pollInterval) clearInterval(pollInterval);
         }
       } catch (err) {
@@ -385,8 +354,6 @@ export default function InterviewFeedbackDetail() {
 
     fetchDetail();
 
-    // Thiết lập polling nếu session chưa hoàn thành
-    // Chỉ poll nếu không phải đang dùng Mock data
     if (!(USE_MOCK && id === "999")) {
       pollInterval = setInterval(() => {
         fetchDetail(true);
@@ -410,10 +377,7 @@ export default function InterviewFeedbackDetail() {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
         <p className="text-slate-400">Không tìm thấy phiên phỏng vấn.</p>
-        <Button
-          variant="secondary"
-          onClick={() => navigate("/test-history")}
-        >
+        <Button variant="secondary" onClick={() => navigate("/test-history")}>
           Quay lại
         </Button>
       </div>
@@ -445,46 +409,32 @@ export default function InterviewFeedbackDetail() {
 
   const overallSections = parseOverallFeedback(session.overallFeedback);
   const duration = getDuration();
-
   const totalQuestions = responses.length;
   const currentResponse = responses[currentQuestionIndex];
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 pb-28">
-      {/* Breadcrumb */}
-      <nav className="mb-6 flex items-center gap-1.5 text-sm text-slate-500">
-        <span
-          className="cursor-pointer transition-colors hover:text-slate-300"
-          onClick={() => navigate("/home")}
+      {/* Back button */}
+      {fromSource && (
+        <button
+          onClick={() => navigate(-1)}
+          className="mb-6 flex items-center gap-3 text-base text-slate-300 transition-colors hover:text-white"
         >
-          Trang chủ
-        </span>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span
-          className="cursor-pointer transition-colors hover:text-slate-300"
-          onClick={() => navigate("/test-history")}
-        >
-          Lịch sử phỏng vấn
-        </span>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span className="font-medium text-purple-400">
-          Phiên phỏng vấn {session.id}
-        </span>
-      </nav>
-
+          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-600">
+            <ArrowLeft className="h-5 w-5" />
+          </span>
+          Quay lại lộ trình
+        </button>
+      )}
       {/* Session Header */}
       <div className="mb-6">
         <div className="flex items-center justify-between gap-4">
+          {/* LEFT */}
           <h1 className="text-2xl font-bold text-white md:text-3xl">
             Phiên phỏng vấn {session.id}
           </h1>
-          {session.status !== "Completed" && (
-            <div className="flex items-center gap-2 rounded-full bg-purple-500/10 px-4 py-1.5 text-sm font-medium text-purple-400 border border-purple-500/20">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Đang tạo báo cáo...
-            </div>
-          )}
         </div>
+
         <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-slate-400">
           <span className="flex items-center gap-1.5">
             <Calendar className="h-4 w-4" />
@@ -502,35 +452,6 @@ export default function InterviewFeedbackDetail() {
         </div>
       </div>
 
-      {/* Document Links */}
-      <div className="mb-6 flex flex-wrap gap-3">
-        {session.positionName && (
-          <div className="flex items-center gap-2 rounded-lg border border-slate-700/60 bg-slate-800/40 px-3 py-2 text-sm text-slate-300">
-            <Briefcase className="h-4 w-4 text-purple-400" />
-            {session.positionName}
-            {session.levelName && (
-              <span className="text-slate-500">• {session.levelName}</span>
-            )}
-          </div>
-        )}
-        <Button
-          variant="ghost"
-          size="sm"
-          icon={<FileText className="h-4 w-4" />}
-          onClick={() => navigate("/cv-management")}
-        >
-          Xem CV đã dùng
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          icon={<Eye className="h-4 w-4" />}
-          disabled
-        >
-          Xem JD yêu cầu
-        </Button>
-      </div>
-
       {/* Overview Cards */}
       <div className="mb-8 grid gap-4 md:grid-cols-3">
         {/* Tổng quan */}
@@ -544,12 +465,15 @@ export default function InterviewFeedbackDetail() {
             </h3>
           </div>
           <p className="text-sm leading-relaxed text-slate-300">
-            {overallSections.overview || (session.status !== "Completed" ? (
-              <span className="flex items-center gap-2 text-slate-500">
-                <Loader2 className="h-3 w-3 animate-spin" />
-                Đang tổng hợp nhận xét...
-              </span>
-            ) : "Chưa có nhận xét tổng quan.")}
+            {overallSections.overview ||
+              (session.status !== "Completed" ? (
+                <span className="flex items-center gap-2 text-slate-500">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Đang tổng hợp nhận xét...
+                </span>
+              ) : (
+                "Chưa có nhận xét tổng quan."
+              ))}
           </p>
         </div>
 
@@ -576,9 +500,7 @@ export default function InterviewFeedbackDetail() {
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-slate-500">
-              Chưa có thông tin ưu điểm.
-            </p>
+            <p className="text-sm text-slate-500">Chưa có thông tin ưu điểm.</p>
           )}
         </div>
 
@@ -668,6 +590,7 @@ export default function InterviewFeedbackDetail() {
           </Button>
         </div>
       </div>
+
     </div>
   );
 }

@@ -5,22 +5,25 @@
 // Difficulty levels (number values for API)
 export const LEVEL = {
   INTERN: 0,
-  JUNIOR: 1,
-  MIDDLE: 2,
-  SENIOR: 3,
-  LEAD: 4,
-  MANAGER: 5
+  FRESHER: 1,
+  JUNIOR: 2,
+  MIDDLE: 3,
+  SENIOR: 4,
+  LEAD: 5,
+  MANAGER: 6,
 } as const;
 
 // Difficulty mapping: number to display text
 export const LEVEL_MAP = {
   0: 'Intern',
-  1: 'Junior',
-  2: 'Middle',
-  3: 'Senior',
-  4: 'Lead',
-  5: 'Manager',
+  1: 'Fresher',
+  2: 'Junior',
+  3: 'Middle',
+  4: 'Senior',
+  5: "Lead",
+  6: "Manager",
 } as const;
+export type Level = typeof LEVEL[keyof typeof LEVEL];
 
 export const DIFFICULTY_LEVEL = {
   EASY: 0,

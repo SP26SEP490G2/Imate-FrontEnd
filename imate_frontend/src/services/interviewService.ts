@@ -60,6 +60,8 @@ export interface InterviewSessionInfo {
   totalQuestionsAnswered: number;
   overallFeedback: string | null;
   estimatedAbility: number | null;
+  userCvId: number | null;
+  jobDescriptionText: string | undefined;
 }
 
 export interface InterviewResultDetail {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye, Bookmark } from 'lucide-react';
+import { Eye, Bookmark, MessageCircle } from 'lucide-react';
 import { StatusBadge } from '@/components/ui/status-badge';
 
 interface QuestionContributedCardProps {
@@ -15,6 +15,7 @@ interface QuestionContributedCardProps {
   level: string;
   rating: number; // 1-5
   isSaved?: boolean;
+  commentCount?: number;
   statusLabel?: string;
   statusType?: "active" | "pending" | "error" | "inactive" | "draft";
   onView?: () => void;
@@ -31,6 +32,7 @@ const QuestionContributedCard: React.FC<QuestionContributedCardProps> = ({
   position,
   rating,
   isSaved = false,
+  commentCount,
   statusLabel,
   statusType = 'inactive',
   onView,
@@ -139,6 +141,13 @@ const QuestionContributedCard: React.FC<QuestionContributedCardProps> = ({
               <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
               {isSaved ? 'Đã lưu' : 'Lưu'}
             </button>
+          )}
+
+          {typeof commentCount === 'number' && commentCount > 1 && (
+            <div className="flex items-center gap-1 text-xs text-slate-400">
+              <MessageCircle className="w-4 h-4" />
+              <span>{commentCount} bình luận</span>
+            </div>
           )}
         </div>
 
