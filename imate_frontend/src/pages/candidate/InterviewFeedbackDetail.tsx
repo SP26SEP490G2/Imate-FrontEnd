@@ -7,8 +7,6 @@ import {
   Calendar,
   Clock,
   FileText,
-  Briefcase,
-  Eye,
   Star,
   CheckCircle2,
   AlertTriangle,
@@ -17,26 +15,16 @@ import {
   ChevronDown,
   ChevronUp,
   ArrowLeft,
-  RotateCw,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   getInterviewResult,
   type InterviewResultDetail,
   type InterviewResponseDetail,
   type StructuredFeedback,
-  setupInterview,
-  createInterviewSession,
 } from "@/services/interviewService";
-import { getListCV } from "@/services/cvService";
 import { MSG24 } from "@/constants/messages";
 import { USE_MOCK } from "@/mocks/interviewMockData";
 

@@ -9,36 +9,18 @@ import {
   Languages,
   Trophy,
   Briefcase,
-  MessageSquare,
   Star,
   Activity,
-  ArrowLeft,
-  CheckCircle2,
-  Edit2,
-  Save,
-  X,
 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "react-toastify";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import {
   getTestHistory,
   type TestHistoryItem,
 } from "@/services/geminiService";
-import {
-  getInterviewHistory,
-  type InterviewHistoryItem,
-} from "@/services/interviewService";
 import {
   getJourneyList,
   type TrainingJourneySummary,
@@ -172,11 +154,9 @@ export default function TestHistory() {
   const initialTab = searchParams.get("tab") || "test";
   const [activeTab, setActiveTab] = useState(initialTab);
   const [history, setHistory] = useState<TestHistoryItem[]>([]);
-  const [interviewHistory, setInterviewHistory] = useState<InterviewHistoryItem[]>([]);
   const [journeys, setJourneys] = useState<TrainingJourneySummary[]>([]);
   const [mentorHistory, setMentorHistory] = useState<BookingDetailResponse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [interviewLoading, setInterviewLoading] = useState(false);
   const [journeyLoading, setJourneyLoading] = useState(false);
   const [mentorLoading, setMentorLoading] = useState(false);
 

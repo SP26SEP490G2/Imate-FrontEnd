@@ -24,6 +24,7 @@ import type {
   SkillItem,
   CategoryItem,
   CompanyItem,
+  Level,
 
 } from '@/types/common/question';
 import { DIFFICULTY_LEVEL, DIFFICULTY_MAP, LEVEL, LEVEL_MAP } from "@/constants/common";
@@ -182,7 +183,7 @@ export function CreateContributeQuestionDialog({
     }
   };
 
-  const handleLevelChange = (level: 0 | 1 | 2 | 3 | 4 | 5) => {
+  const handleLevelChange = (level: Level) => {
     setFormData(prev => ({ ...prev, level }));
     if (errors.level) {
       setErrors(prev => ({ ...prev, level: '' }));
@@ -307,7 +308,7 @@ export function CreateContributeQuestionDialog({
                   Cấp độ <span className="text-red-400">*</span>
                 </label>
                 <div className="flex flex-wrap gap-3">
-                  {([LEVEL.INTERN, LEVEL.JUNIOR, LEVEL.MIDDLE, LEVEL.SENIOR, LEVEL.LEAD, LEVEL.MANAGER] as const).map((level) => (
+                  {([LEVEL.INTERN,LEVEL.JUNIOR, LEVEL.JUNIOR, LEVEL.MIDDLE, LEVEL.SENIOR, LEVEL.LEAD, LEVEL.MANAGER] as const).map((level) => (
                     <button
                       key={level}
                       type="button"
