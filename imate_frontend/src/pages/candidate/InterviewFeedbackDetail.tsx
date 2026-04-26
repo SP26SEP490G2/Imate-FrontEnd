@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ChevronRight,
   ChevronLeft,
@@ -156,114 +156,6 @@ function ScoreBar({ label, value }: { label: string; value: number | null }) {
   );
 }
 
-/*  Dialog: Xem CV đã dùng */
-function CvPreviewDialog({
-  open,
-  onOpenChange,
-  cvUrl,
-  cvName,
-  loading,
-}: {
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-  cvUrl: string | null;
-  cvName: string | null;
-  loading: boolean;
-}) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl border border-white/10 bg-[#11142D] text-white shadow-2xl rounded-3xl p-8">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-3 text-xl font-bold">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-purple-500/10">
-              <FileText className="h-5 w-5 text-purple-400" />
-            </div>
-            CV đã dùng
-          </DialogTitle>
-          {cvName && (
-            <p className="mt-1 text-sm text-slate-400">{cvName}</p>
-          )}
-        </DialogHeader>
-
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-16 gap-3 text-slate-500">
-            <Loader2 className="h-8 w-8 animate-spin text-purple-400" />
-            <p className="text-sm">Đang tải CV...</p>
-          </div>
-        ) : cvUrl ? (
-          <div className="w-full overflow-hidden rounded-2xl border border-white/10 bg-[#0F1333]">
-            <div className="flex items-center justify-between border-b border-white/10 bg-white/5 px-4 py-2">
-              <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">
-                Xem trước CV
-              </span>
-              <div className="flex gap-1">
-                <div className="h-2 w-2 rounded-full bg-red-500/50" />
-                <div className="h-2 w-2 rounded-full bg-yellow-500/50" />
-                <div className="h-2 w-2 rounded-full bg-emerald-500/50" />
-              </div>
-            </div>
-            <div className="h-[450px] w-full">
-              <iframe
-                src={`${cvUrl}#toolbar=0&navpanes=0&scrollbar=0`}
-                className="h-full w-full border-none"
-                title="CV Preview"
-              />
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-16 text-slate-500">
-            <FileText className="mb-3 h-10 w-10 opacity-30" />
-            <p className="text-sm font-medium text-slate-400">
-              CV không khả dụng
-            </p>
-            <p className="text-xs text-slate-500 mt-1">
-              CV này có thể đã bị xóa
-            </p>
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-/*  Dialog: Xem JD yêu cầu  */
-function JdPreviewDialog({
-  open,
-  onOpenChange,
-  jdText,
-}: {
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-  jdText: string | undefined;
-}) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl border border-white/10 bg-[#11142D] text-white shadow-2xl rounded-3xl p-8">
-        <DialogHeader className="mb-4">
-          <DialogTitle className="flex items-center gap-3 text-xl font-bold">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-500/10">
-              <Briefcase className="h-5 w-5 text-indigo-400" />
-            </div>
-            JD yêu cầu
-          </DialogTitle>
-        </DialogHeader>
-
-        {jdText ? (
-          <div className="max-h-[60vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#0F1333] p-6 custom-scrollbar">
-            <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-300">
-              {jdText}
-            </p>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-16 text-slate-500">
-            <Briefcase className="mb-3 h-10 w-10 opacity-30" />
-            <p className="text-sm">Không có mô tả công việc.</p>
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 /*  Question Detail Card */
 function QuestionCard({ response }: { response: InterviewResponseDetail }) {
@@ -355,21 +247,21 @@ function QuestionCard({ response }: { response: InterviewResponseDetail }) {
               response.starTaskScore !== null ||
               response.starActionScore !== null ||
               response.starResultScore !== null) && (
-              <div>
-                <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Điểm STAR
-                </p>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <ScoreBar
-                    label="Situation"
-                    value={response.starSituationScore}
-                  />
-                  <ScoreBar label="Task" value={response.starTaskScore} />
-                  <ScoreBar label="Action" value={response.starActionScore} />
-                  <ScoreBar label="Result" value={response.starResultScore} />
+                <div>
+                  <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    Điểm STAR
+                  </p>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <ScoreBar
+                      label="Situation"
+                      value={response.starSituationScore}
+                    />
+                    <ScoreBar label="Task" value={response.starTaskScore} />
+                    <ScoreBar label="Action" value={response.starActionScore} />
+                    <ScoreBar label="Result" value={response.starResultScore} />
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {response.aiFeedback && (
               <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/5 px-4 py-3">
@@ -449,17 +341,8 @@ export default function InterviewFeedbackDetail() {
   const [loading, setLoading] = useState(true);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
-  // CV Dialog
-  const [showCvDialog, setShowCvDialog] = useState(false);
-  const [cvUrl, setCvUrl] = useState<string | null>(null);
-  const [cvName, setCvName] = useState<string | null>(null);
-  const [cvLoading, setCvLoading] = useState(false);
-  const isCvAvailable = !!detail?.session.userCvId;
-
-  const [retryLoading, setRetryLoading] = useState(false);
-
-  // JD Dialog
-  const [showJdDialog, setShowJdDialog] = useState(false);
+  const [searchParams] = useSearchParams();
+  const fromSource = searchParams.get("from");
 
   useEffect(() => {
     let pollInterval: any;
@@ -493,70 +376,6 @@ export default function InterviewFeedbackDetail() {
       if (pollInterval) clearInterval(pollInterval);
     };
   }, [id]);
-
-  const handleOpenCvDialog = async () => {
-    setShowCvDialog(true);
-    setCvUrl(null);
-    setCvName(null);
-
-    if (!detail?.session.userCvId) {
-      return;
-    }
-
-    try {
-      setCvLoading(true);
-      const cvList = await getListCV();
-
-      const matched = cvList.find(
-        (cv) => String(cv.cvId) === String(detail.session.userCvId)
-      );
-
-      if (matched) {
-        setCvUrl(matched.fileUrl ?? null);
-        setCvName(matched.fileName ?? null);
-      }
-    } catch {
-      toast.error("Không thể tải thông tin CV.");
-    } finally {
-      setCvLoading(false);
-    }
-  };
-
-  const handleRetryInterview = async () => {
-  if (!detail?.session.userCvId) {
-    toast.error("Không thể phỏng vấn lại vì CV đã bị xóa");
-    return;
-  }
-
-  try {
-    setRetryLoading(true);
-
-    // 1. Setup interview (AI phân tích JD)
-    const setupResult = await setupInterview({
-      method: "jd",
-      cvId: detail.session.userCvId,
-      jobDescriptionSourceType: "text",
-      jobDescriptionText: detail.session.jobDescriptionText,
-    });
-
-    const session = await createInterviewSession({
-      positionName: setupResult.position,
-      skillName: setupResult.skill,
-      skillNames: setupResult.skills,
-      levelName: setupResult.level,
-      companyName: setupResult.company ?? undefined,
-      cvId: detail.session.userCvId,
-      jobDescriptionText: detail.session.jobDescriptionText,
-    });
-
-    // 3. Redirect thẳng vào interview
-    navigate(`/interview-chat/${session.sessionId}`);
-  } catch (err: any) {
-    toast.error("Không thể bắt đầu phỏng vấn lại");
-  } finally {
-    setRetryLoading(false);
-  }
-};
 
   if (loading) {
     return (
@@ -608,46 +427,24 @@ export default function InterviewFeedbackDetail() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 pb-28">
       {/* Back button */}
+      {fromSource && (
         <button
-          onClick={() => navigate("/test-history?tab=interview")}
+          onClick={() => navigate(-1)}
           className="mb-6 flex items-center gap-3 text-base text-slate-300 transition-colors hover:text-white"
         >
           <span className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-600">
             <ArrowLeft className="h-5 w-5" />
           </span>
-          Quay lại danh sách
+          Quay lại lộ trình
         </button>
-
+      )}
       {/* Session Header */}
       <div className="mb-6">
         <div className="flex items-center justify-between gap-4">
-          
           {/* LEFT */}
           <h1 className="text-2xl font-bold text-white md:text-3xl">
             Phiên phỏng vấn {session.id}
           </h1>
-
-          {/* RIGHT */}
-          <div className="flex items-center gap-3">
-            <Button
-              variant="primary"
-              onClick={handleRetryInterview}
-              disabled={retryLoading}
-            >
-              {retryLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Đang chuẩn bị...
-                </>
-              ) : (
-                <>
-                  <RotateCw className="h-4 w-4" />
-                  Phỏng vấn lại
-                </>
-              )}
-            </Button>
-            
-          </div>
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-slate-400">
@@ -665,40 +462,6 @@ export default function InterviewFeedbackDetail() {
             </>
           )}
         </div>
-      </div>
-
-      {/* Document Links */}
-      <div className="mb-6 flex flex-wrap gap-3">
-        {session.positionName && (
-          <div className="flex items-center gap-2 rounded-lg border border-slate-700/60 bg-slate-800/40 px-3 py-2 text-sm text-slate-300">
-            <Briefcase className="h-4 w-4 text-purple-400" />
-            {session.positionName}
-            {session.levelName && (
-              <span className="text-slate-500">• {session.levelName}</span>
-            )}
-          </div>
-        )}
-
-        {/* Nút xem CV */}
-        <Button
-          variant="ghost"
-          size="sm"
-          icon={<FileText className="h-4 w-4" />}
-          onClick={handleOpenCvDialog}
-        >
-          Xem CV đã dùng
-        </Button>
-
-        {/* Nút xem JD */}
-        <Button
-          variant="ghost"
-          size="sm"
-          icon={<Eye className="h-4 w-4" />}
-          onClick={() => setShowJdDialog(true)}
-          disabled={!session.jobDescriptionText}
-        >
-          Xem JD yêu cầu
-        </Button>
       </div>
 
       {/* Overview Cards */}
@@ -840,21 +603,6 @@ export default function InterviewFeedbackDetail() {
         </div>
       </div>
 
-      {/* CV Preview Dialog */}
-      <CvPreviewDialog
-        open={showCvDialog}
-        onOpenChange={setShowCvDialog}
-        cvUrl={cvUrl}
-        cvName={cvName}
-        loading={cvLoading}
-      />
-
-      {/* JD Preview Dialog */}
-      <JdPreviewDialog
-        open={showJdDialog}
-        onOpenChange={setShowJdDialog}
-        jdText={session.jobDescriptionText}
-      />
     </div>
   );
 }

@@ -155,6 +155,15 @@ const APIConfig = {
     CorrectTranscript: "/ai-interview/correct-transcript",
     ParseHtml: "/ai-interview/scraping/parse-html",
   },
+  // Training Journey endpoints
+  TrainingJourney: {
+    Base: "/training-journey",
+    Create: "/training-journey",
+    GetList: "/training-journey",
+    GetProgress: "/training-journey/{journeyId}/progress",
+    StartSession: "/training-journey/{journeyId}/start-session",
+    EndSession: "/training-journey/end-session/{sessionId}",
+  },
   // Comment endpoints
   Comment: {
     Create: "/create-comment",
