@@ -110,6 +110,7 @@ export default function TrainingJourneyDetail() {
   const navigate = useNavigate();
   const [selectedJourney, setSelectedJourney] = useState<JourneyProgressResult | null>(null);
   const [journeyLoading, setJourneyLoading] = useState(true);
+  const [isPolling, setIsPolling] = useState(false);
 
   // Rename
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
@@ -125,18 +126,43 @@ export default function TrainingJourneyDetail() {
 
   useEffect(() => {
     if (!journeyId) return;
-    (async () => {
+
+    let pollInterval: any;
+
+    const fetchJourney = async (isSilent = false) => {
       try {
-        setJourneyLoading(true);
+        if (!isSilent) setJourneyLoading(true);
         const data = await getJourneyProgress(Number(journeyId));
         setSelectedJourney(data);
-      } catch {
-        toast.error("Không thể lấy chi tiết lộ trình");
-        navigate("/test-history?tab=interview");
+
+        // Check if we should continue polling
+        const hasActiveSession = data.sessionHistory.some(s => s.status === "InProgress");
+        const isAnalyzing = hasActiveSession;
+
+        setIsPolling(isAnalyzing);
+
+        if (!isAnalyzing && pollInterval) {
+          clearInterval(pollInterval);
+        }
+      } catch (err) {
+        if (!isSilent) {
+          toast.error("Không thể lấy chi tiết lộ trình");
+          navigate("/test-history?tab=interview");
+        }
       } finally {
-        setJourneyLoading(false);
+        if (!isSilent) setJourneyLoading(false);
       }
-    })();
+    };
+
+    fetchJourney();
+
+    pollInterval = setInterval(() => {
+      fetchJourney(true);
+    }, 4000);
+
+    return () => {
+      if (pollInterval) clearInterval(pollInterval);
+    };
   }, [journeyId, navigate]);
 
   const handleOpenCvDialog = async () => {
@@ -228,7 +254,15 @@ export default function TrainingJourneyDetail() {
                 </div>
                 <div>
                   <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Trạng thái</label>
-                  <div className="mt-1"><JourneyStatusBadge status={selectedJourney.status} /></div>
+                  <div className="mt-1 flex items-center gap-2">
+                    <JourneyStatusBadge status={selectedJourney.status} />
+                    {isPolling && (
+                      <span className="flex items-center gap-1.5 text-[10px] text-purple-400 animate-pulse">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Đang phân tích...
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Tổng số phiên</label>
@@ -296,6 +330,19 @@ export default function TrainingJourneyDetail() {
               <h3 className="text-lg font-bold text-white mb-5 shrink-0">Kỹ năng mục tiêu</h3>
 
               <div className="space-y-6 overflow-y-auto pr-1 custom-scrollbar">
+
+                {/* Polling / Analyzing State */}
+                {isPolling && (
+                  <div className="p-4 rounded-xl border border-purple-500/20 bg-purple-500/5 mb-2">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Loader2 className="h-4 w-4 animate-spin text-purple-400" />
+                      <span className="text-sm font-semibold text-purple-300">Đang cập nhật lộ trình...</span>
+                    </div>
+                    <p className="text-xs text-slate-400 leading-relaxed">
+                      Hệ thống đang phân tích kết quả phỏng vấn mới nhất để cập nhật tiến độ kỹ năng của bạn. Vui lòng chờ trong giây lát.
+                    </p>
+                  </div>
+                )}
 
                 {/* Profile gaps — chỉ hiển thị, không luyện tập */}
                 {selectedJourney.profileGaps && selectedJourney.profileGaps.length > 0 && (

@@ -41,6 +41,7 @@ export interface JourneySessionSummary {
   sessionId: number;
   sessionNumber: number;
   startTime: string;
+  status: string;
   estimatedAbility?: number;
   levelName?: string;
   sessionGapsJson: string;
