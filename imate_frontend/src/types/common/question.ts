@@ -412,6 +412,7 @@ export interface ContributedQuestionDetail {
   sampleAnswer?: string;
   contributedDetailId?: number;
   contributedDetail?: any;
+  interviewDate?: string;
   categoriesName: string[];
   skillsName: string[];
   positionsName: string[];

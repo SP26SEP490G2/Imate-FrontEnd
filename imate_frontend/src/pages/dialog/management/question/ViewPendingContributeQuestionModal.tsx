@@ -14,7 +14,7 @@ import {
     changeContributedQuestionStatusForStaff
 } from '@/services/questionService';
 import type { ContributedQuestionDetail } from '@/types/common/question';
-import { DIFFICULTY_MAP, DIFFICULTY_LEVEL } from '@/constants/common';
+import { DIFFICULTY_MAP, DIFFICULTY_LEVEL, LEVEL_MAP } from '@/constants/common';
 import { toast } from 'react-toastify';
 
 interface ViewPendingContributeQuestionModalProps {
@@ -130,25 +130,55 @@ export function ViewPendingContributeQuestionModal({
                                 </p>
                             </div>
 
+                            {/* Company */}
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium text-slate-200">
+                                    Công ty <span className="text-red-400">*</span>
+                                </label>
+                                <div className="flex flex-wrap gap-2">
+                                    <button
+                                        type="button"
+                                        disabled
+                                        className="px-4 py-2 rounded-lg border text-sm font-medium transition-all cursor-not-allowed border-indigo-500 bg-indigo-500/10 text-indigo-400"
+                                    >
+                                        {questionData.companyName || 'N/A'}
+                                    </button>
+                                </div>
+                            </div>
+
                             {/* Difficulty Level */}
                             <div className="space-y-2">
                                 <label className="block text-sm font-medium text-slate-200">
                                     Cấp độ <span className="text-red-400">*</span>
                                 </label>
                                 <div className="flex flex-wrap gap-3">
-                                    {([DIFFICULTY_LEVEL.EASY, DIFFICULTY_LEVEL.MEDIUM, DIFFICULTY_LEVEL.HARD] as const).map((level) => (
-                                        <button
-                                            key={level}
-                                            type="button"
-                                            disabled
-                                            className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all cursor-not-allowed ${questionData.difficulty === level
-                                                ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                                                : 'border-slate-700 bg-slate-800 text-slate-400'
-                                                }`}
-                                        >
-                                            {DIFFICULTY_MAP[level]}
-                                        </button>
-                                    ))}
+                                    <button
+                                        type="button"
+                                        disabled
+                                        className="px-4 py-2 rounded-lg border text-sm font-medium transition-all cursor-not-allowed border-indigo-500 bg-indigo-500/10 text-indigo-400"
+                                    >
+                                        {questionData.difficulty !== null && questionData.difficulty !== undefined
+                                            ? DIFFICULTY_MAP[questionData.difficulty as 0 | 1 | 2]
+                                            : 'N/A'}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Level */}
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium text-slate-200">
+                                    Level <span className="text-red-400">*</span>
+                                </label>
+                                <div className="flex flex-wrap gap-3">
+                                    <button
+                                        type="button"
+                                        disabled
+                                        className="px-4 py-2 rounded-lg border text-sm font-medium transition-all cursor-not-allowed border-indigo-500 bg-indigo-500/10 text-indigo-400"
+                                    >
+                                        {questionData.level !== null && questionData.level !== undefined
+                                            ? LEVEL_MAP[questionData.level as 0 | 1 | 2 | 3 | 4]
+                                            : 'N/A'}
+                                    </button>
                                 </div>
                             </div>
 
@@ -206,6 +236,22 @@ export function ViewPendingContributeQuestionModal({
                                             {skill}
                                         </button>
                                     ))}
+                                </div>
+                            </div>
+
+                            {/* Interview Date */}
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium text-slate-200">
+                                    Ngày phỏng vấn <span className="text-red-400">*</span>
+                                </label>
+                                <div className="flex flex-wrap gap-2">
+                                    <button
+                                        type="button"
+                                        disabled
+                                        className="px-4 py-2 rounded-lg border text-sm font-medium transition-all cursor-not-allowed border-indigo-500 bg-indigo-500/10 text-indigo-400"
+                                    >
+                                        {questionData.interviewDate || 'N/A'}
+                                    </button>
                                 </div>
                             </div>
 
