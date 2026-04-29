@@ -120,7 +120,7 @@ export const CV_UPLOAD = {
     "application/msword",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   ],
-  ACCEPTED_EXTENSIONS: ".pdf,.doc,.docx",
-  ACCEPTED_DISPLAY: "PDF, DOC, DOCX",
+  ACCEPTED_EXTENSIONS: ".pdf,.docx",
+  ACCEPTED_DISPLAY: "PDF, DOCX",
 } as const;
 

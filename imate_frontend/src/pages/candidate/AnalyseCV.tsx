@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ChevronRight,
   TrendingUp,
@@ -8,6 +8,7 @@ import {
   Sparkles,
   Loader2,
   RefreshCw,
+  ArrowLeft,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -132,7 +133,7 @@ function AnalyseSkeleton() {
 /* ------------------------------------------------------------------ */
 export default function AnalyseCV() {
   const { cvId } = useParams<{ cvId: string }>();
-
+  const navigate = useNavigate();
   const [result, setResult] = useState<CvAnalysisResult | null>(null);
   const [cvName, setCvName] = useState("");
   const [loading, setLoading] = useState(true);
@@ -166,6 +167,11 @@ export default function AnalyseCV() {
       setResult(analysisResult);
     } catch (err: any) {
       const msg = err?.message || MSG07;
+      if (msg.includes("AI Credits")) {
+        toast.error(msg);
+        window.history.back();
+        return;
+      }
       setError(msg);
       toast.error(msg);
     } finally {
@@ -227,15 +233,15 @@ export default function AnalyseCV() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 pb-28">
       {/* Breadcrumb */}
-      <nav className="mb-6 flex items-center gap-1.5 text-sm text-slate-500">
-        <Link to="/cv-management" className="transition-colors hover:text-slate-300">
-          Quản Lý CV
-        </Link>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span className="text-slate-400">Phân Tích CV</span>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span className="text-purple-400 font-medium">Báo cáo chi tiết</span>
-      </nav>
+      <button
+                onClick={() => navigate("/cv-management")}
+                className="mb-6 flex items-center gap-3 text-base text-slate-300 transition-colors hover:text-white"
+              >
+                <span className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-600">
+                  <ArrowLeft className="h-5 w-5" />
+                </span>
+                Quay lại quản lý CV
+              </button>
 
       {/* Title */}
       <h1 className="mb-8 text-2xl font-bold text-white md:text-3xl">
@@ -370,20 +376,6 @@ export default function AnalyseCV() {
               </p>
             </div>
           ))}
-        </div>
-      </div>
-
-      {/* ===== CTA Button (fixed bottom) ===== */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-700/60 bg-slate-900/95 backdrop-blur-md">
-        <div className="mx-auto flex max-w-5xl items-center justify-end px-4 py-4">
-          <Button
-            variant="primary"
-            size="lg"
-            icon={<Sparkles className="h-5 w-5" />}
-            className="bg-gradient-to-r from-purple-600 to-indigo-600 px-8 text-base font-semibold shadow-lg shadow-purple-500/25 transition-all hover:shadow-purple-500/40"
-          >
-            Luyện tập với AI ngay
-          </Button>
         </div>
       </div>
     </div>

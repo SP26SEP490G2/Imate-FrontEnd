@@ -5,10 +5,11 @@ import { Upload, FileText, Calendar, Trash2, XCircle, Loader2, Sparkles, Eye } f
 import { toast } from "react-toastify";
 
 import { Button } from "@/components/ui/button";
-import { getListCV, deleteCV } from "@/services/cvService";
+import { getListCV, deleteCV, getAnalyseCvCost } from "@/services/cvService";
 import { MSG07, MSG15 } from "@/constants/messages";
 import type { CvItem } from "@/types/common/cv";
 import UploadCVModal from "./UploadCVModal";
+import { getCurrentPackage } from "@/services/userSubscriptionService";
 
 export default function CVManagement() {
   const navigate = useNavigate();
@@ -54,6 +55,11 @@ export default function CVManagement() {
     }
   };
 
+  const { data: currentPackage } = useQuery({
+    queryKey: ["current-package"],
+    queryFn: getCurrentPackage,
+  });
+
   const getStatusBadge = (status: CvItem["status"]) => {
     const styles: Record<CvItem["status"], string> = {
       Valid: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
@@ -74,6 +80,11 @@ export default function CVManagement() {
     );
   };
 
+  const { data: analyseCost } = useQuery({
+    queryKey: ["analyse-cv-cost"],
+    queryFn: getAnalyseCvCost,
+  });
+
   return (
     <div className="font-sans min-h-screen bg-[#020617] text-white">
       <main>
@@ -87,6 +98,15 @@ export default function CVManagement() {
               <p className="text-slate-400 mb-8 max-w-2xl leading-relaxed">
                 Tải lên và quản lý CV của bạn để ứng tuyển nhanh hơn.
               </p>
+              {analyseCost && (
+                <p className="text-sm text-slate-500 -mt-6 mb-8">
+                  Bạn cần{" "}
+                  <span className="font-semibold text-purple-400">
+                    {analyseCost} AI Credit
+                  </span>{" "}
+                  / lượt để phân tích CV bằng AI
+                </p>
+              )}
             </div>
             <div className="flex flex-col items-start lg:items-end gap-4">
               <Button
@@ -175,10 +195,26 @@ export default function CVManagement() {
                         variant="ghost"
                         size="icon-sm"
                         className="text-slate-500 hover:text-purple-400"
-                        onClick={() => navigate(`/analyse-cv/${cv.cvId}`)}
-                        title="Phân tích CV"
+                        onClick={() => {
+                          if (currentPackage?.rank === 0) {
+                            navigate("/view-subscription?from=premium");
+                          } else {
+                            navigate(`/analyse-cv/${cv.cvId}`);
+                          }
+                        }}
+                        title={
+                          currentPackage?.rank === 0
+                            ? "Nâng cấp gói để dùng tính năng này"
+                            : "Phân tích CV"
+                        }
                       >
-                        <Sparkles className="h-4 w-4" />
+                        <Sparkles
+                          className={`h-4 w-4 transition-colors ${
+                            currentPackage?.rank === 0
+                              ? "text-yellow-400"
+                              : "text-purple-400"
+                          }`}
+                        />
                       </Button>
                       <Button
                         variant="ghost"

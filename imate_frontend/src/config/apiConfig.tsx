@@ -120,6 +120,7 @@ const APIConfig = {
     Upload: "/cv/upload",
     GetList: "/cv/list",
     Delete: "/cv/{cvId}",
+    Cost:"/cv/analyse-cost",
   },
 
   // AI endpoints

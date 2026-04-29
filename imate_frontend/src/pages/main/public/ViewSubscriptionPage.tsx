@@ -10,6 +10,7 @@ import {
   getCurrentPackage,
   getUpgradePreview,
 } from "@/services/userSubscriptionService";
+import { useSearchParams } from "react-router-dom";
 import { PreviewPackageDialog } from "@/pages/dialog/main/payment/PreviewPackageDialog";
 
 const formatPrice = (price: number) => {
@@ -34,6 +35,8 @@ const ViewSubscriptionPage: React.FC = () => {
   const [selectedPackageId, setSelectedPackageId] = React.useState<number | null>(
     null
   );
+  const [searchParams] = useSearchParams();
+const from = searchParams.get("from");
 
   // ================= FETCH CURRENT PACKAGE =================
   const fetchCurrentPackage = async () => {
@@ -110,9 +113,11 @@ const ViewSubscriptionPage: React.FC = () => {
         <div className="max-w-7xl mx-auto">
           {/* HEADER */}
           <div className="text-center mb-14">
-            <h1 className="text-4xl md:text-5xl font-extrabold mb-4 bg-gradient-to-r from-white via-indigo-200 to-purple-300 bg-clip-text text-transparent">
-              Chọn gói dịch vụ phù hợp với bạn
-            </h1>
+            <h2 className="text-2xl md:text-5xl font-extrabold mb-4 bg-gradient-to-r from-white via-indigo-200 to-purple-300 bg-clip-text text-transparent">
+              {from === "premium"
+                ? "Bạn cần nâng cấp gói để sử dụng tính năng này"
+                : "Chọn gói dịch vụ phù hợp với bạn"}
+            </h2>
             <p className="text-slate-400 max-w-2xl mx-auto">
               Mở khóa nhiều quyền lợi hơn để tăng tốc hành trình luyện phỏng vấn IT
               cùng Imate.
