@@ -9,6 +9,8 @@ export const LEVEL = {
   JUNIOR: 2,
   MIDDLE: 3,
   SENIOR: 4,
+  LEAD: 5,
+  MANAGER: 6,
 } as const;
 
 // Difficulty mapping: number to display text
@@ -18,7 +20,10 @@ export const LEVEL_MAP = {
   2: 'Junior',
   3: 'Middle',
   4: 'Senior',
+  5: "Lead",
+  6: "Manager",
 } as const;
+export type Level = typeof LEVEL[keyof typeof LEVEL];
 
 export const DIFFICULTY_LEVEL = {
   EASY: 0,

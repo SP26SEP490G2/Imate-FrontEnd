@@ -9,8 +9,8 @@ import {
   Languages,
   Trophy,
   Briefcase,
-  MessageSquare,
   Star,
+  Activity,
 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -22,9 +22,9 @@ import {
   type TestHistoryItem,
 } from "@/services/geminiService";
 import {
-  getInterviewHistory,
-  type InterviewHistoryItem,
-} from "@/services/interviewService";
+  getJourneyList,
+  type TrainingJourneySummary,
+} from "@/services/trainingJourneyService";
 import { getCandidateBookings } from "@/services/bookingCandidateService";
 import type { BookingDetailResponse } from "@/types/response/booking.response";
 import { MSG07, MSG31 } from "@/constants/messages";
@@ -101,7 +101,7 @@ function EmptyState() {
 /* ------------------------------------------------------------------ */
 const TABS = [
   { id: "test", label: "Bài test năng lực" },
-  { id: "interview", label: "Phỏng vấn AI" },
+  { id: "interview", label: "Lộ trình luyện tập" },
   { id: "mentor", label: "Lịch sử Mentor" },
 ];
 
@@ -133,17 +133,38 @@ function InterviewStatusBadge({ status }: { status: string }) {
   );
 }
 
+function JourneyStatusBadge({ status }: { status: string }) {
+  const isCompleted = status === "Mastered" || status === "Completed";
+  return (
+    <span
+      className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${
+        isCompleted
+          ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-400"
+          : "border-amber-500/40 bg-amber-500/15 text-amber-400"
+      }`}
+    >
+      {isCompleted ? "Hoàn thành" : "Cần luyện tập thêm"}
+    </span>
+  );
+}
+
 export default function TestHistory() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = searchParams.get("tab") || "test";
   const [activeTab, setActiveTab] = useState(initialTab);
   const [history, setHistory] = useState<TestHistoryItem[]>([]);
-  const [interviewHistory, setInterviewHistory] = useState<InterviewHistoryItem[]>([]);
+  const [journeys, setJourneys] = useState<TrainingJourneySummary[]>([]);
   const [mentorHistory, setMentorHistory] = useState<BookingDetailResponse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [interviewLoading, setInterviewLoading] = useState(false);
+  const [journeyLoading, setJourneyLoading] = useState(false);
   const [mentorLoading, setMentorLoading] = useState(false);
+
+  // Pagination for Journey Tab
+  const [journeyPage, setJourneyPage] = useState(1);
+  const [journeyPageSize, setJourneyPageSize] = useState(10);
+  const [journeyTotalPages, setJourneyTotalPages] = useState(1);
+  const [journeyTotalCount, setJourneyTotalCount] = useState(0);
 
   // Pagination for Mentor Tab
   const [mentorPage, setMentorPage] = useState(1);
@@ -190,29 +211,33 @@ export default function TestHistory() {
       }
     };
 
-    const fetchInterviewHistory = async () => {
+    if (activeTab === "test") fetchHistory();
+    if (activeTab === "mentor") fetchMentorHistory();
+  }, [activeTab]);
+
+  useEffect(() => {
+    const fetchJourneys = async () => {
       try {
-        setInterviewLoading(true);
-        const data = await getInterviewHistory();
-        setInterviewHistory(data);
+        setJourneyLoading(true);
+        const data = await getJourneyList(journeyPage, journeyPageSize);
+        setJourneys(data.items);
+        setJourneyTotalPages(data.totalPages);
+        setJourneyTotalCount(data.totalCount);
       } catch {
         toast.error(MSG07);
       } finally {
-        setInterviewLoading(false);
+        setJourneyLoading(false);
       }
     };
+    if (activeTab === "interview") fetchJourneys();
+  }, [activeTab, journeyPage, journeyPageSize]);
 
-    if (activeTab === "test") {
-      fetchHistory();
-    } else if (activeTab === "interview") {
-      fetchInterviewHistory();
-    } else if (activeTab === "mentor") {
-      fetchMentorHistory();
-    }
-  }, [activeTab]);
 
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString("vi-VN", {
+  const formatDate = (dateStr: string | null | undefined) => {
+    if (!dateStr) return "N/A";
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return "N/A";
+    return date.toLocaleDateString("vi-VN", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -345,73 +370,104 @@ export default function TestHistory() {
               </>
             )}
 
-            {/* Interview History Tab */}
+            {/* Training Journey Tab */}
             {activeTab === "interview" && (
               <>
-                {interviewLoading ? (
+                {journeyLoading ? (
                   <div className="flex items-center justify-center py-20">
                     <Loader2 className="h-8 w-8 animate-spin text-purple-400" />
                   </div>
-                ) : interviewHistory.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-20 text-center">
-                    <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#0F1333]">
-                      <MessageSquare className="h-8 w-8 text-slate-500" />
-                    </div>
-                    <p className="mb-2 text-lg font-semibold text-white">Chưa có lịch sử</p>
-                    <p className="mb-6 max-w-md text-sm text-slate-400">
-                      Bạn chưa có buổi phỏng vấn AI nào. Hãy bắt đầu buổi phỏng vấn đầu tiên!
-                    </p>
-                  </div>
                 ) : (
-                  <div className="overflow-hidden rounded-2xl border border-white/5 bg-[#1e293b]/40 backdrop-blur-sm">
-                    <div className="grid grid-cols-12 gap-4 border-b border-white/10 px-6 py-3.5 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      <div className="col-span-3">Phiên phỏng vấn</div>
-                      <div className="col-span-3">Vị trí</div>
-                      <div className="col-span-2">Thời gian</div>
-                      <div className="col-span-2 text-center">Trạng thái</div>
-                      <div className="col-span-2 text-center">Thao tác</div>
-                    </div>
-                    {interviewHistory.map((item, idx) => (
-                      <div
-                        key={item.id}
-                        className={`grid grid-cols-12 items-center gap-4 px-6 py-4 transition-colors hover:bg-slate-800/40 ${idx < interviewHistory.length - 1 ? "border-b border-white/5" : ""
-                          }`}
-                      >
-                        <div className="col-span-3 flex items-center gap-3">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-purple-500/15">
-                            <Briefcase className="h-4 w-4 text-purple-400" />
-                          </div>
-                          <div>
-                            <span className="font-medium text-white">Phiên #{item.id}</span>
-                            {item.totalQuestionsAnswered > 0 && (
-                              <p className="text-xs text-slate-500">{item.totalQuestionsAnswered} câu hỏi</p>
-                            )}
-                          </div>
+                  <>
+                    {journeys.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-20 text-center">
+                        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#0F1333]">
+                          <Activity className="h-8 w-8 text-slate-500" />
                         </div>
-                        <div className="col-span-3">
-                          <span className="text-sm text-slate-300">
-                            {item.positionName || item.questionContent?.substring(0, 40) || "N/A"}
-                          </span>
-                          {item.levelName && <p className="text-xs text-slate-500">{item.levelName}</p>}
-                        </div>
-                        <div className="col-span-2 text-sm text-slate-400">{formatDate(item.startTime)}</div>
-                        <div className="col-span-2 text-center">
-                          <InterviewStatusBadge status={item.status} />
-                        </div>
-                        <div className="col-span-2 text-center">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            icon={<Eye className="h-4 w-4" />}
-                            onClick={() => navigate(`/interview-history/${item.id}`)}
-                            disabled={item.status !== "Completed"}
-                          >
-                            Xem chi tiết
-                          </Button>
-                        </div>
+                        <h3 className="mb-1 text-lg font-semibold text-white">Chưa có lộ trình nào</h3>
+                        <p className="mb-6 max-w-md text-sm text-slate-400">
+                          Hãy thực hiện phỏng vấn AI với CV và JD để hệ thống tự động tạo lộ trình luyện tập cho bạn.
+                        </p>
                       </div>
-                    ))}
-                  </div>
+                    ) : (
+                      <div className="rounded-2xl border border-white/5 bg-[#1e293b]/40 backdrop-blur-sm p-2">
+                        <Table
+                          page={journeyPage}
+                          totalPages={journeyTotalPages}
+                          totalCount={journeyTotalCount}
+                          pageSize={journeyPageSize}
+                          onPageChange={setJourneyPage}
+                          onPageSizeChange={(size) => {
+                            setJourneyPageSize(size);
+                            setJourneyPage(1);
+                          }}
+                          maxHeight="60vh"
+                        >
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="w-1/3">Tên lộ trình</TableHead>
+                              <TableHead>Tiến độ kỹ năng</TableHead>
+                              <TableHead className="text-center">Số phiên tập</TableHead>
+                              <TableHead className="text-center">Cập nhật</TableHead>
+                              <TableHead className="text-center">Thao tác</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {journeys.map((j) => (
+                              <TableRow key={j.journeyId}>
+                                <TableCell>
+                                  <div className="flex items-center gap-3">
+                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-500/10">
+                                      <Activity className="h-5 w-5 text-purple-400" />
+                                    </div>
+                                    <div>
+                                      <span className="font-medium text-white block truncate">{j.name || "Lộ trình không tên"}</span>
+                                      <div className="mt-1">
+                                        <JourneyStatusBadge status={j.status} />
+                                      </div>
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="space-y-1.5 pr-4">
+                                    <div className="flex justify-between text-xs">
+                                      <span className="text-slate-400">Hoàn thành</span>
+                                      <span className="text-purple-400 font-medium">{j.resolvedGaps}/{j.totalGaps}</span>
+                                    </div>
+                                    <div className="h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
+                                      <div 
+                                        className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-500" 
+                                        style={{ width: `${j.totalGaps > 0 ? (j.resolvedGaps / j.totalGaps) * 100 : 0}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="text-center">
+                                  <span className="font-medium text-white">{j.totalSessions}</span>
+                                </TableCell>
+                                <TableCell className="text-center">
+                                  <span className="text-sm text-slate-400">{formatDate(j.lastPracticed)}</span>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex justify-center">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      icon={<Eye className="h-4 w-4" />}
+                                      className="text-xs h-8 px-2"
+                                      onClick={() => navigate(`/test-history/journey/${j.journeyId}`)}
+                                    >
+                                      Chi tiết
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    )}
+                  </>
                 )}
               </>
             )}
