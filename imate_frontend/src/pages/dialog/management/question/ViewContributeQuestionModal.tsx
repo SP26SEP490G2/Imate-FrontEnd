@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { getContributedQuestionDetail, sortCommentsByTotalVotesDesc } from '@/services/questionService';
 import type { ContributedQuestionDetail } from '@/types/common/question';
-import { DIFFICULTY_MAP, DIFFICULTY_LEVEL, LEVEL_MAP } from '@/constants/common';
+import { DIFFICULTY_MAP, LEVEL_MAP } from '@/constants/common';
 import { toast } from 'react-toastify';
 
 interface ViewContributeQuestionModalProps {

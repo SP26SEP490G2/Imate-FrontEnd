@@ -14,7 +14,7 @@ import {
     changeContributedQuestionStatusForStaff
 } from '@/services/questionService';
 import type { ContributedQuestionDetail } from '@/types/common/question';
-import { DIFFICULTY_MAP, DIFFICULTY_LEVEL, LEVEL_MAP } from '@/constants/common';
+import { DIFFICULTY_MAP, LEVEL_MAP } from '@/constants/common';
 import { toast } from 'react-toastify';
 
 interface ViewPendingContributeQuestionModalProps {

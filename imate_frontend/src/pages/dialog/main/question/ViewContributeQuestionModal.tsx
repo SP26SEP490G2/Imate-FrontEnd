@@ -528,7 +528,7 @@ export function ViewContributeQuestionModal({
                             <div className="space-y-2">
                                 <label className="block text-sm font-medium text-slate-200">Cấp độ</label>
                                 <StatusBadge status={getLevelStatus(questionData.level)}>
-                                    {questionData.level !== null ? LEVEL_MAP[questionData.level as 0 | 1 | 2 | 3 | 4 | 5] : 'N/A'}
+                                    {questionData.level !== null ? LEVEL_MAP[questionData.level as 0 | 1 | 2 | 3 | 4] : 'N/A'}
                                 </StatusBadge>
                             </div>
                         </div>

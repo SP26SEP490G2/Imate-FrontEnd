@@ -1,11 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import {useNavigate, useParams } from "react-router-dom";
 import {
-  ChevronRight,
   TrendingUp,
   AlertTriangle,
   MessageSquare,
-  Sparkles,
   Loader2,
   RefreshCw,
   ArrowLeft,
