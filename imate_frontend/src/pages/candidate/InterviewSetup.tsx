@@ -1,15 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   FileText,
-  Upload,
-  Link2,
   Clock,
   ChevronRight,
   Loader2,
   AlertCircle,
-  X,
-  File,
   ArrowLeft,
 } from "lucide-react";
 import { toast } from "react-toastify";
@@ -35,7 +31,7 @@ import {
 /* ------------------------------------------------------------------ */
 /*  Tab types                                                          */
 /* ------------------------------------------------------------------ */
-type JdTab = "text" | "file" | "link";
+type JdTab = "text";
 
 /* ------------------------------------------------------------------ */
 /*  Main Page                                                          */
@@ -53,10 +49,7 @@ export default function InterviewSetup() {
   const [cvLoading, setCvLoading] = useState(true);
 
   // JD state — default tab to "text" and prefill if JD was passed in
-  const [jdTab, setJdTab] = useState<JdTab>("text");
   const [jdText, setJdText] = useState(prefillJd);
-  const [jdLink, setJdLink] = useState("");
-  const [jdFile, setJdFile] = useState<File | null>(null);
 
   // Duration
   // const [duration, setDuration] = useState("30");
@@ -67,7 +60,7 @@ export default function InterviewSetup() {
   const [step, setStep] = useState<"config" | "review">("config");
   const [costInfo, setCostInfo] = useState<InterviewCostInfo | null>(null);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+
 
   // Fetch CV list on mount
   useEffect(() => {
@@ -106,12 +99,7 @@ export default function InterviewSetup() {
     fetchCost();
   }, []);
 
-  // Handle file drop
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file) setJdFile(file);
-  };
+
 
   // Handle confirm config
   const handleConfirm = async () => {
@@ -120,10 +108,7 @@ export default function InterviewSetup() {
       return;
     }
 
-    const hasJdInput =
-      (jdTab === "text" && jdText.trim().length > 10) ||
-      (jdTab === "file" && jdFile) ||
-      (jdTab === "link" && jdLink.trim().length > 5);
+    const hasJdInput = jdText.trim().length > 10;
 
     if (!hasJdInput) {
       toast.error(MSG30);
@@ -149,15 +134,11 @@ export default function InterviewSetup() {
       const request = {
         method: "jd" as const,
         cvId: parseInt(selectedCvId),
-        jobDescriptionSourceType: jdTab as "text" | "url" | "file",
-        jobDescriptionText: jdTab === "text" ? jdText : undefined,
-        jobDescriptionUrl: jdTab === "link" ? jdLink : undefined,
+        jobDescriptionSourceType: "text" as const,
+        jobDescriptionText: jdText,
       };
 
-      const result = await setupInterview(
-        request,
-        jdTab === "file" ? jdFile! : undefined
-      );
+      const result = await setupInterview(request);
       setSetupResult(result);
       setStep("review");
     } catch (err: any) {
@@ -191,7 +172,7 @@ export default function InterviewSetup() {
         levelName: setupResult.level,
         companyName: setupResult.company ?? undefined,
         cvId: parseInt(selectedCvId),
-        jobDescriptionText: jdTab === "text" ? jdText : undefined,
+        jobDescriptionText: jdText,
       };
 
       const session = await createInterviewSession(sessionReq);
@@ -274,108 +255,22 @@ export default function InterviewSetup() {
               Thông tin mô tả công việc (JD)
             </label>
 
-            {/* JD Tabs */}
-            <div className="mb-3 grid grid-cols-3 gap-1 rounded-xl bg-slate-900/60 p-1">
-              {[
-                { key: "text" as JdTab, label: "Dán mô tả", icon: FileText },
-                { key: "file" as JdTab, label: "Tải lên tệp", icon: Upload },
-                { key: "link" as JdTab, label: "Dán link", icon: Link2 },
-              ].map(({ key, label, icon: Icon }) => (
-                <button
-                  key={key}
-                  onClick={() => setJdTab(key)}
-                  className={`flex items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${jdTab === key
-                    ? "bg-purple-600 text-white shadow-lg shadow-purple-500/20"
-                    : "text-slate-400 hover:text-white"
-                    }`}
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                  {label}
-                </button>
-              ))}
+            {/* JD Content */}
+            <div className="relative">
+              <textarea
+                value={jdText}
+                onChange={(e) => setJdText(e.target.value)}
+                placeholder="Dán nội dung mô tả công việc (JD) tại đây. Càng chi tiết, AI sẽ phỏng vấn bạn càng sát thực tế..."
+                rows={6}
+                maxLength={5000}
+                className="w-full resize-none rounded-xl border border-slate-700/60 bg-slate-900/60 px-4 py-3 text-sm text-white placeholder-slate-500 outline-none transition-colors focus:border-purple-500/50"
+              />
+              <span className="absolute bottom-3 right-3 text-xs text-slate-600">
+                {jdText.length} / 5000 ký tự
+              </span>
             </div>
 
-            {/* JD Content */}
-            {jdTab === "text" && (
-              <div className="relative">
-                <textarea
-                  value={jdText}
-                  onChange={(e) => setJdText(e.target.value)}
-                  placeholder="Dán nội dung mô tả công việc (JD) tại đây. Càng chi tiết, AI sẽ phỏng vấn bạn càng sát thực tế..."
-                  rows={6}
-                  maxLength={5000}
-                  className="w-full resize-none rounded-xl border border-slate-700/60 bg-slate-900/60 px-4 py-3 text-sm text-white placeholder-slate-500 outline-none transition-colors focus:border-purple-500/50"
-                />
-                <span className="absolute bottom-3 right-3 text-xs text-slate-600">
-                  {jdText.length} / 5000 ký tự
-                </span>
-              </div>
-            )}
 
-            {jdTab === "file" && (
-              <div
-                onDrop={handleDrop}
-                onDragOver={(e) => e.preventDefault()}
-                onClick={() => fileInputRef.current?.click()}
-                className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-700/60 bg-slate-900/40 px-6 py-10 transition-colors hover:border-purple-500/40"
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".pdf,.docx,.doc,.txt"
-                  className="hidden"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) setJdFile(f);
-                  }}
-                />
-                {jdFile ? (
-                  <div className="flex items-center gap-3">
-                    <File className="h-8 w-8 text-purple-400" />
-                    <div>
-                      <p className="text-sm font-medium text-white">
-                        {jdFile.name}
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        {(jdFile.size / 1024).toFixed(1)} KB
-                      </p>
-                    </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setJdFile(null);
-                      }}
-                      className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <Upload className="h-8 w-8 text-slate-500" />
-                    <p className="text-sm text-slate-400">
-                      Kéo thả file hoặc{" "}
-                      <span className="font-medium text-purple-400">
-                        Chọn file
-                      </span>
-                    </p>
-                    <p className="text-xs text-slate-600">
-                      PDF, DOCX, DOC, TXT
-                    </p>
-                  </>
-                )}
-              </div>
-            )}
-
-            {jdTab === "link" && (
-              <input
-                type="url"
-                value={jdLink}
-                onChange={(e) => setJdLink(e.target.value)}
-                placeholder="https://example.com/job/senior-backend-developer"
-                className="w-full rounded-xl border border-slate-700/60 bg-slate-900/60 px-4 py-3 text-sm text-white placeholder-slate-500 outline-none transition-colors focus:border-purple-500/50"
-              />
-            )}
           </div>
 
           {/* Duration */}
