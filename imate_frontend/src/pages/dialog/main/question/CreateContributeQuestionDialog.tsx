@@ -307,7 +307,7 @@ export function CreateContributeQuestionDialog({
                   Cấp độ <span className="text-red-400">*</span>
                 </label>
                 <div className="flex flex-wrap gap-3">
-                  {([LEVEL.INTERN, LEVEL.JUNIOR, LEVEL.MIDDLE, LEVEL.SENIOR, LEVEL.LEAD, LEVEL.MANAGER] as const).map((level) => (
+                  {([LEVEL.INTERN, LEVEL.FRESHER, LEVEL.JUNIOR, LEVEL.MIDDLE, LEVEL.SENIOR] as const).map((level) => (
                     <button
                       key={level}
                       type="button"
