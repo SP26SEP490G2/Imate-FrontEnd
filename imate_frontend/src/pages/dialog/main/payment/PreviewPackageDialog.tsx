@@ -1,4 +1,3 @@
-// ...existing code...
 import {
   Dialog,
   DialogContent,
@@ -9,114 +8,155 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-
-import type { UpgradePreview, CancelPreview } from "@/types/response/userSubscription.response";
-
-type PreviewType = "upgrade" | "cancel";
+import type {
+  CurrentSubscriptionDetail,
+  UpgradePreview,
+} from "@/types/response/userSubscription.response";
 
 interface PreviewPackageDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  type: PreviewType;
-  upgradePreview?: UpgradePreview;
-  cancelPreview?: CancelPreview;
+  upgradePreview?: UpgradePreview | null;
+  currentSubscription?: CurrentSubscriptionDetail | null;
   onConfirm?: () => void;
+  viewOnly?: boolean;
 }
+
+const formatPrice = (price: number) =>
+  price === 0 ? "Miễn phí" : `${price.toLocaleString("vi-VN")}đ`;
+
+const formatDate = (iso: string | null) => {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleDateString("vi-VN");
+};
+
+const formatLimit = (used: number, limit: number) => {
+  if (limit === 2147483647) return `${used} / Không giới hạn`;
+  return `${used} / ${limit}`;
+};
 
 export function PreviewPackageDialog({
   open,
   onOpenChange,
-  type,
   upgradePreview,
-  cancelPreview,
+  currentSubscription,
   onConfirm,
+  viewOnly = false,
 }: PreviewPackageDialogProps) {
-  const isUpgrade = type === "upgrade";
+  const hasActivePaidPlan =
+    currentSubscription && currentSubscription.rank > 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-sm bg-slate-900 border-slate-800 text-white">
+        
+        {/* HEADER */}
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold text-white">
-            {isUpgrade ? "Xác nhận nâng cấp gói" : "Xác nhận hủy gói"}
+          <DialogTitle className="text-lg font-semibold">
+            {viewOnly ? "Thông tin gói hiện tại của bạn" : "Xác nhận nâng cấp"}
           </DialogTitle>
-          <DialogDescription></DialogDescription>
+
+          {!viewOnly && hasActivePaidPlan && (
+            <DialogDescription className="text-sm text-amber-400 leading-relaxed">
+              Nâng cấp sẽ hủy gói{" "}
+              <span className="text-white font-medium">
+                {currentSubscription.packageName}
+              </span> hiện tại của bạn.
+              <br />
+              Thời gian và AI Credit còn lại sẽ không được hoàn.
+            </DialogDescription>
+          )}
         </DialogHeader>
 
-        {/* Upgrade preview */}
-        {isUpgrade && upgradePreview && (
-          <div className="space-y-3 text-slate-200 text-sm">
-            <div className="flex justify-between">
-              <span>Gói hiện tại:</span>
-              <span>{upgradePreview.oldPackageName || "Free"}</span>
+        {/* BODY */}
+        <div className="space-y-4 text-sm">
+          <div className="h-px bg-slate-700" />
+          {/* VIEW ONLY */}
+          {viewOnly && currentSubscription && (
+            <div className="space-y-2 text-slate-300">
+              <Row label="Tên gói" value={currentSubscription.packageName} />
+              <Row label="Ngày đăng ký" value={formatDate(currentSubscription.startedAt)} />
+              <Row label="Hết hạn" value={formatDate(currentSubscription.expiresAt)} />
+              <Row
+                label="Còn lại"
+                value={
+                  currentSubscription.remainingDays != null
+                    ? `${currentSubscription.remainingDays} ngày`
+                    : "—"
+                }
+                highlight
+              />
+              <Row
+                label="AI Credit đã dùng"
+                value={formatLimit(
+                  currentSubscription.mockInterviewUsed,
+                  currentSubscription.initialMockLimit
+                )}
+              />
             </div>
+          )}
 
-            <div className="flex justify-between">
-              <span>Gói mới:</span>
-              <span>{upgradePreview.newPackageName}</span>
-            </div>
+          {/* UPGRADE */}
+          {!viewOnly && upgradePreview && (
+            <>
+              <div className="space-y-2 text-slate-300">
+                <Row label="Gói mới" value={upgradePreview.newPackageName} />
+                <Row
+                  label="Giá"
+                  value={formatPrice(upgradePreview.newPackagePrice)}
+                  highlight
+                />
+              </div>
 
-            <div className="flex justify-between">
-              <span>Giá gói mới:</span>
-              <span>{upgradePreview.newPackagePrice.toLocaleString()}đ</span>
-            </div>
+              {hasActivePaidPlan && (
+                <div className="pt-3 border-t border-slate-800 space-y-2 text-slate-400">
+                  <Row label="Gói hiện tại" value={currentSubscription.packageName} />
+                  <Row label="Hết hạn" value={formatDate(currentSubscription.expiresAt)} />
+                </div>
+              )}
+            </>
+          )}
+        </div>
+        <div className="h-px bg-slate-700" />
 
-            <div className="flex justify-between">
-              <span>Giá trị còn lại:</span>
-              <span>-{upgradePreview.remainingValue.toLocaleString()}đ</span>
-            </div>
-
-            <div className="border-t border-slate-700 pt-2 flex justify-between font-bold text-white">
-              <span>Số tiền cần thanh toán:</span>
-              <span>{upgradePreview.amountToCharge.toLocaleString()}đ</span>
-            </div>
-
-            {!upgradePreview.isEligible && (
-              <p className="text-red-400">{upgradePreview.message}</p>
-            )}
-          </div>
-        )}
-
-        {/* Cancel preview */}
-        {!isUpgrade && cancelPreview && (
-          <div className="space-y-3 text-slate-200 text-sm">
-            <div className="flex justify-between">
-              <span>Gói sẽ hủy:</span>
-              <span>{cancelPreview.packageToCancel}</span>
-            </div>
-
-            <div className="flex justify-between">
-              <span>Số ngày còn lại:</span>
-              <span>{cancelPreview.remainingDays} ngày</span>
-            </div>
-
-            <div className="border-t border-slate-700 pt-2 flex justify-between font-bold text-white">
-              <span>Số tiền hoàn lại:</span>
-              <span>{cancelPreview.refundAmount.toLocaleString()}đ</span>
-            </div>
-          </div>
-        )}
-
-        <DialogFooter className="mt-4">
+        {/* FOOTER */}
+        <DialogFooter className="flex justify-end gap-2">
           <DialogClose asChild>
             <Button
-              type="button"
               variant="outline"
               className="border-slate-700 text-slate-300 hover:bg-slate-800"
             >
-              Hủy
+              {viewOnly ? "Đóng" : "Hủy"}
             </Button>
           </DialogClose>
 
-          <Button
-            type="button"
-            variant="primary"
-            onClick={onConfirm}
-          >
-            {isUpgrade ? "Xác nhận nâng cấp" : "Xác nhận hủy"}
-          </Button>
+          {!viewOnly && (
+            <Button onClick={onConfirm}>
+              Xác nhận
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/* ===== helper row ===== */
+function Row({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: React.ReactNode;
+  highlight?: boolean;
+}) {
+  return (
+    <div className="flex justify-between">
+      <span className="text-slate-400">{label}</span>
+      <span className={highlight ? "text-white font-medium" : "text-white"}>
+        {value}
+      </span>
+    </div>
   );
 }

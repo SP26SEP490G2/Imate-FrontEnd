@@ -62,6 +62,7 @@ export const TransactionStatus = {
   Failed: "Failed",
   Cancelled: "Cancelled",
   Escrow: "Escrow",
+  Released: "Released",
 } as const;
 
 export type TransactionStatusType = keyof typeof TransactionStatus;
@@ -72,6 +73,7 @@ export const TRANSACTION_STATUS_OPTIONS = [
   { value: TransactionStatus.Failed, label: "Thất bại" },
   { value: TransactionStatus.Cancelled, label: "Đã hủy" },
   { value: TransactionStatus.Escrow, label: "Đang giữ hộ" },
+  { value: TransactionStatus.Released, label: "Đã trả" },
 ] as const;
 
 export const TransactionType = {
