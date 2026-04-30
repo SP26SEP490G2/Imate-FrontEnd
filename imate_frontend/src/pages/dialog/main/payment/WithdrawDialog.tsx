@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-import { createWithdrawal } from "@/services/walletService";
+import { createWithdrawal, getTransactionConfig } from "@/services/walletService";
 import type { WithdrawRequest } from "@/types/request/wallet.request";
 
 import { toast } from "react-toastify";
@@ -38,6 +38,14 @@ export function WithdrawDialog({
 
   const [loading, setLoading] = React.useState(false);
   const isCandidate = user?.role === "Candidate";
+  const [withdrawHours, setWithdrawHours] = React.useState<number | null>(null);
+  React.useEffect(() => {
+  if (open) {
+    getTransactionConfig()
+      .then(res => setWithdrawHours(res.data.withdrawalAutoRefundHours))
+      .catch(() => console.error("Không lấy được config"));
+  }
+}, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,8 +97,13 @@ export function WithdrawDialog({
           <DialogTitle className="text-lg font-semibold">
             Rút imCoin
           </DialogTitle>
-          <DialogDescription>
-            Yêu cầu rút tiền sẽ được xử lý trong vòng 48 giờ.
+          <DialogDescription className="text-sm text-slate-400 leading-relaxed">
+            Yêu cầu rút tiền sẽ được xử lý trong vòng{" "}
+            <span className="text-white font-medium not-italic">
+              {withdrawHours} giờ
+            </span>.
+            <br />
+            Nếu chưa xử lý, hệ thống sẽ tự động hoàn imCoin về ví.
           </DialogDescription>
         </DialogHeader>
 
