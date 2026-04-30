@@ -39,7 +39,7 @@ import {
     voteComment,
 } from '@/services/questionService';
 import type { CommentItem, SystemQuestionDetail } from '@/types/common/question';
-import { DIFFICULTY_MAP } from '@/constants/common';
+import { DIFFICULTY_MAP, LEVEL_MAP } from '@/constants/common';
 import { ROLES } from '@/constants/role';
 import { toast } from 'react-toastify';
 import { StatusBadge } from '@/components/ui/status-badge';
@@ -164,6 +164,13 @@ export function ViewSystemQuestionModal({
         if (difficulty === 0) return 'active';
         if (difficulty === 1) return 'pending';
         if (difficulty === 2) return 'error';
+        return 'inactive';
+    };
+
+    const getLevelStatus = (level: number | null): "active" | "pending" | "error" | "inactive" | "draft" => {
+        if (level === 0 || level === 1) return 'active';
+        if (level === 2 || level === 3) return 'pending';
+        if (level === 4 || level === 5) return 'error';
         return 'inactive';
     };
 
@@ -474,6 +481,18 @@ export function ViewSystemQuestionModal({
                                 <StatusBadge status={getDifficultyStatus(questionData.difficulty)}>
                                     {questionData.difficulty !== null && questionData.difficulty !== undefined
                                         ? DIFFICULTY_MAP[questionData.difficulty as 0 | 1 | 2]
+                                        : 'N/A'}
+                                </StatusBadge>
+                            </div>
+                        </div>
+
+                        {/* Level */}
+                        <div className="space-y-2">
+                            <label className="block text-sm font-medium text-slate-200">Cấp độ</label>
+                            <div>
+                                <StatusBadge status={getLevelStatus(questionData.level ?? null)}>
+                                    {questionData.level !== null && questionData.level !== undefined
+                                        ? LEVEL_MAP[questionData.level as 0 | 1 | 2 | 3 | 4]
                                         : 'N/A'}
                                 </StatusBadge>
                             </div>

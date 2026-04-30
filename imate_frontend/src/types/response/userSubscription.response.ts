@@ -1,18 +1,8 @@
 export interface UpgradePreview {
   newPackageName: string;
   newPackagePrice: number;
-  hasActiveSubscription: boolean;
-  oldPackageName?: string;
-  remainingValue: number;
-  amountToCharge: number;
   isEligible: boolean;
   message: string;
-}
-
-export interface CancelPreview {
-  packageToCancel: string;
-  remainingDays: number;
-  refundAmount: number;
 }
 
 export interface CurrentPackage {
@@ -20,4 +10,15 @@ export interface CurrentPackage {
   packageName: string;
   rank: number;
   price: number;
+}
+
+export interface CurrentSubscriptionDetail {
+  packageName: string;
+  rank: number;
+  startedAt: string | null;
+  expiresAt: string | null;
+  remainingDays: number | null;
+  isExpired: boolean;
+  mockInterviewUsed: number;
+  initialMockLimit: number;
 }

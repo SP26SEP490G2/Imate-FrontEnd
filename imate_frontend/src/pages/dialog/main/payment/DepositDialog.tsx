@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-import { createDeposit } from "@/services/walletService";
+import { createDeposit, getMaxDepositAmount, getTransactionConfig } from "@/services/walletService";
 import type { DepositRequest } from "@/types/request/wallet.request";
 
 import { toast } from "react-toastify";
@@ -33,6 +33,30 @@ export function DepositDialog({
   const { user} = useAuth();
   const [amount, setAmount] = React.useState<number | "">("");
   const [loading, setLoading] = React.useState(false);
+  const [maxAmount, setMaxAmount] = React.useState<number | null>(null);
+
+  React.useEffect(() => {
+  if (open) {
+    getMaxDepositAmount()
+      .then(setMaxAmount)
+      .catch(() => {
+        console.error("Không lấy được giới hạn nạp tiền");
+      });
+  }
+}, [open]);
+
+  const [depositTimeout, setDepositTimeout] = React.useState<number | null>(null);
+  React.useEffect(() => {
+  if (open) {
+    getMaxDepositAmount().then(setMaxAmount).catch(() => {
+      console.error("Không lấy được max deposit");
+    });
+
+    getTransactionConfig()
+      .then(res => setDepositTimeout(res.data.depositTimeoutMinutes))
+      .catch(() => console.error("Không lấy được config"));
+  }
+}, [open]);
 
   const quickAmounts = [50000, 100000, 500000];
 
@@ -41,6 +65,11 @@ export function DepositDialog({
 
     if (!amount || amount <= 0) {
       toast.error("Vui lòng nhập số tiền hợp lệ");
+      return;
+    }
+
+    if (maxAmount && amount > maxAmount) {
+      toast.error(`Số tiền nạp tối đa là ${maxAmount.toLocaleString("en-US")} VNĐ`);
       return;
     }
 
@@ -62,7 +91,9 @@ export function DepositDialog({
 
     } catch (err: any) {
       const message =
-        err.response?.data?.message || "Tạo yêu cầu nạp thất bại";
+        err.response?.data?.message ||
+        err.response?.data ||
+        "Tạo yêu cầu nạp thất bại";
       toast.error(message);
     } finally {
       setLoading(false);
@@ -79,7 +110,14 @@ export function DepositDialog({
           <DialogTitle className="text-lg font-semibold">
             Nạp imCoin
           </DialogTitle>
-          <DialogDescription></DialogDescription>
+          <DialogDescription className="text-sm text-slate-400 leading-relaxed">
+            Thanh toán cần hoàn tất trong vòng {" "}
+            <span className="text-white font-medium not-italic">
+              {depositTimeout} phút
+            </span>.
+            <br />
+            Nếu quá thời gian, giao dịch nạp imCoin sẽ tự động bị hủy.
+          </DialogDescription>
         </DialogHeader>
 
         {/* BODY */}

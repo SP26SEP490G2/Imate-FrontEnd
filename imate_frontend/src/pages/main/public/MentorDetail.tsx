@@ -12,7 +12,6 @@ import {
   Link2,
   Code,
   Award,
-  Heart,
 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
@@ -92,8 +91,6 @@ const MentorDetail: React.FC = () => {
       ? `@ ${mentor.companies[0]}`
       : "Mentor";
   const pricePerSession = mentor.pricePerSession != null ? Number(mentor.pricePerSession) : 0;
-  const package5 = pricePerSession > 0 ? Math.round(pricePerSession * 5 * 0.9) : 0;
-  const package10 = pricePerSession > 0 ? Math.round(pricePerSession * 10 * 0.8) : 0;
   const avgRatings = mentor.avgRatings;
   const totalRatingCount = mentor.totalRatingCount;
 
@@ -257,39 +254,7 @@ const MentorDetail: React.FC = () => {
               </ul>
             </section>
 
-            <section className="p-6 rounded-2xl border border-white/5 bg-[#1e293b]/40 backdrop-blur-sm">
-              <div className="flex items-center gap-2 mb-2">
-                <Heart className="w-4 h-4 text-rose-400" />
-                <h2 className="text-sm font-semibold text-white">Gói dịch vụ phổ biến</h2>
-              </div>
-              <p className="text-sm text-slate-400 mb-4">
-                Tiết kiệm hơn với các gói học tập dài hạn cùng Mentor.
-              </p>
-              <div className="space-y-3 mb-4">
-                {package5 > 0 && (
-                  <div className="flex justify-between items-center py-2 border-b border-white/5">
-                    <span className="text-slate-300">Gói 5 buổi</span>
-                    <span className="font-semibold text-white">{package5.toLocaleString("vi-VN")}₫</span>
-                  </div>
-                )}
-                {package10 > 0 && (
-                  <div className="flex justify-between items-center py-2 border-b border-white/5">
-                    <span className="text-slate-300">Gói 10 buổi</span>
-                    <span className="font-semibold text-white">{package10.toLocaleString("vi-VN")}₫</span>
-                  </div>
-                )}
-              </div>
-              <button
-                type="button"
-                disabled
-                className="w-full py-3 rounded-xl bg-white/10 text-white font-medium border border-white/10 cursor-not-allowed opacity-80"
-              >
-                Chọn gói dịch vụ
-              </button>
-              <p className="text-xs text-slate-500 mt-4 leading-relaxed">
-                Giao dịch được đảm bảo bởi IMATE. Tiền sẽ được hoàn trả nếu buổi cố vấn không diễn ra đúng cam kết.
-              </p>
-            </section>
+
           </div>
         </div>
       </main>

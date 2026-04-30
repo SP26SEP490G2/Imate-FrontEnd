@@ -54,7 +54,8 @@ function Wallet() {
     [TransactionStatus.Completed]: "active",
     [TransactionStatus.Failed]: "inactive",
     [TransactionStatus.Cancelled]: "error",
-    [TransactionStatus.Escrow]: "draft"
+    [TransactionStatus.Escrow]: "draft",
+    [TransactionStatus.Released]: "draft"
   };
 
   useEffect(() => {

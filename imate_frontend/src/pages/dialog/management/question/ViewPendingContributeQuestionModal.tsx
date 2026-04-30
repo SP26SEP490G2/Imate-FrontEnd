@@ -239,22 +239,6 @@ export function ViewPendingContributeQuestionModal({
                                 </div>
                             </div>
 
-                            {/* Interview Date */}
-                            <div className="space-y-2">
-                                <label className="block text-sm font-medium text-slate-200">
-                                    Ngày phỏng vấn <span className="text-red-400">*</span>
-                                </label>
-                                <div className="flex flex-wrap gap-2">
-                                    <button
-                                        type="button"
-                                        disabled
-                                        className="px-4 py-2 rounded-lg border text-sm font-medium transition-all cursor-not-allowed border-indigo-500 bg-indigo-500/10 text-indigo-400"
-                                    >
-                                        {questionData.interviewDate || 'N/A'}
-                                    </button>
-                                </div>
-                            </div>
-
                         </div>
 
                         <DialogFooter>

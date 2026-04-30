@@ -28,7 +28,7 @@ import type {
     CategoryItem,
     SystemQuestionDetail
 } from '@/types/common/question';
-import { DIFFICULTY_MAP, DIFFICULTY_LEVEL } from '@/constants/common';
+import { DIFFICULTY_MAP, DIFFICULTY_LEVEL, LEVEL, LEVEL_MAP } from '@/constants/common';
 import { toast } from 'react-toastify';
 
 interface UpdateSystemQuestionModalProps {
@@ -44,6 +44,8 @@ export function UpdateSystemQuestionModal({
     onOpenChange,
     onSuccess
 }: UpdateSystemQuestionModalProps) {
+    const PAGE_SIZE = 30;
+    const DISPLAY_STEP = 20;
     const MAX_SAMPLE_ANSWER_LENGTH = 1300;
     const [loading, setLoading] = useState(false);
     const [loadingData, setLoadingData] = useState(true);
@@ -53,6 +55,7 @@ export function UpdateSystemQuestionModal({
     const [formData, setFormData] = useState<UpdateSystemQuestionRequest>({
         content: '',
         difficulty: DIFFICULTY_LEVEL.EASY,
+        level: LEVEL.INTERN,
         sampleAnswer: '',
         isActive: true,
         categoryIds: [],
@@ -64,6 +67,10 @@ export function UpdateSystemQuestionModal({
     const [positions, setPositions] = useState<PositionItem[]>([]);
     const [skills, setSkills] = useState<SkillItem[]>([]);
     const [categories, setCategories] = useState<CategoryItem[]>([]);
+
+    const [visiblePositions, setVisiblePositions] = useState(DISPLAY_STEP);
+    const [visibleSkills, setVisibleSkills] = useState(DISPLAY_STEP);
+    const [visibleCategories, setVisibleCategories] = useState(DISPLAY_STEP);
 
     // Form errors
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -109,15 +116,19 @@ export function UpdateSystemQuestionModal({
             setLoadingData(true);
             const [questionDetail, positionsRes, skillsRes, categoriesRes] = await Promise.all([
                 getSystemQuestionDetail(questionId),
-                getAllPositions({ pageSize: 10, isActive: true }),
-                getAllSkills({ pageSize: 10, isActive: true }),
-                getAllCategories({ pageSize: 10, isActive: true }),
+                getAllPositions({ pageSize: PAGE_SIZE, isActive: true }),
+                getAllSkills({ pageSize: PAGE_SIZE, isActive: true }),
+                getAllCategories({ pageSize: PAGE_SIZE, isActive: true }),
                 getListQuestionCategories()
             ]);
 
             setPositions(positionsRes.data);
             setSkills(skillsRes.data);
             setCategories(categoriesRes.data);
+
+            setVisiblePositions(DISPLAY_STEP);
+            setVisibleSkills(DISPLAY_STEP);
+            setVisibleCategories(DISPLAY_STEP);
 
             // Match names to IDs from the fetched lists
             // API returns categoriesName, positionsName, skillsName as string arrays
@@ -146,6 +157,7 @@ export function UpdateSystemQuestionModal({
             setFormData({
                 content: questionDetail.content || '',
                 difficulty: questionDetail.difficulty,
+                level: questionDetail.level ?? LEVEL.INTERN,
                 sampleAnswer: questionDetail.sampleAnswer || '',
                 isActive: questionDetail.isActive,
                 categoryIds: categoryIds,
@@ -178,6 +190,10 @@ export function UpdateSystemQuestionModal({
 
         if (formData.categoryIds.length === 0) {
             newErrors.categoryIds = 'Phải chọn ít nhất một danh mục.';
+        }
+
+        if (formData.level === null || formData.level === undefined) {
+            newErrors.level = 'Vui lòng chọn cấp độ.';
         }
 
         if (formData.skillIds.length === 0) {
@@ -222,6 +238,13 @@ export function UpdateSystemQuestionModal({
         setFormData(prev => ({ ...prev, difficulty }));
         if (errors.difficulty) {
             setErrors(prev => ({ ...prev, difficulty: '' }));
+        }
+    };
+
+    const handleLevelChange = (level: 0 | 1 | 2 | 3 | 4 | 5) => {
+        setFormData(prev => ({ ...prev, level }));
+        if (errors.level) {
+            setErrors(prev => ({ ...prev, level: '' }));
         }
     };
 
@@ -315,7 +338,7 @@ export function UpdateSystemQuestionModal({
                             {/* Difficulty Level */}
                             <div className="space-y-2">
                                 <label className="block text-sm font-medium text-slate-200">
-                                    Cấp độ <span className="text-red-400">*</span>
+                                    Độ khó <span className="text-red-400">*</span>
                                 </label>
                                 <div className="flex flex-wrap gap-3">
                                     {([DIFFICULTY_LEVEL.EASY, DIFFICULTY_LEVEL.MEDIUM, DIFFICULTY_LEVEL.HARD] as const).map((level) => (
@@ -333,6 +356,35 @@ export function UpdateSystemQuestionModal({
                                         </button>
                                     ))}
                                 </div>
+                                {errors.difficulty && (
+                                    <p className="text-red-400 text-xs">{errors.difficulty}</p>
+                                )}
+                            </div>
+
+                            {/* Level */}
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium text-slate-200">
+                                    Cấp độ <span className="text-red-400">*</span>
+                                </label>
+                                <div className="flex flex-wrap gap-3">
+                                    {([LEVEL.INTERN, LEVEL.FRESHER, LEVEL.JUNIOR, LEVEL.MIDDLE, LEVEL.SENIOR] as const).map((level) => (
+                                        <button
+                                            key={level}
+                                            type="button"
+                                            onClick={() => handleLevelChange(level)}
+                                            disabled={loading}
+                                            className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${formData.level === level
+                                                ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
+                                                : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
+                                                }`}
+                                        >
+                                            {LEVEL_MAP[level]}
+                                        </button>
+                                    ))}
+                                </div>
+                                {errors.level && (
+                                    <p className="text-red-400 text-xs">{errors.level}</p>
+                                )}
                             </div>
 
                             {/* Categories */}
@@ -341,7 +393,7 @@ export function UpdateSystemQuestionModal({
                                     Danh mục <span className="text-red-400">*</span>
                                 </label>
                                 <div className="flex flex-wrap gap-2">
-                                    {categories.map((category) => (
+                                    {categories.slice(0, visibleCategories).map((category) => (
                                         <button
                                             key={category.id}
                                             type="button"
@@ -356,6 +408,18 @@ export function UpdateSystemQuestionModal({
                                         </button>
                                     ))}
                                 </div>
+                                {categories.length > visibleCategories && (
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setVisibleCategories((prev) => Math.min(prev + DISPLAY_STEP, categories.length))
+                                        }
+                                        disabled={loading}
+                                        className="px-4 py-2 rounded-lg border text-sm font-medium transition-all border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600"
+                                    >
+                                        Xem thêm
+                                    </button>
+                                )}
                                 {errors.categoryIds && (
                                     <p className="text-red-400 text-xs">{errors.categoryIds}</p>
                                 )}
@@ -367,7 +431,7 @@ export function UpdateSystemQuestionModal({
                                     Vị trí <span className="text-red-400">*</span>
                                 </label>
                                 <div className="flex flex-wrap gap-2">
-                                    {positions.map((position) => (
+                                    {positions.slice(0, visiblePositions).map((position) => (
                                         <button
                                             key={position.id}
                                             type="button"
@@ -382,6 +446,18 @@ export function UpdateSystemQuestionModal({
                                         </button>
                                     ))}
                                 </div>
+                                {positions.length > visiblePositions && (
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setVisiblePositions((prev) => Math.min(prev + DISPLAY_STEP, positions.length))
+                                        }
+                                        disabled={loading}
+                                        className="px-4 py-2 rounded-lg border text-sm font-medium transition-all border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600 disabled:opacity-60 disabled:cursor-not-allowed"
+                                    >
+                                        Xem thêm
+                                    </button>
+                                )}
                                 {errors.positionIds && (
                                     <p className="text-red-400 text-xs">{errors.positionIds}</p>
                                 )}
@@ -393,7 +469,7 @@ export function UpdateSystemQuestionModal({
                                     Kỹ năng <span className="text-red-400">*</span>
                                 </label>
                                 <div className="flex flex-wrap gap-2">
-                                    {skills.map((skill) => (
+                                    {skills.slice(0, visibleSkills).map((skill) => (
                                         <button
                                             key={skill.id}
                                             type="button"
@@ -408,6 +484,18 @@ export function UpdateSystemQuestionModal({
                                         </button>
                                     ))}
                                 </div>
+                                {skills.length > visibleSkills && (
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setVisibleSkills((prev) => Math.min(prev + DISPLAY_STEP, skills.length))
+                                        }
+                                        disabled={loading}
+                                        className="px-4 py-2 rounded-lg border text-sm font-medium transition-all border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600 disabled:opacity-60 disabled:cursor-not-allowed"
+                                    >
+                                        Xem thêm
+                                    </button>
+                                )}
                                 {errors.skillIds && (
                                     <p className="text-red-400 text-xs">{errors.skillIds}</p>
                                 )}
