@@ -39,6 +39,8 @@ export function CreateContributeQuestionDialog({
   onOpenChange,
   onSuccess,
 }: CreateContributeQuestionDialogProps) {
+  const PAGE_SIZE = 30;
+  const DISPLAY_STEP = 20;
   const MAX_USER_ANSWER_LENGTH = 1300;
   const getTodayString = () => {
     const now = new Date();
@@ -69,11 +71,20 @@ export function CreateContributeQuestionDialog({
   const [categories, setCategories] = React.useState<CategoryItem[]>([]);
   const [companies, setCompanies] = React.useState<CompanyItem[]>([]);
 
+  const [visiblePositions, setVisiblePositions] = React.useState(DISPLAY_STEP);
+  const [visibleSkills, setVisibleSkills] = React.useState(DISPLAY_STEP);
+  const [visibleCategories, setVisibleCategories] = React.useState(DISPLAY_STEP);
+  const [visibleCompanies, setVisibleCompanies] = React.useState(DISPLAY_STEP);
+
   // Form errors
   const [errors, setErrors] = React.useState<Record<string, string>>({});
 
   React.useEffect(() => {
     if (open) {
+      setVisiblePositions(DISPLAY_STEP);
+      setVisibleSkills(DISPLAY_STEP);
+      setVisibleCategories(DISPLAY_STEP);
+      setVisibleCompanies(DISPLAY_STEP);
       fetchDropdownData();
     }
   }, [open]);
@@ -82,10 +93,10 @@ export function CreateContributeQuestionDialog({
     try {
       setLoadingData(true);
       const [positionsRes, skillsRes, categoriesRes, companiesRes] = await Promise.all([
-        getAllPositions({ pageSize: 10, isActive: true }),
-        getAllSkills({ pageSize: 10, isActive: true }),
-        getAllCategories({ pageSize: 10, isActive: true }),
-        getAllCompanies({ pageSize: 10, isActive: true }),
+        getAllPositions({ pageSize: PAGE_SIZE, isActive: true }),
+        getAllSkills({ pageSize: PAGE_SIZE, isActive: true }),
+        getAllCategories({ pageSize: PAGE_SIZE, isActive: true }),
+        getAllCompanies({ pageSize: PAGE_SIZE, isActive: true }),
       ]);
 
       setPositions(positionsRes.data);
@@ -333,7 +344,7 @@ export function CreateContributeQuestionDialog({
                   Công ty <span className="text-red-400">*</span>
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {companies.map((company) => (
+                  {companies.slice(0, visibleCompanies).map((company) => (
                     <button
                       key={company.id}
                       type="button"
@@ -351,6 +362,18 @@ export function CreateContributeQuestionDialog({
                     </button>
                   ))}
                 </div>
+                {companies.length > visibleCompanies && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setVisibleCompanies((prev) => Math.min(prev + DISPLAY_STEP, companies.length))
+                    }
+                    disabled={loading}
+                    className="px-4 py-2 rounded-lg border text-sm font-medium transition-all border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600"
+                  >
+                    Xem thêm
+                  </button>
+                )}
                 {errors.companyId && (
                   <p className="text-red-400 text-xs">{errors.companyId}</p>
                 )}
@@ -362,7 +385,7 @@ export function CreateContributeQuestionDialog({
                   Danh mục <span className="text-red-400">*</span>
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {categories.map((category) => (
+                  {categories.slice(0, visibleCategories).map((category) => (
                     <button
                       key={category.id}
                       type="button"
@@ -377,6 +400,18 @@ export function CreateContributeQuestionDialog({
                     </button>
                   ))}
                 </div>
+                {categories.length > visibleCategories && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setVisibleCategories((prev) => Math.min(prev + DISPLAY_STEP, categories.length))
+                    }
+                    disabled={loading}
+                    className="px-4 py-2 rounded-lg border text-sm font-medium transition-all border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600"
+                  >
+                    Xem thêm
+                  </button>
+                )}
                 {errors.categoryIds && (
                   <p className="text-red-400 text-xs">{errors.categoryIds}</p>
                 )}
@@ -388,7 +423,7 @@ export function CreateContributeQuestionDialog({
                   Vị trí <span className="text-red-400">*</span>
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {positions.map((position) => (
+                  {positions.slice(0, visiblePositions).map((position) => (
                     <button
                       key={position.id}
                       type="button"
@@ -403,6 +438,18 @@ export function CreateContributeQuestionDialog({
                     </button>
                   ))}
                 </div>
+                {positions.length > visiblePositions && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setVisiblePositions((prev) => Math.min(prev + DISPLAY_STEP, positions.length))
+                    }
+                    disabled={loading}
+                    className="px-4 py-2 rounded-lg border text-sm font-medium transition-all border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600"
+                  >
+                    Xem thêm
+                  </button>
+                )}
                 {errors.positionIds && (
                   <p className="text-red-400 text-xs">{errors.positionIds}</p>
                 )}
@@ -414,7 +461,7 @@ export function CreateContributeQuestionDialog({
                   Kỹ năng <span className="text-red-400">*</span>
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {skills.map((skill) => (
+                  {skills.slice(0, visibleSkills).map((skill) => (
                     <button
                       key={skill.id}
                       type="button"
@@ -429,6 +476,18 @@ export function CreateContributeQuestionDialog({
                     </button>
                   ))}
                 </div>
+                {skills.length > visibleSkills && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setVisibleSkills((prev) => Math.min(prev + DISPLAY_STEP, skills.length))
+                    }
+                    disabled={loading}
+                    className="px-4 py-2 rounded-lg border text-sm font-medium transition-all border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600"
+                  >
+                    Xem thêm
+                  </button>
+                )}
                 {errors.skillIds && (
                   <p className="text-red-400 text-xs">{errors.skillIds}</p>
                 )}

@@ -23,7 +23,7 @@ import type {
   SkillItem,
   CategoryItem
 } from '@/types/common/question';
-import { DIFFICULTY_LEVEL, DIFFICULTY_MAP } from '@/constants/common';
+import { DIFFICULTY_LEVEL, DIFFICULTY_MAP, LEVEL, LEVEL_MAP } from '@/constants/common';
 
 interface CreateSystemQuestionDialogProps {
   open: boolean;
@@ -36,6 +36,8 @@ export function CreateSystemQuestionDialog({
   onOpenChange,
   onSuccess,
 }: CreateSystemQuestionDialogProps) {
+  const PAGE_SIZE = 30;
+  const DISPLAY_STEP = 20;
   const MAX_SAMPLE_ANSWER_LENGTH = 1300;
   const [loading, setLoading] = React.useState(false);
   const [loadingData, setLoadingData] = React.useState(false);
@@ -44,6 +46,7 @@ export function CreateSystemQuestionDialog({
   const [formData, setFormData] = React.useState<CreateSystemQuestionRequest>({
     content: '',
     difficulty: DIFFICULTY_LEVEL.EASY,
+    level: LEVEL.INTERN,
     sampleAnswer: '',
     categoryIds: [],
     skillIds: [],
@@ -55,11 +58,18 @@ export function CreateSystemQuestionDialog({
   const [skills, setSkills] = React.useState<SkillItem[]>([]);
   const [categories, setCategories] = React.useState<CategoryItem[]>([]);
 
+  const [visiblePositions, setVisiblePositions] = React.useState(DISPLAY_STEP);
+  const [visibleSkills, setVisibleSkills] = React.useState(DISPLAY_STEP);
+  const [visibleCategories, setVisibleCategories] = React.useState(DISPLAY_STEP);
+
   // Form errors
   const [errors, setErrors] = React.useState<Record<string, string>>({});
 
   React.useEffect(() => {
     if (open) {
+      setVisiblePositions(DISPLAY_STEP);
+      setVisibleSkills(DISPLAY_STEP);
+      setVisibleCategories(DISPLAY_STEP);
       fetchDropdownData();
     }
   }, [open]);
@@ -68,9 +78,9 @@ export function CreateSystemQuestionDialog({
     try {
       setLoadingData(true);
       const [positionsRes, skillsRes, categoriesRes] = await Promise.all([
-        getAllPositions({ pageSize: 10, isActive: true }),
-        getAllSkills({ pageSize: 10, isActive: true }),
-        getAllCategories({ pageSize: 10, isActive: true }),
+        getAllPositions({ pageSize: PAGE_SIZE, isActive: true }),
+        getAllSkills({ pageSize: PAGE_SIZE, isActive: true }),
+        getAllCategories({ pageSize: PAGE_SIZE, isActive: true }),
       ]);
 
       setPositions(positionsRes.data);
@@ -101,6 +111,10 @@ export function CreateSystemQuestionDialog({
 
     if (formData.categoryIds.length === 0) {
       newErrors.categoryIds = 'Phải chọn ít nhất một danh mục.';
+    }
+
+    if (formData.level === null || formData.level === undefined) {
+      newErrors.level = 'Vui lòng chọn cấp độ.';
     }
 
     if (formData.skillIds.length === 0) {
@@ -137,6 +151,7 @@ export function CreateSystemQuestionDialog({
       setFormData({
         content: '',
         difficulty: DIFFICULTY_LEVEL.EASY,
+        level: LEVEL.INTERN,
         sampleAnswer: '',
         categoryIds: [],
         skillIds: [],
@@ -162,6 +177,13 @@ export function CreateSystemQuestionDialog({
     setFormData(prev => ({ ...prev, difficulty }));
     if (errors.difficulty) {
       setErrors(prev => ({ ...prev, difficulty: '' }));
+    }
+  };
+
+  const handleLevelChange = (level: 0 | 1 | 2 | 3 | 4 | 5) => {
+    setFormData(prev => ({ ...prev, level }));
+    if (errors.level) {
+      setErrors(prev => ({ ...prev, level: '' }));
     }
   };
 
@@ -255,7 +277,7 @@ export function CreateSystemQuestionDialog({
               {/* Difficulty Level */}
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-slate-200">
-                  Cấp độ <span className="text-red-400">*</span>
+                  Độ khó <span className="text-red-400">*</span>
                 </label>
                 <div className="flex flex-wrap gap-3">
                   {([DIFFICULTY_LEVEL.EASY, DIFFICULTY_LEVEL.MEDIUM, DIFFICULTY_LEVEL.HARD] as const).map((level) => (
@@ -278,13 +300,39 @@ export function CreateSystemQuestionDialog({
                 )}
               </div>
 
+              {/* Level */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-200">
+                  Cấp độ <span className="text-red-400">*</span>
+                </label>
+                <div className="flex flex-wrap gap-3">
+                  {([LEVEL.INTERN, LEVEL.FRESHER, LEVEL.JUNIOR, LEVEL.MIDDLE, LEVEL.SENIOR] as const).map((level) => (
+                    <button
+                      key={level}
+                      type="button"
+                      onClick={() => handleLevelChange(level)}
+                      disabled={loading}
+                      className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${formData.level === level
+                        ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
+                        : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
+                        }`}
+                    >
+                      {LEVEL_MAP[level]}
+                    </button>
+                  ))}
+                </div>
+                {errors.level && (
+                  <p className="text-red-400 text-xs">{errors.level}</p>
+                )}
+              </div>
+
               {/* Categories */}
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-slate-200">
                   Danh mục <span className="text-red-400">*</span>
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {categories.map((category) => (
+                  {categories.slice(0, visibleCategories).map((category) => (
                     <button
                       key={category.id}
                       type="button"
@@ -299,6 +347,18 @@ export function CreateSystemQuestionDialog({
                     </button>
                   ))}
                 </div>
+                {categories.length > visibleCategories && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setVisibleCategories((prev) => Math.min(prev + DISPLAY_STEP, categories.length))
+                    }
+                    disabled={loading}
+                    className="px-4 py-2 rounded-lg border text-sm font-medium transition-all border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600"
+                  >
+                    Xem thêm
+                  </button>
+                )}
                 {errors.categoryIds && (
                   <p className="text-red-400 text-xs">{errors.categoryIds}</p>
                 )}
@@ -310,7 +370,7 @@ export function CreateSystemQuestionDialog({
                   Vị trí <span className="text-red-400">*</span>
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {positions.map((position) => (
+                  {positions.slice(0, visiblePositions).map((position) => (
                     <button
                       key={position.id}
                       type="button"
@@ -325,6 +385,18 @@ export function CreateSystemQuestionDialog({
                     </button>
                   ))}
                 </div>
+                {positions.length > visiblePositions && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setVisiblePositions((prev) => Math.min(prev + DISPLAY_STEP, positions.length))
+                    }
+                    disabled={loading}
+                    className="px-4 py-2 rounded-lg border text-sm font-medium transition-all border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600"
+                  >
+                    Xem thêm
+                  </button>
+                )}
                 {errors.positionIds && (
                   <p className="text-red-400 text-xs">{errors.positionIds}</p>
                 )}
@@ -336,7 +408,7 @@ export function CreateSystemQuestionDialog({
                   Kỹ năng <span className="text-red-400">*</span>
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {skills.map((skill) => (
+                  {skills.slice(0, visibleSkills).map((skill) => (
                     <button
                       key={skill.id}
                       type="button"
@@ -351,6 +423,18 @@ export function CreateSystemQuestionDialog({
                     </button>
                   ))}
                 </div>
+                {skills.length > visibleSkills && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setVisibleSkills((prev) => Math.min(prev + DISPLAY_STEP, skills.length))
+                    }
+                    disabled={loading}
+                    className="px-4 py-2 rounded-lg border text-sm font-medium transition-all border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600"
+                  >
+                    Xem thêm
+                  </button>
+                )}
                 {errors.skillIds && (
                   <p className="text-red-400 text-xs">{errors.skillIds}</p>
                 )}

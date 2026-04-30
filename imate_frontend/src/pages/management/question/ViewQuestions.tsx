@@ -25,7 +25,7 @@ import type {
   PositionItem,
   SkillItem
 } from '@/types/common/question';
-import { DIFFICULTY_MAP } from '@/constants/common';
+import { DIFFICULTY_MAP, LEVEL_MAP } from '@/constants/common';
 import {
   Eye,
   Pencil,
@@ -466,13 +466,9 @@ const ViewQuestions: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-3">
-              <span className="text-sm text-slate-400 whitespace-nowrap">Cấp độ:</span>
+              <span className="text-sm text-slate-400 whitespace-nowrap">Độ khó:</span>
               <select
-                value={
-                  activeTab === 'pending'
-                    ? (pendingContributedFilters.level !== undefined ? String(pendingContributedFilters.level) : '')
-                    : (currentFilters.difficulty !== undefined ? String(currentFilters.difficulty) : '')
-                }
+                value={currentFilters.difficulty !== undefined ? String(currentFilters.difficulty) : ''}
                 onChange={(e) => {
                   const value = e.target.value;
                   const numValue = value ? parseInt(value) as DifficultyLevel : undefined;
@@ -481,7 +477,7 @@ const ViewQuestions: React.FC = () => {
                   } else if (activeTab === 'contributed') {
                     handleContributedFilterChange('difficulty', numValue);
                   } else {
-                    handlePendingContributedFilterChange('level', numValue);
+                    handlePendingContributedFilterChange('difficulty', numValue);
                   }
                 }}
                 className="bg-slate-800 border border-slate-700 rounded-md px-4 py-2 text-slate-200 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer min-w-36"
@@ -489,6 +485,29 @@ const ViewQuestions: React.FC = () => {
                 <option value="">Tất cả</option>
                 {DIFFICULTY_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-slate-400 whitespace-nowrap">Level:</span>
+              <select
+                value={activeTab === 'pending'
+                  ? (pendingContributedFilters.level !== undefined ? String(pendingContributedFilters.level) : '')
+                  : (contributedFilters.level !== undefined ? String(contributedFilters.level) : '')}
+                onChange={(e) => {
+                  const value = e.target.value ? parseInt(e.target.value) : undefined;
+                  if (activeTab === 'contributed') {
+                    handleContributedFilterChange('level', value);
+                  } else {
+                    handlePendingContributedFilterChange('level', value);
+                  }
+                }}
+                className="bg-slate-800 border border-slate-700 rounded-md px-4 py-2 text-slate-200 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer min-w-36"
+              >
+                <option value="">Tất cả</option>
+                {Object.entries(LEVEL_MAP).map(([key, label]) => (
+                  <option key={key} value={key}>{label}</option>
                 ))}
               </select>
             </div>
@@ -540,7 +559,8 @@ const ViewQuestions: React.FC = () => {
                 <TableHead>Vị trí</TableHead>
                 <TableHead>Kỹ năng</TableHead>
                 <TableHead>Danh mục</TableHead>
-                <TableHead>Cấp độ</TableHead>
+                <TableHead>Độ khó</TableHead>
+                <TableHead>Level</TableHead>
                 <TableHead>Người đăng</TableHead>
                 <TableHead>Trạng thái</TableHead>
                 <TableHead className="text-center">Hành động</TableHead>
@@ -574,6 +594,9 @@ const ViewQuestions: React.FC = () => {
                         <div className="h-6 bg-slate-700 rounded w-16"></div>
                       </TableCell>
                       <TableCell className="px-6 py-6">
+                        <div className="h-6 bg-slate-700 rounded w-16"></div>
+                      </TableCell>
+                      <TableCell className="px-6 py-6">
                         <div className="h-4 bg-slate-700 rounded w-24"></div>
                       </TableCell>
                       <TableCell className="px-6 py-6">
@@ -592,7 +615,7 @@ const ViewQuestions: React.FC = () => {
               ) : error ? (
                 // Error state
                 <TableRow>
-                  <TableCell colSpan={9} className="px-8 py-12 text-center">
+                  <TableCell colSpan={10} className="px-8 py-12 text-center">
                     <p className="text-red-400 mb-4">{error}</p>
                     <button
                       onClick={() => {
@@ -638,6 +661,13 @@ const ViewQuestions: React.FC = () => {
                           {DIFFICULTY_MAP[question.difficulty as 0 | 1 | 2] || 'N/A'}
                         </StatusBadge>
                       </TableCell>
+                      <TableCell className="px-6 py-6">
+                        <StatusBadge status="inactive">
+                          {question.level !== null && question.level !== undefined
+                            ? LEVEL_MAP[question.level as 0 | 1 | 2 | 3 | 4]
+                            : 'N/A'}
+                        </StatusBadge>
+                      </TableCell>
                       <TableCell className="px-6 py-6 text-sm text-slate-400">
                         {question.creatorName || 'N/A'}
                       </TableCell>
@@ -667,7 +697,7 @@ const ViewQuestions: React.FC = () => {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={9} className="px-8 py-12 text-center text-slate-400">
+                    <TableCell colSpan={10} className="px-8 py-12 text-center text-slate-400">
                       Không có câu hỏi nào
                     </TableCell>
                   </TableRow>
@@ -700,6 +730,13 @@ const ViewQuestions: React.FC = () => {
                           {question.difficulty !== null ? DIFFICULTY_MAP[question.difficulty] : 'N/A'}
                         </StatusBadge>
                       </TableCell>
+                      <TableCell className="px-6 py-6">
+                        <StatusBadge status="inactive">
+                          {question.level !== null && question.level !== undefined
+                            ? LEVEL_MAP[question.level as 0 | 1 | 2 | 3 | 4]
+                            : 'N/A'}
+                        </StatusBadge>
+                      </TableCell>
                       <TableCell className="px-6 py-6 text-sm text-slate-400">
                         {question.creatorName || 'N/A'}
                       </TableCell>
@@ -729,7 +766,7 @@ const ViewQuestions: React.FC = () => {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={9} className="px-8 py-12 text-center text-slate-400">
+                    <TableCell colSpan={10} className="px-8 py-12 text-center text-slate-400">
                       Không có câu hỏi nào
                     </TableCell>
                   </TableRow>
@@ -762,6 +799,13 @@ const ViewQuestions: React.FC = () => {
                           {question.difficulty !== null ? DIFFICULTY_MAP[question.difficulty] : 'N/A'}
                         </StatusBadge>
                       </TableCell>
+                      <TableCell className="px-6 py-6">
+                        <StatusBadge status="inactive">
+                          {question.level !== null && question.level !== undefined
+                            ? LEVEL_MAP[question.level as 0 | 1 | 2 | 3 | 4]
+                            : 'N/A'}
+                        </StatusBadge>
+                      </TableCell>
                       <TableCell className="px-6 py-6 text-sm text-slate-400">
                         {question.creatorName || 'N/A'}
                       </TableCell>
@@ -791,7 +835,7 @@ const ViewQuestions: React.FC = () => {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={9} className="px-8 py-12 text-center text-slate-400">
+                    <TableCell colSpan={10} className="px-8 py-12 text-center text-slate-400">
                       Không có câu hỏi nào
                     </TableCell>
                   </TableRow>
