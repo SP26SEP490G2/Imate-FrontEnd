@@ -245,18 +245,20 @@ const AppliedCandidateList: React.FC = () => {
                                             <Button
                                                 size="sm"
                                                 variant="outline"
-                                                className="w-8 h-8 p-0 text-green-500 border-green-500 hover:bg-green-500 hover:text-white flex-shrink-0 cursor-pointer"
+                                                className={`w-8 h-8 p-0 text-green-500 border-green-500 hover:bg-green-500 hover:text-white flex-shrink-0 ${candidate.status?.toLowerCase() === "approved" || candidate.status?.toLowerCase() === "rejected" ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                                                 title="Phê duyệt"
                                                 onClick={() => handleOpenModal(candidate, "Approved")}
+                                                disabled={candidate.status?.toLowerCase() === "approved" || candidate.status?.toLowerCase() === "rejected"}
                                             >
                                                 <Check size={16} />
                                             </Button>
                                             <Button
                                                 size="sm"
                                                 variant="outline"
-                                                className="w-8 h-8 p-0 text-red-500 border-red-500 hover:bg-red-500 hover:text-white flex-shrink-0 cursor-pointer"
+                                                className={`w-8 h-8 p-0 text-red-500 border-red-500 hover:bg-red-500 hover:text-white flex-shrink-0 ${candidate.status?.toLowerCase() === "approved" || candidate.status?.toLowerCase() === "rejected" ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                                                 title="Từ chối"
                                                 onClick={() => handleOpenModal(candidate, "Rejected")}
+                                                disabled={candidate.status?.toLowerCase() === "approved" || candidate.status?.toLowerCase() === "rejected"}
                                             >
                                                 <X size={16} />
                                             </Button>
