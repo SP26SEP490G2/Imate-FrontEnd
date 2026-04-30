@@ -40,6 +40,13 @@ export function CreateContributeQuestionDialog({
   onSuccess,
 }: CreateContributeQuestionDialogProps) {
   const MAX_USER_ANSWER_LENGTH = 1300;
+  const getTodayString = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
   const [loading, setLoading] = React.useState(false);
   const [loadingData, setLoadingData] = React.useState(false);
 
@@ -51,7 +58,7 @@ export function CreateContributeQuestionDialog({
     companyId: 0,
     positionIds: [],
     skillIds: [],
-    interviewDate: '',
+    interviewDate: getTodayString(),
     categoryIds: [],
     userAnswer: '',
   });
@@ -114,17 +121,6 @@ export function CreateContributeQuestionDialog({
       newErrors.skillIds = 'Phải chọn ít nhất một kỹ năng.';
     }
 
-    if (!formData.interviewDate) {
-      newErrors.interviewDate = 'Vui lòng chọn ngày phỏng vấn.';
-    } else {
-      const selectedDate = new Date(formData.interviewDate);
-      const currentDate = new Date();
-      currentDate.setHours(0, 0, 0, 0); // Reset time to start of day for accurate date comparison
-      if (selectedDate > currentDate) {
-        newErrors.interviewDate = 'Ngày phỏng vấn không được chọn ngày trong tương lai.';
-      }
-    }
-
     if (formData.userAnswer && formData.userAnswer.length > MAX_USER_ANSWER_LENGTH) {
       newErrors.userAnswer = `Câu trả lời tối đa ${MAX_USER_ANSWER_LENGTH} ký tự.`;
     }
@@ -135,6 +131,10 @@ export function CreateContributeQuestionDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!formData.interviewDate) {
+      setFormData(prev => ({ ...prev, interviewDate: getTodayString() }));
+    }
 
     if (!validateForm()) {
       toast.error('Vui lòng kiểm tra lại thông tin.');
@@ -155,7 +155,7 @@ export function CreateContributeQuestionDialog({
         difficulty: DIFFICULTY_LEVEL.EASY,
         level: LEVEL.INTERN,
         skillIds: [],
-        interviewDate: '',
+        interviewDate: getTodayString(),
         categoryIds: [],
         userAnswer: '',
       });
@@ -431,25 +431,6 @@ export function CreateContributeQuestionDialog({
                 </div>
                 {errors.skillIds && (
                   <p className="text-red-400 text-xs">{errors.skillIds}</p>
-                )}
-              </div>
-              {/* Interview Date */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-slate-200">
-                  Ngày phỏng vấn <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="date" max={new Date().toISOString().split('T')[0]} value={formData.interviewDate}
-                  onChange={(e) => {
-                    setFormData(prev => ({ ...prev, interviewDate: e.target.value }));
-                    if (errors.interviewDate) setErrors(prev => ({ ...prev, interviewDate: '' }));
-                  }}
-                  className={`w-full rounded-lg px-4 py-3 bg-slate-800 border ${errors.interviewDate ? 'border-red-500' : 'border-slate-700'
-                    } text-slate-100 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary/50 outline-none transition-all`}
-                  disabled={loading}
-                />
-                {errors.interviewDate && (
-                  <p className="text-red-400 text-xs">{errors.interviewDate}</p>
                 )}
               </div>
             </div>

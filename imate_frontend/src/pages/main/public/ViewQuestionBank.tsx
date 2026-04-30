@@ -415,6 +415,8 @@ const ViewQuestionBank: React.FC = () => {
     return 'inactive';
   };
 
+  const isApprovedStatus = (status?: string) => status?.toLowerCase() === 'approved';
+
   const filterSavedSystemQuestions = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
     if (!normalizedSearch) {
@@ -1060,6 +1062,7 @@ const ViewQuestionBank: React.FC = () => {
                   {myContributedData.items.map((question) => {
                     const card = buildMyContributedCardData(question);
                     const saved = isSavedFor('contributed', question.id, Boolean(question.isSaved));
+                    const canSave = isCandidate && isApprovedStatus(card.status);
                     return (
                       <QuestionContributedCard
                         key={`my-contributed-${card.id}`}
@@ -1079,7 +1082,7 @@ const ViewQuestionBank: React.FC = () => {
                         statusLabel={card.status}
                         statusType={getApprovalStatusBadge(card.status)}
                         onView={() => handleView(question.id, 'contributed', saved, false, card.status)}
-                        onSave={isCandidate ? () => handleSave('contributed', question.id, saved) : undefined}
+                        onSave={canSave ? () => handleSave('contributed', question.id, saved) : undefined}
                       />
                     );
                   })}
