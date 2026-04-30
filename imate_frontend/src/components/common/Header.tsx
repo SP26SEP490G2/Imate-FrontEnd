@@ -5,7 +5,8 @@ import {
   Wallet,
   Bell,
   CheckCheck,
-  Circle
+  Circle,
+  Sparkles
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
@@ -18,6 +19,8 @@ import type { MenuItem } from '@/types/common/menu';
 import { ROLES } from '@/constants/role';
 import { useSignalR } from '@/store/SignalRContext';
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { getCurrentSubscriptionDetail } from "@/services/userSubscriptionService";
+import { useQuery } from "@tanstack/react-query";
 
 type HeaderNotification = {
   id: number;
@@ -93,6 +96,24 @@ function Header() {
       menuItems = CANDIDATE_MENU_ITEMS;
     }
   }
+
+  const { data: currentSubscription } = useQuery({
+    queryKey: ["current-subscription"],
+    queryFn: getCurrentSubscriptionDetail,
+    enabled: isAuthenticated,
+  });
+
+  const aiCredit = (() => {
+    if (!currentSubscription) return 0;
+
+    if (currentSubscription.rank === 0) return 0;
+
+    return Math.max(
+      currentSubscription.initialMockLimit -
+      currentSubscription.mockInterviewUsed,
+      0
+    );
+  })();
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 1279px)");
@@ -306,15 +327,41 @@ function Header() {
                 )}
               </div>
 
-              {/* Wallet */}
-              <Button
-                variant="outline"
-                className="border-white/20 text-white cursor-pointer"
-                onClick={() => navigate("/wallet")}
-              >
-                <Wallet className="w-4 h-4 mr-2" />
-                {user?.balance ?? 0}
-              </Button>
+              <div className="flex items-center gap-2">
+
+  {/* ImCoin */}
+  <div className="relative group">
+    <Button
+      variant="outline"
+      className="border-white/20 text-white flex items-center gap-2"
+      onClick={() => navigate("/wallet")}
+    >
+      <Wallet className="w-4 h-4" />
+      {user?.balance ?? 0}
+    </Button>
+
+    <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition pointer-events-none">
+      Số dư ImCoin
+    </div>
+  </div>
+
+  {/* AI Credit */}
+  <div className="relative group">
+    <Button
+      variant="outline"
+      className="border-white/20 text-white flex items-center gap-2"
+      onClick={() => navigate("/view-subscription")}
+    >
+      <Sparkles className="w-4 h-4 text-indigo-400" />
+      {currentSubscription ? aiCredit : "..."}
+    </Button>
+
+    <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition pointer-events-none">
+      Số dư AI Credit
+    </div>
+  </div>
+
+</div>
 
               {/* Avatar */}
               <div className="relative">
