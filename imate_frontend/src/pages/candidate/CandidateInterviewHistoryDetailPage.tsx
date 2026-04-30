@@ -49,7 +49,7 @@ const CandidateInterviewHistoryDetailPage = () => {
       } catch (error: any) {
         console.error("Error fetching session detail:", error);
         toast.error("Không thể tải thông tin chi tiết buổi học.");
-        navigate("/candidate/interview-history");
+        navigate("/test-history?tab=mentor");
       } finally {
         setIsLoading(false);
       }
@@ -104,7 +104,7 @@ const CandidateInterviewHistoryDetailPage = () => {
     <div className="text-white p-6 max-w-5xl mx-auto h-[calc(100vh-80px)] overflow-y-auto custom-scrollbar">
       {/* Back Button */}
       <button 
-        onClick={() => navigate("/candidate/interview-history")}
+        onClick={() => navigate("/test-history?tab=mentor")}
         className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group"
       >
         <div className="p-2 rounded-lg bg-white/5 group-hover:bg-indigo-600 transition-all">
