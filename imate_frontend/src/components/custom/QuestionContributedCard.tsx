@@ -30,6 +30,7 @@ const QuestionContributedCard: React.FC<QuestionContributedCardProps> = ({
   timeAgo,
   skills,
   position,
+  level,
   rating,
   isSaved = false,
   commentCount,
@@ -123,6 +124,9 @@ const QuestionContributedCard: React.FC<QuestionContributedCardProps> = ({
           </StatusBadge>
         ))}
         <StatusBadge status="draft">{position}</StatusBadge>
+        {level && level !== 'N/A' && (
+          <StatusBadge status="pending">{level}</StatusBadge>
+        )}
       </div>
 
       {/* Footer: Rating & Actions */}

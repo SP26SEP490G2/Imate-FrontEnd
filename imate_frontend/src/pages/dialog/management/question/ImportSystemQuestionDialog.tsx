@@ -86,6 +86,7 @@ export const ImportSystemQuestionDialog: React.FC<ImportSystemQuestionDialogProp
                 return {
                     content: item?.content ?? '',
                     difficulty: item?.difficulty ?? '',
+                    level: item?.level ?? '',
                     sampleAnswer: item?.sampleAnswer ?? '',
                     categoryNames: item?.categoryNames ?? '',
                     skillNames: item?.skillNames ?? '',
@@ -137,6 +138,7 @@ export const ImportSystemQuestionDialog: React.FC<ImportSystemQuestionDialogProp
         return {
             content: item?.content ?? '',
             difficulty: item?.difficulty ?? '',
+            level: item?.level ?? '',
             sampleAnswer: item?.sampleAnswer ?? '',
             categoryNames: item?.categoryNames ?? '',
             skillNames: item?.skillNames ?? '',
@@ -158,6 +160,7 @@ export const ImportSystemQuestionDialog: React.FC<ImportSystemQuestionDialogProp
             [key]: {
                 content: row.content,
                 difficulty: row.difficulty,
+                level: row.level,
                 sampleAnswer: row.sampleAnswer,
                 categoryNames: row.categoryNames,
                 skillNames: row.skillNames,
@@ -381,7 +384,8 @@ export const ImportSystemQuestionDialog: React.FC<ImportSystemQuestionDialogProp
                                                 <tr>
                                                     <th className="px-4 py-3 font-medium">Dòng</th>
                                                     <th className="px-4 py-3 font-medium">Nội dung</th>
-                                                    <th className="px-4 py-3 font-medium">Cấp độ</th>
+                                                    <th className="px-4 py-3 font-medium">Độ khó</th>
+                                                    <th className="px-4 py-3 font-medium">Level</th>
                                                     <th className="px-4 py-3 font-medium">SampleAnswer</th>
                                                     <th className="px-4 py-3 font-medium">Category</th>
                                                     <th className="px-4 py-3 font-medium">Skill</th>
@@ -424,6 +428,20 @@ export const ImportSystemQuestionDialog: React.FC<ImportSystemQuestionDialogProp
                                                                 ) : (
                                                                     <span className="inline-flex px-2 py-1 text-xs rounded-full bg-slate-800 text-slate-200">
                                                                         {req.difficulty || '-'}
+                                                                    </span>
+                                                                )}
+                                                            </td>
+                                                            <td className="px-4 py-3 min-w-[140px]">
+                                                                {isEditing ? (
+                                                                    <input
+                                                                        value={draft?.level || ''}
+                                                                        onChange={(e) => updateDraftField(rowKey, 'level', e.target.value)}
+                                                                        placeholder="Level"
+                                                                        className="w-full bg-slate-800 border border-slate-700 rounded-md px-2 py-1 text-xs text-slate-200"
+                                                                    />
+                                                                ) : (
+                                                                    <span className="inline-flex px-2 py-1 text-xs rounded-full bg-slate-800 text-slate-200">
+                                                                        {req.level || '-'}
                                                                     </span>
                                                                 )}
                                                             </td>
