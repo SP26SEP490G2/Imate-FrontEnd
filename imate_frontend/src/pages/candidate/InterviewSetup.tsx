@@ -287,15 +287,11 @@ export default function InterviewSetup() {
               <div className="mt-4 flex items-center gap-2 rounded-xl border border-purple-500/20 bg-purple-500/5 px-4 py-3 text-sm text-slate-300">
                 <AlertCircle className="h-4 w-4 text-purple-400" />
                 <span>
-                  Số lượt phỏng vấn đã dùng tháng này:{" "}
+                  Số lượt phỏng vấn còn lại:{" "}
                   <span className="font-bold text-white">
-                    {costInfo.usedMock ?? 0}
+                    {costInfo.remaining ?? 0}
                   </span>
-                  /
-                  <span className="font-bold text-white">
-                    {costInfo.limit ?? 0}
-                  </span>{" "}
-                  lượt.
+                  {" lượt."}
                 </span>
                 {costInfo.limit !== undefined &&
                   costInfo.usedMock !== undefined &&
