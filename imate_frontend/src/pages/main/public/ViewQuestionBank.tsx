@@ -164,6 +164,7 @@ const ViewQuestionBank: React.FC = () => {
         skillId,
         positionId,
         categoryId,
+        level,
         difficulty,
         sortBy,
         sortOrder,
@@ -334,6 +335,11 @@ const ViewQuestionBank: React.FC = () => {
     return date.toLocaleDateString('vi-VN');
   };
 
+  const formatLevelLabel = (value?: number | null) => {
+    if (value === null || value === undefined) return 'N/A';
+    return LEVEL_MAP[value as keyof typeof LEVEL_MAP] || 'N/A';
+  };
+
   const buildCardData = (question: PublicSystemQuestionBankItem) => {
     const difficultyText = question.difficulty || 'N/A';
     const rating = difficultyText.toLowerCase() === 'hard'
@@ -351,7 +357,7 @@ const ViewQuestionBank: React.FC = () => {
       timeAgo: formatDate(question.createdAt),
       skills: question.skills.map((item) => item.name),
       position: question.positions.map((item) => item.name).join(', ') || 'N/A',
-      level: "",
+      level: formatLevelLabel(question.level ?? null),
       difficulty: difficultyText,
       rating,
       commentCount: question.commentCount,
@@ -375,7 +381,7 @@ const ViewQuestionBank: React.FC = () => {
       timeAgo: formatDate(question.createdAt),
       skills: question.skills.map((item) => item.name),
       position: question.positions.map((item) => item.name).join(', ') || 'N/A',
-      level: question.contributedDetail?.level || 'N/A',
+      level: formatLevelLabel(question.level ?? null),
       difficulty: difficultyText,
       rating,
       commentCount: question.commentCount,
@@ -399,7 +405,7 @@ const ViewQuestionBank: React.FC = () => {
       timeAgo: formatDate(question.updatedAt || question.createdAt || ''),
       skills: question.skillsName || [],
       position: question.positionsName?.join(', ') || 'N/A',
-      level: question.contributedDetail?.level || difficultyText,
+      level: formatLevelLabel(question.level ?? null),
       difficulty: difficultyText,
       rating,
       status: question.approvalStatus || 'Pending',
@@ -448,7 +454,7 @@ const ViewQuestionBank: React.FC = () => {
         question.sampleAnswer,
         question.creatorName,
         question.contributedDetail?.company,
-        question.contributedDetail?.level,
+        formatLevelLabel(question.level ?? null),
         ...question.categories.map((item) => item.name),
         ...question.skills.map((item) => item.name),
         ...question.positions.map((item) => item.name),
@@ -716,6 +722,28 @@ const ViewQuestionBank: React.FC = () => {
                   </div>
                 )}
 
+                {activeTab === 'system' && (
+                  <div className="w-full space-y-2">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Level</label>
+                    <select
+                      value={level ?? ''}
+                      onChange={(e) => {
+                        setLevel(e.target.value ? Number(e.target.value) : undefined);
+                        setPageNumber(1);
+                      }}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm text-slate-300 outline-none"
+                    >
+                      <option value="">Tất cả</option>
+                      {Object.entries(LEVEL_MAP)
+                        .map(([key, label]) => (
+                          <option key={key} value={key}>
+                            {label}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                )}
+
                 {activeTab === 'contributed' && (
                   <>
                     <div className="w-full space-y-2">
@@ -749,7 +777,7 @@ const ViewQuestionBank: React.FC = () => {
                       >
                         <option value="">Tất cả</option>
                         {Object.entries(LEVEL_MAP)
-                          .filter(([key]) => Number(key) < 4)
+                          .filter(([key]) => Number(key) < 5)
                           .map(([key, label]) => (
                             <option key={key} value={key}>
                               {label}

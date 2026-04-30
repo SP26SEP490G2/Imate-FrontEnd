@@ -36,6 +36,7 @@ export interface PublicSystemQuestionBankItem {
   id: number;
   content: string;
   difficulty: string | null;
+  level?: Level | null;
   sampleAnswer?: string;
   creatorName: string;
   createdAt: string;
@@ -49,7 +50,6 @@ export interface PublicSystemQuestionBankItem {
 export interface PublicContributedQuestionDetail {
   id: number;
   interviewDate?: string;
-  level?: string;
   company?: string;
   companyURL?: string;
 }
@@ -58,6 +58,7 @@ export interface PublicContributedQuestionBankItem {
   id: number;
   content: string;
   difficulty: string | null;
+  level?: Level | null;
   sampleAnswer?: string;
   isActive: boolean;
   createdAt: string;
@@ -143,6 +144,7 @@ export interface GetQuestionBankListRequest {
   positionId?: number;
   searchTerm?: string;
   categoryId?: number;
+  level?: number;
   difficulty?: number;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
@@ -186,11 +188,11 @@ export interface MyContributedQuestionItem {
   isSaved?: boolean;
   approvalStatus: string;
   sampleAnswer?: string;
+  level?: Level | null;
   contributedDetailId?: number;
   contributedDetail?: {
     id?: number;
     interviewDate?: string;
-    level?: string;
     company?: {
       id?: number;
       name?: string;
@@ -245,6 +247,7 @@ export interface StaffSystemQuestionItem {
   categoriesName?: string[];
   creatorName?: string;
   difficulty: DifficultyLevel;
+  level?: Level | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -254,6 +257,7 @@ export interface StaffContributedQuestionItem {
   id: number;
   content: string;
   difficulty: DifficultyLevel | null;
+  level?: Level | null;
   isFromSystem: boolean;
   isActive: boolean;
   creatorId: number;
@@ -332,6 +336,7 @@ export interface CompanyItem {
 export interface CreateSystemQuestionRequest {
   content: string;
   difficulty: DifficultyLevel;
+  level: Level;
   sampleAnswer: string;
   categoryIds: number[];
   skillIds: number[];
@@ -341,6 +346,7 @@ export interface CreateSystemQuestionRequest {
 export interface UpdateSystemQuestionRequest {
   content: string;
   difficulty: DifficultyLevel;
+  level: Level;
   sampleAnswer: string;
   isActive: boolean;
   categoryIds: number[];
@@ -382,6 +388,7 @@ export interface SystemQuestionDetail {
   id: number;
   content: string;
   difficulty: DifficultyLevel;
+  level: Level | null;
   sampleAnswer: string;
   isActive: boolean;
   isFromSystem: boolean;
@@ -440,6 +447,7 @@ export interface CommentItem {
 export interface FinalImportRequest {
   content: string;
   difficulty: string;
+  level: string;
   sampleAnswer: string;
   categoryNames: string;
   skillNames: string;
