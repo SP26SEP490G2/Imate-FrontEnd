@@ -212,12 +212,25 @@ function TestScreen({
   onReset: () => void;
 }) {
   const navigate = useNavigate();
-  const [answers, setAnswers] = useState<Record<number, string>>({});
+  // Khôi phục câu trả lời từ localStorage nếu có
+  const [answers, setAnswers] = useState<Record<number, string>>(() => {
+    try {
+      const saved = localStorage.getItem(LS_TEST_ANSWERS);
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
   const [submitted, setSubmitted] = useState(false);
 
   const handleSelect = (questionId: number, label: string) => {
     if (submitted) return;
-    setAnswers((prev) => ({ ...prev, [questionId]: label }));
+    setAnswers((prev) => {
+      const updated = { ...prev, [questionId]: label };
+      // Lưu câu trả lời vào localStorage mỗi khi chọn
+      localStorage.setItem(LS_TEST_ANSWERS, JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const handleSubmit = async () => {
@@ -227,6 +240,10 @@ function TestScreen({
     }
     setSubmitted(true);
     toast.success("Nộp bài thành công!");
+
+    // Xóa localStorage sau khi nộp bài (đã lưu DB)
+    localStorage.removeItem(LS_TEST_DATA);
+    localStorage.removeItem(LS_TEST_ANSWERS);
 
     // Lưu kết quả vào DB (không block UI nếu lỗi)
     try {
@@ -519,10 +536,24 @@ function LoadingOverlay() {
 }
 
 /* ------------------------------------------------------------------ */
+/*  LocalStorage keys                                                   */
+/* ------------------------------------------------------------------ */
+const LS_TEST_DATA = "practice-test-data";
+const LS_TEST_ANSWERS = "practice-test-answers";
+
+/* ------------------------------------------------------------------ */
 /*  Main Page Component                                                */
 /* ------------------------------------------------------------------ */
 export default function PracticeTest() {
-  const [testData, setTestData] = useState<PracticeTestResult | null>(null);
+  // Khôi phục testData từ localStorage nếu có (đang làm dở)
+  const [testData, setTestData] = useState<PracticeTestResult | null>(() => {
+    try {
+      const saved = localStorage.getItem(LS_TEST_DATA);
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
   const [loading, setLoading] = useState(false);
 
   const handleStart = async (params: GeneratePracticeTestParams) => {
@@ -530,6 +561,9 @@ export default function PracticeTest() {
     try {
       const result = await generatePracticeTest(params);
       setTestData(result);
+      // Lưu vào localStorage ngay khi AI gen xong
+      localStorage.setItem(LS_TEST_DATA, JSON.stringify(result));
+      localStorage.removeItem(LS_TEST_ANSWERS); // reset câu trả lời cũ
     } catch (err: any) {
       const msg = err?.response?.data?.message || err?.message || "Không thể tạo bài test. Vui lòng thử lại.";
       toast.error(msg);
@@ -540,6 +574,8 @@ export default function PracticeTest() {
 
   const handleReset = () => {
     setTestData(null);
+    localStorage.removeItem(LS_TEST_DATA);
+    localStorage.removeItem(LS_TEST_ANSWERS);
   };
 
   return (
