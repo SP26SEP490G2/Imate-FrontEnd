@@ -73,7 +73,14 @@ const CandidateInterviewHistoryPage = () => {
                 <div className="flex items-start justify-between mb-6">
                   <div className="flex items-center gap-4">
                     <Avatar className="w-14 h-14 border-2 border-transparent group-hover:border-indigo-500 transition-all">
-                      <AvatarImage src={(session as any).profileAvatarUrl || session.mentorAvatarUrl || undefined} alt={session.mentorName} />
+                      <AvatarImage 
+                        src={((session as any).profileAvatarUrl && (session as any).profileAvatarUrl.trim() !== "") 
+                          ? (session as any).profileAvatarUrl 
+                          : (session.mentorAvatarUrl && session.mentorAvatarUrl.trim() !== "") 
+                            ? session.mentorAvatarUrl 
+                            : `https://ui-avatars.com/api/?name=${encodeURIComponent(session.mentorName || "User")}&background=random&color=fff&size=512`} 
+                        alt={session.mentorName} 
+                      />
                       <AvatarFallback name={session.mentorName} />
                     </Avatar>
                     <div>

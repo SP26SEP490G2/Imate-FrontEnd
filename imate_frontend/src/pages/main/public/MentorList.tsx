@@ -6,6 +6,7 @@ import type { ListPreviewMentorResponse } from '@/types/common/mentor';
 import type { PositionItem, SkillItem, CompanyItem } from '@/types/common/question';
 import { Search, Star } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import mentorImage from '@/assets/images/mentor.webp';
 
 const PAGE_SIZE = 8;
 
@@ -113,10 +114,13 @@ const MentorList: React.FC = () => {
             </div>
             <div className="relative rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-[#11142D]">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,_rgba(99,102,241,0.25),_transparent_55%)]" />
-              <div className="w-full h-80 flex flex-col items-start justify-start text-slate-400 relative p-8">
-                <span className="text-2xl md:text-3xl font-bold text-white">Kết nối Mentor</span>
-                <span className="text-base md:text-lg text-slate-300 mt-2">Lộ trình cá nhân hóa theo mục tiêu</span>
-
+              <div className="w-full h-80 relative">
+                <img
+                  src={mentorImage}
+                  alt="Mentor"
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
               </div>
             </div>
           </div>

@@ -23,6 +23,8 @@ import { cn } from "@/lib/utils";
 import UpdateRecruiterDialog from "../dialog/UpdateRecruiterDialog";
 import "@/constants/messages";
 import { MSG09, MSG10 } from "@/constants/messages";
+import { getCurrentPackage } from "@/services/userSubscriptionService";
+import { useQuery } from "@tanstack/react-query";
 
 const nameSchema = z.object({
   fullName: z.string().min(2, "Tên phải có ít nhất 2 ký tự"),
@@ -80,6 +82,12 @@ const ViewProfile = () => {
     img.onerror = () => setLoaded(false);
   }, [avatarPreview]);
 
+  const { data: currentPackageData } = useQuery({
+    queryKey: ["current-package"],
+    queryFn: getCurrentPackage,
+    enabled: !!user,
+  });
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     // Thêm type
     const file = event.target.files?.[0];
@@ -127,7 +135,7 @@ const ViewProfile = () => {
     }
   }, [user, refetchUser]);
 
-  const currentPlan = user?.subscription || "Gói Thường";
+  const currentPlan = currentPackageData?.packageName || "Gói Thường";
   const isRecruiter = user?.role === "Recruiter";
   const isMentor = user?.role === "Mentor";
   const isAdmin = user?.role === "Admin";
@@ -603,16 +611,22 @@ const ViewProfile = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-[#A78BFA] dark:text-indigo-300">
                     <Star size={20} />
-                    Gói cước của bạn
+                    Gói của bạn
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-col items-center gap-4 text-center">
                   <h3 className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{currentPlan}</h3>
-                  <p className="text-muted-foreground text-sm">Nâng cấp để mở khóa tất cả các tính năng nâng cao.</p>
-                  <Button className="w-full cursor-pointer bg-gradient-to-r from-[#6C63FF] to-[#8B5CF6] text-white hover:brightness-110" onClick={() => navigate("/view-subscription")}>
-                    <ArrowUpCircle size={18} className="mr-2" />
-                    Nâng cấp ngay
-                  </Button>
+                  {currentPackageData?.rank === 0 ? (
+                    <>
+                      <p className="text-muted-foreground text-sm">Nâng cấp để mở khóa tất cả các tính năng.</p>
+                      <Button className="w-full cursor-pointer bg-gradient-to-r from-[#6C63FF] to-[#8B5CF6] text-white hover:brightness-110" onClick={() => navigate("/view-subscription")}>
+                        <ArrowUpCircle size={18} className="mr-2" />
+                        Nâng cấp ngay
+                      </Button>
+                    </>
+                  ) : (
+                    <p className="text-muted-foreground text-sm">Bạn đang sử dụng gói trả phí.<br /> Tận hưởng mọi dịch vụ tốt nhất của IMATE!</p>
+                  )}
                 </CardContent>
               </Card>
             </div>

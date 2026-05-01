@@ -77,7 +77,7 @@ function Header() {
   const guestMenu = [
     { label: "Ngân hàng câu hỏi", href: "/view-question-bank" },
     { label: "Luyện tập AI", href: "/practice-with-ai" },
-    { label: "Mentor", href: "/view-mentor" },
+    { label: "Đội ngũ Mentor", href: "/view-mentor" },
     { label: "Bảng giá", href: "/view-subscription" },
   ];
 
@@ -341,22 +341,22 @@ function Header() {
                   </div>
                 </div>
 
-                {/* AI Credit - Using SignalR AI credit */}
-                <div className="relative group">
-                  <Button
-                    variant="outline"
-                    className="border-white/20 text-white flex items-center gap-2"
-                    onClick={() => navigate("/view-subscription")}
-                  >
-                    <Sparkles className="w-4 h-4 text-indigo-400" />
-                    {displayAiCredit}
-                  </Button>
+                {user?.role === ROLES.CANDIDATE && (
+                  <div className="relative group">
+                    <Button
+                      variant="outline"
+                      className="border-white/20 text-white flex items-center gap-2"
+                      onClick={() => navigate("/view-subscription")}
+                    >
+                      <Sparkles className="w-4 h-4 text-indigo-400" />
+                      {displayAiCredit}
+                    </Button>
 
-                  <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition pointer-events-none">
-                    Số dư AI Credit
+                    <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition pointer-events-none">
+                      Số dư AI Credit
+                    </div>
                   </div>
-                </div>
-
+                )}
               </div>
 
               {/* Avatar */}

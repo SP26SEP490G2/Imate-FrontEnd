@@ -17,7 +17,7 @@ export const CANDIDATE_MENU_ITEMS: MenuItem[] = [
     label: "Luyện tập với AI",
     href: "/practice-with-ai"
   },
-  { label: "Mentor", href: "/view-mentor" },
+  { label: "Đội ngũ Mentor", href: "/view-mentor" },
   { label: "Bảng giá", href: "/view-subscription" },
   { label: "Cơ hội việc làm", href: "/view-job-applications" }
 ];

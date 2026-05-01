@@ -143,7 +143,7 @@ const MentorInterviewSchedule = () => {
   };
 
   return (
-    <div className="text-white p-6 max-w-6xl mx-auto h-[calc(100vh-80px)] overflow-y-auto">
+    <div className="text-white p-6 max-w-6xl mx-auto min-h-screen">
       {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <h1 className="text-3xl font-bold">Lịch làm việc</h1>
