@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   History,
-  ChevronRight,
   Loader2,
   CheckCircle2,
   XCircle,
@@ -12,6 +11,7 @@ import {
   Clock,
   FileText,
   Code2,
+  ArrowLeft,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -58,7 +58,7 @@ function ConfigScreen({
   const [skill, setSkill] = useState("");
   const [skills, setSkills] = useState<{ id: number; name: string }[]>([]);
   const [level, setLevel] = useState("Junior");
-
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
   // Fetch skills từ DB
@@ -88,14 +88,15 @@ function ConfigScreen({
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
-      {/* Breadcrumb */}
-      <nav className="mb-6 flex items-center gap-1.5 text-sm text-slate-500">
-        <span className="transition-colors hover:text-slate-300 cursor-pointer">Trang chủ</span>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span className="text-slate-400">Luyện tập AI</span>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span className="font-medium text-purple-400">Cấu hình bài test</span>
-      </nav>
+      <button
+          onClick={() => navigate("/practice-with-ai")}
+          className="mb-6 flex items-center gap-3 text-base text-slate-300 transition-colors hover:text-white"
+        >
+          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-600">
+            <ArrowLeft className="h-5 w-5" />
+          </span>
+          Quay lại danh sách
+        </button>
 
       {/* Title */}
       <div className="mb-8 text-center">
