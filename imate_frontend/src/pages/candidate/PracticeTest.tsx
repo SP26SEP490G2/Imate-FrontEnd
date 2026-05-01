@@ -176,13 +176,21 @@ function ConfigScreen({
         </div>
 
 
-
-        {/* Practice Limit Info */}
-        <div className="mb-6 flex items-center gap-2 rounded-lg bg-amber-500/10 px-4 py-2.5 text-sm">
-          <Clock className="h-4 w-4 text-amber-400" />
-          <span className="text-amber-300">
-            Lượt luyện tập miễn phí: <strong>4/6</strong> lượt (tuần này)
-          </span>
+        {/* AI Credit Cost Info */}
+        <div className="mb-6 rounded-xl border border-purple-500/20 bg-purple-500/8 px-4 py-3">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-purple-500/15">
+              <Sparkles className="h-4 w-4 text-purple-400" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-purple-300">
+                Mỗi bài test tốn <strong className="text-white">1 AI Credit</strong>
+              </p>
+              <p className="mt-0.5 text-xs text-slate-400">
+                AI sẽ tạo câu hỏi cá nhân hóa theo lĩnh vực, kỹ năng và cấp bậc của bạn
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Start Button */}
@@ -223,27 +231,38 @@ function TestScreen({
   });
   const [submitted, setSubmitted] = useState(false);
 
-  const handleSelect = (questionId: number, label: string) => {
-    if (submitted) return;
-    setAnswers((prev) => {
-      const updated = { ...prev, [questionId]: label };
-      // Lưu câu trả lời vào localStorage mỗi khi chọn
-      localStorage.setItem(LS_TEST_ANSWERS, JSON.stringify(updated));
-      return updated;
-    });
-  };
+  // Khôi phục thời gian bắt đầu
+  const [timeLeft, setTimeLeft] = useState<number>(() => {
+    try {
+      const savedStart = localStorage.getItem("practice-test-start");
+      if (savedStart) {
+        const start = parseInt(savedStart);
+        const elapsed = Math.floor((Date.now() - start) / 1000);
+        return Math.max(0, testData.timeLimitMinutes * 60 - elapsed);
+      }
+      localStorage.setItem("practice-test-start", Date.now().toString());
+      return testData.timeLimitMinutes * 60;
+    } catch {
+      return testData.timeLimitMinutes * 60;
+    }
+  });
 
-  const handleSubmit = async () => {
-    if (Object.keys(answers).length < testData.questions.length) {
+  const handleSubmit = async (forceAutoSubmit = false) => {
+    if (!forceAutoSubmit && Object.keys(answers).length < testData.questions.length) {
       toast.warning("Vui lòng trả lời tất cả câu hỏi trước khi nộp bài.");
       return;
     }
     setSubmitted(true);
-    toast.success("Nộp bài thành công!");
+    if (forceAutoSubmit) {
+      toast.warning("Hết giờ! Hệ thống tự động nộp bài.");
+    } else {
+      toast.success("Nộp bài thành công!");
+    }
 
     // Xóa localStorage sau khi nộp bài (đã lưu DB)
     localStorage.removeItem(LS_TEST_DATA);
     localStorage.removeItem(LS_TEST_ANSWERS);
+    localStorage.removeItem("practice-test-start");
 
     // Lưu kết quả vào DB (không block UI nếu lỗi)
     try {
@@ -269,11 +288,40 @@ function TestScreen({
     }
   };
 
+  useEffect(() => {
+    if (submitted) return;
+    
+    if (timeLeft <= 0) {
+      handleSubmit(true);
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft, submitted]);
+
+  const handleSelect = (questionId: number, label: string) => {
+    if (submitted) return;
+    setAnswers((prev) => {
+      const updated = { ...prev, [questionId]: label };
+      // Lưu câu trả lời vào localStorage mỗi khi chọn
+      localStorage.setItem(LS_TEST_ANSWERS, JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   // Calculate score
   const correctCount = testData.questions.filter(
     (q) => answers[q.id] === q.correctAnswer
   ).length;
   const score = Math.round((correctCount / testData.questions.length) * 100);
+
+  const displayMins = Math.floor(timeLeft / 60);
+  const displaySecs = timeLeft % 60;
+  const isTimeRunningOut = timeLeft < 300; // Dưới 5 phút
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 pb-28">
@@ -295,10 +343,12 @@ function TestScreen({
             <span className="rounded-md bg-cyan-500/15 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-cyan-400">
               {testData.level}
             </span>
-            <span className="flex items-center gap-1">
-              <Clock className="h-3.5 w-3.5" />
-              {testData.timeLimitMinutes} phút
-            </span>
+            {!submitted && (
+              <span className={`flex items-center gap-1 font-mono font-bold ${isTimeRunningOut ? 'text-red-400 animate-pulse' : 'text-slate-300'}`}>
+                <Clock className="h-3.5 w-3.5" />
+                {String(displayMins).padStart(2, '0')}:{String(displaySecs).padStart(2, '0')}
+              </span>
+            )}
           </div>
         </div>
         {!submitted && (
@@ -384,7 +434,10 @@ function TestScreen({
                   size="lg"
                   icon={<RotateCcw className="h-5 w-5" />}
                   className="bg-gradient-to-r from-purple-600 to-indigo-600 px-8 font-semibold shadow-lg"
-                  onClick={onReset}
+                  onClick={() => {
+                    localStorage.removeItem("practice-test-start");
+                    onReset();
+                  }}
                 >
                   Làm bài mới
                 </Button>
@@ -395,15 +448,32 @@ function TestScreen({
               <p className="text-sm text-slate-400">
                 {Object.keys(answers).length}/{testData.totalQuestions} câu đã trả lời
               </p>
-              <Button
-                variant="primary"
-                size="lg"
-                icon={<CheckCircle2 className="h-5 w-5" />}
-                className="bg-gradient-to-r from-purple-600 to-indigo-600 px-8 font-semibold shadow-lg"
-                onClick={handleSubmit}
-              >
-                Nộp bài
-              </Button>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  icon={<XCircle className="h-5 w-5" />}
+                  onClick={() => {
+                    if (window.confirm("Bạn có chắc chắn muốn thoát? Kết quả làm bài hiện tại sẽ không được lưu.")) {
+                      localStorage.removeItem(LS_TEST_DATA);
+                      localStorage.removeItem(LS_TEST_ANSWERS);
+                      localStorage.removeItem("practice-test-start");
+                      onReset();
+                    }
+                  }}
+                >
+                  Thoát
+                </Button>
+                <Button
+                  variant="primary"
+                  size="lg"
+                  icon={<CheckCircle2 className="h-5 w-5" />}
+                  className="bg-gradient-to-r from-purple-600 to-indigo-600 px-8 font-semibold shadow-lg"
+                  onClick={() => handleSubmit(false)}
+                >
+                  Nộp bài
+                </Button>
+              </div>
             </>
           )}
         </div>
@@ -560,6 +630,7 @@ export default function PracticeTest() {
     setLoading(true);
     try {
       const result = await generatePracticeTest(params);
+
       setTestData(result);
       // Lưu vào localStorage ngay khi AI gen xong
       localStorage.setItem(LS_TEST_DATA, JSON.stringify(result));

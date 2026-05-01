@@ -36,7 +36,7 @@ export default function CVManagement() {
       toast.success(MSG15);
       refetch();
     } catch {
-      toast.error(MSG07);
+      toast.error("Không thể xóa CV. CV có thể đang được sử dụng trong phiên phỏng vấn.");
     } finally {
       setDeleting(false);
       setDeleteTarget(null);

@@ -197,6 +197,10 @@ function QuestionCard({ response }: { response: InterviewResponseDetail }) {
             Đang phân tích phản hồi...
           </div>
         </div>
+      ) : response.questionNumber <= 2 ? (
+        <div className="mb-5 rounded-xl border border-slate-700/40 bg-slate-800/40 px-4 py-3 text-center text-sm text-slate-400">
+          Câu hỏi chào hỏi không tính điểm năng lực.
+        </div>
       ) : (
         <div className="mb-5 grid gap-4 md:grid-cols-2">
           <ScoreBar label="Cách diễn đạt" value={response.communicationScore} />
@@ -220,36 +224,40 @@ function QuestionCard({ response }: { response: InterviewResponseDetail }) {
 
         {expanded && (
           <div className="mt-4 space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <ScoreBar
-                label="Giải quyết vấn đề"
-                value={response.problemSolvingScore}
-              />
-              <ScoreBar
-                label="Kinh nghiệm thực tế"
-                value={response.practicalExperienceScore}
-              />
-            </div>
-
-            {(response.starSituationScore !== null ||
-              response.starTaskScore !== null ||
-              response.starActionScore !== null ||
-              response.starResultScore !== null) && (
-                <div>
-                  <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                    Điểm STAR
-                  </p>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <ScoreBar
-                      label="Situation"
-                      value={response.starSituationScore}
-                    />
-                    <ScoreBar label="Task" value={response.starTaskScore} />
-                    <ScoreBar label="Action" value={response.starActionScore} />
-                    <ScoreBar label="Result" value={response.starResultScore} />
-                  </div>
+            {response.questionNumber > 2 && (
+              <>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <ScoreBar
+                    label="Giải quyết vấn đề"
+                    value={response.problemSolvingScore}
+                  />
+                  <ScoreBar
+                    label="Kinh nghiệm thực tế"
+                    value={response.practicalExperienceScore}
+                  />
                 </div>
-              )}
+
+                {(response.starSituationScore !== null ||
+                  response.starTaskScore !== null ||
+                  response.starActionScore !== null ||
+                  response.starResultScore !== null) && (
+                    <div>
+                      <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                        Điểm STAR
+                      </p>
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <ScoreBar
+                          label="Situation"
+                          value={response.starSituationScore}
+                        />
+                        <ScoreBar label="Task" value={response.starTaskScore} />
+                        <ScoreBar label="Action" value={response.starActionScore} />
+                        <ScoreBar label="Result" value={response.starResultScore} />
+                      </div>
+                    </div>
+                  )}
+              </>
+            )}
 
             {response.aiFeedback && (
               <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/5 px-4 py-3">
