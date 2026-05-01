@@ -11,6 +11,7 @@ import {
   X,
   CheckCircle2,
   FileUp,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -369,27 +370,28 @@ export default function InterviewSetup() {
 
             {/* Usage limits */}
             {costInfo && (
-              <div className="mt-4 flex items-center gap-2 rounded-xl border border-purple-500/20 bg-purple-500/5 px-4 py-3 text-sm text-slate-300">
-                <AlertCircle className="h-4 w-4 text-purple-400" />
-                <span>
-                  Số lượt phỏng vấn còn lại:{" "}
-                  <span className="font-bold text-white">
-                    {costInfo.remaining ?? 0}
-                  </span>
-                  {" lượt."}
-                  {!costInfo.isFree && costInfo.cost && costInfo.cost > 0 && (
-                    <span className="ml-2 text-xs text-slate-400">
-                      (Yêu cầu: <span className="font-semibold text-purple-400">{costInfo.cost}</span> credit/buổi)
-                    </span>
-                  )}
-                </span>
-                {costInfo.limit !== undefined &&
-                  costInfo.usedMock !== undefined &&
-                  costInfo.limit - costInfo.usedMock <= 1 && (
-                    <span className="ml-auto text-xs font-semibold text-amber-400">
-                      Sắp hết lượt!
-                    </span>
-                  )}
+              <div className="mt-6 rounded-xl border border-purple-500/20 bg-purple-500/8 px-4 py-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-purple-500/15">
+                    <Sparkles className="h-4 w-4 text-purple-400" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-purple-300">
+                      {costInfo.isFree ? (
+                        <>Bạn đang dùng lượt phỏng vấn <strong className="text-white">Miễn phí</strong></>
+                      ) : (
+                        <>Mỗi buổi phỏng vấn tốn <strong className="text-white">{costInfo.cost ?? 1} AI Credit</strong></>
+                      )}
+                    </p>
+                    {costInfo.isFree && (
+                      <div className="mt-0.5 flex items-center justify-between">
+                        <p className="text-xs text-slate-400">
+                          Số lượt còn lại trong tháng: <strong className="text-white">{costInfo.remaining ?? 0}</strong> lượt
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
           </div>
