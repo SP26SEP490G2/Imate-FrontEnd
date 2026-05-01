@@ -98,10 +98,10 @@ function Header() {
   });
 
   const displayBalance =
-  signalRContext.balance ?? user?.balance ?? 0;
+    signalRContext.balance ?? user?.balance ?? 0;
 
-  const displayAiCredit = signalRContext.aiCredit !== null 
-    ? signalRContext.aiCredit 
+  const displayAiCredit = signalRContext.aiCredit !== null
+    ? signalRContext.aiCredit
     : (() => {
       if (!currentSubscription) return 0;
       if (currentSubscription.rank === 0) return 0;
@@ -245,6 +245,7 @@ function Header() {
                   >
                     <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
                       <h3 className="text-lg font-bold text-white">Thông báo</h3>
+                      {/*
                       <button
                         type="button"
                         className="text-xs font-medium text-indigo-300 transition hover:text-indigo-200 disabled:cursor-not-allowed disabled:text-slate-500"
@@ -253,6 +254,7 @@ function Header() {
                       >
                         Đánh dấu đã đọc
                       </button>
+                      */}
                     </div>
 
                     <div className={cn("divide-y divide-white/5", showAllNotifications && "max-h-80 overflow-y-auto")}>
@@ -292,11 +294,13 @@ function Header() {
                               <p className="mt-1 text-xs text-slate-400">
                                 {formatRelativeTime(notification.createdAt)}
                               </p>
+                              {/*
                               {notification.link && (
                                 <p className="mt-1 text-[11px] text-slate-500">
                                   Thông báo có đính kèm liên kết.
                                 </p>
                               )}
+                              */}
                             </div>
 
                             {!notification.isRead && (
