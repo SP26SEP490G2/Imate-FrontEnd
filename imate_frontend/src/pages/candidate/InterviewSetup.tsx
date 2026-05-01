@@ -292,6 +292,11 @@ export default function InterviewSetup() {
                     {costInfo.remaining ?? 0}
                   </span>
                   {" lượt."}
+                  {!costInfo.isFree && costInfo.cost && costInfo.cost > 0 && (
+                    <span className="ml-2 text-xs text-slate-400">
+                      (Yêu cầu: <span className="font-semibold text-purple-400">{costInfo.cost}</span> credit/buổi)
+                    </span>
+                  )}
                 </span>
                 {costInfo.limit !== undefined &&
                   costInfo.usedMock !== undefined &&
