@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table, TableHeader, TableRow, TableHead, TableBody, TableCell,
 } from "@/components/ui/table";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Eye, CheckCircle, XCircle, ShieldAlert, UserX, StarOff, MessageSquareWarning } from "lucide-react";
+import { Eye, CheckCircle, XCircle, ShieldAlert, UserX, StarOff, MessageSquareWarning, Flag } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -77,6 +77,12 @@ const PENDING_TYPE_CONFIG: Record<string, {
     color: "text-rose-300",
     borderColor: "border-rose-500/30",
     bgColor: "bg-rose-500/10",
+  },
+  Other: {
+    icon: <Flag className="w-5 h-5" />,
+    color: "text-indigo-300",
+    borderColor: "border-indigo-500/30",
+    bgColor: "bg-indigo-500/10",
   },
 };
 
@@ -411,8 +417,26 @@ export default function StaffApplicationManagement() {
                 </TableCell>
 
                 {/* Loại đơn */}
-                <TableCell className="font-medium text-slate-200">
-                  {getApplicationTypeLabel(app.applicationType)}
+                <TableCell>
+                  <div
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[11px] font-semibold tracking-wide uppercase transition-colors ${
+                      PENDING_TYPE_CONFIG[app.applicationType]?.bgColor || "bg-slate-800"
+                    } ${
+                      PENDING_TYPE_CONFIG[app.applicationType]?.color || "text-slate-300"
+                    } ${
+                      PENDING_TYPE_CONFIG[app.applicationType]?.borderColor || "border-slate-700"
+                    }`}
+                  >
+                    {PENDING_TYPE_CONFIG[app.applicationType]?.icon && (
+                      <span className="shrink-0">
+                        {React.cloneElement(
+                          PENDING_TYPE_CONFIG[app.applicationType].icon as React.ReactElement,
+                          { size: 10, className: "w-2.5 h-2.5" }
+                        )}
+                      </span>
+                    )}
+                    {getApplicationTypeLabel(app.applicationType)}
+                  </div>
                 </TableCell>
 
                 {/* Ngày gửi */}

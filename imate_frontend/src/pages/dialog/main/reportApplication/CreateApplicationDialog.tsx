@@ -23,18 +23,19 @@ import {
 
 import { toast } from "react-toastify";
 import { ImageUploadPreview } from "@/components/ui/image-upload-preview";
-import { AlertTriangle, Info, ThumbsDown, ThumbsUp } from "lucide-react";
+import { AlertTriangle, Info, ThumbsDown, ThumbsUp, History, Flag, ExternalLink, Eye } from "lucide-react";
 
 import {
   addApplicationTechnical,
   addApplicationMentor,
-  // ...existing code...
+  addReportCommentApplication,
+  addOtherApplication,
 } from "@/services/applicationService";
 
 import { useAuth } from "@/store/AuthContext";
-import { 
-  ApplicationType, 
-  APPLICATION_TYPE_OPTIONS, 
+import {
+  ApplicationType,
+  APPLICATION_TYPE_OPTIONS,
   type ApplicationTypeEnum
 } from "@/constants/enum";
 
@@ -73,6 +74,26 @@ export function CreateApplicationDialog({
   const [loading, setLoading] = React.useState(false);
 
   const isReportComment = type === ApplicationType.ReportComment;
+  const isReportMentorGuide = type === ApplicationType.ReportMentor && defaultType !== ApplicationType.ReportMentor;
+  const isReportRatingGuide = type === ApplicationType.ReportRating && defaultType !== ApplicationType.ReportRating;
+  const showGuide = isReportComment || isReportMentorGuide || isReportRatingGuide;
+
+  const filteredOptions = React.useMemo(() => {
+    return APPLICATION_TYPE_OPTIONS.filter((option) => {
+      if (user?.role === "Candidate") {
+        // Candidate không được Report Rating (Voting)
+        return option.value !== ApplicationType.ReportRating;
+      }
+      if (user?.role === "Mentor") {
+        // Mentor không được report comment và report mentor
+        return (
+          option.value !== ApplicationType.ReportComment &&
+          option.value !== ApplicationType.ReportMentor
+        );
+      }
+      return true;
+    });
+  }, [user?.role]);
 
   const resetForm = () => {
     setType(defaultType || ApplicationType.TechnicalError);
@@ -117,13 +138,24 @@ export function CreateApplicationDialog({
           await addApplicationTechnical(formData, user.id);
           break;
         case ApplicationType.ReportMentor:
+        case ApplicationType.ReportRating:
           if (!bookingId || isNaN(Number(bookingId))) {
-            toast.error("Vui lòng nhập Booking ID hợp lệ");
+            toast.error("Vui lòng chọn thông tin hợp lệ để báo cáo");
             setLoading(false);
             return;
           }
           formData.append("bookingId", bookingId.trim());
           await addApplicationMentor(formData, user.id);
+          break;
+        case ApplicationType.ReportComment:
+          // Report Comment có thể cần bookingId hoặc commentId, tùy backend
+          if (bookingId) {
+            formData.append("bookingId", bookingId.trim());
+          }
+          await addReportCommentApplication(formData, user.id);
+          break;
+        case ApplicationType.Other:
+          await addOtherApplication(formData, user.id);
           break;
         default:
           toast.error("Loại đơn không hợp lệ");
@@ -183,7 +215,7 @@ export function CreateApplicationDialog({
                   <SelectValue placeholder="Chọn loại đơn" />
                 </SelectTrigger>
                 <SelectContent>
-                  {APPLICATION_TYPE_OPTIONS.map((option) => (
+                  {filteredOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
@@ -192,92 +224,196 @@ export function CreateApplicationDialog({
               </Select>
             </div>
 
-            {/* Booking ID - hiện khi không phải TechnicalError */}
-            {type !== ApplicationType.TechnicalError && (
-              <div className="space-y-2">
-                <Label className="text-slate-200">
-                  Mã Booking <span className="text-red-400">*</span>
-                </Label>
-                <Input
-                  value={bookingId}
-                  onChange={(e) => setBookingId(e.target.value)}
-                  placeholder="Nhập ID buổi học (ví dụ: 101)"
-                  className="bg-slate-800 border-slate-700"
-                  disabled={loading || !!defaultBookingId}
-                />
-              </div>
-            )}
-
             {/* Hướng dẫn khi chọn ReportComment */}
             {isReportComment && (
-              <div className="rounded-lg border border-blue-500/30 bg-blue-500/10 p-4 space-y-4">
-                <div className="flex items-center gap-2 text-blue-300">
+              <div className="rounded-lg border border-indigo-500/30 bg-indigo-500/10 p-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="flex items-center gap-2 text-indigo-300">
                   <Info className="w-4 h-4 flex-shrink-0" />
                   <span className="text-sm font-semibold">Hướng dẫn báo cáo bình luận</span>
                 </div>
 
                 <p className="text-sm text-slate-300 leading-relaxed">
-                  Nhấn vào icon{" "}
-                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-700 border border-slate-600">
-                    <AlertTriangle className="w-3 h-3 text-red-400" />
-                  </span>{" "}
-                  ở góc trên bên phải của bình luận để tạo đơn báo cáo.
+                  Để báo cáo một bình luận cụ thể, vui lòng thực hiện theo các bước sau:
                 </p>
 
-                {/* Comment mô phỏng */}
-                <div className="rounded-lg border border-slate-600 bg-slate-800/60 p-3 space-y-3">
-                  {/* Header comment */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-indigo-700 flex items-center justify-center text-xs font-medium text-indigo-200 flex-shrink-0">
-                        NV
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-slate-200">Nguyễn Văn A</p>
-                        <p className="text-xs text-slate-400">28/03/2026, 09:14</p>
-                      </div>
-                    </div>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center text-xs font-bold text-indigo-400 flex-shrink-0 border border-indigo-500/30">1</div>
+                    <p className="text-sm text-slate-300">Tìm đến bài viết hoặc khóa học có chứa bình luận bạn muốn báo cáo.</p>
+                  </div>
 
-                    {/* Icon báo cáo với highlight */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className="text-xs text-red-400 font-medium bg-red-500/10 border border-red-500/30 px-2 py-1 rounded">
-                        Bấm vào đây
-                      </span>
-                      <div className="relative">
-                        {/* Vòng pulse */}
-                        <span className="absolute inset-0 rounded-full border-2 border-red-400 animate-ping opacity-75" />
-                        <div className="relative w-8 h-8 rounded-full border-2 border-red-500 bg-red-500/10 flex items-center justify-center">
-                          <AlertTriangle className="w-4 h-4 text-red-400" />
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center text-xs font-bold text-indigo-400 flex-shrink-0 border border-indigo-500/30">2</div>
+                    <div className="space-y-3 flex-1">
+                      <p className="text-sm text-slate-300">
+                        Nhấn vào icon{" "}
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-700 border border-slate-600">
+                          <AlertTriangle className="w-3 h-3 text-red-400" />
+                        </span>{" "}
+                        ở góc trên bên phải của bình luận đó.
+                      </p>
+
+                      {/* Comment mô phỏng */}
+                      <div className="rounded-lg border border-slate-600 bg-slate-800/60 p-3 space-y-3">
+                        {/* Header comment */}
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-indigo-700 flex items-center justify-center text-[10px] font-medium text-indigo-200 flex-shrink-0">
+                              NV
+                            </div>
+                            <div>
+                              <p className="text-[11px] font-medium text-slate-200">Nguyễn Văn A</p>
+                              <p className="text-[9px] text-slate-400">28/03/2026, 09:14</p>
+                            </div>
+                          </div>
+
+                          {/* Icon báo cáo với highlight */}
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <span className="text-[9px] text-red-400 font-bold bg-red-500/10 border border-red-500/30 px-1.5 py-0.5 rounded animate-pulse">
+                              Bấm tại đây
+                            </span>
+                            <div className="relative">
+                              <span className="absolute inset-0 rounded-full border border-red-400 animate-ping opacity-75" />
+                              <div className="relative w-6 h-6 rounded-full border border-red-500 bg-red-500/10 flex items-center justify-center">
+                                <AlertTriangle className="w-3 h-3 text-red-400" />
+                              </div>
+                            </div>
+                          </div>
                         </div>
+                        <p className="text-[11px] text-slate-400 italic">"Nội dung bình luận cần báo cáo..."</p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Nội dung comment */}
-                  <p className="text-sm text-slate-400 italic">
-                    Đây là nội dung bình luận mẫu...
-                  </p>
-
-                  {/* Vote row */}
-                  <div className="flex items-center gap-2 pt-1">
-                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-slate-600 text-xs text-slate-400">
-                      <ThumbsUp className="w-3 h-3" /> 2
-                    </span>
-                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-slate-600 text-xs text-slate-400">
-                      <ThumbsDown className="w-3 h-3" /> 0
-                    </span>
-                    <span className="text-sm font-semibold text-violet-400 ml-1">+2</span>
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center text-xs font-bold text-indigo-400 flex-shrink-0 border border-indigo-500/30">3</div>
+                    <p className="text-sm text-slate-300">Hệ thống sẽ tự động điền thông tin liên quan, bạn chỉ cần nhập lý do và gửi đơn.</p>
                   </div>
                 </div>
 
-                <p className="text-xs text-slate-500 italic">
-                  * Đây chỉ là bình luận mô phỏng minh họa cách thực hiện.
-                </p>
+                <div className="pt-2 border-t border-indigo-500/20">
+                  <p className="text-[11px] text-slate-500 italic">
+                    * Việc báo cáo trực tiếp giúp chúng tôi xác định chính xác bình luận vi phạm.
+                  </p>
+                </div>
               </div>
             )}
 
-            {/* Các field chỉ hiện khi KHÔNG phải ReportComment */}
-            {!isReportComment && (
+            {/* Hướng dẫn khi chọn ReportMentor từ màn view-application */}
+            {isReportMentorGuide && (
+              <div className="rounded-lg border border-indigo-500/30 bg-indigo-500/10 p-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="flex items-center gap-2 text-indigo-300">
+                  <Info className="w-4 h-4 flex-shrink-0" />
+                  <span className="text-sm font-semibold">Hướng dẫn báo cáo Mentor</span>
+                </div>
+
+                <p className="text-sm text-slate-300 leading-relaxed">
+                  Để báo cáo một Mentor từ một buổi học cụ thể, vui lòng thực hiện các bước sau:
+                </p>
+
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center text-xs font-bold text-indigo-400 flex-shrink-0 border border-indigo-500/30">1</div>
+                    <div className="flex-1">
+                      <p className="text-sm text-slate-300 mb-2">Truy cập vào mục <b>Lịch sử Mentor</b>.</p>
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-xs text-slate-300">
+                        <History size={14} className="text-indigo-400" />
+                        <span>Lịch sử phỏng vấn</span>
+                        <span className="text-slate-500">/</span>
+                        <span>Lịch sử Mentor</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center text-xs font-bold text-indigo-400 flex-shrink-0 border border-indigo-500/30">2</div>
+                    <div className="flex-1">
+                      <p className="text-sm text-slate-300 mb-2">Chọn buổi học với Mentor cần báo cáo và nhấn <b>Xem chi tiết</b>.</p>
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-xs text-slate-300">
+                        <Eye size={14} className="text-indigo-400" />
+                        <span>Chi tiết</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center text-xs font-bold text-indigo-400 flex-shrink-0 border border-indigo-500/30">3</div>
+                    <div className="flex-1">
+                      <p className="text-sm text-slate-300 mb-2">Tại màn hình chi tiết, nhấn vào nút <b>Báo cáo Mentor</b>.</p>
+                      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-600/20 border border-rose-500/30 text-xs font-bold text-rose-400 animate-pulse">
+                        <Flag size={14} />
+                        <span>Báo cáo Mentor</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-indigo-500/20">
+                  <p className="text-[11px] text-slate-500 italic">
+                    * Báo cáo từ chi tiết buổi học giúp hệ thống ghi nhận chính xác mã buổi học (Booking ID).
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Hướng dẫn khi chọn ReportRating từ màn view-application */}
+            {isReportRatingGuide && (
+              <div className="rounded-lg border border-indigo-500/30 bg-indigo-500/10 p-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="flex items-center gap-2 text-indigo-300">
+                  <Info className="w-4 h-4 flex-shrink-0" />
+                  <span className="text-sm font-semibold">Hướng dẫn báo cáo đánh giá</span>
+                </div>
+
+                <p className="text-sm text-slate-300 leading-relaxed">
+                  Để báo cáo một đánh giá không hợp lệ từ học viên, vui lòng thực hiện các bước sau:
+                </p>
+
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center text-xs font-bold text-indigo-400 flex-shrink-0 border border-indigo-500/30">1</div>
+                    <div className="flex-1">
+                      <p className="text-sm text-slate-300 mb-2">Truy cập vào mục <b>Đánh giá từ học viên</b>.</p>
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-xs text-slate-300">
+                        <ThumbsUp size={14} className="text-indigo-400" />
+                        <span>Cá nhân</span>
+                        <span className="text-slate-500">/</span>
+                        <span>Đánh giá từ học viên</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center text-xs font-bold text-indigo-400 flex-shrink-0 border border-indigo-500/30">2</div>
+                    <div className="flex-1">
+                      <p className="text-sm text-slate-300 mb-2">Tìm đến đánh giá cần báo cáo và nhấn vào icon <b>Cảnh báo</b>.</p>
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-xs text-slate-300">
+                        <div className="relative">
+                          <span className="absolute inset-0 rounded-full border border-red-400 animate-ping opacity-75" />
+                          <AlertTriangle size={14} className="text-red-400 relative" />
+                        </div>
+                        <span className="text-red-400 font-bold ml-1">Bấm tại đây</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center text-xs font-bold text-indigo-400 flex-shrink-0 border border-indigo-500/30">3</div>
+                    <div className="flex-1">
+                      <p className="text-sm text-slate-300">Hệ thống sẽ tự động lấy thông tin đánh giá, bạn chỉ cần nhập nội dung chi tiết và gửi.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-indigo-500/20">
+                  <p className="text-[11px] text-slate-500 italic">
+                    * Việc báo cáo từ danh sách đánh giá giúp chúng tôi xác định chính xác đánh giá vi phạm.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Các field chỉ hiện khi KHÔNG phải chế độ hướng dẫn */}
+            {!showGuide && (
               <>
 
                 <div className="space-y-2">
@@ -309,8 +445,8 @@ export function CreateApplicationDialog({
             )}
           </div>
 
-          {/* Bằng chứng — ẩn khi ReportComment */}
-          {!isReportComment && (
+          {/* Bằng chứng — ẩn khi ở chế độ hướng dẫn */}
+          {!showGuide && (
             <div className="space-y-4">
               <div className="h-px bg-slate-700" />
               <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">
@@ -342,12 +478,12 @@ export function CreateApplicationDialog({
                 className="border-slate-600 text-slate-300 hover:bg-slate-800"
                 onClick={resetForm}
               >
-                {isReportComment ? "Đóng" : "Hủy"}
+                {showGuide ? "Đóng" : "Hủy"}
               </Button>
             </DialogClose>
 
-            {/* Nút Gửi đơn — ẩn khi ReportComment */}
-            {!isReportComment && (
+            {/* Nút Gửi đơn — ẩn khi ở chế độ hướng dẫn */}
+            {!showGuide && (
               <Button
                 type="submit"
                 variant="primary"

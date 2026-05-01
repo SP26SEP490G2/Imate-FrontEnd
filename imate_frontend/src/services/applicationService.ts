@@ -62,6 +62,17 @@ export const addApplicationMentor = async (data: FormData, id: number) => {
   }
 };
 
+// add new application other report
+export const addOtherApplication = async (data: FormData, userId: number) => {
+  try {
+    const response = await apiClient.post(`/application/other-application/${userId}`, data, { headers: { "Content-Type": "multipart/form-data" } });
+    return response;
+  } catch (error: any) {
+    console.log("error", error.message);
+    throw error.message;
+  }
+};
+
 // add new application report comment
 export const addReportCommentApplication = async (data: FormData, userId: number) => {
   try {
@@ -118,6 +129,16 @@ export const getApplicationTechnicalDetails = async (applicationId: number) => {
     return response.data;
   } catch (error: any) {
     throw error;
+  }
+};
+
+// get other application details
+export const getApplicationOtherDetails = async (applicationId: number) => {
+  try {
+    const response = await apiClient.get(`/application/${applicationId}/other-details`);
+    return response.data;
+  } catch (error: any) {
+    throw error.message;
   }
 };
 
