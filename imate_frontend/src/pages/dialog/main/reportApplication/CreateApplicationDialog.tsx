@@ -23,7 +23,7 @@ import {
 
 import { toast } from "react-toastify";
 import { ImageUploadPreview } from "@/components/ui/image-upload-preview";
-import { AlertTriangle, Info, ThumbsDown, ThumbsUp, History, Flag, ExternalLink, Eye } from "lucide-react";
+import { AlertTriangle, Info, ThumbsUp, History, Flag, Eye } from "lucide-react";
 
 import {
   addApplicationTechnical,

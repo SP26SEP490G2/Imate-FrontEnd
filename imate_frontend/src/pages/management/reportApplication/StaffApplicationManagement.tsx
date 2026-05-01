@@ -430,7 +430,7 @@ export default function StaffApplicationManagement() {
                     {PENDING_TYPE_CONFIG[app.applicationType]?.icon && (
                       <span className="shrink-0">
                         {React.cloneElement(
-                          PENDING_TYPE_CONFIG[app.applicationType].icon as React.ReactElement,
+                          PENDING_TYPE_CONFIG[app.applicationType].icon as React.ReactElement<any>,
                           { size: 10, className: "w-2.5 h-2.5" }
                         )}
                       </span>

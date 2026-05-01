@@ -59,7 +59,6 @@ function Header() {
   const notifications = signalRContext.notifications ?? [];
   const unreadCount = signalRContext.unreadCount ?? notifications.filter((notification) => !notification.isRead).length;
   const markNotificationAsRead = signalRContext.markNotificationAsRead ?? (async () => { });
-  const markAllNotificationsAsRead = signalRContext.markAllNotificationsAsRead ?? (async () => { });
   const unreadBadgeLabel = unreadCount > 99 ? "99+" : String(unreadCount);
   const navigate = useNavigate();
 
@@ -156,10 +155,6 @@ function Header() {
     }
 
     setExpandedNotificationId((prev) => (prev === notification.id ? null : notification.id));
-  };
-
-  const handleMarkAllAsRead = async () => {
-    await markAllNotificationsAsRead();
   };
 
   const displayedNotifications = showAllNotifications
