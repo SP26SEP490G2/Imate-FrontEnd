@@ -298,11 +298,13 @@ export default function InterviewSetup() {
                         <>Mỗi buổi phỏng vấn tốn <strong className="text-white">{costInfo.cost ?? 1} AI Credit</strong></>
                       )}
                     </p>
-                    <div className="mt-0.5 flex items-center justify-between">
-                      <p className="text-xs text-slate-400">
-                        Số lượt còn lại{costInfo.isFree ? " trong tháng" : ""}: <strong className="text-white">{costInfo.remaining ?? 0}</strong> lượt
-                      </p>
-                    </div>
+                    {costInfo.isFree && (
+                      <div className="mt-0.5 flex items-center justify-between">
+                        <p className="text-xs text-slate-400">
+                          Số lượt còn lại trong tháng: <strong className="text-white">{costInfo.remaining ?? 0}</strong> lượt
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
