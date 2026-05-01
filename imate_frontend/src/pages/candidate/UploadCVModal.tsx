@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { uploadCV } from "@/services/cvService";
 import { CV_UPLOAD } from "@/constants/common";
-import { MSG18, MSG22, MSG23, MSG07 } from "@/constants/messages";
+import { MSG18, MSG22, MSG07 } from "@/constants/messages";
 
 interface UploadCVModalProps {
   open: boolean;

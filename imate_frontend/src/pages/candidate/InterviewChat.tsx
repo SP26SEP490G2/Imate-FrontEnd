@@ -15,6 +15,7 @@ import {
 import { recognizeSpeechFromBase64 } from "@/services/azureSpeechService";
 import { MSG28 } from "@/constants/messages";
 import { USE_MOCK, MOCK_WELCOME, MOCK_QUESTIONS } from "@/mocks/interviewMockData";
+import { useInterviewSessionLock } from "@/hooks/useInterviewSessionLock";
 
 import voiceOnVideo from "@/assets/video/voiceOn.mp4";
 import voiceOffVideo from "@/assets/video/voiceOff.mp4";
@@ -43,6 +44,9 @@ export default function InterviewChat() {
   const { sessionId: sessionIdParam } = useParams<{ sessionId: string }>();
   const sessionId = parseInt(sessionIdParam ?? "0");
   const navigate = useNavigate();
+
+  // SignalR session lock — chặn 2 tab cùng session
+  const { isBlocked, blockMessage} = useInterviewSessionLock(sessionId);
 
   // Chat state — khôi phục từ localStorage nếu có (persist qua tab close)
   const storageKey = `interview-chat-${sessionId}`;
@@ -573,6 +577,32 @@ export default function InterviewChat() {
   /* ---------------------------------------------------------------- */
   /*  Render                                                           */
   /* ---------------------------------------------------------------- */
+
+  // Nếu session đang bị lock bởi tab khác → hiển thị cảnh báo
+  if (isBlocked) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#0a0b1a]">
+        <div className="mx-4 w-full max-w-lg rounded-2xl border border-red-500/30 bg-slate-800/90 p-8 text-center shadow-2xl">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-500/20">
+            <svg className="h-8 w-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h2 className="mb-2 text-xl font-bold text-white">Phiên đang mở ở tab khác</h2>
+          <p className="mb-6 text-sm text-slate-400">
+            {blockMessage || "Phiên phỏng vấn này đang được mở ở tab/cửa sổ khác. Vui lòng sử dụng tab đã mở."}
+          </p>
+          <button
+            onClick={() => navigate("/practice-with-ai")}
+            className="rounded-lg bg-purple-600 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-purple-500"
+          >
+            Quay lại trang chính
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen flex-col bg-[#0a0b1a]">
       {/* ===== HEADER ===== */}

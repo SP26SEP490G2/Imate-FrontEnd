@@ -69,7 +69,7 @@ const MentorRatings = () => {
   }
 
   return (
-    <div className="text-white p-6 max-w-5xl mx-auto h-[calc(100vh-80px)] overflow-y-auto">
+    <div className="text-white p-6 max-w-5xl mx-auto min-h-screen">
       {/* HEADER */}
       <div className="flex items-center gap-4 mb-8">
         <button 

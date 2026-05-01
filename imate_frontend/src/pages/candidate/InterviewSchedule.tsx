@@ -238,7 +238,12 @@ const InterviewSchedule = () => {
                      {/* Left: Info */}
                      <div className="flex items-center gap-4">
                         <Avatar className="w-14 h-14 border-2 border-indigo-500/30">
-                          <AvatarImage src={booking.profileAvatarUrl || undefined} alt={booking.profileName} />
+                          <AvatarImage 
+                            src={(booking.profileAvatarUrl && booking.profileAvatarUrl.trim() !== "") 
+                              ? booking.profileAvatarUrl 
+                              : `https://ui-avatars.com/api/?name=${encodeURIComponent(booking.profileName || "User")}&background=random&color=fff&size=512`} 
+                            alt={booking.profileName} 
+                          />
                           <AvatarFallback name={booking.profileName} />
                         </Avatar>
                        <div>

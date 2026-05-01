@@ -5,7 +5,8 @@ import {
   Wallet,
   Bell,
   CheckCheck,
-  Circle
+  Circle,
+  Sparkles
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
@@ -16,8 +17,10 @@ import { cn } from "@/lib/utils";
 import UserMenu from "@/components/custom/UserMenu";
 import type { MenuItem } from '@/types/common/menu';
 import { ROLES } from '@/constants/role';
-import { useSignalR } from '@/store/SignalRContext';
+import { useSignalR } from "@/store/SignalRContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { getCurrentSubscriptionDetail } from "@/services/userSubscriptionService";
+import { useQuery } from "@tanstack/react-query";
 
 type HeaderNotification = {
   id: number;
@@ -52,12 +55,7 @@ const formatRelativeTime = (value?: string) => {
 
 function Header() {
   const { user, isAuthenticated } = useAuth();
-  const signalRContext = useSignalR() as {
-    notifications?: HeaderNotification[];
-    unreadCount?: number;
-    markNotificationAsRead?: (notificationId: number) => Promise<void>;
-    markAllNotificationsAsRead?: () => Promise<void>;
-  };
+  const signalRContext = useSignalR();
   const notifications = signalRContext.notifications ?? [];
   const unreadCount = signalRContext.unreadCount ?? notifications.filter((notification) => !notification.isRead).length;
   const markNotificationAsRead = signalRContext.markNotificationAsRead ?? (async () => { });
@@ -76,11 +74,10 @@ function Header() {
   const notificationMenuRef = useRef<HTMLDivElement>(null);
   const notificationAnchorRef = useRef<HTMLButtonElement>(null);
 
-  // menu cho guest
   const guestMenu = [
     { label: "Ngân hàng câu hỏi", href: "/view-question-bank" },
     { label: "Luyện tập AI", href: "/practice-with-ai" },
-    { label: "Mentor", href: "/view-mentor" },
+    { label: "Đội ngũ Mentor", href: "/view-mentor" },
     { label: "Bảng giá", href: "/view-subscription" },
   ];
 
@@ -93,6 +90,26 @@ function Header() {
       menuItems = CANDIDATE_MENU_ITEMS;
     }
   }
+
+  const { data: currentSubscription } = useQuery({
+    queryKey: ["current-subscription"],
+    queryFn: getCurrentSubscriptionDetail,
+    enabled: isAuthenticated,
+  });
+
+  const displayBalance =
+  signalRContext.balance ?? user?.balance ?? 0;
+
+  const displayAiCredit = signalRContext.aiCredit !== null 
+    ? signalRContext.aiCredit 
+    : (() => {
+      if (!currentSubscription) return 0;
+      if (currentSubscription.rank === 0) return 0;
+      return Math.max(
+        currentSubscription.initialMockLimit - currentSubscription.mockInterviewUsed,
+        0
+      );
+    })();
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 1279px)");
@@ -306,15 +323,41 @@ function Header() {
                 )}
               </div>
 
-              {/* Wallet */}
-              <Button
-                variant="outline"
-                className="border-white/20 text-white cursor-pointer"
-                onClick={() => navigate("/wallet")}
-              >
-                <Wallet className="w-4 h-4 mr-2" />
-                {user?.balance ?? 0}
-              </Button>
+              <div className="flex items-center gap-2">
+
+                {/* ImCoin - Using SignalR balance */}
+                <div className="relative group">
+                  <Button
+                    variant="outline"
+                    className="border-white/20 text-white flex items-center gap-2"
+                    onClick={() => navigate("/wallet")}
+                  >
+                    <Wallet className="w-4 h-4" />
+                    {displayBalance.toLocaleString()}
+                  </Button>
+
+                  <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition pointer-events-none">
+                    Số dư ImCoin
+                  </div>
+                </div>
+
+                {user?.role === ROLES.CANDIDATE && (
+                  <div className="relative group">
+                    <Button
+                      variant="outline"
+                      className="border-white/20 text-white flex items-center gap-2"
+                      onClick={() => navigate("/view-subscription")}
+                    >
+                      <Sparkles className="w-4 h-4 text-indigo-400" />
+                      {displayAiCredit}
+                    </Button>
+
+                    <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition pointer-events-none">
+                      Số dư AI Credit
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* Avatar */}
               <div className="relative">

@@ -104,7 +104,7 @@ export default function CVManagement() {
                   <span className="font-semibold text-purple-400">
                     {analyseCost} AI Credit
                   </span>{" "}
-                  / lượt để phân tích CV bằng AI
+                  / lượt để phân tích CV bằng AI. Nếu CV đã được phân tích, bạn sẽ chỉ bị giảm AI Credit khi phân tích lại.
                 </p>
               )}
             </div>
