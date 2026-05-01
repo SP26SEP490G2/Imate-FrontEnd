@@ -8,7 +8,7 @@ import {
 } from '@/services/questionService';
 import { getListPosition } from '@/services/positionService';
 import { getAllSkill } from '@/services/skillService';
-import { DIFFICULTY_OPTIONS } from '@/constants/enum';
+import { DIFFICULTY_MAP, LEVEL_MAP } from '@/constants/common';
 import { ImportSystemQuestionDialog } from '@/pages/dialog/management/question/ImportSystemQuestionDialog';
 import { UpdateSystemQuestionModal } from '@/pages/dialog/management/question/UpdateSystemQuestionModal';
 import { CreateSystemQuestionDialog } from '@/pages/dialog/management/question/CreateSystemQuestionDialog';
@@ -25,7 +25,6 @@ import type {
   PositionItem,
   SkillItem
 } from '@/types/common/question';
-import { DIFFICULTY_MAP, LEVEL_MAP } from '@/constants/common';
 import {
   Eye,
   Pencil,
@@ -471,7 +470,7 @@ const ViewQuestions: React.FC = () => {
                 value={currentFilters.difficulty !== undefined ? String(currentFilters.difficulty) : ''}
                 onChange={(e) => {
                   const value = e.target.value;
-                  const numValue = value ? parseInt(value) as DifficultyLevel : undefined;
+                  const numValue = value ? parseInt(value, 10) as DifficultyLevel : undefined;
                   if (activeTab === 'system') {
                     handleSystemFilterChange('difficulty', numValue);
                   } else if (activeTab === 'contributed') {
@@ -483,8 +482,8 @@ const ViewQuestions: React.FC = () => {
                 className="bg-slate-800 border border-slate-700 rounded-md px-4 py-2 text-slate-200 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer min-w-36"
               >
                 <option value="">Tất cả</option>
-                {DIFFICULTY_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
+                {Object.entries(DIFFICULTY_MAP).map(([key, label]) => (
+                  <option key={key} value={key}>{label}</option>
                 ))}
               </select>
             </div>
@@ -492,12 +491,16 @@ const ViewQuestions: React.FC = () => {
             <div className="flex items-center gap-3">
               <span className="text-sm text-slate-400 whitespace-nowrap">Level:</span>
               <select
-                value={activeTab === 'pending'
-                  ? (pendingContributedFilters.level !== undefined ? String(pendingContributedFilters.level) : '')
-                  : (contributedFilters.level !== undefined ? String(contributedFilters.level) : '')}
+                value={activeTab === 'system'
+                  ? (systemFilters.level !== undefined ? String(systemFilters.level) : '')
+                  : activeTab === 'pending'
+                    ? (pendingContributedFilters.level !== undefined ? String(pendingContributedFilters.level) : '')
+                    : (contributedFilters.level !== undefined ? String(contributedFilters.level) : '')}
                 onChange={(e) => {
-                  const value = e.target.value ? parseInt(e.target.value) : undefined;
-                  if (activeTab === 'contributed') {
+                  const value = e.target.value ? parseInt(e.target.value, 10) : undefined;
+                  if (activeTab === 'system') {
+                    handleSystemFilterChange('level', value);
+                  } else if (activeTab === 'contributed') {
                     handleContributedFilterChange('level', value);
                   } else {
                     handlePendingContributedFilterChange('level', value);

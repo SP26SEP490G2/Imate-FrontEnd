@@ -288,6 +288,7 @@ export interface GetSystemQuestionParams {
   positionId?: number;
   categoryId?: number;
   difficulty?: DifficultyLevel;
+  level?: Level;
   isActive?: boolean;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
