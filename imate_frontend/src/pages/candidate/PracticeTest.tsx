@@ -636,8 +636,16 @@ export default function PracticeTest() {
       localStorage.setItem(LS_TEST_DATA, JSON.stringify(result));
       localStorage.removeItem(LS_TEST_ANSWERS); // reset câu trả lời cũ
     } catch (err: any) {
+      console.error("API Error Response:", err?.response?.status, err?.message);
       const msg = err?.response?.data?.message || err?.message || "Không thể tạo bài test. Vui lòng thử lại.";
-      toast.error(msg);
+      toast.error(msg); // Hiển thị thông báo đỏ
+      
+      const msgLower = msg.toLowerCase();
+      if (err?.response?.status === 403 || msgLower.includes("nâng cấp") || msgLower.includes("mua gói") || msgLower.includes("credit")) {
+        // Dùng navigate (soft-routing) thay vì window.location để không bị reload lại toàn trang,
+        // giúp giữ lại cái thông báo toast.error(msg) trên màn hình vài giây.
+        navigate("/view-subscription");
+      }
     } finally {
       setLoading(false);
     }
