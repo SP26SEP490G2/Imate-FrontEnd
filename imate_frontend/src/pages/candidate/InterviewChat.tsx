@@ -46,7 +46,7 @@ export default function InterviewChat() {
   const navigate = useNavigate();
 
   // SignalR session lock — chặn 2 tab cùng session
-  const { isBlocked, blockMessage, isConnecting: lockConnecting } = useInterviewSessionLock(sessionId);
+  const { isBlocked, blockMessage} = useInterviewSessionLock(sessionId);
 
   // Chat state — khôi phục từ localStorage nếu có (persist qua tab close)
   const storageKey = `interview-chat-${sessionId}`;

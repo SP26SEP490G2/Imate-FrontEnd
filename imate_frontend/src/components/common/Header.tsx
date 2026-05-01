@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import UserMenu from "@/components/custom/UserMenu";
 import type { MenuItem } from '@/types/common/menu';
 import { ROLES } from '@/constants/role';
-import { useSignalR } from '@/store/SignalRContext';
+import { useSignalR } from "@/store/SignalRContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { getCurrentSubscriptionDetail } from "@/services/userSubscriptionService";
 import { useQuery } from "@tanstack/react-query";
@@ -55,12 +55,7 @@ const formatRelativeTime = (value?: string) => {
 
 function Header() {
   const { user, isAuthenticated } = useAuth();
-  const signalRContext = useSignalR() as {
-    notifications?: HeaderNotification[];
-    unreadCount?: number;
-    markNotificationAsRead?: (notificationId: number) => Promise<void>;
-    markAllNotificationsAsRead?: () => Promise<void>;
-  };
+  const signalRContext = useSignalR();
   const notifications = signalRContext.notifications ?? [];
   const unreadCount = signalRContext.unreadCount ?? notifications.filter((notification) => !notification.isRead).length;
   const markNotificationAsRead = signalRContext.markNotificationAsRead ?? (async () => { });
@@ -79,7 +74,6 @@ function Header() {
   const notificationMenuRef = useRef<HTMLDivElement>(null);
   const notificationAnchorRef = useRef<HTMLButtonElement>(null);
 
-  // menu cho guest
   const guestMenu = [
     { label: "Ngân hàng câu hỏi", href: "/view-question-bank" },
     { label: "Luyện tập AI", href: "/practice-with-ai" },
@@ -103,17 +97,19 @@ function Header() {
     enabled: isAuthenticated,
   });
 
-  const aiCredit = (() => {
-    if (!currentSubscription) return 0;
+  const displayBalance =
+  signalRContext.balance ?? user?.balance ?? 0;
 
-    if (currentSubscription.rank === 0) return 0;
-
-    return Math.max(
-      currentSubscription.initialMockLimit -
-      currentSubscription.mockInterviewUsed,
-      0
-    );
-  })();
+  const displayAiCredit = signalRContext.aiCredit !== null 
+    ? signalRContext.aiCredit 
+    : (() => {
+      if (!currentSubscription) return 0;
+      if (currentSubscription.rank === 0) return 0;
+      return Math.max(
+        currentSubscription.initialMockLimit - currentSubscription.mockInterviewUsed,
+        0
+      );
+    })();
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 1279px)");
@@ -329,39 +325,39 @@ function Header() {
 
               <div className="flex items-center gap-2">
 
-  {/* ImCoin */}
-  <div className="relative group">
-    <Button
-      variant="outline"
-      className="border-white/20 text-white flex items-center gap-2"
-      onClick={() => navigate("/wallet")}
-    >
-      <Wallet className="w-4 h-4" />
-      {user?.balance ?? 0}
-    </Button>
+                {/* ImCoin - Using SignalR balance */}
+                <div className="relative group">
+                  <Button
+                    variant="outline"
+                    className="border-white/20 text-white flex items-center gap-2"
+                    onClick={() => navigate("/wallet")}
+                  >
+                    <Wallet className="w-4 h-4" />
+                    {displayBalance.toLocaleString()}
+                  </Button>
 
-    <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition pointer-events-none">
-      Số dư ImCoin
-    </div>
-  </div>
+                  <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition pointer-events-none">
+                    Số dư ImCoin
+                  </div>
+                </div>
 
-  {/* AI Credit */}
-  <div className="relative group">
-    <Button
-      variant="outline"
-      className="border-white/20 text-white flex items-center gap-2"
-      onClick={() => navigate("/view-subscription")}
-    >
-      <Sparkles className="w-4 h-4 text-indigo-400" />
-      {currentSubscription ? aiCredit : "..."}
-    </Button>
+                {/* AI Credit - Using SignalR AI credit */}
+                <div className="relative group">
+                  <Button
+                    variant="outline"
+                    className="border-white/20 text-white flex items-center gap-2"
+                    onClick={() => navigate("/view-subscription")}
+                  >
+                    <Sparkles className="w-4 h-4 text-indigo-400" />
+                    {displayAiCredit}
+                  </Button>
 
-    <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition pointer-events-none">
-      Số dư AI Credit
-    </div>
-  </div>
+                  <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition pointer-events-none">
+                    Số dư AI Credit
+                  </div>
+                </div>
 
-</div>
+              </div>
 
               {/* Avatar */}
               <div className="relative">
