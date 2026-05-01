@@ -17,7 +17,7 @@ import type { BookingDetailResponse } from "@/types/response/booking.response";
 import ImateLoading from "@/components/custom/imateLoading";
 import { toast } from "react-toastify";
 
-import { getInitials, getAvatarColor } from "@/helpers/common";
+import { getAvatarColor } from "@/helpers/common";
 import { cn } from "@/lib/utils";
 
 const MentorInterviewHistoryDetailPage = () => {
@@ -65,7 +65,7 @@ const MentorInterviewHistoryDetailPage = () => {
   };
 
   return (
-    <div className="text-white p-6 max-w-5xl mx-auto h-[calc(100vh-80px)] overflow-y-auto custom-scrollbar">
+    <div className="text-white p-6 max-w-5xl mx-auto min-h-screen">
       {/* Back Button */}
       <button 
         onClick={() => navigate("/mentor/interview-history")}
@@ -207,17 +207,15 @@ const MentorInterviewHistoryDetailPage = () => {
               <div className="relative inline-block mb-4">
                 <div className={cn(
                   "w-24 h-24 rounded-3xl flex items-center justify-center font-bold text-white border-4 border-[#1A1A2E] shadow-2xl mx-auto overflow-hidden",
-                  !session.profileAvatarUrl && getAvatarColor(session.profileName)
+                  (!session.profileAvatarUrl || session.profileAvatarUrl.trim() === "") && getAvatarColor(session.profileName)
                 )}>
-                  {session.profileAvatarUrl ? (
-                    <img 
-                      src={session.profileAvatarUrl} 
-                      alt={session.profileName}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-3xl">{getInitials(session.profileName)}</span>
-                  )}
+                  <img 
+                    src={(session.profileAvatarUrl && session.profileAvatarUrl.trim() !== "") 
+                      ? session.profileAvatarUrl 
+                      : `https://ui-avatars.com/api/?name=${encodeURIComponent(session.profileName || "User")}&background=random&color=fff&size=512`} 
+                    alt={session.profileName}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-4 border-[#1A1A2E] ${session.status === 2 ? 'bg-emerald-500' : 'bg-rose-500'}`}></div>
               </div>

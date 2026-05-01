@@ -272,7 +272,15 @@ const CandidateInterviewHistoryDetailPage = () => {
             <div className="relative z-10 mt-4">
               <div className="relative inline-block mb-4">
                 <Avatar className="w-24 h-24 border-4 border-[#1A1A2E] shadow-2xl mx-auto rounded-3xl">
-                  <AvatarImage src={session.profileAvatarUrl || (session as any).mentorAvatarUrl || undefined} alt={session.profileName} className="object-cover" />
+                  <AvatarImage 
+                    src={(session.profileAvatarUrl && session.profileAvatarUrl.trim() !== "") 
+                      ? session.profileAvatarUrl 
+                      : ((session as any).mentorAvatarUrl && (session as any).mentorAvatarUrl.trim() !== "") 
+                        ? (session as any).mentorAvatarUrl 
+                        : `https://ui-avatars.com/api/?name=${encodeURIComponent(session.profileName || "User")}&background=random&color=fff&size=512`} 
+                    alt={session.profileName} 
+                    className="object-cover" 
+                  />
                   <AvatarFallback name={session.profileName || "Mentor"} className="rounded-3xl text-2xl" />
                 </Avatar>
                 <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-4 border-[#1A1A2E] ${session.status === 2 ? 'bg-emerald-500' : 'bg-rose-500'}`}></div>

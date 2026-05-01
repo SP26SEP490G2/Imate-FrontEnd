@@ -7,7 +7,7 @@ interface ImateLoadingProps {
 
 const ImateLoading: React.FC<ImateLoadingProps> = ({ type }) => {
   return (
-    <div className={`flex ${type === "screen" ? "h-screen" : ""} flex-col items-center justify-center bg-white`}>
+    <div className={`flex ${type === "screen" ? "h-screen" : ""} flex-col items-center justify-center bg-[#020617] text-white`}>
       <motion.img
         src={images.logo}
         alt="Loading..."
@@ -22,7 +22,9 @@ const ImateLoading: React.FC<ImateLoadingProps> = ({ type }) => {
           ease: "easeInOut",
         }}
       />
-      <motion.p className={`${type === "screen" ? "" : "text-sm"}`}>Đang tải...</motion.p>
+      <motion.p className={`${type === "screen" ? "mt-4 text-slate-400 font-medium" : "text-sm text-slate-500"}`}>
+        Đang tải...
+      </motion.p>
     </div>
   );
 };
