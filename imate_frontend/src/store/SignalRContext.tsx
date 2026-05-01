@@ -24,11 +24,6 @@ export type NotificationPayload = {
   [key: string]: unknown;
 };
 
-export type BalanceUpdatePayload = {
-  imCoinBalance?: number;
-  aiCredit?: number;
-};
-
 interface SignalRContextState {
   connection: signalR.HubConnection | null;
   notifications: NotificationPayload[];
@@ -45,8 +40,8 @@ const SignalRContext = createContext<SignalRContextState>({
   unreadCount: 0,
   balance: null,
   aiCredit: null,
-  markNotificationAsRead: async () => { },
-  markAllNotificationsAsRead: async () => { },
+  markNotificationAsRead: async () => {},
+  markAllNotificationsAsRead: async () => {},
 });
 
 export const useSignalR = () => useContext(SignalRContext);
@@ -56,198 +51,168 @@ interface SignalRProviderProps {
 }
 
 export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) => {
-  const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
+  const [systemConnection, setSystemConnection] = useState<signalR.HubConnection | null>(null);
+  const [balanceConnection, setBalanceConnection] = useState<signalR.HubConnection | null>(null);
+
   const [notifications, setNotifications] = useState<NotificationPayload[]>([]);
   const [balance, setBalance] = useState<number | null>(null);
   const [aiCredit, setAiCredit] = useState<number | null>(null);
-  const queryClient = useQueryClient();
 
   const { isAuthenticated } = useAuth();
-  const systemNotificationHubUrl = `${API_BASE_URL}/systemNotificationHub`;
-  const balanceHubUrl = `${API_BASE_URL}/balanceHub`;
+  const queryClient = useQueryClient();
+  const token = localStorage.getItem("authToken");
 
   const unreadCount = useMemo(
     () => notifications.filter((notification) => !notification.isRead).length,
     [notifications]
   );
 
-  const extractNotificationList = (payload: unknown): NotificationPayload[] => {
-    if (Array.isArray(payload)) {
-      return payload as NotificationPayload[];
-    }
-
-    if (payload && typeof payload === 'object') {
-      const objectPayload = payload as Record<string, unknown>;
-      const nested = objectPayload.data ?? objectPayload.items ?? objectPayload.Data ?? objectPayload.Items;
-      if (Array.isArray(nested)) {
-        return nested as NotificationPayload[];
-      }
-    }
-
-    return [];
-  };
-
-  const markNotificationAsRead = async (notificationId: number) => {
-    const target = notifications.find((notification) => notification.id === notificationId);
-    if (!target || target.isRead) {
-      return;
-    }
-
-    setNotifications((prev) =>
-      prev.map((notification) =>
-        notification.id === notificationId
-          ? { ...notification, isRead: true }
-          : notification
-      )
-    );
-
-    try {
-      if (connection && connection.state === signalR.HubConnectionState.Connected) {
-        await connection.invoke('MarkNotificationAsRead', notificationId.toString());
-      } else {
-        console.warn("SignalR: Cannot mark notification as read. Hub is not connected.");
-      }
-    } catch (error) {
-      console.error('SignalR: Failed to mark notification as read:', error);
-    }
-  };
-
-  const markAllNotificationsAsRead = async () => {
-    if (notifications.every((notification) => notification.isRead)) {
-      return;
-    }
-
-    setNotifications((prev) => prev.map((notification) => ({ ...notification, isRead: true })));
-
-    try {
-      if (connection && connection.state === signalR.HubConnectionState.Connected) {
-        await connection.invoke('MarkAllNotificationsAsRead');
-      } else {
-        console.warn("SignalR: Cannot mark all as read. Hub is not connected.");
-      }
-    } catch (error) {
-      console.error('SignalR: Failed to mark all notifications as read:', error);
-    }
-  };
-
-  // EFFECT 1: Fetch initial notifications
+  // URL cho hai Hub - ĐÃ SỬA ĐÚNG
+  const systemNotificationHubUrl = `${API_BASE_URL}/systemNotificationHub`;
+  const balanceHubUrl = `${API_BASE_URL}/balanceHub`;
+  // ==================== FETCH INITIAL NOTIFICATIONS ====================
   useEffect(() => {
     const fetchInitialNotifications = async () => {
-      if (isAuthenticated) {
-        try {
-          const response = await apiClient.get<NotificationPayload[] | { data?: NotificationPayload[]; items?: NotificationPayload[] }>('/notifications/my-notifications');
-          setNotifications(extractNotificationList(response.data));
-          console.log('SignalR: Fetched initial notifications.');
-        } catch (error) {
-          console.error("SignalR: Failed to fetch initial notifications:", error);
+      if (!isAuthenticated) return;
+
+      try {
+        const response = await apiClient.get('/notifications/my-notifications');
+        const data = response.data;
+
+        if (Array.isArray(data)) {
+          setNotifications(data);
+        } else if (data && typeof data === 'object') {
+          const nested = (data as any).data ?? (data as any).items ?? [];
+          setNotifications(Array.isArray(nested) ? nested : []);
         }
+      } catch (error) {
+        console.error("SignalR: Failed to fetch initial notifications:", error);
       }
     };
 
     fetchInitialNotifications();
   }, [isAuthenticated]);
 
-  // EFFECT 2: Setup SystemNotification Hub (existing notifications)
+  // ==================== SYSTEM NOTIFICATION HUB ====================
   useEffect(() => {
-    if (isAuthenticated) {
-      const token = localStorage.getItem("authToken");
-      if (!token) {
-        console.log('SignalR: User authenticated but no token found.');
-        return;
+    if (!isAuthenticated || !token) return;
+
+    const conn = new signalR.HubConnectionBuilder()
+      .withUrl(systemNotificationHubUrl, {
+        accessTokenFactory: () => token
+      })
+      .withAutomaticReconnect()
+      .build();
+
+    setSystemConnection(conn);
+
+    conn.start()
+      .then(() => {
+      })
+      .catch((err) => {
+        console.error('❌ SystemNotificationHub start error:', err);
+      });
+
+    conn.on('ReceiveNotification', (payload: NotificationPayload) => {
+      setNotifications((prev) => [payload, ...prev]);
+
+      if (payload.link && payload.type === 'AI_INTERVIEW_RESULT_READY') {
+        toast.success(payload.message || 'Kết quả phỏng vấn đã sẵn sàng!');
+      } else {
+        toast.info(payload.message || 'Bạn có thông báo mới!');
       }
+    });
 
-      const newConnection = new signalR.HubConnectionBuilder()
-        .withUrl(systemNotificationHubUrl, { accessTokenFactory: () => token })
-        .withAutomaticReconnect()
-        .build();
+    return () => {
+      conn.stop().catch(() => {});
+    };
+  }, [isAuthenticated, token, systemNotificationHubUrl]);
 
-      setConnection(newConnection);
-
-      newConnection.start()
-        .then(() => {
-          console.log('SignalR SystemNotification Hub Connected.');
-
-          newConnection.on('ReceiveNotification', (payload: NotificationPayload) => {
-            console.log('SignalR: New notification received:', payload);
-
-            setNotifications((prevNotifications) => [payload, ...prevNotifications]);
-
-            if (payload.link && payload.type === 'AI_INTERVIEW_RESULT_READY') {
-              toast.success(payload.message || 'Kết quả phỏng vấn đã sẵn sàng!', {
-                style: { fontWeight: 'normal' },
-                className: 'toast-normal-weight'
-              });
-            } else {
-              toast.info(payload.message || 'Bạn có thông báo mới!');
-            }
-          });
-        })
-        .catch((err) => console.error('SignalR SystemNotification Connection Error: ', err));
-
-      return () => {
-        console.log('Stopping SignalR SystemNotification Hub connection...');
-        newConnection.stop();
-      };
-    }
-  }, [isAuthenticated]);
-
-  // EFFECT 3: Setup BalanceHub for real-time balance/AI credit updates
+  // ==================== BALANCE HUB ====================
   useEffect(() => {
-    if (isAuthenticated) {
-      const token = localStorage.getItem("authToken");
-      if (!token) {
-        console.log('SignalR BalanceHub: User authenticated but no token found.');
-        return;
-      }
+    if (!isAuthenticated || !token) return;
 
-      const balanceConnection = new signalR.HubConnectionBuilder()
-        .withUrl(balanceHubUrl, { accessTokenFactory: () => token })
-        .withAutomaticReconnect()
-        .build();
+    const conn = new signalR.HubConnectionBuilder()
+      .withUrl(balanceHubUrl, {
+        accessTokenFactory: () => token,
+        transport: signalR.HttpTransportType.LongPolling
+      })
+      .withAutomaticReconnect()
+      .build();
 
-      balanceConnection.start()
-        .then(() => {
-          console.log('SignalR BalanceHub Connected.');
+    setBalanceConnection(conn);
 
-          // Listen for balance updates (ImCoin)
-          balanceConnection.on('BalanceUpdated', (data: { imCoinBalance: number }) => {
-            setBalance(data.imCoinBalance);
-            queryClient.invalidateQueries({ queryKey: ['user'] });
-          });
+    conn.start()
+      .then(() => {
+      })
+      .catch((err) => {
+        console.error('❌ BalanceHub start error:', err);
+      });
 
-          // Listen for AI credit updates
-          balanceConnection.on('AiCreditUpdated', (data: { aiCredit: number }) => {
-            console.log('[v0] AiCreditUpdated received:', data);
-            setAiCredit(data.aiCredit);
-            queryClient.invalidateQueries({ queryKey: ['current-subscription'] });
-          });
+    // Listen balance updates
+    conn.on('BalanceUpdated', (data: { imCoinBalance: number }) => {
+      setBalance(data.imCoinBalance);
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+    });
 
-          // Listen for both balance and AI credit updates
-          balanceConnection.on('BalanceAndAiCreditUpdated', (data: { imCoinBalance: number; aiCredit: number }) => {
-            console.log('[v0] BalanceAndAiCreditUpdated received:', data);
-            setBalance(data.imCoinBalance);
-            setAiCredit(data.aiCredit);
-          
-            queryClient.invalidateQueries({ queryKey: ['user'] });
-            queryClient.invalidateQueries({ queryKey: ['current-subscription'] });
-          });
+    conn.on('AiCreditUpdated', (data: { aiCredit: number }) => {
+      setAiCredit(data.aiCredit);
+      queryClient.invalidateQueries({ queryKey: ['current-subscription'] });
+    });
 
-          balanceConnection.on('Connected', (data: { message: string }) => {
-            console.log('[v0] BalanceHub Connected confirmation:', data);
-          });
-        })
-        .catch((err) => console.error('SignalR BalanceHub Connection Error: ', err));
+    conn.on('BalanceAndAiCreditUpdated', (data: { imCoinBalance: number; aiCredit: number }) => {
+      setBalance(data.imCoinBalance);
+      setAiCredit(data.aiCredit);
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+      queryClient.invalidateQueries({ queryKey: ['current-subscription'] });
+    });
 
-      return () => {
-        balanceConnection.stop();
-      };
+    return () => {
+      conn.stop().catch(() => {});
+    };
+  }, [isAuthenticated, token, balanceHubUrl, queryClient]);
+
+  // Cleanup khi component unmount
+  useEffect(() => {
+    return () => {
+      if (systemConnection) systemConnection.stop();
+      if (balanceConnection) balanceConnection.stop();
+    };
+  }, [systemConnection, balanceConnection]);
+
+  const markNotificationAsRead = async (notificationId: number) => {
+    if (!systemConnection || systemConnection.state !== signalR.HubConnectionState.Connected) return;
+
+    const target = notifications.find((n) => n.id === notificationId);
+    if (!target || target.isRead) return;
+
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === notificationId ? { ...n, isRead: true } : n))
+    );
+
+    try {
+      await systemConnection.invoke('MarkNotificationAsRead', notificationId.toString());
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
     }
-  }, [isAuthenticated, queryClient]);
+  };
+
+  const markAllNotificationsAsRead = async () => {
+    if (!systemConnection || systemConnection.state !== signalR.HubConnectionState.Connected) return;
+
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+
+    try {
+      await systemConnection.invoke('MarkAllNotificationsAsRead');
+    } catch (error) {
+      console.error('Failed to mark all as read:', error);
+    }
+  };
 
   return (
     <SignalRContext.Provider
       value={{
-        connection,
+        connection: systemConnection,
         notifications,
         unreadCount,
         balance,
