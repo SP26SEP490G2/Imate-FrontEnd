@@ -1,28 +1,17 @@
 import { useState, useEffect } from "react";
 import { format, parseISO } from "date-fns";
-import { Star, MessageSquare, User, Calendar as CalendarIcon, ArrowLeft, AlertTriangle } from "lucide-react";
+import { Star, MessageSquare, User, Calendar as CalendarIcon, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getMentorRatings } from "@/services/mentorService";
 import type { CandidateRatingsResponse, RatingDetail } from "@/types/response/rating.response";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { CreateApplicationDialog } from "@/pages/dialog/main/reportApplication/CreateApplicationDialog";
-import { ApplicationType } from "@/constants/enum";
 
 const MentorRatings = () => {
   const navigate = useNavigate();
   const [data, setData] = useState<CandidateRatingsResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Report Modal State
-  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [selectedBookingId, setSelectedBookingId] = useState<number | null>(null);
-
-  const handleOpenReport = (bookingId: number) => {
-    setSelectedBookingId(bookingId);
-    setIsReportModalOpen(true);
-  };
 
   useEffect(() => {
     fetchRatings();
@@ -80,7 +69,7 @@ const MentorRatings = () => {
   }
 
   return (
-    <div className="text-white p-6 max-w-5xl mx-auto min-h-screen">
+    <div className="text-white p-6 max-w-5xl mx-auto h-[calc(100vh-80px)] overflow-y-auto">
       {/* HEADER */}
       <div className="flex items-center gap-4 mb-8">
         <button 
@@ -138,18 +127,7 @@ const MentorRatings = () => {
           </div>
         ) : (
           data.ratings.map((review: RatingDetail) => (
-            <Card key={review.bookingId} className="bg-[#1A1A2E]/80 border-white/5 p-6 hover:border-indigo-500/30 transition-all shadow-lg relative group">
-              {/* Report Button */}
-              <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                  onClick={() => handleOpenReport(review.bookingId)}
-                  className="p-2 text-gray-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all"
-                  title="Báo cáo đánh giá không hợp lệ"
-                >
-                  <AlertTriangle size={18} />
-                </button>
-              </div>
-
+            <Card key={review.bookingId} className="bg-[#1A1A2E]/80 border-white/5 p-6 hover:border-indigo-500/30 transition-all shadow-lg">
               <div className="flex flex-col md:flex-row gap-6">
                 {/* User Column */}
                 <div className="flex md:flex-col items-center md:items-center gap-4 md:w-32 flex-shrink-0">
@@ -187,15 +165,6 @@ const MentorRatings = () => {
           ))
         )}
       </div>
-      {/* Report Dialog */}
-      {selectedBookingId && (
-        <CreateApplicationDialog
-          open={isReportModalOpen}
-          onOpenChange={setIsReportModalOpen}
-          defaultType={ApplicationType.ReportRating}
-          defaultBookingId={selectedBookingId}
-        />
-      )}
     </div>
   );
 };

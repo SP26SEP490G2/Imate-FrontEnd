@@ -101,7 +101,7 @@ const Footer: React.FC = () => {
                     </div>
                 </div>
                 <div className="pt-8 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-slate-500">
-                    <p>© 2026 IMATE. Tất cả quyền được bảo lưu.</p>
+                    <p>© 2024 IMATE. Tất cả quyền được bảo lưu.</p>
                     <div className="flex gap-6">
                         <a className="hover:text-white transition-colors" href="#">
                             Điều khoản dịch vụ

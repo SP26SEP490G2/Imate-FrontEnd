@@ -30,8 +30,6 @@ import type {
   SavedSystemQuestionItem,
   SavedContributedQuestionItem,
   CommentItem,
-  ValidateExcelResponse,
-  FinalImportRequest,
 } from "@/types/common/question";
 
 const parsePagination = (
@@ -125,27 +123,23 @@ export const getMyContributedQuestions = async (
       params: request,
     }
   );
-  const body = response.data as MyContributedQuestionListResponse | { items?: MyContributedQuestionItem[] };
-  const pagination = parsePagination(response.headers['x-pagination'], {
-    totalCount: (body as MyContributedQuestionListResponse).totalCount,
-    pageNumber: (body as MyContributedQuestionListResponse).pageNumber,
-    pageSize: (body as MyContributedQuestionListResponse).pageSize,
-    totalPages: (body as MyContributedQuestionListResponse).totalPages,
-    hasNextPage: (body as MyContributedQuestionListResponse).hasNextPage,
-    hasPreviousPage: (body as MyContributedQuestionListResponse).hasPreviousPage,
-  });
-  const totalPages = pagination.totalPages > 0
-    ? pagination.totalPages
-    : Math.ceil((pagination.totalCount || 0) / (pagination.pageSize || 10));
+
+  const paginationHeader = response.headers['x-pagination'];
+  const pagination = paginationHeader ? JSON.parse(paginationHeader) : {
+    totalCount: 0,
+    pageSize: request.pageSize || 10,
+    pageNumber: request.pageNumber || 1,
+    totalPages: 0,
+  };
 
   return {
-    items: body?.items || [],
-    totalCount: pagination.totalCount,
-    pageNumber: pagination.pageNumber,
-    pageSize: pagination.pageSize,
-    totalPages,
-    hasNextPage: pagination.hasNextPage,
-    hasPreviousPage: pagination.hasPreviousPage,
+    items: response.data.items || [],
+    totalCount: Number(pagination.totalCount || pagination.TotalCount || 0),
+    pageNumber: Number(pagination.pageNumber || pagination.PageNumber || 1),
+    pageSize: Number(pagination.pageSize || pagination.PageSize || 10),
+    totalPages: Number(pagination.totalPages || pagination.TotalPages || 0),
+    hasNextPage: Boolean(pagination.hasNextPage || pagination.HasNextPage || false),
+    hasPreviousPage: Boolean(pagination.hasPreviousPage || pagination.HasPreviousPage || false),
   };
 };
 
@@ -232,7 +226,7 @@ export const getAllContributedQuestionsForStaff = async (
     hasNextPage: pagination.hasNextPage,
     hasPreviousPage: pagination.hasPreviousPage
   };
-};
+  };
 
 /**
  * Get all pending contributed questions for staff with filters and pagination
@@ -494,52 +488,6 @@ export const exportSystemQuestionsForStaff = async (params: GetSystemQuestionPar
   });
 
   const fileName = parseFilenameFromContentDisposition(response.headers["content-disposition"]);
-  return {
-    blob: response.data,
-    fileName,
-  };
-};
-
-export const validateQuestionsFromExcel = async (file: File): Promise<ValidateExcelResponse> => {
-  const formData = new FormData();
-  formData.append("file", file);
-  const response = await apiClient.post<ValidateExcelResponse>(
-    APIConfig.Question.ValidateQuestionsFromExcel,
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
-  );
-  return response.data;
-};
-
-export const importValidatedQuestions = async (requests: FinalImportRequest[]): Promise<any> => {
-  const response = await apiClient.post(
-    APIConfig.Question.ImportValidatedQuestions,
-    requests
-  );
-  return response.data;
-};
-
-export const revalidateSingleQuestion = async (request: FinalImportRequest): Promise<any> => {
-  const response = await apiClient.post(
-    APIConfig.Question.RevalidateSingleQuestion,
-    request
-  );
-  return response.data;
-};
-
-export const downloadQuestionTemplate = async (): Promise<{ blob: Blob; fileName: string }> => {
-  const response = await apiClient.get(APIConfig.Question.DownloadQuestionTemplate, {
-    responseType: "blob",
-    headers: {
-      Accept: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    },
-  });
-
-  const fileName = parseFilenameFromContentDisposition(response.headers["content-disposition"] || `Question_Import_Template_${Date.now()}.xlsx`);
   return {
     blob: response.data,
     fileName,

@@ -214,7 +214,7 @@ const UpdateMentorDialog: React.FC<UpdateMentorDialogProps> = ({ type, onSubmit,
 
               <Card className="border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20">
                 <CardContent className="p-3 text-sm text-yellow-700 dark:text-yellow-400">
-                  Lưu ý: Chỉ được cập nhật lại giá phiên sau <b>1 tuần</b> kể từ lần thay đổi gần nhất.
+                  ⚠️ Lưu ý: Chỉ được cập nhật lại giá phiên sau <b>1 tuần</b> kể từ lần thay đổi gần nhất.
                 </CardContent>
               </Card>
             </>

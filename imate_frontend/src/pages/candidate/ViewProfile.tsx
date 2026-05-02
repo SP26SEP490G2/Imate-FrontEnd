@@ -19,12 +19,11 @@ import { getBankDetail } from "@/services/mentorService";
 import UpdateMentorDialog from "../dialog/UpdateMentorDialog";
 import usePriceUpdateControl from "@/helpers/usePriceUpdateControl";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { CommonBreadcrumb } from "@/components/ui/breadcrumb";
 import { cn } from "@/lib/utils";
 import UpdateRecruiterDialog from "../dialog/UpdateRecruiterDialog";
 import "@/constants/messages";
 import { MSG09, MSG10 } from "@/constants/messages";
-import { getCurrentPackage } from "@/services/userSubscriptionService";
-import { useQuery } from "@tanstack/react-query";
 
 const nameSchema = z.object({
   fullName: z.string().min(2, "Tên phải có ít nhất 2 ký tự"),
@@ -82,12 +81,6 @@ const ViewProfile = () => {
     img.onerror = () => setLoaded(false);
   }, [avatarPreview]);
 
-  const { data: currentPackageData } = useQuery({
-    queryKey: ["current-package"],
-    queryFn: getCurrentPackage,
-    enabled: !!user,
-  });
-
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     // Thêm type
     const file = event.target.files?.[0];
@@ -135,7 +128,7 @@ const ViewProfile = () => {
     }
   }, [user, refetchUser]);
 
-  const currentPlan = currentPackageData?.packageName || "Gói Thường";
+  const currentPlan = user?.subscription || "Gói Thường";
   const isRecruiter = user?.role === "Recruiter";
   const isMentor = user?.role === "Mentor";
   const isAdmin = user?.role === "Admin";
@@ -167,12 +160,13 @@ const ViewProfile = () => {
   return (
     <div className=" bg-[#050816] text-white">
 
-      <div className="container mx-auto px-4 pb-16 pt-6 md:px-10 max-w-[1200px]">
+      <div className="container mx-auto px-4 pb-16 md:px-10 max-w-[1200px]">
+        <CommonBreadcrumb />
         {/* === 1. PROFILE HEADER === */}
         <div className="mx-auto">
           <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
 
-          <div className="flex flex-col items-center justify-between gap-6 rounded-[16px] border border-white/5 bg-[#1e293b]/40 backdrop-blur-sm p-6 shadow-[0_20px_40px_rgba(0,0,0,0.35)] md:flex-row">
+          <div className="flex flex-col items-center justify-between gap-6 rounded-[16px] border border-white/10 bg-[#11142D] p-6 shadow-[0_20px_40px_rgba(0,0,0,0.35)] md:flex-row">
             <div className="flex flex-col items-center gap-6 md:flex-row">
               {/* Avatar */}
               <div className="relative h-24 w-24 md:h-32 md:w-32">
@@ -255,19 +249,19 @@ const ViewProfile = () => {
           <div className="mx-auto mt-10 space-y-8">
             {/* Stats */}
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-              <Card className="rounded-[16px] border border-white/5 bg-[#1e293b]/40 backdrop-blur-sm shadow-[0_10px_25px_rgba(0,0,0,0.35)]">
+              <Card className="rounded-[16px] border border-white/10 bg-[#11142D] shadow-[0_10px_25px_rgba(0,0,0,0.35)]">
                 <CardContent className="p-4 text-center">
                   <div className="text-2xl font-bold text-[#8B5CF6] dark:text-blue-400">{user?.yoe || 0}</div>
                   <p className="text-md text-gray-600 dark:text-gray-400">Năm kinh nghiệm</p>
                 </CardContent>
               </Card>
-              <Card className="rounded-[16px] border border-white/5 bg-[#1e293b]/40 backdrop-blur-sm shadow-[0_10px_25px_rgba(0,0,0,0.35)]">
+              <Card className="rounded-[16px] border border-white/10 bg-[#11142D] shadow-[0_10px_25px_rgba(0,0,0,0.35)]">
                 <CardContent className="p-4 text-center">
                   <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{user?.totalRatingCount || 0}</div>
                   <p className="text-md text-gray-600 dark:text-gray-400">Đánh giá</p>
                 </CardContent>
               </Card>
-              <Card className="rounded-[16px] border border-white/5 bg-[#1e293b]/40 backdrop-blur-sm shadow-[0_10px_25px_rgba(0,0,0,0.35)]">
+              <Card className="rounded-[16px] border border-white/10 bg-[#11142D] shadow-[0_10px_25px_rgba(0,0,0,0.35)]">
                 <CardContent className="p-4 text-center">
                   <div className="flex items-center justify-center gap-1">
                     <Star size={18} className="fill-yellow-500 text-yellow-500" />
@@ -276,7 +270,7 @@ const ViewProfile = () => {
                   <p className="text-md text-gray-600 dark:text-gray-400">Đánh giá trung bình</p>
                 </CardContent>
               </Card>
-              <Card className="relative rounded-[16px] border border-white/5 bg-[#1e293b]/40 backdrop-blur-sm shadow-[0_10px_25px_rgba(0,0,0,0.35)]">
+              <Card className="relative rounded-[16px] border border-white/10 bg-[#11142D] shadow-[0_10px_25px_rgba(0,0,0,0.35)]">
                 <CardContent className="p-4 text-center">
                   <div className="text-2xl font-bold text-green-600 dark:text-green-400">{formatPrice(user?.pricePerSession || 0)}</div>
                   <p className="text-md text-gray-600 dark:text-gray-400">Giá/phiên</p>
@@ -308,7 +302,7 @@ const ViewProfile = () => {
             </div>
 
             {/* Contact Information */}
-            <Card className="rounded-[16px] border border-white/5 bg-[#1e293b]/40 backdrop-blur-sm shadow-[0_20px_40px_rgba(0,0,0,0.35)]">
+            <Card className="rounded-[16px] border border-white/10 bg-[#11142D] shadow-[0_20px_40px_rgba(0,0,0,0.35)]">
               <CardHeader className="flex items-center justify-between">
                 <CardTitle className="text-[18px] font-semibold text-white">Thông tin liên hệ</CardTitle>
                 <UpdateMentorDialog data={user} type="personal" onSubmit={() => refetchUser()} />
@@ -337,7 +331,7 @@ const ViewProfile = () => {
 
             {/* Bank Information */}
             {(user?.bankAccountHolderName || user?.bankAccountNumber || user?.bankCode) && (
-              <Card className="rounded-[16px] border border-white/5 bg-[#1e293b]/40 backdrop-blur-sm shadow-[0_20px_40px_rgba(0,0,0,0.35)]">
+              <Card className="rounded-[16px] border border-white/10 bg-[#11142D] shadow-[0_20px_40px_rgba(0,0,0,0.35)]">
                 <CardHeader className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2 text-base">Thông tin ngân hàng</CardTitle>
                   <UpdateMentorDialog data={user} type="bank" onSubmit={() => refetchUser()} />
@@ -394,7 +388,7 @@ const ViewProfile = () => {
 
             {/* Bio */}
             {user?.bio && (
-              <Card className="rounded-[16px] border border-white/5 bg-[#1e293b]/40 backdrop-blur-sm shadow-[0_20px_40px_rgba(0,0,0,0.35)]">
+              <Card className="rounded-[16px] border border-white/10 bg-[#11142D] shadow-[0_20px_40px_rgba(0,0,0,0.35)]">
                 <CardHeader className="flex items-center justify-between">
                   <CardTitle className="text-[18px] font-semibold text-white">Giới thiệu</CardTitle>
                   <UpdateMentorDialog data={user} type="bio" onSubmit={() => refetchUser()} />
@@ -408,7 +402,7 @@ const ViewProfile = () => {
             {/* Positions */}
             <div className="grid gap-4 md:grid-cols-2">
               {user?.companies && user.companies.length > 0 && (
-                <Card className="rounded-[16px] border border-white/5 bg-[#1e293b]/40 backdrop-blur-sm shadow-[0_20px_40px_rgba(0,0,0,0.35)]">
+                <Card className="rounded-[16px] border border-white/10 bg-[#11142D] shadow-[0_20px_40px_rgba(0,0,0,0.35)]">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-base">
                       <Building size={18} className="text-indigo-600 dark:text-indigo-400" />
@@ -428,7 +422,7 @@ const ViewProfile = () => {
               )}
 
               {user?.positions && user.positions.length > 0 && (
-                <Card className="rounded-[16px] border border-white/5 bg-[#1e293b]/40 backdrop-blur-sm shadow-[0_20px_40px_rgba(0,0,0,0.35)]">
+                <Card className="rounded-[16px] border border-white/10 bg-[#11142D] shadow-[0_20px_40px_rgba(0,0,0,0.35)]">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-base">
                       <Briefcase size={18} className="text-indigo-600 dark:text-indigo-400" />
@@ -450,7 +444,7 @@ const ViewProfile = () => {
 
             {/* Skills */}
             {user?.skills && user.skills.length > 0 && (
-              <Card className="rounded-[16px] border border-white/5 bg-[#1e293b]/40 backdrop-blur-sm shadow-[0_20px_40px_rgba(0,0,0,0.35)]">
+              <Card className="rounded-[16px] border border-white/10 bg-[#11142D] shadow-[0_20px_40px_rgba(0,0,0,0.35)]">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Code2 size={20} className="text-indigo-600 dark:text-indigo-400" />
@@ -471,7 +465,7 @@ const ViewProfile = () => {
 
             {/* Documents */}
             {(user?.cvUrl || user?.certificateUrl) && (
-              <Card className="rounded-[16px] border border-white/5 bg-[#1e293b]/40 backdrop-blur-sm shadow-[0_20px_40px_rgba(0,0,0,0.35)]">
+              <Card className="rounded-[16px] border border-white/10 bg-[#11142D] shadow-[0_20px_40px_rgba(0,0,0,0.35)]">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
                     <FileText size={18} className="text-indigo-600 dark:text-indigo-400" />
@@ -502,7 +496,7 @@ const ViewProfile = () => {
           <div className="mx-auto mt-10 space-y-8">
 
             {/* Company Info */}
-            <Card className="rounded-[16px] border border-white/5 bg-[#1e293b]/40 backdrop-blur-sm shadow-[0_20px_40px_rgba(0,0,0,0.35)]">
+            <Card className="rounded-[16px] border border-white/10 bg-[#11142D] shadow-[0_20px_40px_rgba(0,0,0,0.35)]">
               <CardHeader className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2 text-white">
                   <Building size={18} />
@@ -607,26 +601,20 @@ const ViewProfile = () => {
 
           {!(isMentor || isAdmin || isStaff || isRecruiter) && (
             <div className="lg:col-span-1">
-              <Card className="sticky top-24 rounded-[16px] border border-white/5 bg-[#1e293b]/40 backdrop-blur-sm shadow-[0_20px_40px_rgba(0,0,0,0.35)]">
+              <Card className="sticky top-24 bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/30 dark:to-blue-900/30">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-[#A78BFA] dark:text-indigo-300">
                     <Star size={20} />
-                    Gói của bạn
+                    Gói cước của bạn
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-col items-center gap-4 text-center">
                   <h3 className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{currentPlan}</h3>
-                  {currentPackageData?.rank === 0 ? (
-                    <>
-                      <p className="text-muted-foreground text-sm">Nâng cấp để mở khóa tất cả các tính năng.</p>
-                      <Button className="w-full cursor-pointer bg-gradient-to-r from-[#6C63FF] to-[#8B5CF6] text-white hover:brightness-110" onClick={() => navigate("/view-subscription")}>
-                        <ArrowUpCircle size={18} className="mr-2" />
-                        Nâng cấp ngay
-                      </Button>
-                    </>
-                  ) : (
-                    <p className="text-muted-foreground text-sm">Bạn đang sử dụng gói trả phí.<br /> Tận hưởng mọi dịch vụ tốt nhất của IMATE!</p>
-                  )}
+                  <p className="text-muted-foreground text-sm">Nâng cấp để mở khóa tất cả các tính năng nâng cao.</p>
+                  <Button className="w-full cursor-pointer bg-gradient-to-r from-[#6C63FF] to-[#8B5CF6] text-white hover:brightness-110" onClick={() => navigate("/view-subscription")}>
+                    <ArrowUpCircle size={18} className="mr-2" />
+                    Nâng cấp ngay
+                  </Button>
                 </CardContent>
               </Card>
             </div>

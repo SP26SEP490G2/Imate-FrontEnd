@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   ChevronRight,
   ChevronLeft,
@@ -7,6 +7,8 @@ import {
   Calendar,
   Clock,
   FileText,
+  Briefcase,
+  Eye,
   Star,
   CheckCircle2,
   AlertTriangle,
@@ -14,7 +16,6 @@ import {
   Lightbulb,
   ChevronDown,
   ChevronUp,
-  ArrowLeft,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -26,9 +27,10 @@ import {
   type StructuredFeedback,
 } from "@/services/interviewService";
 import { MSG24 } from "@/constants/messages";
-import { USE_MOCK } from "@/mocks/interviewMockData";
 
-/*  Helper: parse structuredFeedbackJson  */
+/* ------------------------------------------------------------------ */
+/*  Helper: parse structuredFeedbackJson                               */
+/* ------------------------------------------------------------------ */
 function parseFeedback(json: string | null): StructuredFeedback | null {
   if (!json) return null;
   try {
@@ -38,7 +40,9 @@ function parseFeedback(json: string | null): StructuredFeedback | null {
   }
 }
 
-/*  Helper: parse overallFeedback into sections */
+/* ------------------------------------------------------------------ */
+/*  Helper: parse overallFeedback into sections                        */
+/* ------------------------------------------------------------------ */
 interface OverallFeedbackSections {
   overview: string;
   strengths: string[];
@@ -50,6 +54,7 @@ function parseOverallFeedback(text: string | null): OverallFeedbackSections {
     return { overview: "", strengths: [], improvements: [] };
   }
 
+  // Try to parse as JSON first (backend might send structured data)
   try {
     const parsed = JSON.parse(text);
     return {
@@ -58,6 +63,7 @@ function parseOverallFeedback(text: string | null): OverallFeedbackSections {
       improvements: parsed.improvements || [],
     };
   } catch {
+    // Parse text-based feedback with sections
     const sections: OverallFeedbackSections = {
       overview: "",
       strengths: [],
@@ -99,6 +105,7 @@ function parseOverallFeedback(text: string | null): OverallFeedbackSections {
       }
     }
 
+    // If no sections were found, put everything in overview
     if (!sections.strengths.length && !sections.improvements.length) {
       sections.overview = text;
     }
@@ -107,31 +114,35 @@ function parseOverallFeedback(text: string | null): OverallFeedbackSections {
   }
 }
 
-/*  Score Bar (scaled /5)  */
+/* ------------------------------------------------------------------ */
+/*  Score Bar (scaled /5)                                              */
+/* ------------------------------------------------------------------ */
 function ScoreBar({ label, value }: { label: string; value: number | null }) {
   const v = value ?? 0;
+  // Backend scores are 0-1 (double), scale to 0-5
   const scaled = Math.round(v * 5 * 10) / 10;
+  const displayValue = Math.round(scaled);
   const percent = (scaled / 5) * 100;
 
   const color =
     scaled >= 4
       ? "from-emerald-500 to-emerald-400"
       : scaled >= 2.5
-        ? "from-amber-500 to-amber-400"
-        : "from-red-500 to-red-400";
+      ? "from-amber-500 to-amber-400"
+      : "from-red-500 to-red-400";
 
   const textColor =
     scaled >= 4
       ? "text-emerald-400"
       : scaled >= 2.5
-        ? "text-amber-400"
-        : "text-red-400";
+      ? "text-amber-400"
+      : "text-red-400";
 
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between text-sm">
         <span className="text-slate-400">{label}</span>
-        <span className={`font-bold ${textColor}`}>{scaled}/5</span>
+        <span className={`font-bold ${textColor}`}>{displayValue}/5</span>
       </div>
       <div className="h-2 rounded-full bg-slate-700/50">
         <div
@@ -143,9 +154,14 @@ function ScoreBar({ label, value }: { label: string; value: number | null }) {
   );
 }
 
-
-/*  Question Detail Card */
-function QuestionCard({ response }: { response: InterviewResponseDetail }) {
+/* ------------------------------------------------------------------ */
+/*  Question Detail Card                                               */
+/* ------------------------------------------------------------------ */
+function QuestionCard({
+  response,
+}: {
+  response: InterviewResponseDetail;
+}) {
   const [expanded, setExpanded] = useState(false);
   const feedback = parseFeedback(response.structuredFeedbackJson);
 
@@ -180,34 +196,13 @@ function QuestionCard({ response }: { response: InterviewResponseDetail }) {
         </div>
       </div>
 
-      {/* Score Metrics or Loading */}
-      {!response.structuredFeedbackJson ? (
-        <div className="mb-5 grid gap-4 md:grid-cols-2">
-          <div className="animate-pulse space-y-2">
-            <div className="h-4 w-24 rounded bg-slate-700" />
-            <div className="h-2 w-full rounded bg-slate-700" />
-          </div>
-          <div className="animate-pulse space-y-2">
-            <div className="h-4 w-24 rounded bg-slate-700" />
-            <div className="h-2 w-full rounded bg-slate-700" />
-          </div>
-          <div className="col-span-2 mt-2 flex items-center gap-2 text-xs text-purple-400">
-            <Loader2 className="h-3 w-3 animate-spin" />
-            Đang phân tích phản hồi...
-          </div>
-        </div>
-      ) : response.questionNumber <= 2 ? (
-        <div className="mb-5 rounded-xl border border-slate-700/40 bg-slate-800/40 px-4 py-3 text-center text-sm text-slate-400">
-          Câu hỏi chào hỏi không tính điểm năng lực.
-        </div>
-      ) : (
-        <div className="mb-5 grid gap-4 md:grid-cols-2">
-          <ScoreBar label="Cách diễn đạt" value={response.communicationScore} />
-          <ScoreBar label="Kiến thức" value={response.technicalDepthScore} />
-        </div>
-      )}
+      {/* Score Metrics */}
+      <div className="mb-5 grid gap-4 md:grid-cols-2">
+        <ScoreBar label="Cách diễn đạt" value={response.communicationScore} />
+        <ScoreBar label="Kiến thức" value={response.technicalDepthScore} />
+      </div>
 
-      {/* Expand/Collapse */}
+      {/* Expand/Collapse for detailed feedback */}
       <div className="border-t border-slate-700/40 pt-4">
         <button
           onClick={() => setExpanded(!expanded)}
@@ -223,41 +218,40 @@ function QuestionCard({ response }: { response: InterviewResponseDetail }) {
 
         {expanded && (
           <div className="mt-4 space-y-4">
-            {response.questionNumber > 2 && (
-              <>
+            {/* Additional Score Metrics */}
+            <div className="grid gap-4 md:grid-cols-2">
+              <ScoreBar
+                label="Giải quyết vấn đề"
+                value={response.problemSolvingScore}
+              />
+              <ScoreBar
+                label="Kinh nghiệm thực tế"
+                value={response.practicalExperienceScore}
+              />
+            </div>
+
+            {/* STAR Scores (if available) */}
+            {(response.starSituationScore !== null ||
+              response.starTaskScore !== null ||
+              response.starActionScore !== null ||
+              response.starResultScore !== null) && (
+              <div>
+                <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Điểm STAR
+                </p>
                 <div className="grid gap-4 md:grid-cols-2">
                   <ScoreBar
-                    label="Giải quyết vấn đề"
-                    value={response.problemSolvingScore}
+                    label="Situation"
+                    value={response.starSituationScore}
                   />
-                  <ScoreBar
-                    label="Kinh nghiệm thực tế"
-                    value={response.practicalExperienceScore}
-                  />
+                  <ScoreBar label="Task" value={response.starTaskScore} />
+                  <ScoreBar label="Action" value={response.starActionScore} />
+                  <ScoreBar label="Result" value={response.starResultScore} />
                 </div>
-
-                {(response.starSituationScore !== null ||
-                  response.starTaskScore !== null ||
-                  response.starActionScore !== null ||
-                  response.starResultScore !== null) && (
-                    <div>
-                      <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                        Điểm STAR
-                      </p>
-                      <div className="grid gap-4 md:grid-cols-2">
-                        <ScoreBar
-                          label="Situation"
-                          value={response.starSituationScore}
-                        />
-                        <ScoreBar label="Task" value={response.starTaskScore} />
-                        <ScoreBar label="Action" value={response.starActionScore} />
-                        <ScoreBar label="Result" value={response.starResultScore} />
-                      </div>
-                    </div>
-                  )}
-              </>
+              </div>
             )}
 
+            {/* AI Feedback */}
             {response.aiFeedback && (
               <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/5 px-4 py-3">
                 <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-indigo-400">
@@ -270,6 +264,7 @@ function QuestionCard({ response }: { response: InterviewResponseDetail }) {
               </div>
             )}
 
+            {/* Structured Feedback Details */}
             {feedback?.strengths && feedback.strengths.length > 0 && (
               <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3">
                 <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-400">
@@ -310,14 +305,17 @@ function QuestionCard({ response }: { response: InterviewResponseDetail }) {
               </div>
             )}
 
-            {(response.expectedAnswerOutline || feedback?.suggested_answer) && (
+            {/* Suggested / Expected Answer */}
+            {(response.expectedAnswerOutline ||
+              feedback?.suggested_answer) && (
               <div className="rounded-xl border border-purple-500/20 bg-purple-500/5 px-4 py-3">
                 <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-purple-400">
                   <Star className="h-3.5 w-3.5" />
                   Đáp án mẫu
                 </p>
                 <p className="text-sm leading-relaxed text-slate-300">
-                  {feedback?.suggested_answer || response.expectedAnswerOutline}
+                  {feedback?.suggested_answer ||
+                    response.expectedAnswerOutline}
                 </p>
               </div>
             )}
@@ -328,7 +326,9 @@ function QuestionCard({ response }: { response: InterviewResponseDetail }) {
   );
 }
 
-/*  Main Page */
+/* ------------------------------------------------------------------ */
+/*  Main Page                                                          */
+/* ------------------------------------------------------------------ */
 export default function InterviewFeedbackDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -336,40 +336,21 @@ export default function InterviewFeedbackDetail() {
   const [loading, setLoading] = useState(true);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
-  const [searchParams] = useSearchParams();
-  const fromSource = searchParams.get("from");
-
   useEffect(() => {
-    let pollInterval: any;
-
-    const fetchDetail = async (isSilent = false) => {
+    const fetchDetail = async () => {
       if (!id) return;
       try {
-        if (!isSilent) setLoading(true);
+        setLoading(true);
         const data = await getInterviewResult(parseInt(id));
-        setDetail(data as unknown as InterviewResultDetail);
-
-        if ((data as any).session.status === "Completed") {
-          if (pollInterval) clearInterval(pollInterval);
-        }
-      } catch (err) {
-        if (!isSilent) toast.error(MSG24);
+        setDetail(data);
+      } catch {
+        toast.error(MSG24);
       } finally {
-        if (!isSilent) setLoading(false);
+        setLoading(false);
       }
     };
 
     fetchDetail();
-
-    if (!(USE_MOCK && id === "999")) {
-      pollInterval = setInterval(() => {
-        fetchDetail(true);
-      }, 3000);
-    }
-
-    return () => {
-      if (pollInterval) clearInterval(pollInterval);
-    };
   }, [id]);
 
   if (loading) {
@@ -384,7 +365,10 @@ export default function InterviewFeedbackDetail() {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
         <p className="text-slate-400">Không tìm thấy phiên phỏng vấn.</p>
-        <Button variant="secondary" onClick={() => navigate("/test-history")}>
+        <Button
+          variant="secondary"
+          onClick={() => navigate("/test-history")}
+        >
           Quay lại
         </Button>
       </div>
@@ -416,32 +400,38 @@ export default function InterviewFeedbackDetail() {
 
   const overallSections = parseOverallFeedback(session.overallFeedback);
   const duration = getDuration();
+
   const totalQuestions = responses.length;
   const currentResponse = responses[currentQuestionIndex];
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 pb-28">
-      {/* Back button */}
-      {fromSource && (
-        <button
-          onClick={() => navigate(-1)}
-          className="mb-6 flex items-center gap-3 text-base text-slate-300 transition-colors hover:text-white"
+      {/* Breadcrumb */}
+      <nav className="mb-6 flex items-center gap-1.5 text-sm text-slate-500">
+        <span
+          className="cursor-pointer transition-colors hover:text-slate-300"
+          onClick={() => navigate("/home")}
         >
-          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-600">
-            <ArrowLeft className="h-5 w-5" />
-          </span>
-          Quay lại lộ trình
-        </button>
-      )}
+          Trang chủ
+        </span>
+        <ChevronRight className="h-3.5 w-3.5" />
+        <span
+          className="cursor-pointer transition-colors hover:text-slate-300"
+          onClick={() => navigate("/test-history")}
+        >
+          Lịch sử phỏng vấn
+        </span>
+        <ChevronRight className="h-3.5 w-3.5" />
+        <span className="font-medium text-purple-400">
+          Phiên phỏng vấn {session.id}
+        </span>
+      </nav>
+
       {/* Session Header */}
       <div className="mb-6">
-        <div className="flex items-center justify-between gap-4">
-          {/* LEFT */}
-          <h1 className="text-2xl font-bold text-white md:text-3xl">
-            Phiên phỏng vấn {session.id}
-          </h1>
-        </div>
-
+        <h1 className="text-2xl font-bold text-white md:text-3xl">
+          Phiên phỏng vấn {session.id}
+        </h1>
         <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-slate-400">
           <span className="flex items-center gap-1.5">
             <Calendar className="h-4 w-4" />
@@ -459,6 +449,35 @@ export default function InterviewFeedbackDetail() {
         </div>
       </div>
 
+      {/* Document Links */}
+      <div className="mb-6 flex flex-wrap gap-3">
+        {session.positionName && (
+          <div className="flex items-center gap-2 rounded-lg border border-slate-700/60 bg-slate-800/40 px-3 py-2 text-sm text-slate-300">
+            <Briefcase className="h-4 w-4 text-purple-400" />
+            {session.positionName}
+            {session.levelName && (
+              <span className="text-slate-500">• {session.levelName}</span>
+            )}
+          </div>
+        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          icon={<FileText className="h-4 w-4" />}
+          onClick={() => navigate("/cv-management")}
+        >
+          Xem CV đã dùng
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          icon={<Eye className="h-4 w-4" />}
+          disabled
+        >
+          Xem JD yêu cầu
+        </Button>
+      </div>
+
       {/* Overview Cards */}
       <div className="mb-8 grid gap-4 md:grid-cols-3">
         {/* Tổng quan */}
@@ -472,15 +491,7 @@ export default function InterviewFeedbackDetail() {
             </h3>
           </div>
           <p className="text-sm leading-relaxed text-slate-300">
-            {overallSections.overview ||
-              (session.status !== "Completed" ? (
-                <span className="flex items-center gap-2 text-slate-500">
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  Đang tổng hợp nhận xét...
-                </span>
-              ) : (
-                "Chưa có nhận xét tổng quan."
-              ))}
+            {overallSections.overview || "Chưa có nhận xét tổng quan."}
           </p>
         </div>
 
@@ -507,7 +518,9 @@ export default function InterviewFeedbackDetail() {
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-slate-500">Chưa có thông tin ưu điểm.</p>
+            <p className="text-sm text-slate-500">
+              Chưa có thông tin ưu điểm.
+            </p>
           )}
         </div>
 
@@ -597,7 +610,6 @@ export default function InterviewFeedbackDetail() {
           </Button>
         </div>
       </div>
-
     </div>
   );
 }

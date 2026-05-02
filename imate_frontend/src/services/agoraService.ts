@@ -35,15 +35,9 @@ class AgoraService {
     if (!this.client) throw new Error("Client not initialized");
 
     this.client.on("user-published", async (user, mediaType) => {
-      console.log(`ðŸ”µ Agora: user-published: uid=${user.uid}, mediaType=${mediaType}`);
       if (mediaType === "audio" || mediaType === "video") {
-        try {
-          await this.client!.subscribe(user, mediaType);
-          console.log(`ðŸ”µ Agora: subscribed to ${mediaType} from user ${user.uid}`);
-          onUserPublished(user, mediaType);
-        } catch (err) {
-          console.error(`âŒ Agora: Failed to subscribe to ${user.uid}:`, err);
-        }
+        await this.client!.subscribe(user, mediaType);
+        onUserPublished(user, mediaType);
       }
     });
 
@@ -54,17 +48,6 @@ class AgoraService {
     this.client.on("user-left", (user) => {
       onUserUnpublished(user);
     });
-  }
-
-  removeAllListeners(): void {
-    if (this.client) {
-      this.client.removeAllListeners();
-      console.log("ðŸ”µ All Agora listeners removed");
-    }
-  }
-
-  getRemoteUsers(): IAgoraRTCRemoteUser[] {
-    return this.client ? this.client.remoteUsers : [];
   }
 
   async joinChannel(config: AgoraConfig): Promise<void> {

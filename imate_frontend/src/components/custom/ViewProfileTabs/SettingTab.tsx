@@ -1,6 +1,9 @@
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Lock } from "lucide-react";
 
 // --- Thêm các import ---
 import { useForm, type SubmitHandler } from "react-hook-form";
@@ -30,10 +33,6 @@ const passwordSchema = z
   .refine((data) => data.newPassword === data.confirmPassword, {
     message: MSG58,
     path: ["confirmPassword"], // Gắn lỗi vào trường confirmPassword
-  })
-  .refine((data) => data.currentPassword !== data.newPassword, {
-    message: "Mật khẩu mới không được trùng với mật khẩu hiện tại",
-    path: ["newPassword"],
   });
 
 type PasswordFormData = z.infer<typeof passwordSchema>;
@@ -98,7 +97,6 @@ const SettingTab = () => {
 
       // BƯỚC 4: Gọi API backend đã tạo
       await changePasswordService({
-        currentPassword: data.currentPassword,
         newPassword: data.newPassword,
         firebaseIdToken: firebaseIdToken,
       });
@@ -121,67 +119,66 @@ const SettingTab = () => {
   };
 
   return (
-    <div className="max-w-2xl">
-      <div
-        className="
+  <div className="max-w-2xl">
+    <div
+      className="
       rounded-2xl
-      bg-[#1e293b]/40
-      border border-white/5
-      backdrop-blur-sm
+      bg-[#11142D]
+      border border-white/10
       p-8
       shadow-[0_20px_40px_rgba(0,0,0,0.35)]
       "
-      >
-        <Form {...form}>
-          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
+    >
+      <Form {...form}>
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
 
-            {/* Header */}
-            <div className="space-y-2">
-              <h2 className="text-[28px] font-semibold text-white">
-                Đổi mật khẩu
-              </h2>
-
-              {isGoogleAccount ? (
-                <p className="text-sm text-[#A0A3BD]">
-                  Tài khoản đăng nhập bằng Google không thể thay đổi mật khẩu.
-                </p>
-              ) : (
-                <p className="text-sm text-[#A0A3BD]">
-                  Cập nhật mật khẩu để bảo mật tài khoản của bạn.
-                </p>
-              )}
-            </div>
+          {/* Header */}
+          <div className="space-y-2">
+            <h2 className="text-[28px] font-semibold text-white">
+              Đổi mật khẩu
+            </h2>
 
             {isGoogleAccount ? (
-              <div className="bg-[#161A3F] border border-white/10 rounded-xl p-5 text-sm text-[#A0A3BD]">
-                Để thay đổi mật khẩu, vui lòng truy cập{" "}
-                <a
-                  href="https://myaccount.google.com/personal-info"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[#8B5CF6] hover:underline font-medium"
-                >
-                  Google Account Security
-                </a>
-              </div>
+              <p className="text-sm text-[#A0A3BD]">
+                Tài khoản đăng nhập bằng Google không thể thay đổi mật khẩu.
+              </p>
             ) : (
-              <>
-                {/* Current Password */}
-                <FormField
-                  control={control}
-                  name="currentPassword"
-                  render={({ field }) => (
-                    <FormItem className="space-y-2">
-                      <label className="text-sm text-[#A0A3BD]">
-                        Mật khẩu hiện tại
-                      </label>
+              <p className="text-sm text-[#A0A3BD]">
+                Cập nhật mật khẩu để bảo mật tài khoản của bạn.
+              </p>
+            )}
+          </div>
 
-                      <div className="relative">
-                        <FormControl>
-                          <Input
-                            type={showPassword ? "text" : "password"}
-                            placeholder="Nhập mật khẩu hiện tại"
-                            className="
+          {isGoogleAccount ? (
+            <div className="bg-[#161A3F] border border-white/10 rounded-xl p-5 text-sm text-[#A0A3BD]">
+              Để thay đổi mật khẩu, vui lòng truy cập{" "}
+              <a
+                href="https://myaccount.google.com/personal-info"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#8B5CF6] hover:underline font-medium"
+              >
+                Google Account Security
+              </a>
+            </div>
+          ) : (
+            <>
+              {/* Current Password */}
+              <FormField
+                control={control}
+                name="currentPassword"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <label className="text-sm text-[#A0A3BD]">
+                      Mật khẩu hiện tại
+                    </label>
+
+                    <div className="relative">
+                      <FormControl>
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Nhập mật khẩu hiện tại"
+                          className="
                           h-12
                           bg-[#0F1333]
                           border border-white/10
@@ -191,45 +188,45 @@ const SettingTab = () => {
                           focus:border-[#8B5CF6]
                           focus:ring-0
                           "
-                            {...field}
-                          />
-                        </FormControl>
+                          {...field}
+                        />
+                      </FormControl>
 
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="
                         absolute right-4 top-1/2 -translate-y-1/2
                         text-[#6B6F8E]
                         hover:text-white
                         transition-colors
                         "
-                        >
-                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                        </button>
-                      </div>
+                      >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
 
-                      <FormMessage className="text-[#EF4444] text-xs" />
-                    </FormItem>
-                  )}
-                />
+                    <FormMessage className="text-[#EF4444] text-xs" />
+                  </FormItem>
+                )}
+              />
 
-                {/* New Password */}
-                <FormField
-                  control={control}
-                  name="newPassword"
-                  render={({ field }) => (
-                    <FormItem className="space-y-2">
-                      <label className="text-sm text-[#A0A3BD]">
-                        Mật khẩu mới
-                      </label>
+              {/* New Password */}
+              <FormField
+                control={control}
+                name="newPassword"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <label className="text-sm text-[#A0A3BD]">
+                      Mật khẩu mới
+                    </label>
 
-                      <div className="relative">
-                        <FormControl>
-                          <Input
-                            type={showNewPassword ? "text" : "password"}
-                            placeholder="Nhập mật khẩu mới"
-                            className="
+                    <div className="relative">
+                      <FormControl>
+                        <Input
+                          type={showNewPassword ? "text" : "password"}
+                          placeholder="Nhập mật khẩu mới"
+                          className="
                           h-12
                           bg-[#0F1333]
                           border border-white/10
@@ -239,51 +236,51 @@ const SettingTab = () => {
                           focus:border-[#8B5CF6]
                           focus:ring-0
                           "
-                            {...field}
-                          />
-                        </FormControl>
+                          {...field}
+                        />
+                      </FormControl>
 
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setShowNewPassword(!showNewPassword)
-                          }
-                          className="
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setShowNewPassword(!showNewPassword)
+                        }
+                        className="
                         absolute right-4 top-1/2 -translate-y-1/2
                         text-[#6B6F8E]
                         hover:text-white
                         transition-colors
                         "
-                        >
-                          {showNewPassword ? (
-                            <EyeOff size={18} />
-                          ) : (
-                            <Eye size={18} />
-                          )}
-                        </button>
-                      </div>
+                      >
+                        {showNewPassword ? (
+                          <EyeOff size={18} />
+                        ) : (
+                          <Eye size={18} />
+                        )}
+                      </button>
+                    </div>
 
-                      <FormMessage className="text-[#EF4444] text-xs" />
-                    </FormItem>
-                  )}
-                />
+                    <FormMessage className="text-[#EF4444] text-xs" />
+                  </FormItem>
+                )}
+              />
 
-                {/* Confirm Password */}
-                <FormField
-                  control={control}
-                  name="confirmPassword"
-                  render={({ field }) => (
-                    <FormItem className="space-y-2">
-                      <label className="text-sm text-[#A0A3BD]">
-                        Xác nhận mật khẩu mới
-                      </label>
+              {/* Confirm Password */}
+              <FormField
+                control={control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <label className="text-sm text-[#A0A3BD]">
+                      Xác nhận mật khẩu mới
+                    </label>
 
-                      <div className="relative">
-                        <FormControl>
-                          <Input
-                            type={showConfirmPassword ? "text" : "password"}
-                            placeholder="Xác nhận mật khẩu mới"
-                            className="
+                    <div className="relative">
+                      <FormControl>
+                        <Input
+                          type={showConfirmPassword ? "text" : "password"}
+                          placeholder="Xác nhận mật khẩu mới"
+                          className="
                           h-12
                           bg-[#0F1333]
                           border border-white/10
@@ -293,41 +290,41 @@ const SettingTab = () => {
                           focus:border-[#8B5CF6]
                           focus:ring-0
                           "
-                            {...field}
-                          />
-                        </FormControl>
+                          {...field}
+                        />
+                      </FormControl>
 
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setShowConfirmPassword(!showConfirmPassword)
-                          }
-                          className="
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                        className="
                         absolute right-4 top-1/2 -translate-y-1/2
                         text-[#6B6F8E]
                         hover:text-white
                         transition-colors
                         "
-                        >
-                          {showConfirmPassword ? (
-                            <EyeOff size={18} />
-                          ) : (
-                            <Eye size={18} />
-                          )}
-                        </button>
-                      </div>
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff size={18} />
+                        ) : (
+                          <Eye size={18} />
+                        )}
+                      </button>
+                    </div>
 
-                      <FormMessage className="text-[#EF4444] text-xs" />
-                    </FormItem>
-                  )}
-                />
+                    <FormMessage className="text-[#EF4444] text-xs" />
+                  </FormItem>
+                )}
+              />
 
-                {/* Submit Button */}
-                <div className="pt-2">
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="
+              {/* Submit Button */}
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="
                   h-12
                   px-6
                   rounded-xl
@@ -341,17 +338,17 @@ const SettingTab = () => {
                   transition-all
                   shadow-[0_0_20px_rgba(139,92,246,0.35)]
                   "
-                  >
-                    {isLoading ? "Đang cập nhật..." : "Lưu thay đổi"}
-                  </button>
-                </div>
-              </>
-            )}
-          </form>
-        </Form>
-      </div>
+                >
+                  {isLoading ? "Đang cập nhật..." : "Lưu thay đổi"}
+                </button>
+              </div>
+            </>
+          )}
+        </form>
+      </Form>
     </div>
-  );
+  </div>
+);
 };
 
 export default SettingTab;

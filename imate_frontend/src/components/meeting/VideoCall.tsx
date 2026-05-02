@@ -137,17 +137,6 @@ const VideoCall: React.FC<VideoCallProps> = ({
     }
     let startTime = localStorage.getItem(getMeetingStartKey(channel));
     const now = Date.now();
-    
-    // Fix: If startTime existed from more than 2 hours ago, reset it (stale data bug)
-    if (startTime) {
-      const oldTime = parseInt(startTime, 10);
-      if (now - oldTime > 2 * 60 * 60 * 1000) {
-        console.log("ðŸ”µ Stale countdown found, resetting...");
-        localStorage.removeItem(getMeetingStartKey(channel));
-        startTime = null;
-      }
-    }
-
     if (!startTime) {
       localStorage.setItem(getMeetingStartKey(channel), now.toString());
       startTime = now.toString();
@@ -195,10 +184,8 @@ const VideoCall: React.FC<VideoCallProps> = ({
   useEffect(() => {
     try {
       agoraService.initializeClient();
-      agoraService.removeAllListeners(); // Clean up old listeners before setting up new ones
       agoraService.setupEventListeners(
         (user, mediaType) => {
-          console.log(`ðŸ”µ Remote user ${user.uid} published ${mediaType}`);
           setRemoteUsers(prev => new Map(prev).set(user.uid, user));
           setTimeout(() => {
             if (mediaType === "video") {
@@ -231,32 +218,19 @@ const VideoCall: React.FC<VideoCallProps> = ({
           }
         }
       );
-    } catch (err) {
-      console.error("â Œ Agora: Error in setupEventListeners:", err);
-    }
+    } catch {}
     return () => { if (agoraService.getIsJoined()) agoraService.leaveChannel(); };
   }, []);
 
   useEffect(() => {
     if (joined && localVideoRef.current) {
-      try { 
-        console.log("ðŸ”µ Agora: Playing local video");
-        agoraService.playLocalVideo(localVideoRef.current); 
-      } catch (err) {
-        console.error("â Œ Agora: Failed to play local video:", err);
-      }
+      try { agoraService.playLocalVideo(localVideoRef.current); } catch {}
     }
   }, [joined]);
 
   useEffect(() => {
     if (isSharing && screenContainerRef.current) {
-      try { 
-        console.log("ðŸ”µ Agora: Playing screen share");
-        agoraService.playLocalScreenVideo(screenContainerRef.current); 
-        setScreenOwnerUid("local"); 
-      } catch (err) {
-        console.error("â Œ Agora: Failed to play screen share:", err);
-      }
+      try { agoraService.playLocalScreenVideo(screenContainerRef.current); setScreenOwnerUid("local"); } catch {}
     } else if (!isSharing && screenOwnerUid === "local") {
       setScreenOwnerUid(null);
       setTimeout(() => {
@@ -271,13 +245,9 @@ const VideoCall: React.FC<VideoCallProps> = ({
   const handleStartRecording = useCallback(async () => {
     if (!bookingId) return;
     try {
-      console.log("ðŸ”µ Agora: Calling StartRecordingForBooking...");
       await startRecordingForBooking(bookingId);
       setIsAgoraRecording(true);
-      console.log("âœ… Agora: Recording started successfully");
-    } catch (err) { 
-      console.error("â Œ Agora: Failed to start recording:", err);
-    }
+    } catch { /* silent */ }
   }, [bookingId]);
 
   const handleStopRecording = useCallback(async () => {
@@ -293,15 +263,8 @@ const VideoCall: React.FC<VideoCallProps> = ({
   useEffect(() => {
     if (!bookingId || !joined) return;
     const count = 1 + remoteUsers.size;
-    console.log(`ðŸ”µ Agora: Participant count: ${count} (Remote: ${remoteUsers.size})`);
-    if (count >= 2 && !isAgoraRecording) {
-      console.log("ðŸ”µ Agora: Triggering StartRecording...");
-      handleStartRecording();
-    }
-    if (count < 2 && isAgoraRecording) {
-      console.log("ðŸ”µ Agora: Triggering StopRecording...");
-      handleStopRecording();
-    }
+    if (count >= 2 && !isAgoraRecording) handleStartRecording();
+    if (count < 2 && isAgoraRecording) handleStopRecording();
   }, [remoteUsers.size, joined, bookingId, isAgoraRecording, handleStartRecording, handleStopRecording]);
 
   // ── Join / Leave ──
@@ -322,26 +285,6 @@ const VideoCall: React.FC<VideoCallProps> = ({
         throw err;
       }
       setJoined(true);
-      
-      // Manual Sync: Check for any users already in the channel
-      const existingRemoteUsers = agoraService.getRemoteUsers();
-      if (existingRemoteUsers.length > 0) {
-        console.log(`ðŸ”µ Agora: Syncing ${existingRemoteUsers.length} existing remote users`);
-        setRemoteUsers(prev => {
-          const next = new Map(prev);
-          existingRemoteUsers.forEach(user => {
-            next.set(user.uid, user);
-            // If they already have tracks, we might need to play them if events were missed
-            if (user.hasVideo || user.hasAudio) {
-               console.log(`ðŸ”µ Agora: User ${user.uid} already has tracks, triggering playback fallback`);
-               // In some cases we might already be subscribed, so we can trigger the "onUserPublished" logic
-               // However, setupEventListeners should handle this for net-new joins. 
-               // For pre-existing, we just ensure they are in the state.
-            }
-          });
-          return next;
-        });
-      }
     } catch (err: any) {
       if (err?.code === "INVALID_APP_ID") toast.error("App ID không hợp lệ.", { autoClose: 7000 });
       else if (err?.code === "INVALID_TOKEN") toast.error("Token không hợp lệ hoặc đã hết hạn.", { autoClose: 7000 });

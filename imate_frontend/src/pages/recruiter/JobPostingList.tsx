@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Plus, Pencil, Search, Users, Ban } from "lucide-react";
+import { Plus, Pencil, Search, Users, Ban, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/store/AuthContext";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -22,7 +21,7 @@ import { Input } from "@/components/ui/input";
 
 import type { JobItem, JobResponse } from "@/types/common/recruiter";
 import { getRecruiterJobApplications, CloseJob } from "@/services/recruiterService";
-import UpdateJobPostModal from "@/pages/dialog/main/recruiter/UpdateJobPostModal";
+import UpdateJobPostModal from "@/dialog/main/recruiter/UpdateJobPostModal";
 import { toast } from "react-toastify";
 import {
     AlertDialog,
@@ -36,14 +35,6 @@ import {
 } from "@/components/ui/alert-dialog";
 const JobPostingList: React.FC = () => {
     const navigate = useNavigate();
-    const { user, isLoading: isAuthLoading } = useAuth();
-
-    useEffect(() => {
-        if (isAuthLoading) return;
-        if (user && user.accountStatus === "PendingVerification" && user.verificationStatus !== "Rejected" && user.companyName) {
-            navigate("/recruiter-pending-application", { replace: true });
-        }
-    }, [user, isAuthLoading, navigate]);
 
     const [data, setData] = useState<JobResponse | null>(null);
     const [loading, setLoading] = useState(true);
@@ -194,7 +185,6 @@ const JobPostingList: React.FC = () => {
                                 <option value="Full-time">Full-time</option>
                                 <option value="Part-time">Part-time</option>
                                 <option value="Internship">Internship</option>
-                                <option value="Contract">Contract</option>
                             </select>
                         </div>
                     </div>

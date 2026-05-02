@@ -95,31 +95,7 @@ export const getListPreviewMentors = async (
  * Backend sẽ tạo hoặc cập nhật bản ghi Mentor cho account hiện tại.
  */
 export const submitMentorProfile = async (payload: SubmitMentorProfileRequest): Promise<void> => {
-  const formData = new FormData();
-
-  // Helper function to append values
-  const appendIfDefined = (key: string, value: any) => {
-    if (value !== undefined && value !== null) {
-      if (Array.isArray(value)) {
-        value.forEach((item) => formData.append(key, String(item)));
-      } else if (value instanceof File) {
-        formData.append(key, value);
-      } else {
-        formData.append(key, String(value));
-      }
-    }
-  };
-
-  // Append all fields from the payload
-  Object.entries(payload).forEach(([key, value]) => {
-    appendIfDefined(key, value);
-  });
-
-  await apiClient.post(APIConfig.Mentor.SubmitMentorProfile, formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+  await apiClient.post(APIConfig.Mentor.SubmitMentorProfile, payload);
 };
 
 

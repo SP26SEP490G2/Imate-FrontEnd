@@ -1,7 +1,10 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
+  BookOpen,
   History,
+  Languages,
+  ChevronRight,
   Loader2,
   CheckCircle2,
   XCircle,
@@ -10,8 +13,6 @@ import {
   Sparkles,
   Clock,
   FileText,
-  Code2,
-  ArrowLeft,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -23,14 +24,31 @@ import {
   type PracticeTestQuestion,
   type GeneratePracticeTestParams,
 } from "@/services/geminiService";
-import APIConfig from "@/config/apiConfig";
-import apiClient from "@/services/apiClient";
 import { MSG25 } from "@/constants/messages";
-import { getAllSkills } from "@/services/commonService";
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
 /* ------------------------------------------------------------------ */
+const TEST_TYPES = [
+  {
+    id: "Technical",
+    label: "Kiến thức chuyên môn",
+    desc: "Đánh giá kiến thức chuyên môn, thuật toán và tư duy lập trình.",
+    icon: BookOpen,
+    gradient: "from-purple-500/20 to-indigo-500/20",
+    border: "border-purple-500/40",
+    iconColor: "text-purple-400",
+  },
+  {
+    id: "Language",
+    label: "Đánh giá ngoại ngữ",
+    desc: "Kiểm tra khả năng ngoại ngữ (Tiếng Anh/Nhật) trong bối cảnh IT.",
+    icon: Languages,
+    gradient: "from-cyan-500/20 to-blue-500/20",
+    border: "border-cyan-500/40",
+    iconColor: "text-cyan-400",
+  },
+];
 
 const FIELDS = [
   "Frontend Developer",
@@ -52,109 +70,39 @@ const LEVELS = ["Intern", "Fresher", "Junior", "Middle", "Senior"];
 /* ------------------------------------------------------------------ */
 function ConfigScreen({
   onStart,
-  initialConfig,
 }: {
   onStart: (params: GeneratePracticeTestParams) => void;
-  initialConfig?: any;
 }) {
-  const [testType] = useState(initialConfig?.testType || "Technical");
-  const [field, setField] = useState(initialConfig?.field || "Frontend Developer");
-  const [skill, setSkill] = useState(initialConfig?.skill || "");
-  const [skills, setSkills] = useState<{ id: number; name: string }[]>([]);
-  const [level, setLevel] = useState(initialConfig?.level || "Junior");
-  const navigate = useNavigate();
+  const [testType, setTestType] = useState("Technical");
+  const [field, setField] = useState("Frontend Developer");
+  const [level, setLevel] = useState("Junior");
+  const [useCV, setUseCV] = useState(false);
   const [loading, setLoading] = useState(false);
-  // Chi phí từ PRACTICE_QUESTION_COST_POINTS trong DB
-  const [costPerTest, setCostPerTest] = useState<number | null>(null);
 
-  // Fetch skills từ DB
-  useEffect(() => {
-    const fetchSkills = async () => {
-      try {
-        const result = await getAllSkills({ pageSize: 100, isActive: true });
-        setSkills(result.data);
-        if (result.data.length > 0 && !skill) {
-          setSkill(result.data[0].name);
-        }
-      } catch (err) {
-        console.error("Failed to fetch skills:", err);
-      }
-    };
-    fetchSkills();
-
-    // Lấy PRACTICE_QUESTION_COST_POINTS từ endpoint dành cho candidate
-    const fetchCost = async () => {
-      try {
-        const response = await apiClient.get<{ success: boolean; data: { cost: number } }>(
-          APIConfig.PracticeTest.GetCostConfig
-        );
-        const cost = response.data?.data?.cost;
-        if (cost !== undefined && !isNaN(cost)) setCostPerTest(cost);
-      } catch {
-        // Fallback: giữ null → skeleton
-      }
-    };
-    fetchCost();
-  }, []);
-
-    // Auto start if initialConfig.autoStart is true and we haven't started yet
-    // To ensure skills are loaded before auto-starting, we could use an effect
-    // But since the API allows generating even if skill might not exactly match the dropdown list (though it should),
-    // we can just wait for skills to load.
-    // We will handle auto-start in a useEffect.
-
-    const handleStart = async () => {
-      setLoading(true);
-      try {
-        await onStart({ testType, field, skill, level, useCV: false, numberOfQuestions: 10 });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    useEffect(() => {
-      if (initialConfig?.autoStart && skills.length > 0) {
-        // Clear the autoStart flag so it doesn't trigger again if the component re-renders
-        initialConfig.autoStart = false;
-        
-        // If skill wasn't provided in initialConfig, it gets set to the first skill in the list by the other useEffect.
-        // We need to pass the right skill to handleStart.
-        const skillToUse = initialConfig.skill || skills[0]?.name || skill;
-        if (!skill) {
-           setSkill(skillToUse);
-        }
-        
-        // We use a small timeout to let the state setter finish
-        setTimeout(() => {
-          onStart({ 
-            testType: initialConfig.testType || testType, 
-            field: initialConfig.field || field, 
-            skill: skillToUse, 
-            level: initialConfig.level || level, 
-            useCV: false, 
-            numberOfQuestions: 10 
-          }).catch(() => setLoading(false));
-          setLoading(true);
-        }, 100);
-      }
-    }, [initialConfig, skills, onStart, testType, field, level, skill]);
+  const handleStart = async () => {
+    setLoading(true);
+    try {
+      await onStart({ testType, field, level, useCV, numberOfQuestions: 10 });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
-      <button
-          onClick={() => navigate("/practice-with-ai")}
-          className="mb-6 flex items-center gap-3 text-base text-slate-300 transition-colors hover:text-white"
-        >
-          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-600">
-            <ArrowLeft className="h-5 w-5" />
-          </span>
-          Quay lại danh sách
-        </button>
+      {/* Breadcrumb */}
+      <nav className="mb-6 flex items-center gap-1.5 text-sm text-slate-500">
+        <span className="transition-colors hover:text-slate-300 cursor-pointer">Trang chủ</span>
+        <ChevronRight className="h-3.5 w-3.5" />
+        <span className="text-slate-400">Luyện tập AI</span>
+        <ChevronRight className="h-3.5 w-3.5" />
+        <span className="font-medium text-purple-400">Cấu hình bài test</span>
+      </nav>
 
       {/* Title */}
       <div className="mb-8 text-center">
         <h1 className="text-2xl font-bold text-white md:text-3xl">
-          Luyện tập bài test trắc nghiệm
+          Luyện tập bài test với AI
         </h1>
         <p className="mt-2 text-sm text-slate-400">
           Tạo bài đánh giá năng lực cá nhân hóa dựa trên CV và mục tiêu nghề nghiệp của bạn
@@ -163,7 +111,41 @@ function ConfigScreen({
 
       {/* Config Card */}
       <div className="rounded-2xl border border-slate-700/60 bg-gradient-to-br from-slate-800/80 to-slate-900/80 p-6 md:p-8">
-
+        {/* Test Type */}
+        <div className="mb-6">
+          <label className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-300">
+            <BookOpen className="h-4 w-4 text-purple-400" />
+            Loại bài test
+          </label>
+          <div className="grid gap-3 md:grid-cols-2">
+            {TEST_TYPES.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setTestType(t.id)}
+                className={`group relative flex items-start gap-3 rounded-xl border p-4 text-left transition-all ${
+                  testType === t.id
+                    ? `bg-gradient-to-r ${t.gradient} ${t.border}`
+                    : "border-slate-700/50 bg-slate-800/30 hover:border-slate-600/60"
+                }`}
+              >
+                <div
+                  className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                    testType === t.id ? "bg-white/10" : "bg-slate-700/50"
+                  }`}
+                >
+                  <t.icon className={`h-4 w-4 ${t.iconColor}`} />
+                </div>
+                <div>
+                  <p className="font-semibold text-white">{t.label}</p>
+                  <p className="mt-0.5 text-xs text-slate-400">{t.desc}</p>
+                </div>
+                {testType === t.id && (
+                  <CheckCircle2 className="absolute right-3 top-3 h-5 w-5 text-purple-400" />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Field */}
         <div className="mb-6">
@@ -179,28 +161,6 @@ function ConfigScreen({
             {FIELDS.map((f) => (
               <option key={f} value={f}>
                 {f}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Skill */}
-        <div className="mb-6">
-          <label className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-300">
-            <Code2 className="h-4 w-4 text-purple-400" />
-            Kỹ năng
-          </label>
-          <select
-            value={skill}
-            onChange={(e) => setSkill(e.target.value)}
-            className="w-full rounded-xl border border-slate-700/50 bg-slate-800/60 px-4 py-3 text-white outline-none transition-colors focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30"
-          >
-            {skills.length === 0 && (
-              <option value="">Đang tải...</option>
-            )}
-            {skills.map((s) => (
-              <option key={s.id} value={s.name}>
-                {s.name}
               </option>
             ))}
           </select>
@@ -229,28 +189,45 @@ function ConfigScreen({
           </div>
         </div>
 
+        {/* CV Toggle */}
+        <div className="mb-8">
+          <button
+            onClick={() => setUseCV(!useCV)}
+            className={`flex w-full items-center justify-between rounded-xl border p-4 transition-all ${
+              useCV
+                ? "border-purple-500/40 bg-purple-500/10"
+                : "border-slate-700/50 bg-slate-800/30"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <FileText className={`h-5 w-5 ${useCV ? "text-purple-400" : "text-slate-500"}`} />
+              <div className="text-left">
+                <p className="font-semibold text-white">Cá nhân hóa theo CV hiện tại</p>
+                <p className="text-xs text-slate-400">
+                  AI sẽ phân tích CV của bạn để đưa ra câu hỏi phù hợp nhất
+                </p>
+              </div>
+            </div>
+            <div
+              className={`flex h-6 w-11 items-center rounded-full p-0.5 transition-colors ${
+                useCV ? "bg-purple-500" : "bg-slate-600"
+              }`}
+            >
+              <div
+                className={`h-5 w-5 rounded-full bg-white shadow-md transition-transform ${
+                  useCV ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </div>
+          </button>
+        </div>
 
-        {/* AI Credit Cost Info */}
-        <div className="mb-6 rounded-xl border border-purple-500/20 bg-purple-500/8 px-4 py-3">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-purple-500/15">
-              <Sparkles className="h-4 w-4 text-purple-400" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-purple-300">
-                Mỗi bài test tốn{" "}
-                {costPerTest === null ? (
-                  // Đang fetch — skeleton nhỏ
-                  <span className="inline-block h-4 w-8 animate-pulse rounded bg-slate-600/60 align-middle" />
-                ) : (
-                  <strong className="text-white">{costPerTest} AI Credit</strong>
-                )}
-              </p>
-              <p className="mt-0.5 text-xs text-slate-400">
-                AI sẽ tạo câu hỏi cá nhân hóa theo lĩnh vực, kỹ năng và cấp bậc của bạn
-              </p>
-            </div>
-          </div>
+        {/* Practice Limit Info */}
+        <div className="mb-6 flex items-center gap-2 rounded-lg bg-amber-500/10 px-4 py-2.5 text-sm">
+          <Clock className="h-4 w-4 text-amber-400" />
+          <span className="text-amber-300">
+            Lượt luyện tập miễn phí: <strong>4/6</strong> lượt (tuần này)
+          </span>
         </div>
 
         {/* Start Button */}
@@ -280,49 +257,21 @@ function TestScreen({
   onReset: () => void;
 }) {
   const navigate = useNavigate();
-  // Khôi phục câu trả lời từ localStorage nếu có
-  const [answers, setAnswers] = useState<Record<number, string>>(() => {
-    try {
-      const saved = localStorage.getItem(LS_TEST_ANSWERS);
-      return saved ? JSON.parse(saved) : {};
-    } catch {
-      return {};
-    }
-  });
+  const [answers, setAnswers] = useState<Record<number, string>>({});
   const [submitted, setSubmitted] = useState(false);
 
-  // Khôi phục thời gian bắt đầu
-  const [timeLeft, setTimeLeft] = useState<number>(() => {
-    try {
-      const savedStart = localStorage.getItem("practice-test-start");
-      if (savedStart) {
-        const start = parseInt(savedStart);
-        const elapsed = Math.floor((Date.now() - start) / 1000);
-        return Math.max(0, testData.timeLimitMinutes * 60 - elapsed);
-      }
-      localStorage.setItem("practice-test-start", Date.now().toString());
-      return testData.timeLimitMinutes * 60;
-    } catch {
-      return testData.timeLimitMinutes * 60;
-    }
-  });
+  const handleSelect = (questionId: number, label: string) => {
+    if (submitted) return;
+    setAnswers((prev) => ({ ...prev, [questionId]: label }));
+  };
 
-  const handleSubmit = async (forceAutoSubmit = false) => {
-    if (!forceAutoSubmit && Object.keys(answers).length < testData.questions.length) {
+  const handleSubmit = async () => {
+    if (Object.keys(answers).length < testData.questions.length) {
       toast.warning("Vui lòng trả lời tất cả câu hỏi trước khi nộp bài.");
       return;
     }
     setSubmitted(true);
-    if (forceAutoSubmit) {
-      toast.warning("Hết giờ! Hệ thống tự động nộp bài.");
-    } else {
-      toast.success("Nộp bài thành công!");
-    }
-
-    // Xóa localStorage sau khi nộp bài (đã lưu DB)
-    localStorage.removeItem(LS_TEST_DATA);
-    localStorage.removeItem(LS_TEST_ANSWERS);
-    localStorage.removeItem("practice-test-start");
+    toast.success("Nộp bài thành công!");
 
     // Lưu kết quả vào DB (không block UI nếu lỗi)
     try {
@@ -330,7 +279,6 @@ function TestScreen({
         testTitle: testData.testTitle,
         testType: testData.testType,
         field: testData.field,
-        skill: testData.skill ?? "",
         level: testData.level,
         totalQuestions: testData.totalQuestions,
         timeLimitMinutes: testData.timeLimitMinutes,
@@ -348,40 +296,11 @@ function TestScreen({
     }
   };
 
-  useEffect(() => {
-    if (submitted) return;
-    
-    if (timeLeft <= 0) {
-      handleSubmit(true);
-      return;
-    }
-
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [timeLeft, submitted]);
-
-  const handleSelect = (questionId: number, label: string) => {
-    if (submitted) return;
-    setAnswers((prev) => {
-      const updated = { ...prev, [questionId]: label };
-      // Lưu câu trả lời vào localStorage mỗi khi chọn
-      localStorage.setItem(LS_TEST_ANSWERS, JSON.stringify(updated));
-      return updated;
-    });
-  };
-
   // Calculate score
   const correctCount = testData.questions.filter(
     (q) => answers[q.id] === q.correctAnswer
   ).length;
   const score = Math.round((correctCount / testData.questions.length) * 100);
-
-  const displayMins = Math.floor(timeLeft / 60);
-  const displaySecs = timeLeft % 60;
-  const isTimeRunningOut = timeLeft < 300; // Dưới 5 phút
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 pb-28">
@@ -395,20 +314,13 @@ function TestScreen({
             <span className="rounded-md bg-purple-500/15 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-purple-400">
               {testData.field}
             </span>
-            {testData.skill && (
-              <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-emerald-400">
-                {testData.skill}
-              </span>
-            )}
             <span className="rounded-md bg-cyan-500/15 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-cyan-400">
               {testData.level}
             </span>
-            {!submitted && (
-              <span className={`flex items-center gap-1 font-mono font-bold ${isTimeRunningOut ? 'text-red-400 animate-pulse' : 'text-slate-300'}`}>
-                <Clock className="h-3.5 w-3.5" />
-                {String(displayMins).padStart(2, '0')}:{String(displaySecs).padStart(2, '0')}
-              </span>
-            )}
+            <span className="flex items-center gap-1">
+              <Clock className="h-3.5 w-3.5" />
+              {testData.timeLimitMinutes} phút
+            </span>
           </div>
         </div>
         {!submitted && (
@@ -494,10 +406,7 @@ function TestScreen({
                   size="lg"
                   icon={<RotateCcw className="h-5 w-5" />}
                   className="bg-gradient-to-r from-purple-600 to-indigo-600 px-8 font-semibold shadow-lg"
-                  onClick={() => {
-                    localStorage.removeItem("practice-test-start");
-                    onReset();
-                  }}
+                  onClick={onReset}
                 >
                   Làm bài mới
                 </Button>
@@ -508,32 +417,15 @@ function TestScreen({
               <p className="text-sm text-slate-400">
                 {Object.keys(answers).length}/{testData.totalQuestions} câu đã trả lời
               </p>
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="secondary"
-                  size="lg"
-                  icon={<XCircle className="h-5 w-5" />}
-                  onClick={() => {
-                    if (window.confirm("Bạn có chắc chắn muốn thoát? Kết quả làm bài hiện tại sẽ không được lưu.")) {
-                      localStorage.removeItem(LS_TEST_DATA);
-                      localStorage.removeItem(LS_TEST_ANSWERS);
-                      localStorage.removeItem("practice-test-start");
-                      onReset();
-                    }
-                  }}
-                >
-                  Thoát
-                </Button>
-                <Button
-                  variant="primary"
-                  size="lg"
-                  icon={<CheckCircle2 className="h-5 w-5" />}
-                  className="bg-gradient-to-r from-purple-600 to-indigo-600 px-8 font-semibold shadow-lg"
-                  onClick={() => handleSubmit(false)}
-                >
-                  Nộp bài
-                </Button>
-              </div>
+              <Button
+                variant="primary"
+                size="lg"
+                icon={<CheckCircle2 className="h-5 w-5" />}
+                className="bg-gradient-to-r from-purple-600 to-indigo-600 px-8 font-semibold shadow-lg"
+                onClick={handleSubmit}
+              >
+                Nộp bài
+              </Button>
             </>
           )}
         </div>
@@ -666,49 +558,20 @@ function LoadingOverlay() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  LocalStorage keys                                                   */
-/* ------------------------------------------------------------------ */
-const LS_TEST_DATA = "practice-test-data";
-const LS_TEST_ANSWERS = "practice-test-answers";
-
-/* ------------------------------------------------------------------ */
 /*  Main Page Component                                                */
 /* ------------------------------------------------------------------ */
 export default function PracticeTest() {
-  // Khôi phục testData từ localStorage nếu có (đang làm dở)
-  const [testData, setTestData] = useState<PracticeTestResult | null>(() => {
-    try {
-      const saved = localStorage.getItem(LS_TEST_DATA);
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [testData, setTestData] = useState<PracticeTestResult | null>(null);
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
-  const initialConfig = location.state;
 
   const handleStart = async (params: GeneratePracticeTestParams) => {
     setLoading(true);
     try {
       const result = await generatePracticeTest(params);
-
       setTestData(result);
-      // Lưu vào localStorage ngay khi AI gen xong
-      localStorage.setItem(LS_TEST_DATA, JSON.stringify(result));
-      localStorage.removeItem(LS_TEST_ANSWERS); // reset câu trả lời cũ
     } catch (err: any) {
-      console.error("API Error Response:", err?.response?.status, err?.message);
       const msg = err?.response?.data?.message || err?.message || "Không thể tạo bài test. Vui lòng thử lại.";
-      toast.error(msg); // Hiển thị thông báo đỏ
-      
-      const msgLower = msg.toLowerCase();
-      if (err?.response?.status === 403 || msgLower.includes("nâng cấp") || msgLower.includes("mua gói") || msgLower.includes("credit")) {
-        // Dùng navigate (soft-routing) thay vì window.location để không bị reload lại toàn trang,
-        // giúp giữ lại cái thông báo toast.error(msg) trên màn hình vài giây.
-        navigate("/view-subscription");
-      }
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -716,8 +579,6 @@ export default function PracticeTest() {
 
   const handleReset = () => {
     setTestData(null);
-    localStorage.removeItem(LS_TEST_DATA);
-    localStorage.removeItem(LS_TEST_ANSWERS);
   };
 
   return (
@@ -726,7 +587,7 @@ export default function PracticeTest() {
       {testData ? (
         <TestScreen testData={testData} onReset={handleReset} />
       ) : (
-        <ConfigScreen onStart={handleStart} initialConfig={initialConfig} />
+        <ConfigScreen onStart={handleStart} />
       )}
     </>
   );

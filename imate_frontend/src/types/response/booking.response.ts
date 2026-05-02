@@ -11,7 +11,6 @@ export interface BookingDetailResponse {
   status: number;
   meetingRoomId?: string;
   audioRecordKey?: string;
-  recordingUrls?: string[];
   price: number;
   ratingScore?: number;
   reviewText?: string;

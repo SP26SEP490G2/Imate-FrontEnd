@@ -17,7 +17,6 @@ import SignUp from "@/pages/auth/SignUp";
 import VerifyEmail from "@/pages/auth/VerifyEmail";
 import ForgotPassword from "@/pages/auth/ForgotPassword";
 import ResetPassword from "@/pages/auth/ResetPassword";
-import SuspendedPage from "@/pages/auth/SuspendedPage";
 
 // Pages - Guest
 import HomePage from "@/pages/main/public/HomePage";
@@ -36,7 +35,6 @@ import AnalyseCV from "@/pages/candidate/AnalyseCV";
 import PracticeTest from "@/pages/candidate/PracticeTest";
 import TestHistory from "@/pages/candidate/TestHistory";
 import TestHistoryDetail from "@/pages/candidate/TestHistoryDetail";
-import TrainingJourneyDetail from "@/pages/candidate/TrainingJourneyDetail";
 import InterviewFeedbackDetail from "@/pages/candidate/InterviewFeedbackDetail";
 import InterviewSetup from "@/pages/candidate/InterviewSetup";
 import InterviewChat from "@/pages/candidate/InterviewChat";
@@ -87,7 +85,6 @@ import Wallet from "@/pages/management/payment/Wallet";
 import SystemConfigManagement from "@/pages/management/config/SystemConfigManagement";
 import RecruiterCompanyProfile from "@/pages/recruiter/RecruiterCompanyProfile";
 import StaffApplicationManagement from "@/pages/management/reportApplication/StaffApplicationManagement";
-import PracticeWithAI from "@/pages/main/public/PracticeWithAI";
 
 /**
  * Route Configuration Type
@@ -119,7 +116,6 @@ const routeConfigs: RouteConfig[] = [
   { path: "/verify-email", element: <VerifyEmail />, layout: LAYOUT.NONE },
   { path: "/forgot-password", element: <ForgotPassword />, layout: LAYOUT.NONE },
   { path: "/reset-password", element: <ResetPassword />, layout: LAYOUT.NONE },
-  { path: "/suspended", element: <SuspendedPage />, layout: LAYOUT.NONE },
 
   // ===== MAIN LAYOUT ROUTES =====
   { path: "/home", element: <HomePage />, layout: LAYOUT.MAIN },
@@ -128,7 +124,6 @@ const routeConfigs: RouteConfig[] = [
   { path: "/pricing", element: <ViewSubscriptionPage />, layout: LAYOUT.MAIN },
   { path: "/view-mentor", element: <MentorList />, layout: LAYOUT.MAIN },
   { path: "/view-mentor/:id", element: <MentorDetail />, layout: LAYOUT.MAIN },
-  { path: "/practice-with-ai", element: <PracticeWithAI />, layout: LAYOUT.MAIN },
 
   // ===== MAIN LAYOUT ROUTES =====
   { path: "/profile", element: <ViewProfile />, layout: LAYOUT.MAIN, requireAuth: true, accountStatus: ACCOUNT_STATUS.Active },
@@ -137,7 +132,6 @@ const routeConfigs: RouteConfig[] = [
   { path: "/practice-test", element: <PracticeTest />, layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/test-history", element: <TestHistory />, layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/test-history/:id", element: <TestHistoryDetail />, layout: LAYOUT.MAIN, requireAuth: true },
-  { path: "/test-history/journey/:journeyId", element: <TrainingJourneyDetail />, layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/interview-history/:id", element: <InterviewFeedbackDetail />, layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/interview-setup", element: <InterviewSetup />, layout: LAYOUT.MAIN, requireAuth: true },
   { path: "/interview-chat/:sessionId", element: <InterviewChat />, layout: LAYOUT.NONE, requireAuth: true },

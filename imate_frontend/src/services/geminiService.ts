@@ -37,7 +37,6 @@ export interface PracticeTestResult {
   testTitle: string;
   testType: string;
   field: string;
-  skill: string;
   level: string;
   totalQuestions: number;
   timeLimitMinutes: number;
@@ -47,7 +46,6 @@ export interface PracticeTestResult {
 export interface GeneratePracticeTestParams {
   testType: string;
   field: string;
-  skill: string;
   level: string;
   useCV: boolean;
   cvText?: string;
@@ -82,7 +80,6 @@ export interface SubmitPracticeTestParams {
   testTitle: string;
   testType: string;
   field: string;
-  skill: string;
   level: string;
   totalQuestions: number;
   timeLimitMinutes: number;

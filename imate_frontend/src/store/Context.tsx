@@ -24,7 +24,7 @@ interface AppProviderProps {
 export function AppProvider({ children }: AppProviderProps) {
   const user = "guest";
 
-  const [badgeCountsForStaff] = useState({
+  const [badgeCountsForStaff, setBadgeCountsForStaff] = useState({
     reports: 0,
     applications: 0,
     payouts: 0,
@@ -39,7 +39,7 @@ export function AppProvider({ children }: AppProviderProps) {
     }
   };
 
-  const fetchMentorData = async () => {
+  const fetchMentorData = async (page: number, debouncedSearchTerm: string) => {
   };
   return <AppContext.Provider value={{ user, fetchBadgeCounts, badgeCountsForStaff, fetchMentorData, confirmMentor, setConfirmMentor }}>{children}</AppContext.Provider>;
 }

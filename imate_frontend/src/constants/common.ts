@@ -5,21 +5,22 @@
 // Difficulty levels (number values for API)
 export const LEVEL = {
   INTERN: 0,
-  FRESHER: 1,
-  JUNIOR: 2,
-  MIDDLE: 3,
-  SENIOR: 4,
+  JUNIOR: 1,
+  MIDDLE: 2,
+  SENIOR: 3,
+  LEAD: 4,
+  MANAGER: 5
 } as const;
 
 // Difficulty mapping: number to display text
 export const LEVEL_MAP = {
   0: 'Intern',
-  1: 'Fresher',
-  2: 'Junior',
-  3: 'Middle',
-  4: 'Senior',
+  1: 'Junior',
+  2: 'Middle',
+  3: 'Senior',
+  4: 'Lead',
+  5: 'Manager',
 } as const;
-export type Level = typeof LEVEL[keyof typeof LEVEL];
 
 export const DIFFICULTY_LEVEL = {
   EASY: 0,
@@ -116,7 +117,7 @@ export const CV_UPLOAD = {
     "application/msword",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   ],
-  ACCEPTED_EXTENSIONS: ".pdf,.docx",
-  ACCEPTED_DISPLAY: "PDF, DOCX",
+  ACCEPTED_EXTENSIONS: ".pdf,.doc,.docx",
+  ACCEPTED_DISPLAY: "PDF, DOC, DOCX",
 } as const;
 

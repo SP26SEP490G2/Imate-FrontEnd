@@ -87,13 +87,6 @@ export default function SubmitMentorApplication() {
     if (error) setError(null);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: "cvFile" | "certificateFile") => {
-    if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-      setFormData((prev) => ({ ...prev, [field]: file }));
-    }
-  };
-
   const handleToggleId = (name: "positionIds" | "skillIds" | "companyIds", id: number) => {
     setFormData((prev) => {
       const currentIds = prev[name];
@@ -126,10 +119,6 @@ export default function SubmitMentorApplication() {
     } else if (step === 2) {
       if (formData.positionIds.length === 0 || formData.skillIds.length === 0) {
         setError("Vui lòng chọn ít nhất một Vị trí và một Kỹ năng.");
-        return false;
-      }
-      if (!formData.cvFile) {
-        setError("Vui lòng tải lên CV của bạn.");
         return false;
       }
     } else if (step === 3) {
@@ -168,8 +157,6 @@ export default function SubmitMentorApplication() {
         positionIds: formData.positionIds,
         skillIds: formData.skillIds,
         companyIds: formData.companyIds,
-        cvFile: formData.cvFile,
-        certificateFile: formData.certificateFile,
       };
       
       if (formData.yoe !== undefined && formData.yoe !== null && String(formData.yoe) !== "") {
@@ -311,42 +298,17 @@ export default function SubmitMentorApplication() {
 
           {currentStep === 2 && (
             <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div>
-                  <label className={labelClass}>Số năm kinh nghiệm</label>
-                  <input
-                    type="number"
-                    name="yoe"
-                    value={formData.yoe}
-                    onChange={handleChange}
-                    min={0}
-                    className={inputClass}
-                    placeholder="VD: 5"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div>
-                  <label className={labelClass}>Tải lên CV (PDF/Word) *</label>
-                  <input
-                    type="file"
-                    accept=".pdf,.doc,.docx"
-                    onChange={(e) => handleFileChange(e, "cvFile")}
-                    className="block w-full text-sm text-slate-300 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-500/20 file:text-indigo-400 hover:file:bg-indigo-500/30 file:cursor-pointer bg-slate-900/50 border border-white/10 rounded-xl cursor-pointer"
-                  />
-                  {formData.cvFile && <p className="mt-1 text-xs text-indigo-400 px-1 truncate">{formData.cvFile.name}</p>}
-                </div>
-                <div>
-                  <label className={labelClass}>Chứng chỉ (Tùy chọn)</label>
-                  <input
-                    type="file"
-                    accept=".pdf,.doc,.docx,.jpg,.png"
-                    onChange={(e) => handleFileChange(e, "certificateFile")}
-                    className="block w-full text-sm text-slate-300 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-slate-800 file:text-slate-300 hover:file:bg-slate-700 file:cursor-pointer bg-slate-900/50 border border-white/10 rounded-xl cursor-pointer"
-                  />
-                  {formData.certificateFile && <p className="mt-1 text-xs text-indigo-400 px-1 truncate">{formData.certificateFile.name}</p>}
-                </div>
+              <div>
+                <label className={labelClass}>Số năm kinh nghiệm</label>
+                <input
+                  type="number"
+                  name="yoe"
+                  value={formData.yoe}
+                  onChange={handleChange}
+                  min={0}
+                  className={inputClass}
+                  placeholder="VD: 5"
+                />
               </div>
 
               <div>

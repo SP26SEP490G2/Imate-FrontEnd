@@ -8,13 +8,12 @@ import {
 } from '@/services/questionService';
 import { getListPosition } from '@/services/positionService';
 import { getAllSkill } from '@/services/skillService';
-import { DIFFICULTY_MAP, LEVEL_MAP } from '@/constants/common';
-import { ImportSystemQuestionDialog } from '@/pages/dialog/management/question/ImportSystemQuestionDialog';
-import { UpdateSystemQuestionModal } from '@/pages/dialog/management/question/UpdateSystemQuestionModal';
-import { CreateSystemQuestionDialog } from '@/pages/dialog/management/question/CreateSystemQuestionDialog';
-import { CreateContributeQuestionDialog } from '@/pages/dialog/main/question/CreateContributeQuestionDialog';
-import { ViewContributeQuestionModal } from '@/pages/dialog/management/question/ViewContributeQuestionModal';
-import { ViewPendingContributeQuestionModal } from '@/pages/dialog/management/question/ViewPendingContributeQuestionModal';
+import { DIFFICULTY_OPTIONS } from '@/constants/enum';
+import { UpdateSystemQuestionModal } from '@/dialog/management/question/UpdateSystemQuestionModal';
+import { CreateSystemQuestionDialog } from '@/dialog/management/question/CreateSystemQuestionDialog';
+import { CreateContributeQuestionDialog } from '@/dialog/main/question/CreateContributeQuestionDialog';
+import { ViewContributeQuestionModal } from '@/dialog/management/question/ViewContributeQuestionModal';
+import { ViewPendingContributeQuestionModal } from '@/dialog/management/question/ViewPendingContributeQuestionModal';
 import type {
   StaffSystemQuestionItem,
   StaffContributedQuestionItem,
@@ -25,12 +24,12 @@ import type {
   PositionItem,
   SkillItem
 } from '@/types/common/question';
+import { DIFFICULTY_MAP } from '@/constants/common';
 import {
   Eye,
   Pencil,
   Plus,
-  Download,
-  Upload
+  Download
 } from 'lucide-react';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -59,7 +58,6 @@ const ViewQuestions: React.FC = () => {
 
   // Create question modal state
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [importModalOpen, setImportModalOpen] = useState(false);
 
   // Create contribute question modal state
   const [contributeModalOpen, setContributeModalOpen] = useState(false);
@@ -366,25 +364,15 @@ const ViewQuestions: React.FC = () => {
 
         <div className="flex items-center gap-3">
           {activeTab === 'system' && (
-            <>
-              <Button
-                variant="outline"
-                onClick={() => setImportModalOpen(true)}
-                icon={<Upload className="w-4 h-4" />}
-                className="border-slate-700 text-slate-200 hover:bg-slate-800"
-              >
-                Import câu hỏi
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleExportSystemQuestions}
-                disabled={exporting}
-                icon={<Download className="w-4 h-4" />}
-                className="border-slate-700 text-slate-200 hover:bg-slate-800"
-              >
-                {exporting ? 'Đang export...' : 'Export câu hỏi'}
-              </Button>
-            </>
+            <Button
+              variant="outline"
+              onClick={handleExportSystemQuestions}
+              disabled={exporting}
+              icon={<Download className="w-4 h-4" />}
+              className="border-slate-700 text-slate-200 hover:bg-slate-800"
+            >
+              {exporting ? 'Đang export...' : 'Export câu hỏi'}
+            </Button>
           )}
 
           {activeTab === 'system' && (
@@ -465,52 +453,29 @@ const ViewQuestions: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-3">
-              <span className="text-sm text-slate-400 whitespace-nowrap">Độ khó:</span>
+              <span className="text-sm text-slate-400 whitespace-nowrap">Cấp độ:</span>
               <select
-                value={currentFilters.difficulty !== undefined ? String(currentFilters.difficulty) : ''}
+                value={
+                  activeTab === 'pending'
+                    ? (pendingContributedFilters.level !== undefined ? String(pendingContributedFilters.level) : '')
+                    : (currentFilters.difficulty !== undefined ? String(currentFilters.difficulty) : '')
+                }
                 onChange={(e) => {
                   const value = e.target.value;
-                  const numValue = value ? parseInt(value, 10) as DifficultyLevel : undefined;
+                  const numValue = value ? parseInt(value) as DifficultyLevel : undefined;
                   if (activeTab === 'system') {
                     handleSystemFilterChange('difficulty', numValue);
                   } else if (activeTab === 'contributed') {
                     handleContributedFilterChange('difficulty', numValue);
                   } else {
-                    handlePendingContributedFilterChange('difficulty', numValue);
+                    handlePendingContributedFilterChange('level', numValue);
                   }
                 }}
                 className="bg-slate-800 border border-slate-700 rounded-md px-4 py-2 text-slate-200 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer min-w-36"
               >
                 <option value="">Tất cả</option>
-                {Object.entries(DIFFICULTY_MAP).map(([key, label]) => (
-                  <option key={key} value={key}>{label}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-slate-400 whitespace-nowrap">Level:</span>
-              <select
-                value={activeTab === 'system'
-                  ? (systemFilters.level !== undefined ? String(systemFilters.level) : '')
-                  : activeTab === 'pending'
-                    ? (pendingContributedFilters.level !== undefined ? String(pendingContributedFilters.level) : '')
-                    : (contributedFilters.level !== undefined ? String(contributedFilters.level) : '')}
-                onChange={(e) => {
-                  const value = e.target.value ? parseInt(e.target.value, 10) : undefined;
-                  if (activeTab === 'system') {
-                    handleSystemFilterChange('level', value);
-                  } else if (activeTab === 'contributed') {
-                    handleContributedFilterChange('level', value);
-                  } else {
-                    handlePendingContributedFilterChange('level', value);
-                  }
-                }}
-                className="bg-slate-800 border border-slate-700 rounded-md px-4 py-2 text-slate-200 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer min-w-36"
-              >
-                <option value="">Tất cả</option>
-                {Object.entries(LEVEL_MAP).map(([key, label]) => (
-                  <option key={key} value={key}>{label}</option>
+                {DIFFICULTY_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
                 ))}
               </select>
             </div>
@@ -538,315 +503,276 @@ const ViewQuestions: React.FC = () => {
           </div>
         </div>
 
-        <div className="w-full overflow-x-auto">
-          <Table
-            page={currentPagination.pageNumber}
-            totalPages={currentPagination.totalPages}
-            pageSize={currentPagination.pageSize}
-            totalCount={currentPagination.totalCount}
-            onPageChange={(page) => {
-              if (activeTab === 'system') {
-                handleSystemFilterChange('pageNumber', page);
-              } else if (activeTab === 'contributed') {
-                handleContributedFilterChange('pageNumber', page);
-              } else {
-                handlePendingContributedFilterChange('pageNumber', page);
-              }
-            }}
-            onPageSizeChange={handlePageSizeChange}
-          >
-            <TableHeader>
-              <TableRow>
-                <TableHead>STT</TableHead>
-                <TableHead>Câu hỏi</TableHead>
-                <TableHead>Vị trí</TableHead>
-                <TableHead>Kỹ năng</TableHead>
-                <TableHead>Danh mục</TableHead>
-                <TableHead>Độ khó</TableHead>
-                <TableHead>Level</TableHead>
+        <Table
+          page={currentPagination.pageNumber}
+          totalPages={currentPagination.totalPages}
+          pageSize={currentPagination.pageSize}
+          totalCount={currentPagination.totalCount}
+          onPageChange={(page) => {
+            if (activeTab === 'system') {
+              handleSystemFilterChange('pageNumber', page);
+            } else if (activeTab === 'contributed') {
+              handleContributedFilterChange('pageNumber', page);
+            } else {
+              handlePendingContributedFilterChange('pageNumber', page);
+            }
+          }}
+          onPageSizeChange={handlePageSizeChange}
+        >
+          <TableHeader>
+            <TableRow>
+              <TableHead>STT</TableHead>
+              <TableHead>Câu hỏi</TableHead>
+              <TableHead>Vị trí</TableHead>
+              <TableHead>Kỹ năng</TableHead>
+              <TableHead>Cấp độ</TableHead>
+              {activeTab !== 'system' && (
                 <TableHead>Người đăng</TableHead>
-                <TableHead>Trạng thái</TableHead>
-                <TableHead className="text-center">Hành động</TableHead>
+              )}
+              <TableHead>Trạng thái</TableHead>
+              <TableHead className="text-center">Hành động</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading ? (
+              // Loading skeleton
+              <>
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <TableRow key={i} className="animate-pulse">
+                    <TableCell className="px-8 py-6">
+                      <div className="h-4 bg-slate-700 rounded w-8"></div>
+                    </TableCell>
+                    <TableCell className="px-8 py-6">
+                      <div className="space-y-2">
+                        <div className="h-4 bg-slate-700 rounded w-3/4"></div>
+                        <div className="h-3 bg-slate-800 rounded w-32"></div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-6 py-6">
+                      <div className="h-6 bg-slate-700 rounded w-20"></div>
+                    </TableCell>
+                    <TableCell className="px-6 py-6">
+                      <div className="h-4 bg-slate-700 rounded w-24"></div>
+                    </TableCell>
+                    <TableCell className="px-6 py-6">
+                      <div className="h-6 bg-slate-700 rounded w-16"></div>
+                    </TableCell>
+                    {activeTab !== 'system' && (
+                      <TableCell className="px-6 py-6">
+                        <div className="h-4 bg-slate-700 rounded w-24"></div>
+                      </TableCell>
+                    )}
+                    <TableCell className="px-6 py-6">
+                      <div className="h-6 bg-slate-700 rounded w-20"></div>
+                    </TableCell>
+                    <TableCell className="px-8 py-6">
+                      <div className="flex items-center justify-center gap-3">
+                        <div className="h-8 w-8 bg-slate-700 rounded-lg"></div>
+                        <div className="h-8 w-8 bg-slate-700 rounded-lg"></div>
+                        <div className="h-8 w-8 bg-slate-700 rounded-lg"></div>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </>
+            ) : error ? (
+              // Error state
+              <TableRow>
+                <TableCell colSpan={activeTab === 'system' ? 7 : 8} className="px-8 py-12 text-center">
+                  <p className="text-red-400 mb-4">{error}</p>
+                  <button
+                    onClick={() => {
+                      if (activeTab === 'system') {
+                        fetchSystemQuestions();
+                      } else if (activeTab === 'contributed') {
+                        fetchContributedQuestions();
+                      } else {
+                        fetchPendingContributedQuestions();
+                      }
+                    }}
+                    className="px-6 py-2 bg-indigo-500 text-white rounded-xl hover:bg-indigo-600 transition-all font-medium"
+                  >
+                    Thử lại
+                  </button>
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                // Loading skeleton
-                <>
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <TableRow key={i} className="animate-pulse">
-                      <TableCell className="px-8 py-6">
-                        <div className="h-4 bg-slate-700 rounded w-8"></div>
-                      </TableCell>
-                      <TableCell className="px-8 py-6">
-                        <div className="space-y-2">
-                          <div className="h-4 bg-slate-700 rounded w-3/4"></div>
-                          <div className="h-3 bg-slate-800 rounded w-32"></div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-6 py-6">
-                        <div className="h-6 bg-slate-700 rounded w-20"></div>
-                      </TableCell>
-                      <TableCell className="px-6 py-6">
-                        <div className="h-4 bg-slate-700 rounded w-24"></div>
-                      </TableCell>
-                      <TableCell className="px-6 py-6">
-                        <div className="h-4 bg-slate-700 rounded w-24"></div>
-                      </TableCell>
-                      <TableCell className="px-6 py-6">
-                        <div className="h-6 bg-slate-700 rounded w-16"></div>
-                      </TableCell>
-                      <TableCell className="px-6 py-6">
-                        <div className="h-6 bg-slate-700 rounded w-16"></div>
-                      </TableCell>
-                      <TableCell className="px-6 py-6">
-                        <div className="h-4 bg-slate-700 rounded w-24"></div>
-                      </TableCell>
-                      <TableCell className="px-6 py-6">
-                        <div className="h-6 bg-slate-700 rounded w-20"></div>
-                      </TableCell>
-                      <TableCell className="px-8 py-6">
-                        <div className="flex items-center justify-center gap-3">
-                          <div className="h-8 w-8 bg-slate-700 rounded-lg"></div>
-                          <div className="h-8 w-8 bg-slate-700 rounded-lg"></div>
-                          <div className="h-8 w-8 bg-slate-700 rounded-lg"></div>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </>
-              ) : error ? (
-                // Error state
+            ) : activeTab === 'system' ? (
+              systemQuestions.length > 0 ? (
+                systemQuestions.map((question, index) => (
+                  <TableRow key={question.id} className="group hover:bg-white/5 transition-all">
+                    <TableCell className="px-8 py-6 text-sm text-slate-400">
+                      {String((systemPagination.pageNumber - 1) * systemPagination.pageSize + index + 1).padStart(2, '0')}
+                    </TableCell>
+                    <TableCell className="px-8 py-6">
+                      <span className="text-white font-semibold group-hover:text-indigo-400 transition-colors cursor-pointer">
+                        {question.content}
+                      </span>
+                    </TableCell>
+                    <TableCell className="px-6 py-6">
+                      <StatusBadge status="inactive">
+                        {question.positionsName?.length > 0 ? question.positionsName.join(', ') : 'N/A'}
+                      </StatusBadge>
+                    </TableCell>
+                    <TableCell className="px-6 py-6 text-sm text-slate-400">
+                      {question.skillsName?.length > 0 ? question.skillsName.join(', ') : 'N/A'}
+                    </TableCell>
+                    <TableCell className="px-6 py-6">
+                      <StatusBadge status={getDifficultyStatus(DIFFICULTY_MAP[question.difficulty as 0 | 1 | 2] || 'Easy')}>
+                        {DIFFICULTY_MAP[question.difficulty as 0 | 1 | 2] || 'N/A'}
+                      </StatusBadge>
+                    </TableCell>
+                    <TableCell className="px-6 py-6">
+                      <StatusBadge status={question.isActive ? "active" : "inactive"}>
+                        {question.isActive ? "Hoạt động" : "Vô hiệu"}
+                      </StatusBadge>
+                    </TableCell>
+                    <TableCell className="px-8 py-6">
+                      <div className="flex items-center justify-center gap-3">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="p-2 h-8 w-8"
+                              onClick={() => handleEditQuestion(question.id)}
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Sửa</TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
                 <TableRow>
-                  <TableCell colSpan={10} className="px-8 py-12 text-center">
-                    <p className="text-red-400 mb-4">{error}</p>
-                    <button
-                      onClick={() => {
-                        if (activeTab === 'system') {
-                          fetchSystemQuestions();
-                        } else if (activeTab === 'contributed') {
-                          fetchContributedQuestions();
-                        } else {
-                          fetchPendingContributedQuestions();
-                        }
-                      }}
-                      className="px-6 py-2 bg-indigo-500 text-white rounded-xl hover:bg-indigo-600 transition-all font-medium"
-                    >
-                      Thử lại
-                    </button>
+                  <TableCell colSpan={7} className="px-8 py-12 text-center text-slate-400">
+                    Không có câu hỏi nào
                   </TableCell>
                 </TableRow>
-              ) : activeTab === 'system' ? (
-                systemQuestions.length > 0 ? (
-                  systemQuestions.map((question, index) => (
-                    <TableRow key={question.id} className="group hover:bg-white/5 transition-all">
-                      <TableCell className="px-8 py-6 text-sm text-slate-400">
-                        {String((systemPagination.pageNumber - 1) * systemPagination.pageSize + index + 1).padStart(2, '0')}
-                      </TableCell>
-                      <TableCell className="px-8 py-6">
-                        <span className="text-white font-semibold group-hover:text-indigo-400 transition-colors cursor-pointer">
-                          {question.content}
-                        </span>
-                      </TableCell>
-                      <TableCell className="px-6 py-6">
-                        <StatusBadge status="inactive">
-                          {Array.isArray(question.positionsName) && question.positionsName.length > 0 ? question.positionsName.join(', ') : 'N/A'}
-                        </StatusBadge>
-                      </TableCell>
-                      <TableCell className="px-6 py-6 text-sm text-slate-400">
-                        {Array.isArray(question.skillsName) && question.skillsName.length > 0 ? question.skillsName.join(', ') : 'N/A'}
-                      </TableCell>
-                      <TableCell className="px-6 py-6 text-sm text-slate-400">
-                        {Array.isArray(question.categoriesName) && question.categoriesName.length > 0 ? question.categoriesName.join(', ') : 'N/A'}
-                      </TableCell>
-                      <TableCell className="px-6 py-6">
-                        <StatusBadge status={getDifficultyStatus(DIFFICULTY_MAP[question.difficulty as 0 | 1 | 2] || 'Easy')}>
-                          {DIFFICULTY_MAP[question.difficulty as 0 | 1 | 2] || 'N/A'}
-                        </StatusBadge>
-                      </TableCell>
-                      <TableCell className="px-6 py-6">
-                        <StatusBadge status="inactive">
-                          {question.level !== null && question.level !== undefined
-                            ? LEVEL_MAP[question.level as 0 | 1 | 2 | 3 | 4]
-                            : 'N/A'}
-                        </StatusBadge>
-                      </TableCell>
-                      <TableCell className="px-6 py-6 text-sm text-slate-400">
-                        {question.creatorName || 'N/A'}
-                      </TableCell>
-                      <TableCell className="px-6 py-6">
-                        <StatusBadge status={question.isActive ? "active" : "inactive"}>
-                          {question.isActive ? "Hoạt động" : "Vô hiệu"}
-                        </StatusBadge>
-                      </TableCell>
-                      <TableCell className="px-8 py-6">
-                        <div className="flex items-center justify-center gap-3">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="p-2 h-8 w-8"
-                                onClick={() => handleEditQuestion(question.id)}
-                              >
-                                <Pencil className="w-4 h-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Sửa</TooltipContent>
-                          </Tooltip>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={10} className="px-8 py-12 text-center text-slate-400">
-                      Không có câu hỏi nào
+              )
+            ) : activeTab === 'contributed' ? (
+              contributedQuestions.length > 0 ? (
+                contributedQuestions.map((question, index) => (
+                  <TableRow key={question.id} className="group hover:bg-white/5 transition-all">
+                    <TableCell className="px-8 py-6 text-sm text-slate-400">
+                      {String((contributedPagination.pageNumber - 1) * contributedPagination.pageSize + index + 1).padStart(2, '0')}
+                    </TableCell>
+                    <TableCell className="px-8 py-6">
+                      <span className="text-white font-semibold group-hover:text-indigo-400 transition-colors cursor-pointer">
+                        {question.content}
+                      </span>
+                    </TableCell>
+                    <TableCell className="px-6 py-6">
+                      <StatusBadge status="inactive">
+                        {question.positionsName?.length > 0 ? question.positionsName.join(', ') : 'N/A'}
+                      </StatusBadge>
+                    </TableCell>
+                    <TableCell className="px-6 py-6 text-sm text-slate-400">
+                      {question.skillsName?.length > 0 ? question.skillsName.join(', ') : 'N/A'}
+                    </TableCell>
+                    <TableCell className="px-6 py-6">
+                      <StatusBadge status={getDifficultyStatus(question.difficulty !== null ? DIFFICULTY_MAP[question.difficulty] : 'N/A')}>
+                        {question.difficulty !== null ? DIFFICULTY_MAP[question.difficulty] : 'N/A'}
+                      </StatusBadge>
+                    </TableCell>
+                    <TableCell className="px-6 py-6 text-sm text-slate-400">
+                      {question.creatorName || 'N/A'}
+                    </TableCell>
+                    <TableCell className="px-6 py-6">
+                      <StatusBadge status={question.isActive ? "active" : "inactive"}>
+                        {question.isActive ? "Hoạt động" : "Vô hiệu"}
+                      </StatusBadge>
+                    </TableCell>
+                    <TableCell className="px-8 py-6">
+                      <div className="flex items-center justify-center gap-3">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="p-2 h-8 w-8"
+                              onClick={() => handleViewContributeQuestion(question.id)}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Xem chi tiết</TooltipContent>
+                        </Tooltip>
+                      </div>
                     </TableCell>
                   </TableRow>
-                )
-              ) : activeTab === 'contributed' ? (
-                contributedQuestions.length > 0 ? (
-                  contributedQuestions.map((question, index) => (
-                    <TableRow key={question.id} className="group hover:bg-white/5 transition-all">
-                      <TableCell className="px-8 py-6 text-sm text-slate-400">
-                        {String((contributedPagination.pageNumber - 1) * contributedPagination.pageSize + index + 1).padStart(2, '0')}
-                      </TableCell>
-                      <TableCell className="px-8 py-6">
-                        <span className="text-white font-semibold group-hover:text-indigo-400 transition-colors cursor-pointer">
-                          {question.content}
-                        </span>
-                      </TableCell>
-                      <TableCell className="px-6 py-6">
-                        <StatusBadge status="inactive">
-                          {question.positionsName?.length > 0 ? question.positionsName.join(', ') : 'N/A'}
-                        </StatusBadge>
-                      </TableCell>
-                      <TableCell className="px-6 py-6 text-sm text-slate-400">
-                        {question.skillsName?.length > 0 ? question.skillsName.join(', ') : 'N/A'}
-                      </TableCell>
-                      <TableCell className="px-6 py-6 text-sm text-slate-400">
-                        {question.categoriesName?.length > 0 ? question.categoriesName.join(', ') : 'N/A'}
-                      </TableCell>
-                      <TableCell className="px-6 py-6">
-                        <StatusBadge status={getDifficultyStatus(question.difficulty !== null ? DIFFICULTY_MAP[question.difficulty] : 'N/A')}>
-                          {question.difficulty !== null ? DIFFICULTY_MAP[question.difficulty] : 'N/A'}
-                        </StatusBadge>
-                      </TableCell>
-                      <TableCell className="px-6 py-6">
-                        <StatusBadge status="inactive">
-                          {question.level !== null && question.level !== undefined
-                            ? LEVEL_MAP[question.level as 0 | 1 | 2 | 3 | 4]
-                            : 'N/A'}
-                        </StatusBadge>
-                      </TableCell>
-                      <TableCell className="px-6 py-6 text-sm text-slate-400">
-                        {question.creatorName || 'N/A'}
-                      </TableCell>
-                      <TableCell className="px-6 py-6">
-                        <StatusBadge status={question.isActive ? "active" : "inactive"}>
-                          {question.isActive ? "Hoạt động" : "Vô hiệu"}
-                        </StatusBadge>
-                      </TableCell>
-                      <TableCell className="px-8 py-6">
-                        <div className="flex items-center justify-center gap-3">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="p-2 h-8 w-8"
-                                onClick={() => handleViewContributeQuestion(question.id)}
-                              >
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Xem chi tiết</TooltipContent>
-                          </Tooltip>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={10} className="px-8 py-12 text-center text-slate-400">
-                      Không có câu hỏi nào
-                    </TableCell>
-                  </TableRow>
-                )
+                ))
               ) : (
-                pendingContributedQuestions.length > 0 ? (
-                  pendingContributedQuestions.map((question, index) => (
-                    <TableRow key={question.id} className="group hover:bg-white/5 transition-all">
-                      <TableCell className="px-8 py-6 text-sm text-slate-400">
-                        {String((pendingContributedPagination.pageNumber - 1) * pendingContributedPagination.pageSize + index + 1).padStart(2, '0')}
-                      </TableCell>
-                      <TableCell className="px-8 py-6">
-                        <span className="text-white font-semibold group-hover:text-indigo-400 transition-colors cursor-pointer">
-                          {question.content}
-                        </span>
-                      </TableCell>
-                      <TableCell className="px-6 py-6">
-                        <StatusBadge status="inactive">
-                          {question.positionsName?.length > 0 ? question.positionsName.join(', ') : 'N/A'}
-                        </StatusBadge>
-                      </TableCell>
-                      <TableCell className="px-6 py-6 text-sm text-slate-400">
-                        {question.skillsName?.length > 0 ? question.skillsName.join(', ') : 'N/A'}
-                      </TableCell>
-                      <TableCell className="px-6 py-6 text-sm text-slate-400">
-                        {question.categoriesName?.length > 0 ? question.categoriesName.join(', ') : 'N/A'}
-                      </TableCell>
-                      <TableCell className="px-6 py-6">
-                        <StatusBadge status={getDifficultyStatus(question.difficulty !== null ? DIFFICULTY_MAP[question.difficulty] : 'N/A')}>
-                          {question.difficulty !== null ? DIFFICULTY_MAP[question.difficulty] : 'N/A'}
-                        </StatusBadge>
-                      </TableCell>
-                      <TableCell className="px-6 py-6">
-                        <StatusBadge status="inactive">
-                          {question.level !== null && question.level !== undefined
-                            ? LEVEL_MAP[question.level as 0 | 1 | 2 | 3 | 4]
-                            : 'N/A'}
-                        </StatusBadge>
-                      </TableCell>
-                      <TableCell className="px-6 py-6 text-sm text-slate-400">
-                        {question.creatorName || 'N/A'}
-                      </TableCell>
-                      <TableCell className="px-6 py-6">
-                        <StatusBadge status="pending">
-                          Chờ duyệt
-                        </StatusBadge>
-                      </TableCell>
-                      <TableCell className="px-8 py-6">
-                        <div className="flex items-center justify-center gap-3">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="p-2 h-8 w-8"
-                                onClick={() => handleViewPendingContributeQuestion(question.id)}
-                              >
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Xem chi tiết</TooltipContent>
-                          </Tooltip>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={10} className="px-8 py-12 text-center text-slate-400">
-                      Không có câu hỏi nào
+                <TableRow>
+                  <TableCell colSpan={8} className="px-8 py-12 text-center text-slate-400">
+                    Không có câu hỏi nào
+                  </TableCell>
+                </TableRow>
+              )
+            ) : (
+              pendingContributedQuestions.length > 0 ? (
+                pendingContributedQuestions.map((question, index) => (
+                  <TableRow key={question.id} className="group hover:bg-white/5 transition-all">
+                    <TableCell className="px-8 py-6 text-sm text-slate-400">
+                      {String((pendingContributedPagination.pageNumber - 1) * pendingContributedPagination.pageSize + index + 1).padStart(2, '0')}
+                    </TableCell>
+                    <TableCell className="px-8 py-6">
+                      <span className="text-white font-semibold group-hover:text-indigo-400 transition-colors cursor-pointer">
+                        {question.content}
+                      </span>
+                    </TableCell>
+                    <TableCell className="px-6 py-6">
+                      <StatusBadge status="inactive">
+                        {question.positionsName?.length > 0 ? question.positionsName.join(', ') : 'N/A'}
+                      </StatusBadge>
+                    </TableCell>
+                    <TableCell className="px-6 py-6 text-sm text-slate-400">
+                      {question.skillsName?.length > 0 ? question.skillsName.join(', ') : 'N/A'}
+                    </TableCell>
+                    <TableCell className="px-6 py-6">
+                      <StatusBadge status={getDifficultyStatus(question.difficulty !== null ? DIFFICULTY_MAP[question.difficulty] : 'N/A')}>
+                        {question.difficulty !== null ? DIFFICULTY_MAP[question.difficulty] : 'N/A'}
+                      </StatusBadge>
+                    </TableCell>
+                    <TableCell className="px-6 py-6 text-sm text-slate-400">
+                      {question.creatorName || 'N/A'}
+                    </TableCell>
+                    <TableCell className="px-6 py-6">
+                      <StatusBadge status="pending">
+                        Chờ duyệt
+                      </StatusBadge>
+                    </TableCell>
+                    <TableCell className="px-8 py-6">
+                      <div className="flex items-center justify-center gap-3">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="p-2 h-8 w-8"
+                              onClick={() => handleViewPendingContributeQuestion(question.id)}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Xem chi tiết</TooltipContent>
+                        </Tooltip>
+                      </div>
                     </TableCell>
                   </TableRow>
-                )
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={8} className="px-8 py-12 text-center text-slate-400">
+                    Không có câu hỏi nào
+                  </TableCell>
+                </TableRow>
+              )
+            )}
+          </TableBody>
+        </Table>
       </div>
 
       {/* Update Question Modal */}
@@ -882,17 +808,6 @@ const ViewQuestions: React.FC = () => {
         onSuccess={() => {
           if (activeTab === 'contributed') {
             fetchContributedQuestions();
-          }
-        }}
-      />
-
-      {/* Import Question Modal */}
-      <ImportSystemQuestionDialog
-        open={importModalOpen}
-        onOpenChange={setImportModalOpen}
-        onSuccess={() => {
-          if (activeTab === 'system') {
-            fetchSystemQuestions();
           }
         }}
       />

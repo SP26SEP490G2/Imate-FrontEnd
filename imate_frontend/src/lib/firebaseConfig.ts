@@ -1,6 +1,6 @@
 import { initializeApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
-// ...existing code...
+import { getAnalytics } from "firebase/analytics";
 
 const firebaseConfig = {
     // Thông tin cấu hình bạn đã cung cấp

@@ -32,16 +32,16 @@ import type { Company } from "@/types/model/company.model";
 import { getListPosition } from "@/services/positionService";
 import type {PositionResponse } from "@/types/response/position.response";
 
-import { CreateCategoryDialog } from "@/pages/dialog/management/classification/CreateCategoryDialog";
-import { UpdateCategoryDialog } from "../../dialog/management/classification/UpdateCategoryDialog";
-import { CreateSkillDialog } from "../../dialog/management/classification/CreateSkillDialog";
-import { UpdateSkillDialog } from "../../dialog/management/classification/UpdateSkillDialog";
-import { CreatePositionDialog } from "../../dialog/management/classification/CreatePositionDialog";
-import { UpdatePositionDialog } from "../../dialog/management/classification/UpdatePositionDialog";
-import { CreateCompanyDialog } from "@/pages/dialog/management/classification/CreateCompanyDialog";
-import { UpdateCompanyDialog } from "@/pages/dialog/management/classification/UpdateCompanyDialog";
+import { CreateCategoryDialog } from "@/pages/management/dialog/CreateCategoryDialog";
+import { UpdateCategoryDialog } from "../dialog/UpdateCategoryDialog";
+import { CreateSkillDialog } from "../dialog/CreateSkillDialog";
+import { UpdateSkillDialog } from "../dialog/UpdateSkillDialog";
+import { CreatePositionDialog } from "../dialog/CreatePositionDialog";
+import { UpdatePositionDialog } from "../dialog/UpdatePositionDialog";
+import { CreateCompanyDialog } from "@/pages/management/dialog/CreateCompanyDialog";
+import { UpdateCompanyDialog } from "@/pages/management/dialog/UpdateCompanyDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-// ...existing code...
+import { cn } from "@/lib/utils";
 
 
 const tabs = [
@@ -825,8 +825,15 @@ export default function Classification() {
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar>
-                          <AvatarImage src={comp.imageUrl} />
-                          <AvatarFallback name={comp.name} />
+                          <AvatarImage
+                            src={comp.imageUrl || ""}
+                            alt={comp.name}
+                            className="h-full w-full object-cover"
+                          />
+
+                          <AvatarFallback className="bg-slate-800 text-slate-300">
+                            {getInitials(comp.name)}
+                          </AvatarFallback>
                         </Avatar>
 
                         <div>
@@ -936,4 +943,13 @@ export default function Classification() {
       )}
     </div>
   );
+}
+
+export function getInitials(name: string): string {
+  if (!name) return "?";
+  const words = name.trim().split(/\s+/);
+  if (words.length === 1) {
+    return words[0].slice(0, 2).toUpperCase();
+  }
+  return (words[0][0] + words[1][0]).toUpperCase();
 }

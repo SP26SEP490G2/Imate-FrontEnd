@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { Pencil, TrendingUp, TrendingDown, Crown, Plus, Trash2 } from "lucide-react";
+import { Pencil, Package, TrendingUp, TrendingDown, Crown } from "lucide-react";
 import { toast } from "react-toastify";
 import { useSubscriptionPackages } from "@/hooks/useSubscriptionPackages";
-import { getSubscriptionOverview, updateSubscriptionPackagePrice, updateSubscriptionPackageBenefits, updateSubscriptionPackageName, createSubscriptionPackage, deactivateSubscriptionPackage } from "@/services/subscriptionPackageService";
+import { getSubscriptionOverview, updateSubscriptionPackagePrice } from "@/services/subscriptionPackageService";
 import type { SubscriptionOverviewResponse } from "@/services/subscriptionPackageService";
 import type { SubscriptionPackageItem } from "@/types/common/subscriptionPackage";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -135,11 +135,9 @@ interface PricingCardProps {
   pkg: SubscriptionPackageItem;
   index: number;
   onEdit: (pkg: SubscriptionPackageItem) => void;
-  onEditBenefits: (pkg: SubscriptionPackageItem) => void;
-  onDelete: (pkg: SubscriptionPackageItem) => void;
 }
 
-function PricingCard({ pkg, index, onEdit, onEditBenefits, onDelete }: PricingCardProps) {
+function PricingCard({ pkg, index, onEdit }: PricingCardProps) {
   const tier = getTierColor(index);
   return (
     <div
@@ -149,42 +147,25 @@ function PricingCard({ pkg, index, onEdit, onEditBenefits, onDelete }: PricingCa
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-white font-bold text-lg">{pkg.name}</h3>
         {index > 0 && (
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => onEdit(pkg)}
-              title="Chỉnh sửa giá"
-              className={`p-1.5 rounded-md ${tier.badge} hover:opacity-80 transition-opacity`}
-            >
-              <Pencil size={14} />
-            </button>
-            <button
-              onClick={() => onEditBenefits(pkg)}
-              title="Chỉnh sửa tính năng"
-              className={`p-1.5 rounded-md ${tier.badge} hover:opacity-80 transition-opacity`}
-            >
-              <Plus size={14} />
-            </button>
-            <button
-              onClick={() => onDelete(pkg)}
-              title="Xóa gói"
-              className={`p-1.5 rounded-md bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition-colors`}
-            >
-              <Trash2 size={14} />
-            </button>
-          </div>
+          <button
+            onClick={() => onEdit(pkg)}
+            className={`p-1.5 rounded-md ${tier.badge} hover:opacity-80 transition-opacity`}
+          >
+            <Pencil size={14} />
+          </button>
         )}
       </div>
-
+      <p className="text-xs text-slate-400 mb-4">
+        {pkg.duration || "Chưa có mô tả"}
+      </p>
 
       {/* Price */}
       <div className="mb-4">
         <p className={`text-3xl font-bold ${tier.text}`}>
           {formatPrice(pkg.price)}
         </p>
-        {pkg.totalInterviewLimit != null && pkg.totalInterviewLimit > 0 && (
-          <p className="text-sm text-purple-400 mt-1 font-medium">
-            Được nhận {pkg.totalInterviewLimit.toLocaleString("vi-VN")} AI Credits
-          </p>
+        {pkg.price > 0 && (
+          <p className="text-xs text-slate-400 mt-1">{pkg.duration || "5 phiên phỏng vấn"}</p>
         )}
       </div>
 
@@ -204,7 +185,7 @@ function PricingCard({ pkg, index, onEdit, onEditBenefits, onDelete }: PricingCa
   );
 }
 
-// ─── Edit Package Modal (tên + giá) ─────────────────────────
+// ─── Edit Price Modal ───────────────────────────────────────
 interface EditPriceModalProps {
   open: boolean;
   pkg: SubscriptionPackageItem | null;
@@ -213,38 +194,31 @@ interface EditPriceModalProps {
 }
 
 function EditPriceModal({ open, pkg, onClose, onUpdated }: EditPriceModalProps) {
-  const [name, setName] = useState("");
   const [price, setPrice] = useState("");
-  const [nameError, setNameError] = useState("");
-  const [priceError, setPriceError] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Pre-fill khi dialog mở — dùng useEffect thay handleOpen để tránh timing issue
-  useEffect(() => {
-    if (open && pkg) {
-      setName(pkg.name);
+  // Reset when package changes
+  const handleOpen = (isOpen: boolean) => {
+    if (isOpen && pkg) {
       setPrice(pkg.price.toLocaleString("vi-VN"));
-      setNameError("");
-      setPriceError("");
+      setError("");
     }
-  }, [open, pkg]);
+    if (!isOpen) onClose();
+  };
 
   const handleSubmit = async () => {
-    let hasError = false;
-    if (!name.trim()) { setNameError("Tên gói không được để trống."); hasError = true; }
     const numericStr = price.replace(/\./g, "").replace(/,/g, "");
     const numericVal = parseInt(numericStr, 10);
-    if (isNaN(numericVal) || numericVal <= 0) { setPriceError(MSG36); hasError = true; }
-    if (hasError || !pkg) return;
+    if (isNaN(numericVal) || numericVal <= 0) {
+      setError(MSG36);
+      return;
+    }
+    if (!pkg) return;
 
     setLoading(true);
     try {
-      const tasks: Promise<void>[] = [];
-      if (name.trim() !== pkg.name)
-        tasks.push(updateSubscriptionPackageName(pkg.id, name.trim()));
-      if (numericVal !== pkg.price)
-        tasks.push(updateSubscriptionPackagePrice(pkg.id, numericVal));
-      await Promise.all(tasks);
+      await updateSubscriptionPackagePrice(pkg.id, numericVal);
       toast.success(MSG09);
       onUpdated();
       onClose();
@@ -256,299 +230,57 @@ function EditPriceModal({ open, pkg, onClose, onUpdated }: EditPriceModalProps) 
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+    <Dialog open={open} onOpenChange={handleOpen}>
       <DialogContent className="bg-[#111827] border-slate-800 text-slate-200 sm:max-w-[440px] p-0">
         <DialogHeader className="px-6 pt-6 pb-2">
-          <DialogTitle className="text-lg font-semibold text-white">Chỉnh sửa gói dịch vụ</DialogTitle>
+          <DialogTitle className="text-lg font-semibold text-white">Chỉnh sửa giá dịch vụ</DialogTitle>
         </DialogHeader>
 
-        <div className="px-6 pb-6 space-y-4">
-          {/* Tên gói */}
-          <div className="space-y-1.5">
+        <div className="px-6 pb-6 space-y-5">
+          <div className="space-y-2">
             <Label className="text-sm font-medium text-slate-300">
-              Tên gói<span className="text-red-400">*</span>
-            </Label>
-            <Input
-              value={name}
-              onChange={(e) => { setName(e.target.value); if (nameError) setNameError(""); }}
-              placeholder="VD: Gói Cơ Bản"
-              className="bg-slate-900 border-slate-800 text-white placeholder:text-slate-500 focus-visible:ring-purple-500/50"
-            />
-            {nameError && <p className="text-xs text-red-400">{nameError}</p>}
-          </div>
-
-          {/* Giá */}
-          <div className="space-y-1.5">
-            <Label className="text-sm font-medium text-slate-300">
-              Giá dịch vụ<span className="text-red-400">*</span>
+              Giá dịch vụ cho một phiên phỏng vấn<span className="text-red-400">*</span>
             </Label>
             <div className="relative">
               <Input
                 value={price}
                 onChange={(e) => {
+                  // Xóa tất cả ký tự không phải số
                   const raw = e.target.value.replace(/\D/g, "");
+                  // Format với dấu chấm phân cách hàng nghìn
                   const formatted = raw ? Number(raw).toLocaleString("vi-VN") : "";
                   setPrice(formatted);
-                  if (priceError) setPriceError("");
+                  if (error) setError("");
                 }}
                 placeholder="100.000"
                 className="bg-slate-900 border-slate-800 text-white placeholder:text-slate-500 pr-14 focus-visible:ring-purple-500/50"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400 pointer-events-none">VNĐ</span>
             </div>
-            {priceError && <p className="text-xs text-red-400">{priceError}</p>}
+            {error && <p className="text-xs text-red-400">{error}</p>}
+          </div>
+
+          <div className="rounded-lg bg-slate-900/60 border border-slate-800 p-3">
+            <p className="text-xs text-slate-500">
+              <strong className="text-slate-400">Điều khoản liên quan:</strong> Giá dịch vụ sẽ được áp dụng cho tất cả các phiên phỏng vấn mới. 
+              Giá sẽ được reset theo chu kỳ gói đăng ký của người dùng.
+            </p>
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-1">
-            <Button variant="secondary" onClick={onClose} disabled={loading}>Hủy</Button>
-            <Button variant="primary" onClick={handleSubmit} disabled={loading}>
-              {loading ? "Đang cập nhật..." : "Cập nhật"}
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-// ─── Create Package Modal ───────────────────────────────────────
-interface CreatePackageModalProps {
-  open: boolean;
-  onClose: () => void;
-  onCreated: () => void;
-}
-
-function CreatePackageModal({ open, onClose, onCreated }: CreatePackageModalProps) {
-  const [name, setName] = useState("");
-  const [price, setPrice] = useState("");
-  const [durationDays, setDurationDays] = useState("30");
-  const [benefits, setBenefits] = useState<string[]>([""]);
-  const [nameError, setNameError] = useState("");
-  const [priceError, setPriceError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (open) {
-      setName("");
-      setPrice("");
-      setDurationDays("30");
-      setBenefits([""]);
-      setNameError("");
-      setPriceError("");
-    }
-  }, [open]);
-
-  const handleBenefitChange = (idx: number, val: string) => {
-    setBenefits((prev) => prev.map((b, i) => (i === idx ? val : b)));
-  };
-
-  const handleAddBenefit = () => setBenefits((prev) => [...prev, ""]);
-  const handleRemoveBenefit = (idx: number) => setBenefits((prev) => prev.filter((_, i) => i !== idx));
-
-  const handleSubmit = async () => {
-    let hasError = false;
-    if (!name.trim()) { setNameError("Tên gói không được để trống."); hasError = true; }
-    
-    const numericStr = price.replace(/\./g, "").replace(/,/g, "");
-    const numericVal = parseInt(numericStr, 10);
-    if (isNaN(numericVal) || numericVal < 0) { setPriceError("Giá trị không hợp lệ."); hasError = true; }
-    
-    if (hasError) return;
-
-    setLoading(true);
-    try {
-      const filteredBenefits = benefits.map((b) => b.trim()).filter(Boolean);
-      await createSubscriptionPackage(name.trim(), numericVal, parseInt(durationDays, 10), filteredBenefits, false);
-      toast.success("Tạo gói dịch vụ thành công!");
-      onCreated();
-      onClose();
-    } catch {
-      toast.error("Tạo gói dịch vụ thất bại. Vui lòng thử lại.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent className="bg-[#111827] border-slate-800 text-slate-200 sm:max-w-[520px] p-0">
-        <DialogHeader className="px-6 pt-6 pb-2">
-          <DialogTitle className="text-lg font-semibold text-white">Thêm gói dịch vụ mới</DialogTitle>
-        </DialogHeader>
-
-        <div className="px-6 pb-6 space-y-4 max-h-[70vh] overflow-y-auto">
-          {/* Tên gói */}
-          <div className="space-y-1.5">
-            <Label className="text-sm font-medium text-slate-300">
-              Tên gói<span className="text-red-400">*</span>
-            </Label>
-            <Input
-              value={name}
-              onChange={(e) => { setName(e.target.value); if (nameError) setNameError(""); }}
-              placeholder="VD: Gói Mở Rộng"
-              className="bg-slate-900 border-slate-800 text-white placeholder:text-slate-500 focus-visible:ring-purple-500/50"
-            />
-            {nameError && <p className="text-xs text-red-400">{nameError}</p>}
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            {/* Giá */}
-            <div className="space-y-1.5">
-              <Label className="text-sm font-medium text-slate-300">
-                Giá dịch vụ<span className="text-red-400">*</span>
-              </Label>
-              <div className="relative">
-                <Input
-                  value={price}
-                  onChange={(e) => {
-                    const raw = e.target.value.replace(/\D/g, "");
-                    const formatted = raw ? Number(raw).toLocaleString("vi-VN") : "";
-                    setPrice(formatted);
-                    if (priceError) setPriceError("");
-                  }}
-                  placeholder="100.000"
-                  className="bg-slate-900 border-slate-800 text-white placeholder:text-slate-500 pr-14 focus-visible:ring-purple-500/50"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400 pointer-events-none">VNĐ</span>
-              </div>
-              {priceError && <p className="text-xs text-red-400">{priceError}</p>}
-            </div>
-
-            {/* Thời hạn */}
-            <div className="space-y-1.5">
-              <Label className="text-sm font-medium text-slate-300">
-                Thời hạn (ngày)
-              </Label>
-              <Input
-                type="number"
-                value={durationDays}
-                onChange={(e) => setDurationDays(e.target.value)}
-                placeholder="30"
-                className="bg-slate-900 border-slate-800 text-white placeholder:text-slate-500 focus-visible:ring-purple-500/50"
-              />
-            </div>
-          </div>
-
-          {/* Tính năng */}
-          <div className="space-y-2 pt-2">
-            <Label className="text-sm font-medium text-slate-300">Tính năng</Label>
-            {benefits.map((item, idx) => (
-              <div key={idx} className="flex items-center gap-2">
-                <Input
-                  value={item}
-                  onChange={(e) => handleBenefitChange(idx, e.target.value)}
-                  placeholder={`Tính năng ${idx + 1}`}
-                  className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500 flex-1 focus-visible:ring-purple-500/50"
-                />
-                <button
-                  onClick={() => handleRemoveBenefit(idx)}
-                  className="p-2 rounded-md bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition-colors shrink-0"
-                >
-                  <Trash2 size={15} />
-                </button>
-              </div>
-            ))}
-            <button
-              onClick={handleAddBenefit}
-              className="flex items-center gap-2 text-sm text-purple-400 hover:text-purple-300 transition-colors mt-2"
+            <Button
+              variant="secondary"
+              onClick={onClose}
+              disabled={loading}
             >
-              <Plus size={15} /> Thêm tính năng
-            </button>
-          </div>
-
-          <div className="flex items-center justify-end gap-3 pt-4">
-            <Button variant="secondary" onClick={onClose} disabled={loading}>Hủy</Button>
-            <Button variant="primary" onClick={handleSubmit} disabled={loading}>
-              {loading ? "Đang tạo..." : "Tạo gói"}
+              Hủy
             </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-// ─── Edit Benefits Modal ────────────────────────────────────
-interface EditBenefitsModalProps {
-  open: boolean;
-  pkg: SubscriptionPackageItem | null;
-  onClose: () => void;
-  onUpdated: () => void;
-}
-
-function EditBenefitsModal({ open, pkg, onClose, onUpdated }: EditBenefitsModalProps) {
-  const [items, setItems] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (open && pkg) setItems([...pkg.benefits]);
-  }, [open, pkg]);
-
-  const handleChange = (idx: number, val: string) => {
-    setItems((prev) => prev.map((b, i) => (i === idx ? val : b)));
-  };
-
-  const handleAdd = () => setItems((prev) => [...prev, ""]);
-
-  const handleRemove = (idx: number) =>
-    setItems((prev) => prev.filter((_, i) => i !== idx));
-
-  const handleSubmit = async () => {
-    const filtered = items.map((b) => b.trim()).filter(Boolean);
-    if (!pkg) return;
-    setLoading(true);
-    try {
-      await updateSubscriptionPackageBenefits(pkg.id, filtered);
-      toast.success("Cập nhật tính năng thành công!");
-      onUpdated();
-      onClose();
-    } catch {
-      toast.error("Cập nhật thất bại. Vui lòng thử lại.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent className="bg-[#111827] border-slate-800 text-slate-200 sm:max-w-[520px] p-0">
-        <DialogHeader className="px-6 pt-6 pb-2">
-          <DialogTitle className="text-lg font-semibold text-white">
-            Chỉnh sửa tính năng — {pkg?.name}
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="px-6 pb-6 space-y-4">
-          <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-            {items.map((item, idx) => (
-              <div key={idx} className="flex items-center gap-2">
-                <Input
-                  value={item}
-                  onChange={(e) => handleChange(idx, e.target.value)}
-                  placeholder={`Tính năng ${idx + 1}`}
-                  className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500 flex-1 focus-visible:ring-purple-500/50"
-                />
-                <button
-                  onClick={() => handleRemove(idx)}
-                  className="p-2 rounded-md bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition-colors shrink-0"
-                >
-                  <Trash2 size={15} />
-                </button>
-              </div>
-            ))}
-          </div>
-
-          <button
-            onClick={handleAdd}
-            className="flex items-center gap-2 text-sm text-purple-400 hover:text-purple-300 transition-colors"
-          >
-            <Plus size={15} /> Thêm tính năng
-          </button>
-
-          <div className="flex items-center justify-end gap-3 pt-2">
-            <Button variant="secondary" onClick={onClose} disabled={loading}>Hủy</Button>
-            <Button variant="primary" onClick={handleSubmit} disabled={loading}>
-              {loading ? "Đang lưu..." : "Lưu thay đổi"}
+            <Button
+              variant="primary"
+              onClick={handleSubmit}
+              disabled={loading}
+            >
+              {loading ? "Đang cập nhật..." : "Cập nhật"}
             </Button>
           </div>
         </div>
@@ -561,8 +293,6 @@ function EditBenefitsModal({ open, pkg, onClose, onUpdated }: EditBenefitsModalP
 export default function SubscriptionManagement() {
   const { data: packages = [], isLoading, error, refetch: refetchPackages } = useSubscriptionPackages();
   const [editPkg, setEditPkg] = useState<SubscriptionPackageItem | null>(null);
-  const [editBenefitsPkg, setEditBenefitsPkg] = useState<SubscriptionPackageItem | null>(null);
-  const [createModalOpen, setCreateModalOpen] = useState(false);
   const [overview, setOverview] = useState<SubscriptionOverviewResponse | null>(null);
   const [overviewLoading, setOverviewLoading] = useState(true);
 
@@ -597,18 +327,6 @@ export default function SubscriptionManagement() {
     fetchOverview();
   };
 
-  const handleDeletePackage = async (pkg: SubscriptionPackageItem) => {
-    if (window.confirm(`Bạn có chắc chắn muốn xóa/ẩn gói "${pkg.name}" không? Gói này sẽ không hiển thị với người dùng nữa.`)) {
-      try {
-        await deactivateSubscriptionPackage(pkg.id);
-        toast.success("Đã ẩn gói dịch vụ thành công.");
-        handlePriceUpdated();
-      } catch (error: any) {
-        toast.error("Không thể ẩn gói dịch vụ.");
-      }
-    }
-  };
-
   return (
     <div className="p-6 space-y-6 min-h-full">
       {/* Header */}
@@ -621,9 +339,6 @@ export default function SubscriptionManagement() {
             Quản lý và cập nhật các gói đăng ký dịch vụ.
           </p>
         </div>
-        <Button variant="primary" className="gap-2" onClick={() => setCreateModalOpen(true)}>
-          <Plus size={16} /> Thêm gói mới
-        </Button>
       </div>
 
       {/* ── Overview Section ── */}
@@ -710,16 +425,9 @@ export default function SubscriptionManagement() {
           {MSG06}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {packages.map((pkg, i) => (
-            <PricingCard
-              key={pkg.id}
-              pkg={pkg}
-              index={i}
-              onEdit={setEditPkg}
-              onEditBenefits={setEditBenefitsPkg}
-              onDelete={handleDeletePackage}
-            />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {packages.slice(0, 3).map((pkg, i) => (
+            <PricingCard key={pkg.id} pkg={pkg} index={i} onEdit={setEditPkg} />
           ))}
         </div>
       )}
@@ -730,21 +438,6 @@ export default function SubscriptionManagement() {
         pkg={editPkg}
         onClose={() => setEditPkg(null)}
         onUpdated={handlePriceUpdated}
-      />
-
-      {/* ── Edit Benefits Modal ── */}
-      <EditBenefitsModal
-        open={!!editBenefitsPkg}
-        pkg={editBenefitsPkg}
-        onClose={() => setEditBenefitsPkg(null)}
-        onUpdated={handlePriceUpdated}
-      />
-
-      {/* ── Create Package Modal ── */}
-      <CreatePackageModal
-        open={createModalOpen}
-        onClose={() => setCreateModalOpen(false)}
-        onCreated={handlePriceUpdated}
       />
     </div>
   );

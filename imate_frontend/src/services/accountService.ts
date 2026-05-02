@@ -3,7 +3,7 @@ import type { AccountListResponse, AccountResponse, OverviewChartAccountResponse
 import apiClient from "./apiClient";
 
 // get all
-export const getAccountList = async (params: { AccountStatus?: 0 | 1 | 2; SortBy?: string; SortOrder?: string; PageNumber?: number; PageSize?: number; SearchTerm?: string; RoleName?: string }) => {
+export const getAccountList = async (params: { AccountStatus?: 0 | 1 | 2; SortBy?: string; SortOrder?: string; PageNumber?: number; PageSize?: number; SearchTerm?: string }) => {
   //
   try {
     const urlParams = new URLSearchParams();
@@ -14,7 +14,6 @@ export const getAccountList = async (params: { AccountStatus?: 0 | 1 | 2; SortBy
     if (params.PageNumber) urlParams.append("PageNumber", params.PageNumber.toString());
     if (params.PageSize) urlParams.append("PageSize", params.PageSize.toString());
     if (params.SearchTerm) urlParams.append("SearchTerm", params.SearchTerm);
-    if (params.RoleName) urlParams.append("RoleName", params.RoleName);
 
     const res = await apiClient.get(`/accounts?${urlParams.toString()}`);
     //  console.log("res", res.data);
@@ -96,15 +95,6 @@ export const viewDetailAccountStaff = async (id: number) => {
     return res.data;
   } catch (error) {
     console.log("error fetch account staff detail : ", error);
-    throw error;
-  }
-};
-export const viewDetailAccountRecruiter = async (id: number) => {
-  try {
-    const res = await apiClient.get(`/accounts/recruiter/${id}`);
-    return res.data;
-  } catch (error) {
-    console.log("error fetch account recruiter detail : ", error);
     throw error;
   }
 };

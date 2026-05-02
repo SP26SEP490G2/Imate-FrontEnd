@@ -81,7 +81,6 @@ export interface AuthContextType {
 }
 
 export interface ChangePasswordData {
-  currentPassword: string;
   newPassword: string;
   firebaseIdToken: string;
 }

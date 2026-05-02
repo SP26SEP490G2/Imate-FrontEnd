@@ -95,7 +95,19 @@ const MainLayout: React.FC = () => {
         </div>
       )}
 
-      {isRoot ? null : (
+      {isRoot ? null : user?.role === "Candidate" ? (
+        <Footer />
+      ) : user?.role === "Mentor" ? (
+        <div className=" flex min-h-full flex-col bg-gray-50">
+          <footer className="text-white" style={{ background: "linear-gradient(135deg, #5D5FEF 0%, #4a4cc9 100%)" }}>
+            <div className="container mx-auto px-4 py-6 sm:px-6 lg:px-8 lg:py-7">
+              <div className="flex items-center justify-center">
+                <p className="text-center text-sm text-white/80 md:text-left">© 2025 AI Interview Practice. All rights reserved.</p>
+              </div>
+            </div>
+          </footer>
+        </div>
+      ) : (
         <Footer />
       )}
     </div>

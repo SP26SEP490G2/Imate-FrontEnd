@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye, Bookmark, MessageCircle } from 'lucide-react';
+import { Eye, Bookmark } from 'lucide-react';
 import { StatusBadge } from '@/components/ui/status-badge';
 
 interface QuestionContributedCardProps {
@@ -8,14 +8,12 @@ interface QuestionContributedCardProps {
   description: string;
   author: string;
   company: string;
-  difficulty?: string;
   timeAgo: string;
   skills: string[];
   position: string;
   level: string;
   rating: number; // 1-5
   isSaved?: boolean;
-  commentCount?: number;
   statusLabel?: string;
   statusType?: "active" | "pending" | "error" | "inactive" | "draft";
   onView?: () => void;
@@ -33,7 +31,6 @@ const QuestionContributedCard: React.FC<QuestionContributedCardProps> = ({
   level,
   rating,
   isSaved = false,
-  commentCount,
   statusLabel,
   statusType = 'inactive',
   onView,
@@ -48,43 +45,29 @@ const QuestionContributedCard: React.FC<QuestionContributedCardProps> = ({
       .slice(0, 2);
   };
 
-  // const getLevelStatus = (level: string): "active" | "pending" | "error" | "inactive" | "draft" => {
-  //   const levelLower = level.toLowerCase();
-  //   if (levelLower === 'intern' || levelLower === 'fresher') return 'active';
-  //   if (levelLower === 'junior' || levelLower === 'middle') return 'pending';
-  //   if (levelLower === 'senior') return 'error';
-  //   return 'inactive';
-  // };
-  // const getDifficultyStatus = (difficultyText: string | undefined): "active" | "pending" | "error" | "inactive" | "draft" => {
-  //   const difficultyLower = (difficultyText || '').toLowerCase();
-  //   if (!difficultyLower) return 'inactive';
-  //   if (difficultyLower === 'easy') return 'active';
-  //   if (difficultyLower === 'medium') return 'pending';
-  //   if (difficultyLower === 'hard') return 'error';
-  //   return 'inactive';
-  // };
+  const getLevelStatus = (level: string): "active" | "pending" | "error" | "inactive" | "draft" => {
+    const levelLower = level.toLowerCase();
+    if (levelLower === 'intern' || levelLower === 'fresher') return 'active';
+    if (levelLower === 'junior' || levelLower === 'middle') return 'pending';
+    if (levelLower === 'senior') return 'error';
+    return 'inactive';
+  };
 
   const renderStars = () => {
-    return Array.from({ length: 3 }, (_, index) => {
-      let colorClass = 'text-slate-600';
-      if (index < rating) {
-        if (rating === 1) colorClass = 'text-green-500 fill-current';
-        else if (rating === 2) colorClass = 'text-yellow-500 fill-current';
-        else if (rating >= 3) colorClass = 'text-red-500 fill-current';
-      }
-      return (
-        <span
-          key={index}
-          className={`material-symbols-outlined text-sm ${colorClass}`}
-        >
-          star
-        </span>
-      );
-    });
+    return Array.from({ length: 5 }, (_, index) => (
+      <span
+        key={index}
+        className={`material-symbols-outlined text-sm ${
+          index < rating ? 'text-yellow-500 fill-current' : 'text-slate-600'
+        }`}
+      >
+        star
+      </span>
+    ));
   };
 
   return (
-    <div className="bg-[#1e293b]/40 backdrop-blur-sm p-6 rounded-2xl border border-white/5 hover:border-indigo-500/40 hover:-translate-y-1 transition-all duration-300 group">
+    <div className="bg-[#1e293b]/40 backdrop-blur-sm p-6 rounded-2xl border border-white/5 hover:border-indigo-500/30 transition-all group">
       {/* Header: Author & Company */}
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
@@ -124,9 +107,7 @@ const QuestionContributedCard: React.FC<QuestionContributedCardProps> = ({
           </StatusBadge>
         ))}
         <StatusBadge status="draft">{position}</StatusBadge>
-        {level && level !== 'N/A' && (
-          <StatusBadge status="pending">{level}</StatusBadge>
-        )}
+        <StatusBadge status={getLevelStatus(level)}>{level}</StatusBadge>
       </div>
 
       {/* Footer: Rating & Actions */}
@@ -139,19 +120,13 @@ const QuestionContributedCard: React.FC<QuestionContributedCardProps> = ({
           {onSave && (
             <button
               onClick={onSave}
-              className={`flex items-center gap-1 transition-colors text-xs ${isSaved ? 'text-yellow-400 hover:text-yellow-300' : 'text-slate-500 hover:text-yellow-400'
-                }`}
+              className={`flex items-center gap-1 transition-colors text-xs ${
+                isSaved ? 'text-yellow-400 hover:text-yellow-300' : 'text-slate-500 hover:text-yellow-400'
+              }`}
             >
               <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
               {isSaved ? 'Đã lưu' : 'Lưu'}
             </button>
-          )}
-
-          {typeof commentCount === 'number' && commentCount > 1 && (
-            <div className="flex items-center gap-1 text-xs text-slate-400">
-              <MessageCircle className="w-4 h-4" />
-              <span>{commentCount} bình luận</span>
-            </div>
           )}
         </div>
 

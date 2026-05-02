@@ -17,15 +17,13 @@ import type { BookingDetailResponse } from "@/types/response/booking.response";
 import ImateLoading from "@/components/custom/imateLoading";
 import { toast } from "react-toastify";
 
-import { getAvatarColor } from "@/helpers/common";
-import { cn } from "@/lib/utils";
+const MOCK_AVATAR = "https://i.pravatar.cc/150?img=11";
 
 const MentorInterviewHistoryDetailPage = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
   const [session, setSession] = useState<BookingDetailResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedVideoIndex, setSelectedVideoIndex] = useState(0);
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -65,7 +63,7 @@ const MentorInterviewHistoryDetailPage = () => {
   };
 
   return (
-    <div className="text-white p-6 max-w-5xl mx-auto min-h-screen">
+    <div className="text-white p-6 max-w-5xl mx-auto h-[calc(100vh-80px)] overflow-y-auto custom-scrollbar">
       {/* Back Button */}
       <button 
         onClick={() => navigate("/mentor/interview-history")}
@@ -87,51 +85,29 @@ const MentorInterviewHistoryDetailPage = () => {
                 <Video size={20} className="text-indigo-400" />
                 <h3 className="text-xl font-bold">Video ghi lại buổi học</h3>
               </div>
-              {session.recordingUrls && session.recordingUrls.length > 0 && (
+              {session.audioRecordKey && (
                 <a 
-                  href={session.recordingUrls[selectedVideoIndex]} 
+                  href={session.audioRecordKey} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors"
                 >
                   <ExternalLink size={14} />
-                  Mở {session.recordingUrls.length > 1 ? `Phần ${selectedVideoIndex + 1}` : "video"} trong tab mới
+                  Mở trong tab mới
                 </a>
               )}
             </div>
             
-            <div className="aspect-video bg-[#0B0F19] relative flex flex-col items-center justify-center">
-              {session.recordingUrls && session.recordingUrls.length > 0 ? (
-                <>
-                  <video 
-                    key={session.recordingUrls[selectedVideoIndex]}
-                    controls 
-                    className="w-full h-full object-contain"
-                  >
-                    <source src={session.recordingUrls[selectedVideoIndex]} type="video/mp4" />
-                    Your browser does not support the video tag.
-                  </video>
-                  
-                  {session.recordingUrls.length > 1 && (
-                    <div className="absolute bottom-12 left-0 right-0 p-4 flex justify-center gap-2 pointer-events-none">
-                      <div className="flex gap-2 p-2 bg-black/60 backdrop-blur-md rounded-2xl pointer-events-auto border border-white/10">
-                        {session.recordingUrls.map((_, index) => (
-                          <button
-                            key={index}
-                            onClick={() => setSelectedVideoIndex(index)}
-                            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                              selectedVideoIndex === index 
-                                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20" 
-                                : "text-gray-400 hover:text-white hover:bg-white/5"
-                            }`}
-                          >
-                            Phần {index + 1}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </>
+            <div className="aspect-video bg-[#0B0F19] relative flex items-center justify-center">
+              {session.audioRecordKey ? (
+                <video 
+                  controls 
+                  className="w-full h-full object-contain"
+                  poster={MOCK_AVATAR} // Temporary placeholder
+                >
+                  <source src={session.audioRecordKey} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
               ) : (
                 <div className="text-center px-6">
                   <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -205,18 +181,11 @@ const MentorInterviewHistoryDetailPage = () => {
             
             <div className="relative z-10 mt-4">
               <div className="relative inline-block mb-4">
-                <div className={cn(
-                  "w-24 h-24 rounded-3xl flex items-center justify-center font-bold text-white border-4 border-[#1A1A2E] shadow-2xl mx-auto overflow-hidden",
-                  (!session.profileAvatarUrl || session.profileAvatarUrl.trim() === "") && getAvatarColor(session.profileName)
-                )}>
-                  <img 
-                    src={(session.profileAvatarUrl && session.profileAvatarUrl.trim() !== "") 
-                      ? session.profileAvatarUrl 
-                      : `https://ui-avatars.com/api/?name=${encodeURIComponent(session.profileName || "User")}&background=random&color=fff&size=512`} 
-                    alt={session.profileName}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+                <img 
+                  src={session.profileAvatarUrl || MOCK_AVATAR} 
+                  alt={session.profileName}
+                  className="w-24 h-24 rounded-3xl object-cover border-4 border-[#1A1A2E] shadow-2xl mx-auto"
+                />
                 <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-4 border-[#1A1A2E] ${session.status === 2 ? 'bg-emerald-500' : 'bg-rose-500'}`}></div>
               </div>
               <h3 className="text-2xl font-black text-white px-4 truncate">{session.profileName}</h3>

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link, useParams, useLocation } from "react-router-dom";
-import BookMentorDialog from "@/pages/dialog/main/mentor/BookMentorDialog";
+import BookMentorDialog from "@/dialog/main/mentor/BookMentorDialog";
 import { getMentorApplicationById } from "@/services/staffReviewService";
 import type { StaffMentorApplication } from "@/types/response/staffReview.response";
 import {
@@ -12,8 +12,18 @@ import {
   Link2,
   Code,
   Award,
+  Heart,
 } from "lucide-react";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+
+function getInitials(fullName: string): string {
+  return fullName
+    .trim()
+    .split(/\s+/)
+    .map((s) => s[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase() || "?";
+}
 
 const BENEFITS = [
   { icon: Route, text: "Lộ trình cá nhân hóa theo kỹ năng và mục tiêu của bạn" },
@@ -61,7 +71,7 @@ const MentorDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#020617] flex items-center justify-center">
+      <div className="min-h-screen bg-[#0a0b14] flex items-center justify-center">
         <div className="h-12 w-12 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
       </div>
     );
@@ -69,7 +79,7 @@ const MentorDetail: React.FC = () => {
 
   if (error && !mentor) {
     return (
-      <div className="min-h-screen bg-[#020617] font-sans">
+      <div className="min-h-screen bg-[#0a0b14] font-sans">
         <main className="max-w-4xl mx-auto px-6 py-12 text-white">
           <p className="text-red-400 mb-4">{error}</p>
           <Link
@@ -91,12 +101,14 @@ const MentorDetail: React.FC = () => {
       ? `@ ${mentor.companies[0]}`
       : "Mentor";
   const pricePerSession = mentor.pricePerSession != null ? Number(mentor.pricePerSession) : 0;
+  const package5 = pricePerSession > 0 ? Math.round(pricePerSession * 5 * 0.9) : 0;
+  const package10 = pricePerSession > 0 ? Math.round(pricePerSession * 10 * 0.8) : 0;
   const avgRatings = mentor.avgRatings;
   const totalRatingCount = mentor.totalRatingCount;
 
   return (
-    <div className="min-h-screen bg-[#020617] font-sans text-white">
-      <main className="max-w-6xl mx-auto px-6 py-6 md:py-10">
+    <div className="min-h-screen bg-[#0a0b14] font-sans text-white">
+      <main className="max-w-6xl mx-auto px-6 py-6 md:py-8">
         {/* Breadcrumb */}
         <Link
           to="/view-mentor"
@@ -105,16 +117,23 @@ const MentorDetail: React.FC = () => {
           <ChevronLeft className="w-4 h-4" /> Kết nối Mentor
         </Link>
 
-        {/* Profile card */}
-        <div className="rounded-3xl border border-white/5 bg-[#1e293b]/40 backdrop-blur-sm p-6 md:p-8 mb-10 relative overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.18),_transparent_65%)]" />
-          <div className="relative flex flex-col lg:flex-row lg:items-start gap-6 lg:gap-8">
+        {/* Profile card - layout giống ảnh */}
+        <div className="rounded-2xl border border-white/10 bg-[#11142D] p-6 md:p-8 mb-10">
+          <div className="flex flex-col lg:flex-row lg:items-start gap-6 lg:gap-8">
             {/* Avatar + badge */}
             <div className="flex flex-col items-center lg:items-start flex-shrink-0">
-              <Avatar className="w-28 h-28 md:w-32 md:h-32 border-2 border-white/10 bg-white/5">
-                <AvatarImage src={mentor.avatarUrl || undefined} alt={mentor.fullName} />
-                <AvatarFallback name={mentor.fullName} />
-              </Avatar>
+              <div className="w-28 h-28 md:w-32 md:h-32 rounded-full overflow-hidden border-2 border-white/10 bg-white/5">
+                {mentor.avatarUrl ? (
+                  <img src={mentor.avatarUrl} alt={mentor.fullName} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-indigo-400">
+                    {getInitials(mentor.fullName)}
+                  </div>
+                )}
+              </div>
+              <span className="mt-3 rounded-lg bg-amber-500/90 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#0a0b14]">
+                Mentor hàng đầu
+              </span>
             </div>
 
             {/* Tên, chức danh, thống kê */}
@@ -125,19 +144,19 @@ const MentorDetail: React.FC = () => {
                 <span>{titleText}</span>
               </p>
               {(avgRatings != null || totalRatingCount != null) && (
-                <div className="flex flex-wrap gap-8 mb-6">
-                  {avgRatings != null && (
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-1 text-amber-400">
-                        <Star className="w-5 h-5 fill-current" />
-                        <span className="font-bold text-lg">{avgRatings.toFixed(1)}</span>
-                      </div>
-                      <span className="text-xs text-slate-500 uppercase tracking-wider mt-0.5">
-                        {totalRatingCount != null ? `${totalRatingCount} đánh giá` : "Đánh giá"}
-                      </span>
-                    </div>
-                  )}
+              <div className="flex flex-wrap gap-8 mb-6">
+                {avgRatings != null && (
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-1 text-amber-400">
+                    <Star className="w-5 h-5 fill-current" />
+                    <span className="font-bold text-lg">{avgRatings.toFixed(1)}</span>
+                  </div>
+                  <span className="text-xs text-slate-500 uppercase tracking-wider mt-0.5">
+                    {totalRatingCount != null ? `${totalRatingCount} đánh giá` : "Đánh giá"}
+                  </span>
                 </div>
+                )}
+              </div>
               )}
             </div>
 
@@ -222,7 +241,7 @@ const MentorDetail: React.FC = () => {
             {/* Đánh giá từ học viên - chỉ hiển thị khi có dữ liệu từ API */}
             <section>
               <h2 className="text-lg font-semibold text-white mb-4">Đánh giá từ học viên</h2>
-              <div className="rounded-2xl border border-white/5 bg-[#1e293b]/40 backdrop-blur-sm p-6 text-center">
+              <div className="rounded-xl border border-white/10 bg-[#11142D] p-6 text-center">
                 <p className="text-slate-400 text-sm">
                   {totalRatingCount != null && totalRatingCount > 0
                     ? `Có ${totalRatingCount} đánh giá. Tính năng xem chi tiết đánh giá sẽ được cập nhật.`
@@ -234,7 +253,7 @@ const MentorDetail: React.FC = () => {
 
           {/* Sidebar phải */}
           <div className="space-y-6">
-            <section className="p-6 rounded-2xl border border-white/5 bg-[#1e293b]/40 backdrop-blur-sm">
+            <section className="p-6 rounded-2xl border border-white/10 bg-[#11142D]">
               <h2 className="text-sm font-semibold text-white mb-4">Lợi ích khi học cùng Mentor</h2>
               <ul className="space-y-4">
                 {BENEFITS.map((item, i) => {
@@ -251,7 +270,39 @@ const MentorDetail: React.FC = () => {
               </ul>
             </section>
 
-
+            <section className="p-6 rounded-2xl border border-white/10 bg-[#11142D]">
+              <div className="flex items-center gap-2 mb-2">
+                <Heart className="w-4 h-4 text-rose-400" />
+                <h2 className="text-sm font-semibold text-white">Gói dịch vụ phổ biến</h2>
+              </div>
+              <p className="text-sm text-slate-400 mb-4">
+                Tiết kiệm hơn với các gói học tập dài hạn cùng Mentor.
+              </p>
+              <div className="space-y-3 mb-4">
+                {package5 > 0 && (
+                <div className="flex justify-between items-center py-2 border-b border-white/5">
+                  <span className="text-slate-300">Gói 5 buổi</span>
+                  <span className="font-semibold text-white">{package5.toLocaleString("vi-VN")}₫</span>
+                </div>
+                )}
+                {package10 > 0 && (
+                <div className="flex justify-between items-center py-2 border-b border-white/5">
+                  <span className="text-slate-300">Gói 10 buổi</span>
+                  <span className="font-semibold text-white">{package10.toLocaleString("vi-VN")}₫</span>
+                </div>
+                )}
+              </div>
+              <button
+                type="button"
+                disabled
+                className="w-full py-3 rounded-xl bg-white/10 text-white font-medium border border-white/10 cursor-not-allowed opacity-80"
+              >
+                Chọn gói dịch vụ
+              </button>
+              <p className="text-xs text-slate-500 mt-4 leading-relaxed">
+                Giao dịch được đảm bảo bởi IMATE. Tiền sẽ được hoàn trả nếu buổi cố vấn không diễn ra đúng cam kết.
+              </p>
+            </section>
           </div>
         </div>
       </main>

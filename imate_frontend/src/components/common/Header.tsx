@@ -5,8 +5,7 @@ import {
   Wallet,
   Bell,
   CheckCheck,
-  Circle,
-  Sparkles
+  Circle
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
@@ -17,10 +16,7 @@ import { cn } from "@/lib/utils";
 import UserMenu from "@/components/custom/UserMenu";
 import type { MenuItem } from '@/types/common/menu';
 import { ROLES } from '@/constants/role';
-import { useSignalR } from "@/store/SignalRContext";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { getCurrentSubscriptionDetail } from "@/services/userSubscriptionService";
-import { useQuery } from "@tanstack/react-query";
+import { useSignalR } from '@/store/SignalRContext';
 
 type HeaderNotification = {
   id: number;
@@ -55,11 +51,16 @@ const formatRelativeTime = (value?: string) => {
 
 function Header() {
   const { user, isAuthenticated } = useAuth();
-  const signalRContext = useSignalR();
+  const signalRContext = useSignalR() as {
+    notifications?: HeaderNotification[];
+    unreadCount?: number;
+    markNotificationAsRead?: (notificationId: number) => Promise<void>;
+    markAllNotificationsAsRead?: () => Promise<void>;
+  };
   const notifications = signalRContext.notifications ?? [];
-  const [locallyReadIds, setLocallyReadIds] = useState<Set<number>>(new Set());
-  const markNotificationAsRead = signalRContext.markNotificationAsRead ?? (async () => { });
-  const unreadCount = signalRContext.unreadCount ?? notifications.filter((notification) => !notification.isRead && !locallyReadIds.has(notification.id)).length;
+  const unreadCount = signalRContext.unreadCount ?? notifications.filter((notification) => !notification.isRead).length;
+  const markNotificationAsRead = signalRContext.markNotificationAsRead ?? (async () => {});
+  const markAllNotificationsAsRead = signalRContext.markAllNotificationsAsRead ?? (async () => {});
   const unreadBadgeLabel = unreadCount > 99 ? "99+" : String(unreadCount);
   const navigate = useNavigate();
 
@@ -68,16 +69,16 @@ function Header() {
   const [isOpenNotificationMenu, setIsOpenNotificationMenu] = useState(false);
   const [showAllNotifications, setShowAllNotifications] = useState(false);
   const [expandedNotificationId, setExpandedNotificationId] = useState<number | null>(null);
-  const [isCompactNav, setIsCompactNav] = useState(false);
 
   const userMenuRef = useRef<HTMLDivElement>(null);
   const notificationMenuRef = useRef<HTMLDivElement>(null);
   const notificationAnchorRef = useRef<HTMLButtonElement>(null);
 
+  // menu cho guest
   const guestMenu = [
     { label: "Ngân hàng câu hỏi", href: "/view-question-bank" },
-    { label: "Luyện tập AI", href: "/practice-with-ai" },
-    { label: "Đội ngũ Mentor", href: "/view-mentor" },
+    { label: "Luyện tập AI", href: "/practice-with-AI" },
+    { label: "Mentor", href: "/view-mentor" },
     { label: "Bảng giá", href: "/view-subscription" },
   ];
 
@@ -90,39 +91,6 @@ function Header() {
       menuItems = CANDIDATE_MENU_ITEMS;
     }
   }
-
-  const { data: currentSubscription } = useQuery({
-    queryKey: ["current-subscription"],
-    queryFn: getCurrentSubscriptionDetail,
-    enabled: isAuthenticated,
-  });
-
-  const displayBalance =
-    signalRContext.balance ?? user?.balance ?? 0;
-
-  const displayAiCredit = signalRContext.aiCredit !== null
-    ? signalRContext.aiCredit
-    : (() => {
-      if (!currentSubscription) return 0;
-      if (currentSubscription.rank === 0) return 0;
-      return Math.max(
-        currentSubscription.initialMockLimit - currentSubscription.mockInterviewUsed,
-        0
-      );
-    })();
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(max-width: 1279px)");
-
-    const handleChange = (event: MediaQueryListEvent) => {
-      setIsCompactNav(event.matches);
-    };
-
-    setIsCompactNav(mediaQuery.matches);
-
-    mediaQuery.addEventListener("change", handleChange);
-    return () => mediaQuery.removeEventListener("change", handleChange);
-  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -151,21 +119,15 @@ function Header() {
   };
 
   const handleNotificationClick = async (notification: HeaderNotification) => {
-    if (!notification.isRead && !locallyReadIds.has(notification.id)) {
-      setLocallyReadIds((prev) => {
-        const s = new Set(prev);
-        s.add(notification.id);
-        return s;
-      });
-
-      try {
-        await markNotificationAsRead(notification.id);
-      } catch (e) {
-        // ignore API failure; UI already updated optimistically
-      }
+    if (!notification.isRead) {
+      await markNotificationAsRead(notification.id);
     }
 
     setExpandedNotificationId((prev) => (prev === notification.id ? null : notification.id));
+  };
+
+  const handleMarkAllAsRead = async () => {
+    await markAllNotificationsAsRead();
   };
 
   const displayedNotifications = showAllNotifications
@@ -219,12 +181,12 @@ function Header() {
               <a className="text-sm font-bold text-[#020617] bg-white hover:bg-slate-100 px-5 py-2.5 rounded-full transition-all" href="/sign-up">
                 Đăng ký
               </a>
-              <Link className="text-sm font-bold text-white px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full shadow-lg shadow-indigo-500/20 hover:scale-105 transition-transform" to="/sign-up?role=Mentor">
+              <a className="text-sm font-bold text-white px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full shadow-lg shadow-indigo-500/20 hover:scale-105 transition-transform" href="#">
                 Trở thành Mentor
-              </Link>
-              <Link className="text-sm font-bold text-white px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full shadow-lg shadow-indigo-500/20 hover:scale-105 transition-transform" to="/sign-up?role=Recruiter">
+              </a>
+              <a className="text-sm font-bold text-white px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full shadow-lg shadow-indigo-500/20 hover:scale-105 transition-transform" href="#">
                 Liên kết với chúng tôi
-              </Link>
+              </a>
             </div>
           ) : (
             <div className="flex items-center gap-4">
@@ -251,7 +213,6 @@ function Header() {
                   >
                     <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
                       <h3 className="text-lg font-bold text-white">Thông báo</h3>
-                      {/*
                       <button
                         type="button"
                         className="text-xs font-medium text-indigo-300 transition hover:text-indigo-200 disabled:cursor-not-allowed disabled:text-slate-500"
@@ -260,7 +221,6 @@ function Header() {
                       >
                         Đánh dấu đã đọc
                       </button>
-                      */}
                     </div>
 
                     <div className={cn("divide-y divide-white/5", showAllNotifications && "max-h-80 overflow-y-auto")}>
@@ -300,13 +260,11 @@ function Header() {
                               <p className="mt-1 text-xs text-slate-400">
                                 {formatRelativeTime(notification.createdAt)}
                               </p>
-                              {/*
                               {notification.link && (
                                 <p className="mt-1 text-[11px] text-slate-500">
                                   Thông báo có đính kèm liên kết.
                                 </p>
                               )}
-                              */}
                             </div>
 
                             {!notification.isRead && (
@@ -333,41 +291,15 @@ function Header() {
                 )}
               </div>
 
-              <div className="flex items-center gap-2">
-
-                {/* ImCoin - Using SignalR balance */}
-                <div className="relative group">
-                  <Button
-                    variant="outline"
-                    className="border-white/20 text-white flex items-center gap-2"
-                    onClick={() => navigate("/wallet")}
-                  >
-                    <Wallet className="w-4 h-4" />
-                    {displayBalance.toLocaleString()}
-                  </Button>
-
-                  <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition pointer-events-none">
-                    Số dư ImCoin
-                  </div>
-                </div>
-
-                {user?.role === ROLES.CANDIDATE && (
-                  <div className="relative group">
-                    <Button
-                      variant="outline"
-                      className="border-white/20 text-white flex items-center gap-2"
-                      onClick={() => navigate("/view-subscription")}
-                    >
-                      <Sparkles className="w-4 h-4 text-indigo-400" />
-                      {displayAiCredit}
-                    </Button>
-
-                    <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition pointer-events-none">
-                      Số dư AI Credit
-                    </div>
-                  </div>
-                )}
-              </div>
+              {/* Wallet */}
+              <Button
+                variant="outline"
+                className="border-white/20 text-white cursor-pointer"
+                onClick={() => navigate("/wallet")}
+              >
+                <Wallet className="w-4 h-4 mr-2" />
+                {user?.balance ?? 0}
+              </Button>
 
               {/* Avatar */}
               <div className="relative">
@@ -376,10 +308,9 @@ function Header() {
                   className="flex items-center gap-2 cursor-pointer"
                   onClick={() => setIsOpenUserMenu(!isOpenUserMenu)}
                 >
-                  <Avatar>
-                    <AvatarImage src={user?.avatarUrl} />
-                    <AvatarFallback name={user?.fullName} />
-                  </Avatar>
+                  <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center text-white font-semibold">
+                    {user?.fullName?.charAt(0)}
+                  </div>
 
                   <span className="text-sm text-white">
                     {user?.fullName}
@@ -392,7 +323,6 @@ function Header() {
                   isOpenUserMenu={isOpenUserMenu}
                   onClose={() => setIsOpenUserMenu(false)}
                   anchorRef={userMenuRef}
-                  extraMenuItems={isCompactNav ? menuItems : undefined}
                 />
               </div>
             </div>

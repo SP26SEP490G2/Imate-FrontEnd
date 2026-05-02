@@ -3,7 +3,7 @@ import { History } from "lucide-react";
 
 const MentorInterviewHistoryPage = () => {
   return (
-    <div className="text-white p-6 max-w-6xl mx-auto min-h-screen">
+    <div className="text-white p-6 max-w-6xl mx-auto h-[calc(100vh-80px)] overflow-y-auto custom-scrollbar">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
         <div className="space-y-1">
