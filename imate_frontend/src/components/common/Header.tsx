@@ -58,9 +58,10 @@ function Header() {
     markAllNotificationsAsRead?: () => Promise<void>;
   };
   const notifications = signalRContext.notifications ?? [];
-  const unreadCount = signalRContext.unreadCount ?? notifications.filter((notification) => !notification.isRead).length;
+  const [locallyReadIds, setLocallyReadIds] = useState<Set<number>>(new Set());
   const markNotificationAsRead = signalRContext.markNotificationAsRead ?? (async () => {});
   const markAllNotificationsAsRead = signalRContext.markAllNotificationsAsRead ?? (async () => {});
+  const unreadCount = signalRContext.unreadCount ?? notifications.filter((notification) => !notification.isRead && !locallyReadIds.has(notification.id)).length;
   const unreadBadgeLabel = unreadCount > 99 ? "99+" : String(unreadCount);
   const navigate = useNavigate();
 
@@ -119,15 +120,37 @@ function Header() {
   };
 
   const handleNotificationClick = async (notification: HeaderNotification) => {
-    if (!notification.isRead) {
-      await markNotificationAsRead(notification.id);
+    // Optimistically mark as read locally so UI updates immediately when user expands
+    if (!notification.isRead && !locallyReadIds.has(notification.id)) {
+      setLocallyReadIds((prev) => {
+        const s = new Set(prev);
+        s.add(notification.id);
+        return s;
+      });
+
+      try {
+        await markNotificationAsRead(notification.id);
+      } catch (e) {
+        // ignore failure -- we already optimistically updated UI
+      }
     }
 
     setExpandedNotificationId((prev) => (prev === notification.id ? null : notification.id));
   };
 
   const handleMarkAllAsRead = async () => {
-    await markAllNotificationsAsRead();
+    // Optimistically mark all as read locally
+    setLocallyReadIds((prev) => {
+      const s = new Set(prev);
+      notifications.forEach((n) => s.add(n.id));
+      return s;
+    });
+
+    try {
+      await markAllNotificationsAsRead();
+    } catch (e) {
+      // ignore
+    }
   };
 
   const displayedNotifications = showAllNotifications
@@ -229,51 +252,54 @@ function Header() {
                           Hiện chưa có thông báo nào.
                         </div>
                       ) : (
-                        displayedNotifications.map((notification) => (
-                          <button
-                            key={notification.id}
-                            type="button"
-                            onClick={() => handleNotificationClick(notification)}
-                            className={cn(
-                              "flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-white/5",
-                              notification.isRead ? "opacity-60" : "opacity-100"
-                            )}
-                          >
-                            <div className="pt-1">
-                              <Circle
-                                className={cn(
-                                  "h-3 w-3",
-                                  notification.isRead ? "text-slate-500" : "fill-emerald-400 text-emerald-400"
-                                )}
-                              />
-                            </div>
-
-                            <div className="flex-1">
-                              <p
-                                className={cn(
-                                  "text-sm text-slate-100 whitespace-pre-wrap transition-all",
-                                  expandedNotificationId === notification.id ? "line-clamp-none" : "line-clamp-2"
-                                )}
-                              >
-                                {notification.message}
-                              </p>
-                              <p className="mt-1 text-xs text-slate-400">
-                                {formatRelativeTime(notification.createdAt)}
-                              </p>
-                              {notification.link && (
-                                <p className="mt-1 text-[11px] text-slate-500">
-                                  Thông báo có đính kèm liên kết.
-                                </p>
+                        displayedNotifications.map((notification) => {
+                          const isReadDisplay = notification.isRead || locallyReadIds.has(notification.id);
+                          return (
+                            <button
+                              key={notification.id}
+                              type="button"
+                              onClick={() => handleNotificationClick(notification)}
+                              className={cn(
+                                "flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-white/5",
+                                isReadDisplay ? "opacity-60" : "opacity-100"
                               )}
-                            </div>
+                            >
+                              <div className="pt-1">
+                                <Circle
+                                  className={cn(
+                                    "h-3 w-3",
+                                    isReadDisplay ? "text-slate-500" : "fill-emerald-400 text-emerald-400"
+                                  )}
+                                />
+                              </div>
 
-                            {!notification.isRead && (
-                              <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-300">
-                                Mới
-                              </span>
-                            )}
-                          </button>
-                        ))
+                              <div className="flex-1">
+                                <p
+                                  className={cn(
+                                    "text-sm text-slate-100 whitespace-pre-wrap transition-all",
+                                    expandedNotificationId === notification.id ? "line-clamp-none" : "line-clamp-2"
+                                  )}
+                                >
+                                  {notification.message}
+                                </p>
+                                <p className="mt-1 text-xs text-slate-400">
+                                  {formatRelativeTime(notification.createdAt)}
+                                </p>
+                                {notification.link && (
+                                  <p className="mt-1 text-[11px] text-slate-500">
+                                    Thông báo có đính kèm liên kết.
+                                  </p>
+                                )}
+                              </div>
+
+                              {!isReadDisplay && (
+                                <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-300">
+                                  Mới
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })
                       )}
                     </div>
 
