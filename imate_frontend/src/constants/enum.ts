@@ -34,6 +34,7 @@ export const ApplicationType = {
   ReportMentor: "ReportMentor",
   ReportRating: "ReportRating",
   ReportComment: "ReportComment",
+  Other: "Other",
 } as const;
 
 export type ApplicationTypeEnum = keyof typeof ApplicationType;
@@ -43,6 +44,7 @@ export const APPLICATION_TYPE_LABELS: Record<ApplicationTypeEnum, string> = {
   [ApplicationType.ReportMentor]: "Đơn Tố Cáo Mentor",
   [ApplicationType.ReportRating]: "Đơn Tố Cáo Rating",
   [ApplicationType.ReportComment]: "Đơn Tố Cáo Comment",
+  [ApplicationType.Other]: "Đơn Báo Cáo Khác",
 } as const;
 
 export const APPLICATION_TYPE_OPTIONS = [
@@ -50,6 +52,7 @@ export const APPLICATION_TYPE_OPTIONS = [
   { value: ApplicationType.ReportMentor, label: "Đơn Tố Cáo Mentor" },
   { value: ApplicationType.ReportRating, label: "Đơn Tố Cáo Rating" },
   { value: ApplicationType.ReportComment, label: "Đơn Tố Cáo Comment" },
+  { value: ApplicationType.Other, label: "Đơn Báo Cáo Khác" },
 ] as const;
 
 export const getApplicationTypeLabel = (type: string): string => {
@@ -62,6 +65,7 @@ export const TransactionStatus = {
   Failed: "Failed",
   Cancelled: "Cancelled",
   Escrow: "Escrow",
+  Released: "Released",
 } as const;
 
 export type TransactionStatusType = keyof typeof TransactionStatus;
@@ -72,6 +76,7 @@ export const TRANSACTION_STATUS_OPTIONS = [
   { value: TransactionStatus.Failed, label: "Thất bại" },
   { value: TransactionStatus.Cancelled, label: "Đã hủy" },
   { value: TransactionStatus.Escrow, label: "Đang giữ hộ" },
+  { value: TransactionStatus.Released, label: "Đã trả" },
 ] as const;
 
 export const TransactionType = {

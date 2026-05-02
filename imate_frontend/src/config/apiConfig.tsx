@@ -43,6 +43,10 @@ const APIConfig = {
     ExportSystemQuestions: "/export-system-questions",
     ContributeQuestion: "/contribute-question",
     SaveQuestion: "/save-question",
+    ValidateQuestionsFromExcel: "/validate-questions-from-excel",
+    ImportValidatedQuestions: "/import-validated-questions",
+    RevalidateSingleQuestion: "/revalidate-single-question",
+    DownloadQuestionTemplate: "/download-question-template",
   },
 
   // Category endpoints
@@ -108,7 +112,11 @@ const APIConfig = {
   Subscription: {
     GetSubscriptionPackages: "/subscription-packages",
     GetSubscriptionOverview: "/subscription-packages/overview",
+    CreateSubscriptionPackage: "/subscription-packages",
     UpdateSubscriptionPackagePrice: "/subscription-packages",
+    UpdateSubscriptionPackageBenefits: "/subscription-packages",
+    UpdateSubscriptionPackageName: "/subscription-packages",
+    DeleteSubscriptionPackage: "/subscription-packages",
   },
 
   // CV endpoints
@@ -116,6 +124,7 @@ const APIConfig = {
     Upload: "/cv/upload",
     GetList: "/cv/list",
     Delete: "/cv/{cvId}",
+    Cost:"/cv/analyse-cost",
   },
 
   // AI endpoints
@@ -126,6 +135,8 @@ const APIConfig = {
 
   // Practice Test History endpoints (UC-31, UC-32)
   PracticeTest: {
+    CheckCost: "/ai-interview/check-practice-test-cost",
+    GetCostConfig: "/practice-test/cost",
     Submit: "/practice-test/submit",
     GetHistory: "/practice-test/history",
     GetDetail: "/practice-test/history/{id}",
@@ -145,10 +156,20 @@ const APIConfig = {
     GenerateQuestion: "/ai-interview/generate-question",
     SubmitAnswer: "/ai-interview/submit-answer",
     EndInterview: "/ai-interview/end-interview/{sessionId}",
+    ResumeSession: "/ai-interview/resume-session/{sessionId}",
     // Hỗ trợ giọng nói & JD
     TranscribeWhisper: "/ai-interview/transcribe-whisper-base64",
     CorrectTranscript: "/ai-interview/correct-transcript",
     ParseHtml: "/ai-interview/scraping/parse-html",
+  },
+  // Training Journey endpoints
+  TrainingJourney: {
+    Base: "/training-journey",
+    Create: "/training-journey",
+    GetList: "/training-journey",
+    GetProgress: "/training-journey/{journeyId}/progress",
+    StartSession: "/training-journey/{journeyId}/start-session",
+    EndSession: "/training-journey/end-session/{sessionId}",
   },
   // Comment endpoints
   Comment: {
@@ -156,6 +177,10 @@ const APIConfig = {
     Update: "/update-comment/{commentId}",
     Delete: "/delete-comment/{commentId}",
     Vote: "/vote-comment/{commentId}",
+  },
+  // Speech TTS endpoints
+  Speech: {
+    Synthesize: "/speech/synthesize",
   },
 } as const;
 

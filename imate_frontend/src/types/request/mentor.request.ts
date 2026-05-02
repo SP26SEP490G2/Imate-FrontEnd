@@ -16,4 +16,6 @@ export interface SubmitMentorProfileRequest {
   skillIds: number[];
   companyIds: number[];
   yoe?: number;
+  cvFile?: File;
+  certificateFile?: File;
 }

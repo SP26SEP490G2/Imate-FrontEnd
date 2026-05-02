@@ -79,3 +79,10 @@ export const analyseCvById = async (
   // Backend trả trực tiếp CvAnalysisResult trong data
   return response.data?.data ?? response.data;
 };
+
+export const getAnalyseCvCost = async (): Promise<number> => {
+  const response = await apiClient.get(APIConfig.CV.Cost);
+  const data = response.data?.data ?? response.data;
+
+  return data.cost;
+};

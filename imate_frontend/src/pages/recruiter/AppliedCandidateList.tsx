@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Search, ArrowLeft, Check, X } from "lucide-react";
+import { useAuth } from "@/store/AuthContext";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -22,6 +23,14 @@ import { Loader2 } from "lucide-react";
 const AppliedCandidateList: React.FC = () => {
     const { jobId } = useParams<{ jobId: string }>();
     const navigate = useNavigate();
+    const { user, isLoading: isAuthLoading } = useAuth();
+
+    useEffect(() => {
+        if (isAuthLoading) return;
+        if (user && user.accountStatus === "PendingVerification" && user.verificationStatus !== "Rejected" && user.companyName) {
+            navigate("/recruiter-pending-application", { replace: true });
+        }
+    }, [user, isAuthLoading, navigate]);
 
     const [data, setData] = useState<AppliedCandidateResponse | null>(null);
     const [loading, setLoading] = useState(true);
@@ -236,18 +245,20 @@ const AppliedCandidateList: React.FC = () => {
                                             <Button
                                                 size="sm"
                                                 variant="outline"
-                                                className="w-8 h-8 p-0 text-green-500 border-green-500 hover:bg-green-500 hover:text-white flex-shrink-0 cursor-pointer"
+                                                className={`w-8 h-8 p-0 text-green-500 border-green-500 hover:bg-green-500 hover:text-white flex-shrink-0 ${candidate.status?.toLowerCase() === "approved" || candidate.status?.toLowerCase() === "rejected" ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                                                 title="Phê duyệt"
                                                 onClick={() => handleOpenModal(candidate, "Approved")}
+                                                disabled={candidate.status?.toLowerCase() === "approved" || candidate.status?.toLowerCase() === "rejected"}
                                             >
                                                 <Check size={16} />
                                             </Button>
                                             <Button
                                                 size="sm"
                                                 variant="outline"
-                                                className="w-8 h-8 p-0 text-red-500 border-red-500 hover:bg-red-500 hover:text-white flex-shrink-0 cursor-pointer"
+                                                className={`w-8 h-8 p-0 text-red-500 border-red-500 hover:bg-red-500 hover:text-white flex-shrink-0 ${candidate.status?.toLowerCase() === "approved" || candidate.status?.toLowerCase() === "rejected" ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                                                 title="Từ chối"
                                                 onClick={() => handleOpenModal(candidate, "Rejected")}
+                                                disabled={candidate.status?.toLowerCase() === "approved" || candidate.status?.toLowerCase() === "rejected"}
                                             >
                                                 <X size={16} />
                                             </Button>

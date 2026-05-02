@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -18,15 +19,15 @@
   --imate-secondary: #0B0F2A;
   --imate-card: #11142D;
   --imate-surface: #161A3F;
-  --imate-border: rgba(255,255,255,0.08);
-  --imate-divider: rgba(255,255,255,0.06);
+  --imate-border: rgba(255, 255, 255, 0.08);
+  --imate-divider: rgba(255, 255, 255, 0.06);
   --imate-text-primary: #FFFFFF;
   --imate-text-secondary: #A0A3BD;
   --imate-text-muted: #6B6F8E;
   --imate-accent: #8B5CF6;
   --imate-gradient-primary: linear-gradient(135deg, #6C63FF 0%, #8B5CF6 50%, #A855F7 100%);
   --imate-gradient-accent: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
-  --imate-glow: rgba(139,92,246,0.35);
+  --imate-glow: rgba(139, 92, 246, 0.35);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
@@ -101,7 +102,7 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --font-sans: 'Geist Variable', sans-serif;
+  --font-sans: "Be Vietnam Pro", "Geist Variable", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
@@ -152,7 +153,7 @@
   background: var(--imate-card);
   border: 1px solid var(--imate-border);
   border-radius: 16px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.35);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
 }
 
 .imate-glow-blob {
@@ -170,9 +171,11 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
   html {
     @apply font-sans;
   }
@@ -197,12 +200,15 @@
 }
 
 .hide-scrollbar {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE và Edge cũ */
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE và Edge cũ */
 }
 
 .hide-scrollbar::-webkit-scrollbar {
-  display: none; /* Chrome, Safari */
+  display: none;
+  /* Chrome, Safari */
 }
 
 /* Custom Ant Design Tooltip */

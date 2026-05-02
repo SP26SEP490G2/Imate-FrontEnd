@@ -6,6 +6,7 @@ export interface SubscriptionPackageItem {
   benefits: string[];
   isRecommended: boolean;
   rank: number;
+  totalInterviewLimit: number | null;
 }
 
 export interface GetSubscriptionPackagesResponse {

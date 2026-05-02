@@ -30,6 +30,15 @@ export const getSystemConfigByKey = async (key: string, options?: { skipAuthRedi
   return (response.data as { data: SystemConfig }).data;
 };
 
+/**
+ * Đọc key config public (chỉ cần đăng nhập, không cần role Admin)
+ * Whitelist: PRACTICE_QUESTION_COST_POINTS, INTERVIEW_COST_POINTS, ANALYSE_CV_COST_POINT, FREE_INTERVIEW_LIMIT
+ */
+export const getPublicSystemConfigByKey = async (key: string): Promise<SystemConfig> => {
+  const response = await apiClient.get<{ data: SystemConfig; message: string }>(`/system-config/public/${key}`);
+  return (response.data as { data: SystemConfig }).data;
+};
+
 export const updateSystemConfig = async (key: string, value: string): Promise<SystemConfig> => {
   const response = await apiClient.put<{ data: SystemConfig; message: string }>(`/system-config/${key}`, { value });
   return response.data.data;
