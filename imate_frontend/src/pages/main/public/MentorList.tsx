@@ -238,9 +238,6 @@ const MentorList: React.FC = () => {
                           className="flex flex-col flex-1 min-w-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded-xl"
                         >
                           <div className="relative mb-4">
-                            <span className="absolute top-0 left-0 z-10 rounded-md bg-amber-500/90 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#0a0b14]">
-                              Mentor hàng đầu
-                            </span>
                             <Avatar className="w-20 h-20 border-2 border-white/10 mx-auto mt-2">
                               <AvatarImage src={mentor.avatarUrl} alt={mentor.fullName} />
                               <AvatarFallback name={mentor.fullName} />

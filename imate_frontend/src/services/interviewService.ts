@@ -204,10 +204,19 @@ export interface SubmitAnswerRequest {
 /* ------------------------------------------------------------------ */
 
 /**
- * Kiểm tra chi phí phỏng vấn (lượt free / subscription / peppoints)
+ * Kiểm tra chi phí phỏng vấn AI Mock Interview (lượt free / subscription)
  */
 export const checkInterviewCost = async (): Promise<InterviewCostInfo> => {
   const response = await apiClient.get(APIConfig.InterviewAI.CheckCost);
+  const data = response.data?.data ?? response.data;
+  return data as InterviewCostInfo;
+};
+
+/**
+ * Kiểm tra chi phí Practice Test — lấy giá trị PRACTICE_QUESTION_COST_POINTS từ DB
+ */
+export const checkPracticeTestCost = async (): Promise<InterviewCostInfo> => {
+  const response = await apiClient.get(APIConfig.PracticeTest.CheckCost);
   const data = response.data?.data ?? response.data;
   return data as InterviewCostInfo;
 };

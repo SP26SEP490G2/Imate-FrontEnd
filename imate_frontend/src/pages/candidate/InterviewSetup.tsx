@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   FileText,
@@ -7,6 +7,10 @@ import {
   Loader2,
   AlertCircle,
   ArrowLeft,
+  Upload,
+  X,
+  CheckCircle2,
+  FileUp,
   Sparkles,
 } from "lucide-react";
 import { toast } from "react-toastify";
@@ -28,6 +32,7 @@ import {
   MOCK_SETUP_RESPONSE,
   MOCK_SESSION,
 } from "@/mocks/interviewMockData";
+import { useJdFileImport } from "@/hooks/useJdFileImport";
 
 /* ------------------------------------------------------------------ */
 /*  Main Page                                                          */
@@ -46,6 +51,14 @@ export default function InterviewSetup() {
 
   // JD state — default tab to "text" and prefill if JD was passed in
   const [jdText, setJdText] = useState(prefillJd);
+
+  // File input ref (ẩn)
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Hook import file JD
+  const jdFileImport = useJdFileImport(
+    useCallback((text: string) => setJdText(text), [])
+  );
 
   // Duration
   // const [duration, setDuration] = useState("30");
@@ -247,16 +260,90 @@ export default function InterviewSetup() {
 
           {/* JD Input */}
           <div className="mb-6">
-            <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400">
-              Thông tin mô tả công việc (JD)
-            </label>
+            <div className="mb-2 flex items-center justify-between">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400">
+                Thông tin mô tả công việc (JD)
+              </label>
 
-            {/* JD Content */}
+              {/* Nút import file */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={jdFileImport.status === "loading"}
+                className="flex items-center gap-1.5 rounded-lg border border-slate-600/60 bg-slate-800/60 px-3 py-1.5 text-xs font-medium text-slate-300 transition-all hover:border-purple-500/50 hover:bg-purple-500/10 hover:text-purple-300 disabled:opacity-50"
+              >
+                {jdFileImport.status === "loading" ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    Đang đọc...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-3.5 w-3.5" />
+                    Import file JD
+                  </>
+                )}
+              </button>
+
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".txt,.pdf,.docx"
+                className="hidden"
+                onChange={jdFileImport.handleFileChange}
+              />
+            </div>
+
+            {/* File status badge */}
+            {jdFileImport.status === "success" && jdFileImport.fileName && (
+              <div className="mb-2 flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-3 py-2 text-xs text-emerald-400">
+                <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                <FileUp className="h-3.5 w-3.5 shrink-0 text-emerald-300" />
+                <span className="flex-1 truncate font-medium">{jdFileImport.fileName}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    jdFileImport.clearFile();
+                    setJdText("");
+                  }}
+                  className="ml-1 rounded p-0.5 hover:bg-emerald-500/20"
+                  title="Xóa file"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
+
+            {jdFileImport.status === "error" && jdFileImport.errorMsg && (
+              <div className="mb-2 flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/5 px-3 py-2 text-xs text-red-400">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                <span className="flex-1">{jdFileImport.errorMsg}</span>
+                <button
+                  type="button"
+                  onClick={jdFileImport.clearFile}
+                  className="ml-1 rounded p-0.5 hover:bg-red-500/20"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
+
+            {/* Hint accepted formats */}
+            <p className="mb-2 text-xs text-slate-600">
+              Hỗ trợ: .txt, .pdf, .docx — tối đa 10 MB
+            </p>
+
+            {/* JD Textarea */}
             <div className="relative">
               <textarea
                 value={jdText}
-                onChange={(e) => setJdText(e.target.value)}
-                placeholder="Dán nội dung mô tả công việc (JD) tại đây. Càng chi tiết, AI sẽ phỏng vấn bạn càng sát thực tế..."
+                onChange={(e) => {
+                  setJdText(e.target.value);
+                  // Nếu user tự gõ thì reset trạng thái file
+                  if (jdFileImport.status === "success") jdFileImport.clearFile();
+                }}
+                placeholder="Dán nội dung mô tả công việc (JD) tại đây, hoặc import file ở trên. Càng chi tiết, AI sẽ phỏng vấn bạn càng sát thực tế..."
                 rows={6}
                 maxLength={5000}
                 className="w-full resize-none rounded-xl border border-slate-700/60 bg-slate-900/60 px-4 py-3 text-sm text-white placeholder-slate-500 outline-none transition-colors focus:border-purple-500/50"
@@ -265,8 +352,6 @@ export default function InterviewSetup() {
                 {jdText.length} / 5000 ký tự
               </span>
             </div>
-
-
           </div>
 
           {/* Duration */}
@@ -298,11 +383,13 @@ export default function InterviewSetup() {
                         <>Mỗi buổi phỏng vấn tốn <strong className="text-white">{costInfo.cost ?? 1} AI Credit</strong></>
                       )}
                     </p>
-                    <div className="mt-0.5 flex items-center justify-between">
-                      <p className="text-xs text-slate-400">
-                        Số lượt còn lại{costInfo.isFree ? " trong tháng" : ""}: <strong className="text-white">{costInfo.remaining ?? 0}</strong> lượt
-                      </p>
-                    </div>
+                    {costInfo.isFree && (
+                      <div className="mt-0.5 flex items-center justify-between">
+                        <p className="text-xs text-slate-400">
+                          Số lượt còn lại trong tháng: <strong className="text-white">{costInfo.remaining ?? 0}</strong> lượt
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
