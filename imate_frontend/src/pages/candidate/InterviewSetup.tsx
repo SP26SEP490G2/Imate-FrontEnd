@@ -1,15 +1,13 @@
-import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   FileText,
-  Upload,
-  Link2,
   Clock,
   ChevronRight,
   Loader2,
   AlertCircle,
-  X,
-  File,
+  ArrowLeft,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -20,6 +18,7 @@ import {
   setupInterview,
   createInterviewSession,
   type SetupInterviewResponse,
+  type InterviewCostInfo,
 } from "@/services/interviewService";
 import type { CvItem } from "@/types/common/cv";
 import { MSG26, MSG27, MSG29, MSG30 } from "@/constants/messages";
@@ -31,45 +30,41 @@ import {
 } from "@/mocks/interviewMockData";
 
 /* ------------------------------------------------------------------ */
-/*  Tab types                                                          */
-/* ------------------------------------------------------------------ */
-type JdTab = "text" | "file" | "link";
-
-/* ------------------------------------------------------------------ */
 /*  Main Page                                                          */
 /* ------------------------------------------------------------------ */
 export default function InterviewSetup() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Read prefilled JD from navigation state (e.g. coming from ViewJobApplicationDetail)
+  const prefillJd = (location.state as { prefillJd?: string } | null)?.prefillJd ?? "";
 
   // CV state
   const [cvList, setCvList] = useState<CvItem[]>([]);
   const [selectedCvId, setSelectedCvId] = useState<string>("");
   const [cvLoading, setCvLoading] = useState(true);
 
-  // JD state
-  const [jdTab, setJdTab] = useState<JdTab>("text");
-  const [jdText, setJdText] = useState("");
-  const [jdLink, setJdLink] = useState("");
-  const [jdFile, setJdFile] = useState<File | null>(null);
+  // JD state — default tab to "text" and prefill if JD was passed in
+  const [jdText, setJdText] = useState(prefillJd);
 
   // Duration
-  const [duration, setDuration] = useState("30");
+  // const [duration, setDuration] = useState("30");
 
   // Flow state
   const [submitting, setSubmitting] = useState(false);
   const [setupResult, setSetupResult] = useState<SetupInterviewResponse | null>(null);
   const [step, setStep] = useState<"config" | "review">("config");
+  const [costInfo, setCostInfo] = useState<InterviewCostInfo | null>(null);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+
 
   // Fetch CV list on mount
   useEffect(() => {
     const fetchCvs = async () => {
       try {
         setCvLoading(true);
-        // Mock mode: dùng data giả
         if (USE_MOCK) {
-          await new Promise((r) => setTimeout(r, 500)); // giả delay
+          await new Promise((r) => setTimeout(r, 500));
           setCvList(MOCK_CV_LIST);
           setSelectedCvId(MOCK_CV_LIST[0].cvId);
           return;
@@ -87,28 +82,29 @@ export default function InterviewSetup() {
       }
     };
     fetchCvs();
+
+    // Fetch cost/usage info
+    const fetchCost = async () => {
+      try {
+        const info = await checkInterviewCost();
+        setCostInfo(info);
+      } catch {
+        // Skip log
+      }
+    };
+    fetchCost();
   }, []);
 
-  // Handle file drop
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file) setJdFile(file);
-  };
+
 
   // Handle confirm config
   const handleConfirm = async () => {
-    // E1: Missing CV
     if (!selectedCvId) {
       toast.error(MSG29);
       return;
     }
 
-    // Validate JD input
-    const hasJdInput =
-      (jdTab === "text" && jdText.trim().length > 10) ||
-      (jdTab === "file" && jdFile) ||
-      (jdTab === "link" && jdLink.trim().length > 5);
+    const hasJdInput = jdText.trim().length > 10;
 
     if (!hasJdInput) {
       toast.error(MSG30);
@@ -119,38 +115,34 @@ export default function InterviewSetup() {
       setSubmitting(true);
 
       if (USE_MOCK) {
-        // Mock mode
         await new Promise((r) => setTimeout(r, 1000));
         setSetupResult(MOCK_SETUP_RESPONSE);
         setStep("review");
         return;
       }
 
-      // E3: Check cost / subscription
       const cost = await checkInterviewCost();
       if (cost.requiresPayment && !cost.hasEnoughBalance) {
         toast.error(MSG26);
         return;
       }
 
-      // Call setup API
       const request = {
         method: "jd" as const,
         cvId: parseInt(selectedCvId),
-        jobDescriptionSourceType: jdTab as "text" | "url" | "file",
-        jobDescriptionText: jdTab === "text" ? jdText : undefined,
-        jobDescriptionUrl: jdTab === "link" ? jdLink : undefined,
+        jobDescriptionSourceType: "text" as const,
+        jobDescriptionText: jdText,
       };
 
-      const result = await setupInterview(
-        request,
-        jdTab === "file" ? jdFile! : undefined
-      );
+      const result = await setupInterview(request);
       setSetupResult(result);
       setStep("review");
-    } catch {
-      // E2: JD processing failure
-      toast.error(MSG30);
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        MSG30;
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }
@@ -176,13 +168,12 @@ export default function InterviewSetup() {
         levelName: setupResult.level,
         companyName: setupResult.company ?? undefined,
         cvId: parseInt(selectedCvId),
-        jobDescriptionText: jdTab === "text" ? jdText : undefined,
+        jobDescriptionText: jdText,
       };
 
       const session = await createInterviewSession(sessionReq);
       navigate(`/interview-chat/${session.sessionId}`);
     } catch {
-      // E4: Save failure
       toast.error(MSG27);
     } finally {
       setSubmitting(false);
@@ -195,24 +186,16 @@ export default function InterviewSetup() {
   if (step === "config") {
     return (
       <div className="mx-auto max-w-2xl px-4 py-10">
-        {/* Breadcrumb */}
-        <nav className="mb-6 flex items-center gap-1.5 text-sm text-slate-500">
-          <span
-            className="cursor-pointer transition-colors hover:text-slate-300"
-            onClick={() => navigate("/home")}
-          >
-            Trang chủ
+        {/* Back button */}
+        <button
+          onClick={() => navigate("/practice-with-ai")}
+          className="mb-6 flex items-center gap-3 text-base text-slate-300 transition-colors hover:text-white"
+        >
+          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-600">
+            <ArrowLeft className="h-5 w-5" />
           </span>
-          <ChevronRight className="h-3.5 w-3.5" />
-          <span
-            className="cursor-pointer transition-colors hover:text-slate-300"
-            onClick={() => navigate("/practice-ai")}
-          >
-            Luyện tập AI
-          </span>
-          <ChevronRight className="h-3.5 w-3.5" />
-          <span className="font-medium text-purple-400">Thiết lập phỏng vấn</span>
-        </nav>
+          Quay lại danh sách
+        </button>
 
         {/* Card */}
         <div className="rounded-2xl border border-slate-700/60 bg-gradient-to-br from-slate-800/90 to-slate-900/90 p-8">
@@ -223,6 +206,14 @@ export default function InterviewSetup() {
           <p className="mb-8 text-center text-sm text-slate-400">
             Cấu hình thông tin để AI tạo ra kịch bản phỏng vấn tối ưu nhất cho bạn
           </p>
+
+          {/* Prefill notice */}
+          {prefillJd && (
+            <div className="mb-6 flex items-center gap-2 rounded-xl border border-purple-500/30 bg-purple-500/5 px-4 py-3 text-sm text-purple-300">
+              <FileText className="h-4 w-4 shrink-0 text-purple-400" />
+              Mô tả công việc đã được điền tự động từ tin tuyển dụng.
+            </div>
+          )}
 
           {/* CV Selector */}
           <div className="mb-6">
@@ -260,109 +251,22 @@ export default function InterviewSetup() {
               Thông tin mô tả công việc (JD)
             </label>
 
-            {/* JD Tabs */}
-            <div className="mb-3 grid grid-cols-3 gap-1 rounded-xl bg-slate-900/60 p-1">
-              {[
-                { key: "text" as JdTab, label: "Dán mô tả", icon: FileText },
-                { key: "file" as JdTab, label: "Tải lên tệp", icon: Upload },
-                { key: "link" as JdTab, label: "Dán link", icon: Link2 },
-              ].map(({ key, label, icon: Icon }) => (
-                <button
-                  key={key}
-                  onClick={() => setJdTab(key)}
-                  className={`flex items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
-                    jdTab === key
-                      ? "bg-purple-600 text-white shadow-lg shadow-purple-500/20"
-                      : "text-slate-400 hover:text-white"
-                  }`}
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                  {label}
-                </button>
-              ))}
+            {/* JD Content */}
+            <div className="relative">
+              <textarea
+                value={jdText}
+                onChange={(e) => setJdText(e.target.value)}
+                placeholder="Dán nội dung mô tả công việc (JD) tại đây. Càng chi tiết, AI sẽ phỏng vấn bạn càng sát thực tế..."
+                rows={6}
+                maxLength={5000}
+                className="w-full resize-none rounded-xl border border-slate-700/60 bg-slate-900/60 px-4 py-3 text-sm text-white placeholder-slate-500 outline-none transition-colors focus:border-purple-500/50"
+              />
+              <span className="absolute bottom-3 right-3 text-xs text-slate-600">
+                {jdText.length} / 5000 ký tự
+              </span>
             </div>
 
-            {/* JD Content */}
-            {jdTab === "text" && (
-              <div className="relative">
-                <textarea
-                  value={jdText}
-                  onChange={(e) => setJdText(e.target.value)}
-                  placeholder="Dán nội dung mô tả công việc (JD) tại đây. Càng chi tiết, AI sẽ phỏng vấn bạn càng sát thực tế..."
-                  rows={6}
-                  maxLength={5000}
-                  className="w-full resize-none rounded-xl border border-slate-700/60 bg-slate-900/60 px-4 py-3 text-sm text-white placeholder-slate-500 outline-none transition-colors focus:border-purple-500/50"
-                />
-                <span className="absolute bottom-3 right-3 text-xs text-slate-600">
-                  {jdText.length} / 5000 ký tự
-                </span>
-              </div>
-            )}
 
-            {jdTab === "file" && (
-              <div
-                onDrop={handleDrop}
-                onDragOver={(e) => e.preventDefault()}
-                onClick={() => fileInputRef.current?.click()}
-                className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-700/60 bg-slate-900/40 px-6 py-10 transition-colors hover:border-purple-500/40"
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".pdf,.docx,.doc,.txt"
-                  className="hidden"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) setJdFile(f);
-                  }}
-                />
-                {jdFile ? (
-                  <div className="flex items-center gap-3">
-                    <File className="h-8 w-8 text-purple-400" />
-                    <div>
-                      <p className="text-sm font-medium text-white">
-                        {jdFile.name}
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        {(jdFile.size / 1024).toFixed(1)} KB
-                      </p>
-                    </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setJdFile(null);
-                      }}
-                      className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <Upload className="h-8 w-8 text-slate-500" />
-                    <p className="text-sm text-slate-400">
-                      Kéo thả file hoặc{" "}
-                      <span className="font-medium text-purple-400">
-                        Chọn file
-                      </span>
-                    </p>
-                    <p className="text-xs text-slate-600">
-                      PDF, DOCX, DOC, TXT
-                    </p>
-                  </>
-                )}
-              </div>
-            )}
-
-            {jdTab === "link" && (
-              <input
-                type="url"
-                value={jdLink}
-                onChange={(e) => setJdLink(e.target.value)}
-                placeholder="https://example.com/job/senior-backend-developer"
-                className="w-full rounded-xl border border-slate-700/60 bg-slate-900/60 px-4 py-3 text-sm text-white placeholder-slate-500 outline-none transition-colors focus:border-purple-500/50"
-              />
-            )}
           </div>
 
           {/* Duration */}
@@ -373,22 +277,36 @@ export default function InterviewSetup() {
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2 rounded-xl border border-slate-700/60 bg-slate-900/60 px-4 py-3">
                 <Clock className="h-4 w-4 text-purple-400" />
-                <input
-                  type="number"
-                  min={10}
-                  max={60}
-                  value={duration}
-                  onChange={(e) => setDuration(e.target.value)}
-                  className="w-12 bg-transparent text-center text-sm font-semibold text-white outline-none"
-                />
-                <span className="text-sm text-slate-400">Phút</span>
+                <span className="text-sm text-slate-400">30 - 45 Phút</span>
               </div>
               <p className="text-xs text-slate-500">
-                Gợi ý: 30 - 45 phút cho một buổi phỏng vấn hiệu quả.
-                <br />
-                Số lượng câu hỏi AI sẽ được điều chỉnh phù hợp với khung thời gian này.
               </p>
             </div>
+
+            {/* Usage limits */}
+            {costInfo && (
+              <div className="mt-6 rounded-xl border border-purple-500/20 bg-purple-500/8 px-4 py-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-purple-500/15">
+                    <Sparkles className="h-4 w-4 text-purple-400" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-purple-300">
+                      {costInfo.isFree ? (
+                        <>Bạn đang dùng lượt phỏng vấn <strong className="text-white">Miễn phí</strong></>
+                      ) : (
+                        <>Mỗi buổi phỏng vấn tốn <strong className="text-white">{costInfo.cost ?? 1} AI Credit</strong></>
+                      )}
+                    </p>
+                    <div className="mt-0.5 flex items-center justify-between">
+                      <p className="text-xs text-slate-400">
+                        Số lượt còn lại{costInfo.isFree ? " trong tháng" : ""}: <strong className="text-white">{costInfo.remaining ?? 0}</strong> lượt
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Buttons */}
@@ -438,7 +356,6 @@ export default function InterviewSetup() {
 
         {setupResult && (
           <div className="mb-6 space-y-4">
-            {/* Classified Data */}
             <div className="grid gap-3 md:grid-cols-2">
               <InfoCard label="Vị trí" value={setupResult.position} />
               <InfoCard label="Cấp độ" value={setupResult.level} />
@@ -451,7 +368,6 @@ export default function InterviewSetup() {
               )}
             </div>
 
-            {/* Requirements */}
             {setupResult.requirements &&
               setupResult.requirements.length > 0 && (
                 <div className="rounded-xl border border-slate-700/40 bg-slate-900/40 p-4">
@@ -472,7 +388,6 @@ export default function InterviewSetup() {
                 </div>
               )}
 
-            {/* Level mismatch warning */}
             {setupResult.levelMismatchWarning && (
               <div className="flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-sm text-amber-400">
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
@@ -482,7 +397,6 @@ export default function InterviewSetup() {
           </div>
         )}
 
-        {/* Buttons */}
         <div className="flex items-center justify-between">
           <Button
             variant="secondary"

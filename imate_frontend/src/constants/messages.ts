@@ -53,7 +53,7 @@ export const MSG16 = "Xóa thất bại";
 export const MSG17 = "Bạn có chắc chắn muốn xóa không?";
 
 // MSG18: Specific file requirement
-export const MSG18 = "Tệp phải là PDF hoặc DOCX và dưới 25MB";
+export const MSG18 = "Tệp phải là PDF hoặc DOCX và dưới 5MB";
 
 // MSG19: System response error
 export const MSG19 = "Không thể nhận phản hồi từ hệ thống. Vui lòng thử lại";

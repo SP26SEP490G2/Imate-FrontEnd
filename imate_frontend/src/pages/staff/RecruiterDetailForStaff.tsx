@@ -23,6 +23,7 @@ const RecruiterDetailForStaff: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<"approve" | "reject" | null>(null);
+  const [createCompany, setCreateCompany] = useState(true);
 
   const fetchRecruiter = useCallback(async () => {
     if (!id) return;
@@ -49,7 +50,11 @@ const RecruiterDetailForStaff: React.FC = () => {
     if (!id) return;
     setActionLoading("approve");
     try {
-      await reviewRecruiterApplication(Number(id), { isApproved: true, note: null });
+      await reviewRecruiterApplication(Number(id), { 
+        isApproved: true, 
+        note: null,
+        createCompany: createCompany
+      });
       navigate("/management/applications", { replace: true });
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Duyệt thất bại.");
@@ -221,8 +226,23 @@ const RecruiterDetailForStaff: React.FC = () => {
             </section>
           </div>
 
+
+          {/* Create Company Checkbox */}
+          <div className="mt-8 flex items-center gap-3 border-t border-gray-800 pt-6">
+            <input
+              type="checkbox"
+              id="createCompany"
+              checked={createCompany}
+              onChange={(e) => setCreateCompany(e.target.checked)}
+              className="h-5 w-5 rounded border-gray-700 bg-gray-800 text-[#5D5FEF] focus:ring-[#5D5FEF]"
+            />
+            <label htmlFor="createCompany" className="text-sm font-medium text-gray-300 cursor-pointer">
+              Tạo công ty chính thức trong hệ thống từ thông tin này
+            </label>
+          </div>
+
           {/* Action buttons */}
-          <div className="mt-8 flex flex-wrap justify-end gap-3 border-t border-gray-800 pt-6">
+          <div className="mt-4 flex flex-wrap justify-end gap-3">
             <button
               type="button"
               onClick={handleReject}

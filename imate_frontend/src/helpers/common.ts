@@ -3,7 +3,7 @@ export const formatName = (name: string) => {
   const mapping: Record<string, string> = {
     "": "Trang chủ",
     "system-question-bank": "Câu hỏi của Imate",
-    "contributed-question-bank": "Câu hỏi từ cộng đồng",
+    "view-question-bank": "Ngân hàng câu hỏi",
     "sign-in": "Đăng nhập",
     "sign-up": "Đăng ký",
     "view-subscription": "Gói dịch vụ",

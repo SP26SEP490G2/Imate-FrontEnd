@@ -5,7 +5,8 @@ import {
   Wallet,
   Bell,
   CheckCheck,
-  Circle
+  Circle,
+  Sparkles
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
@@ -16,7 +17,10 @@ import { cn } from "@/lib/utils";
 import UserMenu from "@/components/custom/UserMenu";
 import type { MenuItem } from '@/types/common/menu';
 import { ROLES } from '@/constants/role';
-import { useSignalR } from '@/store/SignalRContext';
+import { useSignalR } from "@/store/SignalRContext";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { getCurrentSubscriptionDetail } from "@/services/userSubscriptionService";
+import { useQuery } from "@tanstack/react-query";
 
 type HeaderNotification = {
   id: number;
@@ -51,17 +55,10 @@ const formatRelativeTime = (value?: string) => {
 
 function Header() {
   const { user, isAuthenticated } = useAuth();
-  const signalRContext = useSignalR() as {
-    notifications?: HeaderNotification[];
-    unreadCount?: number;
-    markNotificationAsRead?: (notificationId: number) => Promise<void>;
-    markAllNotificationsAsRead?: () => Promise<void>;
-  };
+  const signalRContext = useSignalR();
   const notifications = signalRContext.notifications ?? [];
-  const [locallyReadIds, setLocallyReadIds] = useState<Set<number>>(new Set());
-  const markNotificationAsRead = signalRContext.markNotificationAsRead ?? (async () => {});
-  const markAllNotificationsAsRead = signalRContext.markAllNotificationsAsRead ?? (async () => {});
-  const unreadCount = signalRContext.unreadCount ?? notifications.filter((notification) => !notification.isRead && !locallyReadIds.has(notification.id)).length;
+  const unreadCount = signalRContext.unreadCount ?? notifications.filter((notification) => !notification.isRead).length;
+  const markNotificationAsRead = signalRContext.markNotificationAsRead ?? (async () => { });
   const unreadBadgeLabel = unreadCount > 99 ? "99+" : String(unreadCount);
   const navigate = useNavigate();
 
@@ -70,16 +67,16 @@ function Header() {
   const [isOpenNotificationMenu, setIsOpenNotificationMenu] = useState(false);
   const [showAllNotifications, setShowAllNotifications] = useState(false);
   const [expandedNotificationId, setExpandedNotificationId] = useState<number | null>(null);
+  const [isCompactNav, setIsCompactNav] = useState(false);
 
   const userMenuRef = useRef<HTMLDivElement>(null);
   const notificationMenuRef = useRef<HTMLDivElement>(null);
   const notificationAnchorRef = useRef<HTMLButtonElement>(null);
 
-  // menu cho guest
   const guestMenu = [
     { label: "Ngân hàng câu hỏi", href: "/view-question-bank" },
-    { label: "Luyện tập AI", href: "/practice-with-AI" },
-    { label: "Mentor", href: "/view-mentor" },
+    { label: "Luyện tập AI", href: "/practice-with-ai" },
+    { label: "Đội ngũ Mentor", href: "/view-mentor" },
     { label: "Bảng giá", href: "/view-subscription" },
   ];
 
@@ -92,6 +89,39 @@ function Header() {
       menuItems = CANDIDATE_MENU_ITEMS;
     }
   }
+
+  const { data: currentSubscription } = useQuery({
+    queryKey: ["current-subscription"],
+    queryFn: getCurrentSubscriptionDetail,
+    enabled: isAuthenticated,
+  });
+
+  const displayBalance =
+    signalRContext.balance ?? user?.balance ?? 0;
+
+  const displayAiCredit = signalRContext.aiCredit !== null
+    ? signalRContext.aiCredit
+    : (() => {
+      if (!currentSubscription) return 0;
+      if (currentSubscription.rank === 0) return 0;
+      return Math.max(
+        currentSubscription.initialMockLimit - currentSubscription.mockInterviewUsed,
+        0
+      );
+    })();
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 1279px)");
+
+    const handleChange = (event: MediaQueryListEvent) => {
+      setIsCompactNav(event.matches);
+    };
+
+    setIsCompactNav(mediaQuery.matches);
+
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -120,37 +150,11 @@ function Header() {
   };
 
   const handleNotificationClick = async (notification: HeaderNotification) => {
-    // Optimistically mark as read locally so UI updates immediately when user expands
-    if (!notification.isRead && !locallyReadIds.has(notification.id)) {
-      setLocallyReadIds((prev) => {
-        const s = new Set(prev);
-        s.add(notification.id);
-        return s;
-      });
-
-      try {
-        await markNotificationAsRead(notification.id);
-      } catch (e) {
-        // ignore failure -- we already optimistically updated UI
-      }
+    if (!notification.isRead) {
+      await markNotificationAsRead(notification.id);
     }
 
     setExpandedNotificationId((prev) => (prev === notification.id ? null : notification.id));
-  };
-
-  const handleMarkAllAsRead = async () => {
-    // Optimistically mark all as read locally
-    setLocallyReadIds((prev) => {
-      const s = new Set(prev);
-      notifications.forEach((n) => s.add(n.id));
-      return s;
-    });
-
-    try {
-      await markAllNotificationsAsRead();
-    } catch (e) {
-      // ignore
-    }
   };
 
   const displayedNotifications = showAllNotifications
@@ -204,12 +208,12 @@ function Header() {
               <a className="text-sm font-bold text-[#020617] bg-white hover:bg-slate-100 px-5 py-2.5 rounded-full transition-all" href="/sign-up">
                 Đăng ký
               </a>
-              <a className="text-sm font-bold text-white px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full shadow-lg shadow-indigo-500/20 hover:scale-105 transition-transform" href="#">
+              <Link className="text-sm font-bold text-white px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full shadow-lg shadow-indigo-500/20 hover:scale-105 transition-transform" to="/sign-up?role=Mentor">
                 Trở thành Mentor
-              </a>
-              <a className="text-sm font-bold text-white px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full shadow-lg shadow-indigo-500/20 hover:scale-105 transition-transform" href="#">
+              </Link>
+              <Link className="text-sm font-bold text-white px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full shadow-lg shadow-indigo-500/20 hover:scale-105 transition-transform" to="/sign-up?role=Recruiter">
                 Liên kết với chúng tôi
-              </a>
+              </Link>
             </div>
           ) : (
             <div className="flex items-center gap-4">
@@ -236,6 +240,7 @@ function Header() {
                   >
                     <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
                       <h3 className="text-lg font-bold text-white">Thông báo</h3>
+                      {/*
                       <button
                         type="button"
                         className="text-xs font-medium text-indigo-300 transition hover:text-indigo-200 disabled:cursor-not-allowed disabled:text-slate-500"
@@ -244,6 +249,7 @@ function Header() {
                       >
                         Đánh dấu đã đọc
                       </button>
+                      */}
                     </div>
 
                     <div className={cn("divide-y divide-white/5", showAllNotifications && "max-h-80 overflow-y-auto")}>
@@ -252,54 +258,53 @@ function Header() {
                           Hiện chưa có thông báo nào.
                         </div>
                       ) : (
-                        displayedNotifications.map((notification) => {
-                          const isReadDisplay = notification.isRead || locallyReadIds.has(notification.id);
-                          return (
-                            <button
-                              key={notification.id}
-                              type="button"
-                              onClick={() => handleNotificationClick(notification)}
-                              className={cn(
-                                "flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-white/5",
-                                isReadDisplay ? "opacity-60" : "opacity-100"
-                              )}
-                            >
-                              <div className="pt-1">
-                                <Circle
-                                  className={cn(
-                                    "h-3 w-3",
-                                    isReadDisplay ? "text-slate-500" : "fill-emerald-400 text-emerald-400"
-                                  )}
-                                />
-                              </div>
-
-                              <div className="flex-1">
-                                <p
-                                  className={cn(
-                                    "text-sm text-slate-100 whitespace-pre-wrap transition-all",
-                                    expandedNotificationId === notification.id ? "line-clamp-none" : "line-clamp-2"
-                                  )}
-                                >
-                                  {notification.message}
-                                </p>
-                                <p className="mt-1 text-xs text-slate-400">
-                                  {formatRelativeTime(notification.createdAt)}
-                                </p>
-                                {notification.link && (
-                                  <p className="mt-1 text-[11px] text-slate-500">
-                                    Thông báo có đính kèm liên kết.
-                                  </p>
+                        displayedNotifications.map((notification) => (
+                          <button
+                            key={notification.id}
+                            type="button"
+                            onClick={() => handleNotificationClick(notification)}
+                            className={cn(
+                              "flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-white/5",
+                              notification.isRead ? "opacity-60" : "opacity-100"
+                            )}
+                          >
+                            <div className="pt-1">
+                              <Circle
+                                className={cn(
+                                  "h-3 w-3",
+                                  notification.isRead ? "text-slate-500" : "fill-emerald-400 text-emerald-400"
                                 )}
-                              </div>
+                              />
+                            </div>
 
-                              {!isReadDisplay && (
-                                <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-300">
-                                  Mới
-                                </span>
+                            <div className="flex-1">
+                              <p
+                                className={cn(
+                                  "text-sm text-slate-100 whitespace-pre-wrap transition-all",
+                                  expandedNotificationId === notification.id ? "line-clamp-none" : "line-clamp-2"
+                                )}
+                              >
+                                {notification.message}
+                              </p>
+                              <p className="mt-1 text-xs text-slate-400">
+                                {formatRelativeTime(notification.createdAt)}
+                              </p>
+                              {/*
+                              {notification.link && (
+                                <p className="mt-1 text-[11px] text-slate-500">
+                                  Thông báo có đính kèm liên kết.
+                                </p>
                               )}
-                            </button>
-                          );
-                        })
+                              */}
+                            </div>
+
+                            {!notification.isRead && (
+                              <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-300">
+                                Mới
+                              </span>
+                            )}
+                          </button>
+                        ))
                       )}
                     </div>
 
@@ -317,15 +322,41 @@ function Header() {
                 )}
               </div>
 
-              {/* Wallet */}
-              <Button
-                variant="outline"
-                className="border-white/20 text-white cursor-pointer"
-                onClick={() => navigate("/wallet")}
-              >
-                <Wallet className="w-4 h-4 mr-2" />
-                {user?.balance ?? 0}
-              </Button>
+              <div className="flex items-center gap-2">
+
+                {/* ImCoin - Using SignalR balance */}
+                <div className="relative group">
+                  <Button
+                    variant="outline"
+                    className="border-white/20 text-white flex items-center gap-2"
+                    onClick={() => navigate("/wallet")}
+                  >
+                    <Wallet className="w-4 h-4" />
+                    {displayBalance.toLocaleString()}
+                  </Button>
+
+                  <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition pointer-events-none">
+                    Số dư ImCoin
+                  </div>
+                </div>
+
+                {user?.role === ROLES.CANDIDATE && (
+                  <div className="relative group">
+                    <Button
+                      variant="outline"
+                      className="border-white/20 text-white flex items-center gap-2"
+                      onClick={() => navigate("/view-subscription")}
+                    >
+                      <Sparkles className="w-4 h-4 text-indigo-400" />
+                      {displayAiCredit}
+                    </Button>
+
+                    <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition pointer-events-none">
+                      Số dư AI Credit
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* Avatar */}
               <div className="relative">
@@ -334,9 +365,10 @@ function Header() {
                   className="flex items-center gap-2 cursor-pointer"
                   onClick={() => setIsOpenUserMenu(!isOpenUserMenu)}
                 >
-                  <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center text-white font-semibold">
-                    {user?.fullName?.charAt(0)}
-                  </div>
+                  <Avatar>
+                    <AvatarImage src={user?.avatarUrl} />
+                    <AvatarFallback name={user?.fullName} />
+                  </Avatar>
 
                   <span className="text-sm text-white">
                     {user?.fullName}
@@ -349,6 +381,7 @@ function Header() {
                   isOpenUserMenu={isOpenUserMenu}
                   onClose={() => setIsOpenUserMenu(false)}
                   anchorRef={userMenuRef}
+                  extraMenuItems={isCompactNav ? menuItems : undefined}
                 />
               </div>
             </div>

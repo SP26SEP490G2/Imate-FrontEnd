@@ -60,6 +60,8 @@ export interface InterviewSessionInfo {
   totalQuestionsAnswered: number;
   overallFeedback: string | null;
   estimatedAbility: number | null;
+  userCvId: number | null;
+  jobDescriptionText: string | undefined;
 }
 
 export interface InterviewResultDetail {
@@ -118,6 +120,9 @@ export interface InterviewCostInfo {
   freeUsedMock?: number;
   freeLimit?: number;
   remainingFree?: number;
+  usedMock?: number;      // New field from backend
+  limit?: number;         // New field from backend
+  remaining?: number;     // New field from backend
   cost?: number;
   balance?: number;
   hasEnoughBalance?: boolean;
@@ -178,6 +183,8 @@ export interface GenerateQuestionResponse {
   isTerminated?: boolean;
   terminationReason?: string;
   terminationMessage?: string;
+  audioBase64?: string | null;
+  mimeType?: string | null;
   metrics?: {
     bloomTaxonomy?: { level: number; levelName: string; description: string };
     irt?: { difficultyScore: number; estimatedAbility: number; interpretation: string };
@@ -253,16 +260,22 @@ export const createInterviewSession = async (
 /**
  * Lấy tin chào đầu buổi phỏng vấn
  */
+export interface WelcomeMessageResponse {
+  welcomeMessage: string;
+  audioBase64?: string | null;
+  mimeType?: string | null;
+}
+
 export const getWelcomeMessage = async (
   sessionId: number
-): Promise<string> => {
+): Promise<WelcomeMessageResponse> => {
   const url = APIConfig.InterviewAI.WelcomeMessage.replace(
     "{sessionId}",
     sessionId.toString()
   );
   const response = await apiClient.get(url);
   const data = response.data?.data ?? response.data;
-  return data.welcomeMessage as string;
+  return data as WelcomeMessageResponse;
 };
 
 /**
@@ -277,7 +290,8 @@ export const generateQuestion = async (
     {
       interviewSessionId: sessionId,
       estimatedAbility: estimatedAbility ?? null,
-    }
+    },
+    { timeout: 200_000 } // 200 giây
   );
   const data = response.data?.data ?? response.data;
 
@@ -295,12 +309,25 @@ export const generateQuestion = async (
 };
 
 /**
- * Gửi câu trả lời của người dùng (lưu + phân tích ngầm)
+ * Gửi câu trả lời của người dùng — nhận phản hồi AI
  */
+export interface SubmitAnswerResponse {
+  message: string;
+  aiReaction?: string;
+  aiReactionAudioBase64?: string | null;
+  mimeType?: string | null;
+}
+
 export const submitAnswer = async (
   request: SubmitAnswerRequest
-): Promise<void> => {
-  await apiClient.post(APIConfig.InterviewAI.SubmitAnswer, request);
+): Promise<SubmitAnswerResponse> => {
+  const response = await apiClient.post(
+    APIConfig.InterviewAI.SubmitAnswer,
+    request,
+    { timeout: 200_000 } // 200 giây
+  );
+  const data = response.data?.data ?? response.data;
+  return data as SubmitAnswerResponse;
 };
 
 /**
@@ -312,6 +339,46 @@ export const endInterview = async (sessionId: number): Promise<void> => {
     sessionId.toString()
   );
   await apiClient.post(url);
+};
+
+/**
+ * Khôi phục trạng thái phiên phỏng vấn khi reload trang
+ */
+export interface ResumeSessionResponseItem {
+  id: number;
+  turnNumber: number;
+  questionContent: string;
+  userAnswer: string | null;
+  answerTimestamp: string | null;
+}
+
+export interface ResumeSessionResponse {
+  session: {
+    id: number;
+    positionName: string | null;
+    skillName: string | null;
+    levelName: string | null;
+    companyName: string | null;
+    startTime: string;
+    endTime: string | null;
+    status: string;
+  };
+  responses: ResumeSessionResponseItem[];
+  answeredCount: number;
+  currentResponseId: number | null;
+  hasUnansweredQuestion: boolean;
+}
+
+export const resumeSession = async (
+  sessionId: number
+): Promise<ResumeSessionResponse> => {
+  const url = APIConfig.InterviewAI.ResumeSession.replace(
+    "{sessionId}",
+    sessionId.toString()
+  );
+  const response = await apiClient.get(url);
+  const data = response.data?.data ?? response.data;
+  return data as ResumeSessionResponse;
 };
 
 /**
@@ -342,5 +409,34 @@ export const correctTranscript = async (
   );
   const data = response.data?.data ?? response.data;
   return data.correctedText as string;
+};
+
+/* ------------------------------------------------------------------ */
+/*  API Functions — Speech TTS                                         */
+/* ------------------------------------------------------------------ */
+
+export interface SynthesizeSpeechResponse {
+  text: string;
+  audioUrl: string;
+  audioBase64: string | null;
+  mimeType: string | null;
+  voice: string;
+  language: string;
+}
+
+/**
+ * Chuyển text AI thành giọng nói (TTS) qua Gemini
+ */
+export const synthesizeSpeech = async (
+  text: string,
+  language?: string
+): Promise<SynthesizeSpeechResponse> => {
+  const response = await apiClient.post(APIConfig.Speech.Synthesize, {
+    text,
+    language: language ?? "vi-VN",
+    returnBase64: true,
+  });
+  const data = response.data?.data ?? response.data;
+  return data as SynthesizeSpeechResponse;
 };
 

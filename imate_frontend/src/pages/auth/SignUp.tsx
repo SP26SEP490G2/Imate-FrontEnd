@@ -1,18 +1,21 @@
 import { Eye, EyeOff, CheckCircle2, Quote, Banknote } from "lucide-react";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { registerWithEmail, generateActionCode, sendActionEmail } from "@/services/authService";
 import type { RegisterEmailData, UserRole, User } from "@/types/common/auth";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { toast } from "react-toastify";
 import { useAuth } from "@/store/AuthContext";
 import { managementRoutes } from "@/config/managementRoutes";
 import { MSG01, MSG56, MSG57, MSG58, MSG59, MSG60, MSG61 } from "@/constants/messages";
 function SignUp() {
-  var navigate = useNavigate();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const initialRole = (queryParams.get("role") as UserRole) || "Candidate";
+
   const { loginWithGoogle, refetchUser } = useAuth();
-  // Khởi tạo role với giá trị "Candidate" (Ứng viên)
-  const [role, setRole] = useState<UserRole>("Candidate");
+  // Khởi tạo role từ URL query parameter hoặc mặc định là "Candidate" (Ứng viên)
+  const [role, setRole] = useState<UserRole>(["Candidate", "Mentor", "Recruiter"].includes(initialRole) ? initialRole : "Candidate");
   const [viewPassword, setViewPassword] = useState(false);
   const [viewConfirmPassword, setViewConfirmPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -176,22 +179,26 @@ function SignUp() {
       localStorage.setItem("user", JSON.stringify(responseData.user));
       await refetchUser();
 
-      const auth = getAuth();
-
+      // Gửi email xác minh (nếu cần)
       try {
-        await signInWithEmailAndPassword(auth, formData.email, formData.password);
         const oobCode = await generateActionCode(formData.email, "VERIFY_EMAIL");
-        await sendActionEmail(oobCode, "startingimate@gmail.com", "VERIFY_EMAIL");
+        await sendActionEmail(oobCode, formData.email, "VERIFY_EMAIL");
       } catch (emailError: any) {
         console.error("Failed to send verification email:", emailError);
       }
-
 
       // Sử dụng role đã chọn trong thông báo
       const roleLabel = getRoleLabel(role);
       toast.success(`Đăng ký thành công vai trò ${roleLabel}!`);
 
-      handleNavigation(responseData.user);
+      // REDIRECT TRỰC TIẾP DỰA TRÊN ROLE
+      if (role === "Recruiter") {
+        navigate("/submit-recruiter-application");
+      } else if (role === "Mentor") {
+        navigate("/submit-mentor-application");
+      } else {
+        navigate("/sign-in");
+      }
     } catch (err: any) {
       console.error("Lỗi đăng ký:", err);
 
@@ -333,8 +340,8 @@ function SignUp() {
                 type="button"
                 onClick={() => selectRole("Candidate")}
                 className={`flex-1 h-11 rounded-lg text-sm font-semibold transition cursor-pointer ${role === "Candidate"
-                    ? "bg-white text-slate-900"
-                    : "text-slate-400 hover:text-white"
+                  ? "bg-white text-slate-900"
+                  : "text-slate-400 hover:text-white"
                   }`}
               >
                 Ứng viên
@@ -344,8 +351,8 @@ function SignUp() {
                 type="button"
                 onClick={() => selectRole("Mentor")}
                 className={`flex-1 h-11 rounded-lg text-sm font-semibold transition cursor-pointer ${role === "Mentor"
-                    ? "bg-white text-slate-900"
-                    : "text-slate-400 hover:text-white"
+                  ? "bg-white text-slate-900"
+                  : "text-slate-400 hover:text-white"
                   }`}
               >
                 Mentor
@@ -355,8 +362,8 @@ function SignUp() {
                 type="button"
                 onClick={() => selectRole("Recruiter")}
                 className={`flex-1 h-11 rounded-lg text-sm font-semibold transition cursor-pointer ${role === "Recruiter"
-                    ? "bg-white text-slate-900"
-                    : "text-slate-400 hover:text-white"
+                  ? "bg-white text-slate-900"
+                  : "text-slate-400 hover:text-white"
                   }`}
               >
                 Recruiter
@@ -368,7 +375,7 @@ function SignUp() {
             </p>
             {(role === "Mentor" || role === "Recruiter") && (
               <p className="mt-2 text-xs text-indigo-300/90">
-                Sau khi đăng ký, hệ thống sẽ tự động đăng nhập và chuyển hướng bạn đến trang nộp hồ sơ {role}.
+                Sau khi đăng ký bằng Google, hệ thống sẽ tự động đăng nhập và chuyển hướng bạn đến trang nộp hồ sơ {role}.
               </p>
             )}
           </div>

@@ -86,3 +86,56 @@ export const rateMentor = async (bookingId: number, ratingScore: number, reviewT
   }
 };
 
+/**
+ * [GET] Lấy lịch sử phỏng vấn của mentor
+ */
+export const getMentorSessionHistory = async () => {
+    try {
+      const res = await apiClient.get<any[]>(`/bookings/mentor/history-session`);
+      return res.data;
+    } catch (error) {
+      console.error("Error fetching mentor session history: ", error);
+      throw error;
+    }
+  };
+  
+  /**
+   * [GET] Lấy chi tiết buổi phỏng vấn trong lịch sử
+   */
+  export const getMentorSessionDetail = async (sessionId: number) => {
+    try {
+      const res = await apiClient.get<BookingDetailResponse>(`/bookings/mentor/history-session/${sessionId}`);
+      return res.data;
+    } catch (error) {
+      console.error("Error fetching mentor session detail: ", error);
+      throw error;
+    }
+  };
+
+/**
+ * [GET] Lấy lịch sử phỏng vấn của candidate (completed/cancelled)
+ */
+export const getCandidateSessionHistory = async () => {
+  try {
+    const res = await apiClient.get<any[]>(`/bookings/candidate/history-session`);
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching candidate session history: ", error);
+    throw error;
+  }
+};
+
+/**
+ * [GET] Lấy chi tiết buổi phỏng vấn của candidate
+ */
+export const getCandidateSessionDetail = async (sessionId: number) => {
+  try {
+    const res = await apiClient.get<BookingDetailResponse>(`/bookings/candidate/history-session/${sessionId}`);
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching candidate session detail: ", error);
+    throw error;
+  }
+};
+
+

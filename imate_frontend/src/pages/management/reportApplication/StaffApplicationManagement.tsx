@@ -5,14 +5,14 @@ import {
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Eye, CheckCircle, XCircle, FileWarning, ShieldAlert, UserX, StarOff, MessageSquareWarning } from "lucide-react";
+import { Eye, CheckCircle, XCircle, ShieldAlert, UserX, StarOff, MessageSquareWarning } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { toast } from "react-toastify";
+// ...existing code...
 
 import {
   getListApplicationForStaff,
@@ -35,7 +35,7 @@ import type {
 } from "@/types/response/application.response";
 import type { Status } from "@/components/ui/status-badge";
 
-import { ViewApplicationDetailDialog } from "@/dialog/main/reportApplication/ViewApplicationDetailDialog";
+import { ViewApplicationDetailDialog } from "@/pages/dialog/main/reportApplication/ViewApplicationDetailDialog";
 
 // ─── Status badge mapping ────────────────────────────────────────────────────
 
@@ -392,9 +392,12 @@ export default function StaffApplicationManagement() {
                 {/* Người gửi */}
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    <Avatar className="w-7 h-7 shrink-0">
-                      <AvatarImage src={app.avatarUrl ?? undefined} alt={app.fullName} />
-                      <AvatarFallback>{app.fullName?.charAt(0) ?? "?"}</AvatarFallback>
+                    <Avatar size="lg">
+                      <AvatarImage src={app?.avatarUrl || ""} />
+                      <AvatarFallback
+                        name={app?.fullName}
+                        className="bg-slate-700"
+                      />
                     </Avatar>
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-slate-200 truncate max-w-[130px]">

@@ -36,6 +36,7 @@ export interface PublicSystemQuestionBankItem {
   id: number;
   content: string;
   difficulty: string | null;
+  level?: Level | null;
   sampleAnswer?: string;
   creatorName: string;
   createdAt: string;
@@ -43,12 +44,12 @@ export interface PublicSystemQuestionBankItem {
   skills: PublicQuestionLookupItem[];
   positions: PublicQuestionLookupItem[];
   isSaved: boolean;
+  commentCount?: number;
 }
 
 export interface PublicContributedQuestionDetail {
   id: number;
   interviewDate?: string;
-  level?: string;
   company?: string;
   companyURL?: string;
 }
@@ -56,7 +57,8 @@ export interface PublicContributedQuestionDetail {
 export interface PublicContributedQuestionBankItem {
   id: number;
   content: string;
-  difficulty?: string | null;
+  difficulty: string | null;
+  level?: Level | null;
   sampleAnswer?: string;
   isActive: boolean;
   createdAt: string;
@@ -69,6 +71,7 @@ export interface PublicContributedQuestionBankItem {
   skills: PublicQuestionLookupItem[];
   positions: PublicQuestionLookupItem[];
   isSaved: boolean;
+  commentCount?: number;
 }
 
 export type SavedSystemQuestionItem = PublicSystemQuestionBankItem;
@@ -141,6 +144,7 @@ export interface GetQuestionBankListRequest {
   positionId?: number;
   searchTerm?: string;
   categoryId?: number;
+  level?: number;
   difficulty?: number;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
@@ -184,11 +188,11 @@ export interface MyContributedQuestionItem {
   isSaved?: boolean;
   approvalStatus: string;
   sampleAnswer?: string;
+  level?: Level | null;
   contributedDetailId?: number;
   contributedDetail?: {
     id?: number;
     interviewDate?: string;
-    level?: string;
     company?: {
       id?: number;
       name?: string;
@@ -200,6 +204,7 @@ export interface MyContributedQuestionItem {
   positionsName: string[];
   createdAt?: string;
   updatedAt?: string;
+  commentCount?: number;
 }
 
 export interface MyContributedQuestionListResponse {
@@ -231,16 +236,18 @@ export interface GetListQuestionCategoriesResponse {
 // Types for Difficulty and Level
 export type DifficultyLevel = 0 | 1 | 2; // 0 = Easy, 1 = Medium, 2 = Hard
 
-export type Level = 0 | 1 | 2 | 3 | 4 | 5; // 0 = Intern, 1 = Junior, 2 = Middle, 3 = Senior, 4 = Lead, 5 = Manager
+export type Level = 0 | 1 | 2 | 3 | 4 | 5 | 6; // 0 = Intern, 1 = Junior, 2 = Middle, 3 = Senior, 4 = Lead, 5 = Manager
 
 // Staff Question Management Types
 export interface StaffSystemQuestionItem {
   id: number;
   content: string;
-  positionsName?: string;
-  skillsName?: string;
-  categoriesName?: string;
+  positionsName?: string[];
+  skillsName?: string[];
+  categoriesName?: string[];
+  creatorName?: string;
   difficulty: DifficultyLevel;
+  level?: Level | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -250,6 +257,7 @@ export interface StaffContributedQuestionItem {
   id: number;
   content: string;
   difficulty: DifficultyLevel | null;
+  level?: Level | null;
   isFromSystem: boolean;
   isActive: boolean;
   creatorId: number;
@@ -280,6 +288,7 @@ export interface GetSystemQuestionParams {
   positionId?: number;
   categoryId?: number;
   difficulty?: DifficultyLevel;
+  level?: Level;
   isActive?: boolean;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
@@ -328,16 +337,17 @@ export interface CompanyItem {
 export interface CreateSystemQuestionRequest {
   content: string;
   difficulty: DifficultyLevel;
+  level: Level;
   sampleAnswer: string;
   categoryIds: number[];
   skillIds: number[];
   positionIds: number[];
-  creatorId: number;
 }
 
 export interface UpdateSystemQuestionRequest {
   content: string;
   difficulty: DifficultyLevel;
+  level: Level;
   sampleAnswer: string;
   isActive: boolean;
   categoryIds: number[];
@@ -379,6 +389,7 @@ export interface SystemQuestionDetail {
   id: number;
   content: string;
   difficulty: DifficultyLevel;
+  level: Level | null;
   sampleAnswer: string;
   isActive: boolean;
   isFromSystem: boolean;
@@ -392,6 +403,7 @@ export interface SystemQuestionDetail {
   positionsName: string[];
   createdAt?: string;
   updatedAt?: string;
+  comments?: CommentItem[];
 }
 
 // Contributed Question Detail for View
@@ -408,6 +420,7 @@ export interface ContributedQuestionDetail {
   sampleAnswer?: string;
   contributedDetailId?: number;
   contributedDetail?: any;
+  interviewDate?: string;
   categoriesName: string[];
   skillsName: string[];
   positionsName: string[];
@@ -422,7 +435,7 @@ export interface CommentItem {
   userName: string;
   userAvatarUrl: string;
   userRole: string;
-  content: string;  
+  content: string;
   createdAt: string;
   updatedAt: string;
   upvoteCount: number;
@@ -430,4 +443,25 @@ export interface CommentItem {
   totalVotes: number;
   currentUserVoteIsUpvote?: boolean | null;
   currentUserVoteType?: "upvote" | "downvote" | null;
+}
+
+export interface FinalImportRequest {
+  content: string;
+  difficulty: string;
+  level: string;
+  sampleAnswer: string;
+  categoryNames: string;
+  skillNames: string;
+  positionNames: string;
+  isValid?: boolean;
+  validationErrors?: string[];
+  rowNumber?: number;
+}
+
+export interface ValidateExcelResponse {
+  validRequests: FinalImportRequest[];
+  invalidRequests: FinalImportRequest[];
+  totalRows: number;
+  validCount: number;
+  invalidCount: number;
 }

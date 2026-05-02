@@ -10,7 +10,32 @@ export interface BookingDetailResponse {
   bookDate: string;  // YYYY-MM-DD
   status: number;
   meetingRoomId?: string;
+  audioRecordKey?: string;
+  recordingUrls?: string[];
   price: number;
+  ratingScore?: number;
+  reviewText?: string;
+  ratingCreatedAt?: string;
+}
+
+export interface MentorSessionSummaryResponse {
+  bookingId: number;
+  candidateId: number;
+  candidateName: string;
+  candidateAvatarUrl?: string;
+  status: number;
+  startTime: string;
+  ratingScore?: number;
+  reviewText?: string;
+}
+
+export interface CandidateSessionSummaryResponse {
+  bookingId: number;
+  mentorId: number;
+  mentorName: string;
+  mentorAvatarUrl?: string;
+  status: number;
+  startTime: string;
   ratingScore?: number;
   reviewText?: string;
   ratingCreatedAt?: string;

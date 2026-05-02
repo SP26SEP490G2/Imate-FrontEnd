@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { getListPreviewMentors } from '../../../services/mentorService';
 import { getListHotQuestions } from '../../../services/questionService';
@@ -12,6 +12,20 @@ const HomePage: React.FC = () => {
   const [questions, setQuestions] = useState<ListHotQuestionResponse[]>([]);
   const [questionsLoading, setQuestionsLoading] = useState(true);
   const [questionsError, setQuestionsError] = useState<string | null>(null);
+
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -324, behavior: 'smooth' }); // 300 (card) + 24 (gap)
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 324, behavior: 'smooth' });
+    }
+  };
 
   useEffect(() => {
     const fetchMentors = async () => {
@@ -46,14 +60,6 @@ const HomePage: React.FC = () => {
     fetchQuestions();
   }, []);
 
-  // Placeholder images cho mentors
-  const placeholderImages = [
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuAui6WN99bSHHdAQTGwuwQDYHov1eX3WALp5S5HHLTgzlJedK-QJ-WP77gKJkSnrulmZlanCUymhkc3gtJAiRCovmqDEqrmKTuvJRiUo4JFPeSsXLxL4YopTlLq55RoGiGiajPJrcYLpjRBT3z3bfQO47xUOd1ySztn4mdORWo7AJR4JR5FoQseiKMhm0PfqgzCbVtdwe8RVqcW9fI7B5t-fx32qh7_V9mUOMM8fd_rgrZyC2h9-jdaZVziXSOicHTj4jOl-hLxbro",
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuBL2D_YXsRQ6VyKpNSQnagL0rWekTiTpgT_2JCqxSzvWsNBeZi7xdMQVKiPCIEgr9dhs0q8ufT8MqAtj6hR9ewQ2oxEcBM7lpj8Fnj5fde0IbZpqRv2hVBu1QdtEITt_VcvHuqhmmYQD9Z1UAscGQdniBLEO5OwY7Ai-ZsjkvZPoFIfjTJi0KlGwBGqx_EzQsqoPaa69qUckH2wMuqu9t9ro0_reZyPoO1l4lI4mSBvzU5F1getk7ZwWtfb4x0t3VI9YgJXovNUdYM",
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuDsoCoFXkDjfMs3rYoRWIoPQpPG-2BB_vxo05Zp31-sAu-sKtMjdwevcYsQQ5pkojJbGkLmkqS2vnN1kRvdd9VgH-dBbsr0eBY2p6DvCSVAEBhKYo_MsQ3Lqw1C8J4HU1d9wtnP8V4NfGA9oHnnSffBoq99dckDMCq6dyxO4u7M2fF55BBSk3LVEKlMCoUF4U6CmNqrRnKENao6nCZPnBjV_SgpAnrpaxYQeREOrd1QTrg0cj_o8QBtjI1d9S1vr8aA4ljfuejYtk0",
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuD-Jkv4rzYbi9tmfVoNtvttHZDzng6n-ASUtofoXhDlQ4snpUcq6yZkXKI4F83MyeMttEwjYzBaXSHrW6eR23wd3cHHJbuALuGRpqCBOlmt6Ut_B2ws_sQecCsDT6OFCdpnMZF4HVNdxjxSuFgt2D7oBtbYVXXBMt3Lojpfu8-8paZeCqaAp23Duo978OAu0-tuYmpOgKm4vB6OfpXX-QNKegJgz_dl8QOUrMjvb5OyCjKhLL8hCKlTGEpz0bmSNz0aDm9rkrBIYkY"
-  ];
-
   return (
     <div className="font-sans">
       {/* Main Content */}
@@ -74,9 +80,12 @@ const HomePage: React.FC = () => {
               Nền tảng luyện tập phỏng vấn thông minh, kết nối chuyên gia hàng đầu giúp bạn bứt phá sự nghiệp công nghệ.
             </p>
             <div className="flex justify-center mb-20">
-              <button className="w-full sm:w-auto px-12 py-4 bg-white text-[#0f172a] font-bold rounded-2xl hover:bg-slate-100 transition-all flex items-center justify-center gap-2 shadow-xl">
+              <Link
+                to="/practice-with-ai"
+                className="w-full sm:w-auto px-12 py-4 bg-white text-[#0f172a] font-bold rounded-2xl hover:bg-slate-100 transition-all flex items-center justify-center gap-2 shadow-xl"
+              >
                 Luyện tập ngay <span className="material-symbols-outlined">rocket_launch</span>
-              </button>
+              </Link>
             </div>
             <div className="pt-12 border-t border-slate-800/50">
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-8">
@@ -105,7 +114,7 @@ const HomePage: React.FC = () => {
                     <div className="w-3 h-3 rounded-full bg-emerald-500/50"></div>
                   </div>
                   <div className="px-3 py-1 bg-slate-800 rounded-lg text-[10px] text-slate-400 font-mono">
-                    localhost:3000/ai-interview
+                    imate.vn/practice-with-ai
                   </div>
                 </div>
                 <div className="space-y-6">
@@ -196,15 +205,21 @@ const HomePage: React.FC = () => {
                 <p className="text-slate-400">Kết nối trực tiếp với các Mentor đang làm việc tại các tập đoàn lớn.</p>
               </div>
               <div className="flex gap-2">
-                <button className="w-12 h-12 rounded-full border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white hover:border-white transition-all">
+                <button
+                  onClick={scrollLeft}
+                  className="w-12 h-12 rounded-full border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white hover:border-white transition-all">
                   <span className="material-symbols-outlined">arrow_back</span>
                 </button>
-                <button className="w-12 h-12 rounded-full border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white hover:border-white transition-all">
+                <button
+                  onClick={scrollRight}
+                  className="w-12 h-12 rounded-full border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white hover:border-white transition-all">
                   <span className="material-symbols-outlined">arrow_forward</span>
                 </button>
               </div>
             </div>
-            <div className="flex overflow-x-auto gap-6 pb-8 no-scrollbar scroll-smooth">
+            <div
+              ref={scrollContainerRef}
+              className="flex overflow-x-auto gap-6 pb-8 no-scrollbar scroll-smooth">
               {loading ? (
                 // Loading skeleton
                 <>
@@ -232,46 +247,66 @@ const HomePage: React.FC = () => {
                 </div>
               ) : mentors.length > 0 ? (
                 // Mentor cards from API
-                mentors.map((mentor, index) => (
-                  <div
-                    key={index}
-                    className="min-w-[300px] flex-none bg-[#1e293b] rounded-3xl border border-white/5 p-6 group hover:border-indigo-500/50 transition-all duration-300"
-                  >
-                    <div className="relative mb-6 overflow-hidden rounded-2xl aspect-[4/5]">
-                      <img
-                        alt={mentor.fullName}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                        src={placeholderImages[index % placeholderImages.length]}
-                      />
-                      <div className="absolute bottom-4 left-4 right-4 p-3 bg-[#020617]/80 backdrop-blur-md rounded-xl border border-white/10">
-                        <div className="text-white font-bold">{mentor.fullName}</div>
-                        <div className="text-xs text-slate-400">{mentor.position || 'Mentor'}</div>
+                <>
+                  {mentors.map((mentor, index) => (
+                    <div
+                      key={index}
+                      className="min-w-[300px] flex-none bg-[#1e293b] rounded-3xl border border-white/5 p-6 group hover:border-indigo-500/50 transition-all duration-300"
+                    >
+                      <div className="relative mb-6 overflow-hidden rounded-2xl aspect-[4/5]">
+                        <img
+                          alt={mentor.fullName}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          src={mentor.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(mentor.fullName)}&background=random&color=fff&size=512`}
+                        />
+                        <div className="absolute bottom-4 left-4 right-4 p-3 bg-[#020617]/80 backdrop-blur-md rounded-xl border border-white/10">
+                          <div className="text-white font-bold">{mentor.fullName}</div>
+                          <div className="text-xs text-slate-400">{mentor.position || 'Mentor'}</div>
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-slate-400">Kinh nghiệm</span>
+                          <span className="text-white font-semibold">{mentor.yoe} năm</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-slate-400">Nơi làm việc</span>
+                          <span className="text-white font-semibold">{mentor.company || 'N/A'}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-amber-400">
+                          <span className="material-symbols-outlined text-sm fill-1">star</span>
+                          <span className="text-xs font-bold">
+                            {mentor.avgRatings?.toFixed(1) || '0.0'} ({mentor.totalRatingCount || 0} đánh giá)
+                          </span>
+                        </div>
+                        <Link
+                          to={`/view-mentor/${mentor.accountId}?book=true`}
+                          className="w-full py-3 bg-white text-[#0f172a] font-bold rounded-xl hover:bg-slate-100 transition-all flex items-center justify-center cursor-pointer"
+                        >
+                          Đặt lịch
+                        </Link>
                       </div>
                     </div>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-slate-400">Kinh nghiệm</span>
-                        <span className="text-white font-semibold">{mentor.yoe} năm</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-slate-400">Nơi làm việc</span>
-                        <span className="text-white font-semibold">{mentor.company || 'N/A'}</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-amber-400">
-                        <span className="material-symbols-outlined text-sm fill-1">star</span>
-                        <span className="text-xs font-bold">
-                          {mentor.avgRatings?.toFixed(1) || '0.0'} ({mentor.totalRatingCount || 0} đánh giá)
-                        </span>
-                      </div>
-                      <Link
-                        to={`/view-mentor/${mentor.accountId}?book=true`}
-                        className="w-full py-3 bg-white text-[#0f172a] font-bold rounded-xl hover:bg-slate-100 transition-all flex items-center justify-center cursor-pointer"
-                      >
-                        Đặt lịch
-                      </Link>
+                  ))}
+
+                  {/* View More Card */}
+                  <div className="min-w-[300px] flex-none rounded-3xl border border-white/10 border-dashed p-6 group hover:border-indigo-500/50 transition-all duration-300 flex flex-col items-center justify-center bg-[#1e293b]/30">
+                    <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center mb-6 group-hover:bg-indigo-500/20 group-hover:scale-110 transition-all duration-300">
+                      <span className="material-symbols-outlined text-3xl text-slate-400 group-hover:text-indigo-400 transition-colors">arrow_forward</span>
                     </div>
+                    <h3 className="text-white font-bold text-xl mb-3">Xem thêm Mentor</h3>
+                    <p className="text-slate-400 text-sm text-center mb-8 px-4">
+                      Khám phá thêm hàng trăm chuyên gia hướng dẫn xuất sắc trên hệ thống
+                    </p>
+                    <Link
+                      to="/view-mentor"
+                      onClick={() => window.scrollTo(0, 0)}
+                      className="px-8 py-3 bg-white/5 text-white font-bold rounded-xl hover:bg-white/10 border border-white/5 hover:border-white/20 transition-all w-full text-center"
+                    >
+                      Khám phá ngay
+                    </Link>
                   </div>
-                ))
+                </>
               ) : (
                 // No mentors available
                 <div className="w-full text-center py-12">
@@ -293,21 +328,21 @@ const HomePage: React.FC = () => {
               {questionsLoading ? (
                 // Loading skeleton
                 <>              {[1, 2, 3].map((i) => (
-                    <div key={i} className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100 animate-pulse">
-                      <div className="flex gap-2 mb-4">
-                        <div className="h-6 w-16 bg-slate-200 rounded-full"></div>
-                        <div className="h-6 w-20 bg-slate-200 rounded-full"></div>
-                      </div>
-                      <div className="space-y-2 mb-6">
-                        <div className="h-4 bg-slate-200 rounded w-full"></div>
-                        <div className="h-4 bg-slate-200 rounded w-3/4"></div>
-                      </div>
-                      <div className="flex items-center justify-between border-t border-slate-100 pt-6">
-                        <div className="h-4 w-20 bg-slate-200 rounded"></div>
-                        <div className="h-4 w-24 bg-slate-200 rounded"></div>
-                      </div>
+                  <div key={i} className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100 animate-pulse">
+                    <div className="flex gap-2 mb-4">
+                      <div className="h-6 w-16 bg-slate-200 rounded-full"></div>
+                      <div className="h-6 w-20 bg-slate-200 rounded-full"></div>
                     </div>
-                  ))}
+                    <div className="space-y-2 mb-6">
+                      <div className="h-4 bg-slate-200 rounded w-full"></div>
+                      <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+                    </div>
+                    <div className="flex items-center justify-between border-t border-slate-100 pt-6">
+                      <div className="h-4 w-20 bg-slate-200 rounded"></div>
+                      <div className="h-4 w-24 bg-slate-200 rounded"></div>
+                    </div>
+                  </div>
+                ))}
                 </>
               ) : questionsError ? (
                 // Error state
@@ -332,7 +367,7 @@ const HomePage: React.FC = () => {
                     'bg-amber-50 text-amber-600',
                     'bg-rose-50 text-rose-600',
                   ];
-                  
+
                   return (
                     <div key={question.id} className="bg-white rounded-3xl p-6 shadow-xl hover:-translate-y-2 transition-transform duration-300 border border-slate-100">
                       <div className="flex gap-2 mb-4 flex-wrap">
@@ -362,9 +397,12 @@ const HomePage: React.FC = () => {
               )}
             </div>
             <div className="mt-12 text-center">
-              <button className="px-8 py-3 rounded-2xl bg-slate-800 text-white font-bold hover:bg-slate-700 transition-all">
+              <Link
+                to="/view-question-bank"
+                onClick={() => window.scrollTo(0, 0)}
+                className="inline-block px-8 py-3 rounded-2xl bg-slate-800 text-white font-bold hover:bg-slate-700 transition-all">
                 Xem thêm câu hỏi
-              </button>
+              </Link>
             </div>
           </div>
         </section>

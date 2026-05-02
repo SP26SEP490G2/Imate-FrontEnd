@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { uploadCV } from "@/services/cvService";
 import { CV_UPLOAD } from "@/constants/common";
-import { MSG18, MSG22, MSG23, MSG07 } from "@/constants/messages";
+import { MSG18, MSG22, MSG07 } from "@/constants/messages";
 
 interface UploadCVModalProps {
   open: boolean;
@@ -37,14 +37,13 @@ export default function UploadCVModal({ open, onOpenChange }: UploadCVModalProps
       handleClose();
     },
     onError: (error: any) => {
-      const message = error?.message || "";
-      // AI Engine reject → MSG23, otherwise → MSG07
-      if (
-        message.includes("không hợp lệ") ||
-        message.includes("invalid") ||
-        message.includes("IT")
-      ) {
-        toast.error(MSG23);
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        "";
+
+      if (message) {
+        toast.error(message);
       } else {
         toast.error(MSG07);
       }

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Pencil, RefreshCw, Save, Search, X } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

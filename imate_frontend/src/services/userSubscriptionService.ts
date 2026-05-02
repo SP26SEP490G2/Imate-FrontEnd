@@ -1,7 +1,7 @@
 import type { 
   UpgradePreview, 
-  CancelPreview,
-  CurrentPackage 
+  CurrentPackage,
+  CurrentSubscriptionDetail
 } from "@/types/response/userSubscription.response";
 import apiClient from "./apiClient";
 
@@ -37,16 +37,6 @@ export const cancelSubscription = async () => {
   }
 };
 
-export const getCancelPreview = async (): Promise<CancelPreview> => {
-  try {
-    const res = await apiClient.get("/user-subscriptions/cancel-preview");
-    return res.data;
-  } catch (error: any) {
-    console.log("error get cancel preview: ", error);
-    throw new Error(error.response?.data?.message || "Không thể xem hoàn tiền.");
-  }
-};
-
 export const getUserSubscriptionHistory = async () => {
   try {
     const res = await apiClient.get(`/user-subscriptions/history`);
@@ -66,3 +56,11 @@ export const getCurrentPackage = async (): Promise<CurrentPackage> => {
     throw error;
   }
 };
+
+export const getCurrentSubscriptionDetail =
+  async (): Promise<CurrentSubscriptionDetail> => {
+    const res = await apiClient.get(
+      "/user-subscriptions/current-subscription"
+    );
+    return res.data;
+  };

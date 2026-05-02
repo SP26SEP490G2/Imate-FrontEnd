@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth } from "@/store/AuthContext";
-import { submitMentorProfile } from "@/services/mentorService";
+import { submitMentorProfile, getBankList } from "@/services/mentorService";
 import { getAllPositions, getAllSkills, getAllCompanies } from "@/services/commonService";
 import type { PositionItem, SkillItem, CompanyItem } from "@/types/common/question";
 import type { SubmitMentorProfileRequest } from "@/types/request/mentor.request";
+import type { BankInfo } from "@/types/common/data";
 import { FileText, ChevronRight, ChevronLeft, Check, Briefcase, Award, CreditCard, Building2, User } from "lucide-react";
 
 export default function SubmitMentorApplication() {
@@ -35,19 +36,22 @@ export default function SubmitMentorApplication() {
   const [positions, setPositions] = useState<PositionItem[]>([]);
   const [skills, setSkills] = useState<SkillItem[]>([]);
   const [companies, setCompanies] = useState<CompanyItem[]>([]);
+  const [banks, setBanks] = useState<BankInfo[]>([]);
 
   // Fetch meta data
   useEffect(() => {
     const fetchMetaData = async () => {
       try {
-        const [posRes, skillRes, compRes] = await Promise.all([
+        const [posRes, skillRes, compRes, bankList] = await Promise.all([
           getAllPositions({ pageSize: 100, pageNumber: 1 }),
           getAllSkills({ pageSize: 100, pageNumber: 1 }),
           getAllCompanies({ pageSize: 100, pageNumber: 1 }),
+          getBankList(),
         ]);
         setPositions(posRes.data);
         setSkills(skillRes.data);
         setCompanies(compRes.data);
+        setBanks(bankList);
       } catch (err) {
         console.error("Error fetching meta data:", err);
       }
@@ -69,8 +73,25 @@ export default function SubmitMentorApplication() {
     }
 
     setFormData((prev) => ({ ...prev, [name]: value }));
-    if (name === "bankName") setFormData((prev) => ({ ...prev, bankCode: value }));
     if (error) setError(null);
+  };
+
+  const handleBankSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedCode = e.target.value;
+    const bank = banks.find((b) => b.code === selectedCode);
+    setFormData((prev) => ({
+      ...prev,
+      bankCode: bank?.code ?? "",
+      bankName: bank?.name ?? "",
+    }));
+    if (error) setError(null);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: "cvFile" | "certificateFile") => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      setFormData((prev) => ({ ...prev, [field]: file }));
+    }
   };
 
   const handleToggleId = (name: "positionIds" | "skillIds" | "companyIds", id: number) => {
@@ -105,6 +126,10 @@ export default function SubmitMentorApplication() {
     } else if (step === 2) {
       if (formData.positionIds.length === 0 || formData.skillIds.length === 0) {
         setError("Vui lòng chọn ít nhất một Vị trí và một Kỹ năng.");
+        return false;
+      }
+      if (!formData.cvFile) {
+        setError("Vui lòng tải lên CV của bạn.");
         return false;
       }
     } else if (step === 3) {
@@ -143,6 +168,8 @@ export default function SubmitMentorApplication() {
         positionIds: formData.positionIds,
         skillIds: formData.skillIds,
         companyIds: formData.companyIds,
+        cvFile: formData.cvFile,
+        certificateFile: formData.certificateFile,
       };
       
       if (formData.yoe !== undefined && formData.yoe !== null && String(formData.yoe) !== "") {
@@ -284,17 +311,42 @@ export default function SubmitMentorApplication() {
 
           {currentStep === 2 && (
             <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-              <div>
-                <label className={labelClass}>Số năm kinh nghiệm</label>
-                <input
-                  type="number"
-                  name="yoe"
-                  value={formData.yoe}
-                  onChange={handleChange}
-                  min={0}
-                  className={inputClass}
-                  placeholder="VD: 5"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label className={labelClass}>Số năm kinh nghiệm</label>
+                  <input
+                    type="number"
+                    name="yoe"
+                    value={formData.yoe}
+                    onChange={handleChange}
+                    min={0}
+                    className={inputClass}
+                    placeholder="VD: 5"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label className={labelClass}>Tải lên CV (PDF/Word) *</label>
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    onChange={(e) => handleFileChange(e, "cvFile")}
+                    className="block w-full text-sm text-slate-300 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-500/20 file:text-indigo-400 hover:file:bg-indigo-500/30 file:cursor-pointer bg-slate-900/50 border border-white/10 rounded-xl cursor-pointer"
+                  />
+                  {formData.cvFile && <p className="mt-1 text-xs text-indigo-400 px-1 truncate">{formData.cvFile.name}</p>}
+                </div>
+                <div>
+                  <label className={labelClass}>Chứng chỉ (Tùy chọn)</label>
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx,.jpg,.png"
+                    onChange={(e) => handleFileChange(e, "certificateFile")}
+                    className="block w-full text-sm text-slate-300 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-slate-800 file:text-slate-300 hover:file:bg-slate-700 file:cursor-pointer bg-slate-900/50 border border-white/10 rounded-xl cursor-pointer"
+                  />
+                  {formData.certificateFile && <p className="mt-1 text-xs text-indigo-400 px-1 truncate">{formData.certificateFile.name}</p>}
+                </div>
               </div>
 
               <div>
@@ -370,15 +422,22 @@ export default function SubmitMentorApplication() {
                 </div>
                 <div>
                   <label className={labelClass}>Ngân hàng *</label>
-                  <input
-                    type="text"
-                    name="bankName"
-                    value={formData.bankName}
-                    onChange={handleChange}
-                    placeholder="VD: Vietcombank"
-                    className={inputClass}
+                  <select
+                    name="bankCode"
+                    value={formData.bankCode}
+                    onChange={handleBankSelect}
+                    className={`${inputClass} cursor-pointer`}
                     required
-                  />
+                  >
+                    <option value="" disabled>
+                      -- Chọn ngân hàng --
+                    </option>
+                    {banks.map((bank) => (
+                      <option key={bank.id} value={bank.code}>
+                        {bank.shortName} – {bank.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className={labelClass}>Số tài khoản *</label>

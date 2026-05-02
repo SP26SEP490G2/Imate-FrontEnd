@@ -3,6 +3,7 @@ import { LogOut } from "lucide-react";
 import { managementRoutes, recruiterManagementRoutes } from "@/config/managementRoutes";
 import { useAuth } from "@/store/AuthContext";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function ManagementLayout() {
   const { user, logout, isLoading, isAuthenticated } = useAuth();
@@ -109,11 +110,12 @@ export default function ManagementLayout() {
         <div className="border-t border-slate-800 p-6">
 
           <div className="flex items-center gap-3 mb-4">
-            <img
-              src={sidebarUser.avatar}
-              className="w-10 h-10 rounded-full object-cover"
-              alt="avatar"
-            />
+            <Avatar size="lg">
+                <AvatarImage src={sidebarUser?.avatar || ""} />
+                <AvatarFallback
+                  name={sidebarUser?.name || "User"}
+                />
+            </Avatar>
 
             <div>
               <p className="text-sm text-white font-semibold">

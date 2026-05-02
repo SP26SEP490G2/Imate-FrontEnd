@@ -1,6 +1,7 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
+import { ACCOUNT_STATUS } from "@/constants/accountStatus";
 
 interface StatusGuardProps {
   children: React.ReactNode;
@@ -33,6 +34,11 @@ export const StatusGuard: React.FC<StatusGuardProps> = ({
     const userData = JSON.parse(userDataString);
     const userStatus = userData.accountStatus || userData.verificationStatus;
 
+    // Check if account is suspended - Global redirect
+    if (userStatus === ACCOUNT_STATUS.Suspended) {
+      return <Navigate to="/suspended" replace />;
+    }
+
     if (userStatus === requiredStatus) {
       return <>{children}</>;
     }
@@ -42,13 +48,13 @@ export const StatusGuard: React.FC<StatusGuardProps> = ({
     
     // Custom redirect logic for Mentor/Recruiter
     if (userData.role === "Recruiter") {
-      if (userData.verificationStatus === "Rejected") {
+      if (userData.verificationStatus === "Rejected" || !userData.verificationStatus || !userData.companyName) {
         return <Navigate to="/submit-recruiter-application" replace />;
       }
       return <Navigate to="/recruiter-pending-application" replace />;
     }
     if (userData.role === "Mentor") {
-      if (userData.verificationStatus === "Rejected") {
+      if (userData.verificationStatus === "Rejected" || !userData.verificationStatus || !userData.phone) {
         return <Navigate to="/submit-mentor-application" replace />;
       }
       return <Navigate to="/pending-application" replace />;

@@ -30,11 +30,20 @@ import {
   getAdminTransactions,
   getReadyForPayoutTransactions,
   getTransactionStatistics,
-  approveTransaction,
-  rejectTransaction,
   processPayoutTransaction,
+  rejectTransaction,
+  approveTransaction,
 } from "@/services/transactionService";
 import { formatPrice } from "@/helpers/common";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import type {
   AdminTransactionItem,
   PaginatedTransactionResponse,
@@ -46,7 +55,6 @@ type TransactionTab = "all" | "withdrawal" | "booking";
 const tabs = [
   { label: "Tất cả giao dịch", value: "all" },
   { label: "Yêu cầu rút tiền", value: "withdrawal" },
-  { label: "Giao dịch booking cần xử lý", value: "booking" },
 ];
 
 const STATUS_OPTIONS = [
@@ -115,6 +123,12 @@ export default function TransactionManagement() {
     netProfit: 0,
   });
   const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
+  const [responseDialogOpen, setResponseDialogOpen] = useState(false);
+  const [currentAction, setCurrentAction] = useState<{
+    id: number;
+    type: "approve" | "reject" | "payout";
+  } | null>(null);
+  const [responseNote, setResponseNote] = useState("");
 
   const activeType = useMemo(() => {
     if (tab === "withdrawal") return "Withdrawal";
@@ -196,14 +210,21 @@ export default function TransactionManagement() {
     setPage(1);
   };
 
-  const handleAction = async (transactionId: number, action: "approve" | "reject" | "payout") => {
-    const noteInput = window.prompt("Nhập ghi chú phản hồi (có thể để trống):", "");
-    if (noteInput === null) {
-      return;
-    }
-    const note = noteInput;
+  const handleAction = (transactionId: number, action: "approve" | "reject" | "payout") => {
+    setCurrentAction({ id: transactionId, type: action });
+    setResponseNote("");
+    setResponseDialogOpen(true);
+  };
+
+  const confirmAction = async () => {
+    if (!currentAction) return;
+
+    const { id: transactionId, type: action } = currentAction;
+    const note = responseNote;
 
     setActionLoadingId(transactionId);
+    setResponseDialogOpen(false);
+
     try {
       if (action === "approve") {
         await approveTransaction(transactionId, { responseNote: note });
@@ -228,6 +249,7 @@ export default function TransactionManagement() {
       toast.error(message);
     } finally {
       setActionLoadingId(null);
+      setCurrentAction(null);
     }
   };
 
@@ -235,15 +257,15 @@ export default function TransactionManagement() {
     tab === "all"
       ? "Danh sách tất cả giao dịch"
       : tab === "withdrawal"
-      ? "Danh sách yêu cầu rút tiền"
-      : "Danh sách giao dịch booking cần xử lý";
+        ? "Danh sách yêu cầu rút tiền"
+        : "Danh sách giao dịch booking cần xử lý";
 
   const searchPlaceholder =
     tab === "all"
       ? "Tìm theo mã giao dịch, external code, tài khoản..."
       : tab === "withdrawal"
-      ? "Tìm theo mã giao dịch hoặc người rút tiền..."
-      : "Tìm theo booking, tài khoản hoặc external code...";
+        ? "Tìm theo mã giao dịch hoặc người rút tiền..."
+        : "Tìm theo booking, tài khoản hoặc external code...";
 
   return (
     <div className="p-6 space-y-6 min-h-full">
@@ -437,6 +459,39 @@ export default function TransactionManagement() {
           </Table>
         )}
       </div>
+
+      <Dialog open={responseDialogOpen} onOpenChange={setResponseDialogOpen}>
+        <DialogContent className="bg-slate-900 border-slate-800 text-slate-100">
+          <DialogHeader>
+            <DialogTitle>
+              {currentAction?.type === "approve"
+                ? "Duyệt yêu cầu"
+                : currentAction?.type === "reject"
+                  ? "Từ chối yêu cầu"
+                  : "Chi trả booking"}
+            </DialogTitle>
+            <DialogDescription className="text-slate-400">
+              Bạn có thể nhập ghi chú phản hồi cho giao dịch này (không bắt buộc).
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Textarea
+              placeholder="Nhập ghi chú..."
+              value={responseNote}
+              onChange={(e) => setResponseNote(e.target.value)}
+              className="bg-slate-800 border-slate-700 text-slate-100 focus:ring-primary"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setResponseDialogOpen(false)} className="text-slate-400 hover:text-white">
+              Hủy
+            </Button>
+            <Button variant="primary" onClick={confirmAction}>
+              Xác nhận
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

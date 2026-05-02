@@ -4,7 +4,7 @@ import { getAuth, applyActionCode } from "firebase/auth";
 import { toast } from "react-toastify";
 // import AuthLayout from "@/layout/auth/authLayout";
 // import AuthBanner from "@/components/custom/authBanner";
-import { Mail, CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, XCircle } from "lucide-react";
 
 function VerifyEmail() {
   const [isLoading, setIsLoading] = useState(true);
@@ -63,7 +63,7 @@ function VerifyEmail() {
   }, [oobCode, navigate]);
 
   return (
-    // <AuthLayout sideContent={<AuthBanner />}>
+    <div className="flex min-h-screen items-center justify-center p-4 bg-gray-50">
       <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-md">
         {isLoading ? (
           <div className="text-center">
@@ -90,7 +90,7 @@ function VerifyEmail() {
           </div>
         )}
       </div>
-    // </AuthLayout>
+    </div>
   );
 }
 
