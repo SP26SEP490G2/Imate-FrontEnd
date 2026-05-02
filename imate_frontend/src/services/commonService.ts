@@ -95,6 +95,26 @@ export const getAllSkills = async (
   };
 };
 
+/**
+ * Lấy danh sách Skill theo Position (qua bảng PositionSkills)
+ */
+export const getSkillsByPosition = async (
+  positionName: string
+): Promise<{ id: number; name: string }[]> => {
+  const response = await apiClient.get<{ id: number; name: string }[]>(
+    APIConfig.Skills.GetSkillsByPosition,
+    { params: { positionName } }
+  );
+  const data = response.data;
+  if (Array.isArray(data)) {
+    return data.map((x: any) => ({
+      id: x.id ?? x.Id ?? 0,
+      name: (x.name ?? x.Name ?? "") as string,
+    }));
+  }
+  return [];
+};
+
 export const getAllCategories = async (
   params?: CommonParams
 ): Promise<PaginatedApiResponse<CategoryItem>> => {

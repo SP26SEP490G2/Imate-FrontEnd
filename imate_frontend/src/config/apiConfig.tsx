@@ -68,6 +68,7 @@ const APIConfig = {
   // Skills endpoints
   Skills: {
     GetAllSkills: "/get-skills",
+    GetSkillsByPosition: "/get-skills-by-position",
     AddSkill: "/skills",
     UpdateSkill: "/skills/{skillId}",
     GetAffectedQuestions: "/skills/{skillId}/affected-questions",

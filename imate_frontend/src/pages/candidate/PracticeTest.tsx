@@ -26,24 +26,11 @@ import {
 import APIConfig from "@/config/apiConfig";
 import apiClient from "@/services/apiClient";
 import { MSG25 } from "@/constants/messages";
-import { getAllSkills } from "@/services/commonService";
+import { getAllPositions, getSkillsByPosition } from "@/services/commonService";
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
 /* ------------------------------------------------------------------ */
-
-const FIELDS = [
-  "Frontend Developer",
-  "Backend Developer",
-  "Fullstack Developer",
-  "Mobile Developer",
-  "DevOps Engineer",
-  "Data Engineer",
-  "QA/Tester",
-  "Business Analyst",
-  "Project Manager",
-  "UI/UX Designer",
-];
 
 const LEVELS = ["Intern", "Fresher", "Junior", "Middle", "Senior"];
 
@@ -58,29 +45,31 @@ function ConfigScreen({
   initialConfig?: any;
 }) {
   const [testType] = useState(initialConfig?.testType || "Technical");
-  const [field, setField] = useState(initialConfig?.field || "Frontend Developer");
+  const [positions, setPositions] = useState<{ id: number; name: string }[]>([]);
+  const [field, setField] = useState(initialConfig?.field || "");
   const [skill, setSkill] = useState(initialConfig?.skill || "");
   const [skills, setSkills] = useState<{ id: number; name: string }[]>([]);
   const [level, setLevel] = useState(initialConfig?.level || "Junior");
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [skillsLoading, setSkillsLoading] = useState(false);
   // Chi phí từ PRACTICE_QUESTION_COST_POINTS trong DB
   const [costPerTest, setCostPerTest] = useState<number | null>(null);
 
-  // Fetch skills từ DB
+  // Fetch positions từ DB
   useEffect(() => {
-    const fetchSkills = async () => {
+    const fetchPositions = async () => {
       try {
-        const result = await getAllSkills({ pageSize: 100, isActive: true });
-        setSkills(result.data);
-        if (result.data.length > 0 && !skill) {
-          setSkill(result.data[0].name);
+        const result = await getAllPositions({ pageSize: 100, isActive: true });
+        setPositions(result.data);
+        if (result.data.length > 0 && !field) {
+          setField(result.data[0].name);
         }
       } catch (err) {
-        console.error("Failed to fetch skills:", err);
+        console.error("Failed to fetch positions:", err);
       }
     };
-    fetchSkills();
+    fetchPositions();
 
     // Lấy PRACTICE_QUESTION_COST_POINTS từ endpoint dành cho candidate
     const fetchCost = async () => {
@@ -96,6 +85,34 @@ function ConfigScreen({
     };
     fetchCost();
   }, []);
+
+  // Fetch skills theo position đã chọn
+  useEffect(() => {
+    if (!field) return;
+    const fetchSkillsByPosition = async () => {
+      setSkillsLoading(true);
+      try {
+        const result = await getSkillsByPosition(field);
+        setSkills(result);
+        // Auto-select skill đầu tiên nếu skill hiện tại không nằm trong danh sách mới
+        if (result.length > 0) {
+          const currentSkillExists = result.some(s => s.name === skill);
+          if (!currentSkillExists) {
+            setSkill(result[0].name);
+          }
+        } else {
+          setSkill("");
+        }
+      } catch (err) {
+        console.error("Failed to fetch skills by position:", err);
+        setSkills([]);
+        setSkill("");
+      } finally {
+        setSkillsLoading(false);
+      }
+    };
+    fetchSkillsByPosition();
+  }, [field]);
 
     // Auto start if initialConfig.autoStart is true and we haven't started yet
     // To ensure skills are loaded before auto-starting, we could use an effect
@@ -176,9 +193,12 @@ function ConfigScreen({
             onChange={(e) => setField(e.target.value)}
             className="w-full rounded-xl border border-slate-700/50 bg-slate-800/60 px-4 py-3 text-white outline-none transition-colors focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30"
           >
-            {FIELDS.map((f) => (
-              <option key={f} value={f}>
-                {f}
+            {positions.length === 0 && (
+              <option value="">Đang tải...</option>
+            )}
+            {positions.map((p) => (
+              <option key={p.id} value={p.name}>
+                {p.name}
               </option>
             ))}
           </select>
@@ -195,8 +215,8 @@ function ConfigScreen({
             onChange={(e) => setSkill(e.target.value)}
             className="w-full rounded-xl border border-slate-700/50 bg-slate-800/60 px-4 py-3 text-white outline-none transition-colors focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30"
           >
-            {skills.length === 0 && (
-              <option value="">Đang tải...</option>
+            {(skills.length === 0 || skillsLoading) && (
+              <option value="">{skillsLoading ? "Đang tải..." : "Không có kỹ năng phù hợp"}</option>
             )}
             {skills.map((s) => (
               <option key={s.id} value={s.name}>
