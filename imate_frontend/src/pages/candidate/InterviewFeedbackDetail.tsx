@@ -111,7 +111,6 @@ function parseOverallFeedback(text: string | null): OverallFeedbackSections {
 function ScoreBar({ label, value }: { label: string; value: number | null }) {
   const v = value ?? 0;
   const scaled = Math.round(v * 5 * 10) / 10;
-  const displayValue = Math.round(scaled);
   const percent = (scaled / 5) * 100;
 
   const color =
@@ -132,7 +131,7 @@ function ScoreBar({ label, value }: { label: string; value: number | null }) {
     <div className="space-y-2">
       <div className="flex items-center justify-between text-sm">
         <span className="text-slate-400">{label}</span>
-        <span className={`font-bold ${textColor}`}>{displayValue}/5</span>
+        <span className={`font-bold ${textColor}`}>{scaled}/5</span>
       </div>
       <div className="h-2 rounded-full bg-slate-700/50">
         <div
