@@ -11,7 +11,6 @@ import {
     Phone,
     MapPinned,
     ExternalLink,
-    CheckCircle2,
     Users,
     Loader2
 } from "lucide-react";
@@ -169,17 +168,12 @@ const ViewJobApplicationDetail: React.FC = () => {
                                     const content = lines.slice(1).join('\n');
                                     return (
                                         <div key={idx} className="mb-8">
-                                            <h3 className="text-xl font-bold text-purple-400 mb-4">{title}</h3>
+                                            {idx > 0 && <h3 className="text-xl font-bold text-purple-400 mb-4">{title}</h3>}
                                             <div className="space-y-3">
-                                                {content.split('-').map((line, lIdx) => {
+                                                {idx === 0 && <p>{title}</p>}
+                                                {content.split('\n').map((line, lIdx) => {
                                                     if (!line.trim()) return null;
-                                                    if (idx === 0) return <p key={lIdx}>{line}</p>;
-                                                    return (
-                                                        <div key={lIdx} className="flex gap-3 items-start">
-                                                            <CheckCircle2 size={18} className="text-emerald-500 mt-1 shrink-0" />
-                                                            <span>{line.trim()}</span>
-                                                        </div>
-                                                    );
+                                                    return <p key={lIdx}>{line.trim()}</p>;
                                                 })}
                                             </div>
                                         </div>
