@@ -313,58 +313,7 @@ export default function TestHistoryDetail() {
         <ScoreRing score={detail.score} />
       </div>
 
-      {/* Score Breakdown + AI Feedback Grid */}
-      <div className="mb-8 grid gap-6 md:grid-cols-2">
-        {/* Skill Breakdown */}
-        <div className="rounded-2xl border border-slate-700/60 bg-gradient-to-br from-slate-800/80 to-slate-900/80 p-6">
-          <h2 className="mb-5 flex items-center gap-2 text-sm font-semibold text-slate-300">
-            <TrendingUp className="h-4 w-4 text-purple-400" />
-            Phân tích chi tiết năng lực
-          </h2>
-          <div className="space-y-4">
-            <SkillBar label="Kiến thức kỹ thuật" value={detail.technicalScore} />
-            <SkillBar label="Tư duy logic" value={detail.logicalScore} />
-            <SkillBar label="Tối ưu hóa" value={detail.optimizationScore} />
-          </div>
-        </div>
 
-        {/* AI Feedback */}
-        <div className="rounded-2xl border border-slate-700/60 bg-gradient-to-br from-slate-800/80 to-slate-900/80 p-6">
-          <h2 className="mb-5 flex items-center gap-2 text-sm font-semibold text-slate-300">
-            <Star className="h-4 w-4 text-purple-400" />
-            Nhận xét tổng quát từ AI
-          </h2>
-          <p className="mb-4 text-sm leading-relaxed text-slate-300">
-            {detail.aiFeedback || "Chưa có nhận xét tổng quát."}
-          </p>
-
-          {/* Strengths */}
-          {detail.aiStrengths && (
-            <div className="mb-3 rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-4 py-3">
-              <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-400">
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                Điểm mạnh
-              </p>
-              <p className="text-sm leading-relaxed text-slate-300">
-                {detail.aiStrengths}
-              </p>
-            </div>
-          )}
-
-          {/* Improvements */}
-          {detail.aiImprovements && (
-            <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-3">
-              <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-amber-400">
-                <Lightbulb className="h-3.5 w-3.5" />
-                Gợi ý cải thiện
-              </p>
-              <p className="text-sm leading-relaxed text-slate-300">
-                {detail.aiImprovements}
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
 
       {/* Questions & Answers */}
       <div className="mb-8">
@@ -385,7 +334,15 @@ export default function TestHistoryDetail() {
             variant="primary"
             size="lg"
             icon={<RotateCcw className="h-5 w-5" />}
-            onClick={() => navigate("/practice-test")}
+            onClick={() => navigate("/practice-test", {
+              state: {
+                autoStart: true,
+                field: detail.field,
+                skill: detail.skill,
+                level: detail.level,
+                testType: detail.testType
+              }
+            })}
           >
             Luyện tập lại bài này
           </Button>

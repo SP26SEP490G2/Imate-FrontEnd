@@ -57,8 +57,9 @@ function Header() {
   const { user, isAuthenticated } = useAuth();
   const signalRContext = useSignalR();
   const notifications = signalRContext.notifications ?? [];
-  const unreadCount = signalRContext.unreadCount ?? notifications.filter((notification) => !notification.isRead).length;
+  const [locallyReadIds, setLocallyReadIds] = useState<Set<number>>(new Set());
   const markNotificationAsRead = signalRContext.markNotificationAsRead ?? (async () => { });
+  const unreadCount = signalRContext.unreadCount ?? notifications.filter((notification) => !notification.isRead && !locallyReadIds.has(notification.id)).length;
   const unreadBadgeLabel = unreadCount > 99 ? "99+" : String(unreadCount);
   const navigate = useNavigate();
 
@@ -150,8 +151,18 @@ function Header() {
   };
 
   const handleNotificationClick = async (notification: HeaderNotification) => {
-    if (!notification.isRead) {
-      await markNotificationAsRead(notification.id);
+    if (!notification.isRead && !locallyReadIds.has(notification.id)) {
+      setLocallyReadIds((prev) => {
+        const s = new Set(prev);
+        s.add(notification.id);
+        return s;
+      });
+
+      try {
+        await markNotificationAsRead(notification.id);
+      } catch (e) {
+        // ignore API failure; UI already updated optimistically
+      }
     }
 
     setExpandedNotificationId((prev) => (prev === notification.id ? null : notification.id));

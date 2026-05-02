@@ -275,7 +275,7 @@ export function CreateContributeQuestionDialog({
                   }}
                   maxLength={MAX_USER_ANSWER_LENGTH}
                   className="w-full h-32 rounded-lg px-4 py-3 bg-slate-800 border border-slate-700 text-slate-100 text-sm placeholder:text-slate-500 resize-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 outline-none transition-all"
-                  placeholder="Bạn đã trả lời câu hỏi này như thế nào? (Không bắt buộc)"
+                  placeholder="Bạn đã trả lời câu hỏi này như thế nào?"
                   disabled={loading}
                 />
                 {errors.userAnswer && (
