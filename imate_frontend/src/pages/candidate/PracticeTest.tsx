@@ -23,6 +23,9 @@ import {
   type PracticeTestQuestion,
   type GeneratePracticeTestParams,
 } from "@/services/geminiService";
+import { getPublicSystemConfigByKey } from "@/services/systemConfigService";
+import APIConfig from "@/config/apiConfig";
+import apiClient from "@/services/apiClient";
 import { MSG25 } from "@/constants/messages";
 import { getAllSkills } from "@/services/commonService";
 
@@ -60,6 +63,8 @@ function ConfigScreen({
   const [level, setLevel] = useState("Junior");
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  // Chi phí từ PRACTICE_QUESTION_COST_POINTS trong DB
+  const [costPerTest, setCostPerTest] = useState<number | null>(null);
 
   // Fetch skills từ DB
   useEffect(() => {
@@ -75,6 +80,20 @@ function ConfigScreen({
       }
     };
     fetchSkills();
+
+    // Lấy PRACTICE_QUESTION_COST_POINTS từ endpoint dành cho candidate
+    const fetchCost = async () => {
+      try {
+        const response = await apiClient.get<{ success: boolean; data: { cost: number } }>(
+          APIConfig.PracticeTest.GetCostConfig
+        );
+        const cost = response.data?.data?.cost;
+        if (cost !== undefined && !isNaN(cost)) setCostPerTest(cost);
+      } catch {
+        // Fallback: giữ null → skeleton
+      }
+    };
+    fetchCost();
   }, []);
 
   const handleStart = async () => {
@@ -185,7 +204,13 @@ function ConfigScreen({
             </div>
             <div>
               <p className="text-sm font-medium text-purple-300">
-                Mỗi bài test tốn <strong className="text-white">1 AI Credit</strong>
+                Mỗi bài test tốn{" "}
+                {costPerTest === null ? (
+                  // Đang fetch — skeleton nhỏ
+                  <span className="inline-block h-4 w-8 animate-pulse rounded bg-slate-600/60 align-middle" />
+                ) : (
+                  <strong className="text-white">{costPerTest} AI Credit</strong>
+                )}
               </p>
               <p className="mt-0.5 text-xs text-slate-400">
                 AI sẽ tạo câu hỏi cá nhân hóa theo lĩnh vực, kỹ năng và cấp bậc của bạn
@@ -626,6 +651,7 @@ export default function PracticeTest() {
     }
   });
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleStart = async (params: GeneratePracticeTestParams) => {
     setLoading(true);

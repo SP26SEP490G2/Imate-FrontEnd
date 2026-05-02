@@ -112,7 +112,11 @@ const APIConfig = {
   Subscription: {
     GetSubscriptionPackages: "/subscription-packages",
     GetSubscriptionOverview: "/subscription-packages/overview",
+    CreateSubscriptionPackage: "/subscription-packages",
     UpdateSubscriptionPackagePrice: "/subscription-packages",
+    UpdateSubscriptionPackageBenefits: "/subscription-packages",
+    UpdateSubscriptionPackageName: "/subscription-packages",
+    DeleteSubscriptionPackage: "/subscription-packages",
   },
 
   // CV endpoints
@@ -131,6 +135,8 @@ const APIConfig = {
 
   // Practice Test History endpoints (UC-31, UC-32)
   PracticeTest: {
+    CheckCost: "/ai-interview/check-practice-test-cost",
+    GetCostConfig: "/practice-test/cost",
     Submit: "/practice-test/submit",
     GetHistory: "/practice-test/history",
     GetDetail: "/practice-test/history/{id}",
