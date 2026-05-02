@@ -115,9 +115,6 @@ const MentorDetail: React.FC = () => {
                 <AvatarImage src={mentor.avatarUrl || undefined} alt={mentor.fullName} />
                 <AvatarFallback name={mentor.fullName} />
               </Avatar>
-              <span className="mt-3 rounded-lg bg-amber-500/90 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#0a0b14]">
-                Mentor hàng đầu
-              </span>
             </div>
 
             {/* Tên, chức danh, thống kê */}
