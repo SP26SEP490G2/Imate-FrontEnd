@@ -9,9 +9,6 @@ import {
   ChevronDown,
   ChevronUp,
   RotateCcw,
-  TrendingUp,
-  Lightbulb,
-  Star,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -71,34 +68,6 @@ function ScoreRing({ score }: { score: number }) {
       <div className="text-center">
         <span className={`text-3xl font-bold ${color}`}>{score}</span>
         <p className="text-xs text-slate-500">/100</p>
-      </div>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Skill Bar                                                          */
-/* ------------------------------------------------------------------ */
-function SkillBar({ label, value }: { label: string; value: number | null }) {
-  const v = value ?? 0;
-  const color =
-    v >= 80
-      ? "from-emerald-500 to-emerald-400"
-      : v >= 50
-        ? "from-amber-500 to-amber-400"
-        : "from-red-500 to-red-400";
-
-  return (
-    <div className="space-y-1.5">
-      <div className="flex items-center justify-between text-sm">
-        <span className="text-slate-300">{label}</span>
-        <span className="font-semibold text-white">{v}%</span>
-      </div>
-      <div className="h-2 rounded-full bg-slate-700/50">
-        <div
-          className={`h-2 rounded-full bg-gradient-to-r ${color} transition-all duration-700`}
-          style={{ width: `${v}%` }}
-        />
       </div>
     </div>
   );

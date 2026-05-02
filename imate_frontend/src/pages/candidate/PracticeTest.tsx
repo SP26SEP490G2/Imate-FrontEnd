@@ -54,7 +54,7 @@ function ConfigScreen({
   onStart,
   initialConfig,
 }: {
-  onStart: (params: GeneratePracticeTestParams) => void;
+  onStart: (params: GeneratePracticeTestParams) => Promise<void>;
   initialConfig?: any;
 }) {
   const [testType] = useState(initialConfig?.testType || "Technical");

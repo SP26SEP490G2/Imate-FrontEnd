@@ -117,6 +117,7 @@ export interface TestHistoryDetail {
   testTitle: string;
   testType: string;
   field: string;
+  skill: string;
   level: string;
   totalQuestions: number;
   correctAnswers: number;
