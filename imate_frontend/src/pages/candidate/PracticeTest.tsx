@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   History,
   Loader2,
@@ -53,14 +53,16 @@ const LEVELS = ["Intern", "Fresher", "Junior", "Middle", "Senior"];
 /* ------------------------------------------------------------------ */
 function ConfigScreen({
   onStart,
+  initialConfig,
 }: {
   onStart: (params: GeneratePracticeTestParams) => void;
+  initialConfig?: any;
 }) {
-  const [testType] = useState("Technical");
-  const [field, setField] = useState("Frontend Developer");
-  const [skill, setSkill] = useState("");
+  const [testType] = useState(initialConfig?.testType || "Technical");
+  const [field, setField] = useState(initialConfig?.field || "Frontend Developer");
+  const [skill, setSkill] = useState(initialConfig?.skill || "");
   const [skills, setSkills] = useState<{ id: number; name: string }[]>([]);
-  const [level, setLevel] = useState("Junior");
+  const [level, setLevel] = useState(initialConfig?.level || "Junior");
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   // Chi phí từ PRACTICE_QUESTION_COST_POINTS trong DB
@@ -96,14 +98,47 @@ function ConfigScreen({
     fetchCost();
   }, []);
 
-  const handleStart = async () => {
-    setLoading(true);
-    try {
-      await onStart({ testType, field, skill, level, useCV: false, numberOfQuestions: 10 });
-    } finally {
-      setLoading(false);
-    }
-  };
+    // Auto start if initialConfig.autoStart is true and we haven't started yet
+    // To ensure skills are loaded before auto-starting, we could use an effect
+    // But since the API allows generating even if skill might not exactly match the dropdown list (though it should),
+    // we can just wait for skills to load.
+    // We will handle auto-start in a useEffect.
+
+    const handleStart = async () => {
+      setLoading(true);
+      try {
+        await onStart({ testType, field, skill, level, useCV: false, numberOfQuestions: 10 });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    useEffect(() => {
+      if (initialConfig?.autoStart && skills.length > 0) {
+        // Clear the autoStart flag so it doesn't trigger again if the component re-renders
+        initialConfig.autoStart = false;
+        
+        // If skill wasn't provided in initialConfig, it gets set to the first skill in the list by the other useEffect.
+        // We need to pass the right skill to handleStart.
+        const skillToUse = initialConfig.skill || skills[0]?.name || skill;
+        if (!skill) {
+           setSkill(skillToUse);
+        }
+        
+        // We use a small timeout to let the state setter finish
+        setTimeout(() => {
+          onStart({ 
+            testType: initialConfig.testType || testType, 
+            field: initialConfig.field || field, 
+            skill: skillToUse, 
+            level: initialConfig.level || level, 
+            useCV: false, 
+            numberOfQuestions: 10 
+          }).catch(() => setLoading(false));
+          setLoading(true);
+        }, 100);
+      }
+    }, [initialConfig, skills, onStart, testType, field, level, skill]);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
@@ -652,6 +687,8 @@ export default function PracticeTest() {
   });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const initialConfig = location.state;
 
   const handleStart = async (params: GeneratePracticeTestParams) => {
     setLoading(true);
@@ -690,7 +727,7 @@ export default function PracticeTest() {
       {testData ? (
         <TestScreen testData={testData} onReset={handleReset} />
       ) : (
-        <ConfigScreen onStart={handleStart} />
+        <ConfigScreen onStart={handleStart} initialConfig={initialConfig} />
       )}
     </>
   );
