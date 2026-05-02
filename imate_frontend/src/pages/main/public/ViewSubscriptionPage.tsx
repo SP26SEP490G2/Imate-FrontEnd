@@ -181,9 +181,17 @@ const ViewSubscriptionPage: React.FC = () => {
                     <p className="text-3xl font-extrabold text-white mb-1">
                       {formatPrice(subscriptionPackage.price)}
                     </p>
-                    <p className="text-sm text-slate-400 mb-6">
+                    <p className="text-sm text-slate-400 mb-2">
                       {subscriptionPackage.duration}
                     </p>
+                    {subscriptionPackage.totalInterviewLimit != null && subscriptionPackage.totalInterviewLimit > 0 && (
+                      <p className="text-sm text-indigo-400 font-semibold mb-6">
+                        Được nhận {subscriptionPackage.totalInterviewLimit.toLocaleString("vi-VN")} AI Credits
+                      </p>
+                    )}
+                    {(subscriptionPackage.totalInterviewLimit == null || subscriptionPackage.totalInterviewLimit <= 0) && (
+                      <div className="mb-6" />
+                    )}
 
                     <ul className="space-y-3 mb-8 min-h-[120px]">
                       {subscriptionPackage.benefits.map(

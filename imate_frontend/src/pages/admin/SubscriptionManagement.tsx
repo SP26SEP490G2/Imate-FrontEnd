@@ -181,6 +181,11 @@ function PricingCard({ pkg, index, onEdit, onEditBenefits, onDelete }: PricingCa
         <p className={`text-3xl font-bold ${tier.text}`}>
           {formatPrice(pkg.price)}
         </p>
+        {pkg.totalInterviewLimit != null && pkg.totalInterviewLimit > 0 && (
+          <p className="text-sm text-purple-400 mt-1 font-medium">
+            Được nhận {pkg.totalInterviewLimit.toLocaleString("vi-VN")} AI Credits
+          </p>
+        )}
       </div>
 
       {/* Features */}
