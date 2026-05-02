@@ -23,7 +23,6 @@ import {
   type PracticeTestQuestion,
   type GeneratePracticeTestParams,
 } from "@/services/geminiService";
-import { getPublicSystemConfigByKey } from "@/services/systemConfigService";
 import APIConfig from "@/config/apiConfig";
 import apiClient from "@/services/apiClient";
 import { MSG25 } from "@/constants/messages";
