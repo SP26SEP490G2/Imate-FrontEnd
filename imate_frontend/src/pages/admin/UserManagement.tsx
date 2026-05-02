@@ -32,6 +32,7 @@ export default function UserManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [selectedUser, setSelectedUser] = useState<AccountResponse | null>(null);
@@ -57,16 +58,13 @@ export default function UserManagement() {
       setLoading(true);
       const params = {
         PageNumber: page,
-        PageSize: 10,
+        PageSize: pageSize,
         SearchTerm: searchTerm || undefined,
+        RoleName: roleFilter !== "all" ? roleFilter : undefined,
       };
       const data = await getAccountList(params);
       if (data) {
-        let filteredUsers = data.items || [];
-        if (roleFilter !== "all") {
-          filteredUsers = filteredUsers.filter(u => u.roles?.includes(roleFilter));
-        }
-        setUsers(filteredUsers);
+        setUsers(data.items || []);
         setTotalPages(data.totalPages || 1);
         setTotalCount(data.totalCount || 0);
       }
@@ -87,7 +85,22 @@ export default function UserManagement() {
       fetchUsers();
     }, 500);
     return () => clearTimeout(timer);
-  }, [searchTerm, roleFilter, page]);
+  }, [searchTerm, roleFilter, page, pageSize]);
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setPage(1);
+  };
+
+  const handleRoleFilterChange = (role: string) => {
+    setRoleFilter(role);
+    setPage(1);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setPage(1);
+  };
 
   const handleStatusToggle = (user: AccountResponse, checked: boolean) => {
     setConfirmDialog({ open: true, user, newChecked: checked });
@@ -218,7 +231,7 @@ export default function UserManagement() {
               <Input
                 placeholder="Tìm kiếm người dùng..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 className="pl-10 pr-4 py-2 w-full bg-slate-800 border-slate-700 text-slate-100 placeholder:text-slate-500"
               />
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -227,12 +240,13 @@ export default function UserManagement() {
             <div className="relative inline-block">
               <select
                 value={roleFilter}
-                onChange={e => setRoleFilter(e.target.value)}
+                onChange={e => handleRoleFilterChange(e.target.value)}
                 className="bg-slate-800 border border-slate-700 rounded-md px-4 py-2 pr-10 text-slate-200 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer min-w-[160px]"
               >
                 <option value="all">Tất cả</option>
                 <option value="Candidate">Ứng viên</option>
                 <option value="Mentor">Mentor</option>
+                <option value="Recruiter">Nhà tuyển dụng</option>
                 <option value="Staff">Nhân viên</option>
               </select>
             </div>
@@ -245,9 +259,9 @@ export default function UserManagement() {
             page={page}
             totalPages={totalPages}
             totalCount={totalCount}
-            pageSize={10}
+            pageSize={pageSize}
             onPageChange={setPage}
-            onPageSizeChange={() => {}}
+            onPageSizeChange={handlePageSizeChange}
             maxHeight="55vh"
           >
             <TableHeader>

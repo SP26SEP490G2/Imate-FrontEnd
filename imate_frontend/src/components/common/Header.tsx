@@ -57,9 +57,9 @@ function Header() {
   const { user, isAuthenticated } = useAuth();
   const signalRContext = useSignalR();
   const notifications = signalRContext.notifications ?? [];
-  const unreadCount = signalRContext.unreadCount ?? notifications.filter((notification) => !notification.isRead).length;
+  const [locallyReadIds, setLocallyReadIds] = useState<Set<number>>(new Set());
   const markNotificationAsRead = signalRContext.markNotificationAsRead ?? (async () => { });
-  const markAllNotificationsAsRead = signalRContext.markAllNotificationsAsRead ?? (async () => { });
+  const unreadCount = signalRContext.unreadCount ?? notifications.filter((notification) => !notification.isRead && !locallyReadIds.has(notification.id)).length;
   const unreadBadgeLabel = unreadCount > 99 ? "99+" : String(unreadCount);
   const navigate = useNavigate();
 
@@ -98,10 +98,10 @@ function Header() {
   });
 
   const displayBalance =
-  signalRContext.balance ?? user?.balance ?? 0;
+    signalRContext.balance ?? user?.balance ?? 0;
 
-  const displayAiCredit = signalRContext.aiCredit !== null 
-    ? signalRContext.aiCredit 
+  const displayAiCredit = signalRContext.aiCredit !== null
+    ? signalRContext.aiCredit
     : (() => {
       if (!currentSubscription) return 0;
       if (currentSubscription.rank === 0) return 0;
@@ -151,15 +151,21 @@ function Header() {
   };
 
   const handleNotificationClick = async (notification: HeaderNotification) => {
-    if (!notification.isRead) {
-      await markNotificationAsRead(notification.id);
+    if (!notification.isRead && !locallyReadIds.has(notification.id)) {
+      setLocallyReadIds((prev) => {
+        const s = new Set(prev);
+        s.add(notification.id);
+        return s;
+      });
+
+      try {
+        await markNotificationAsRead(notification.id);
+      } catch (e) {
+        // ignore API failure; UI already updated optimistically
+      }
     }
 
     setExpandedNotificationId((prev) => (prev === notification.id ? null : notification.id));
-  };
-
-  const handleMarkAllAsRead = async () => {
-    await markAllNotificationsAsRead();
   };
 
   const displayedNotifications = showAllNotifications
@@ -245,6 +251,7 @@ function Header() {
                   >
                     <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
                       <h3 className="text-lg font-bold text-white">Thông báo</h3>
+                      {/*
                       <button
                         type="button"
                         className="text-xs font-medium text-indigo-300 transition hover:text-indigo-200 disabled:cursor-not-allowed disabled:text-slate-500"
@@ -253,6 +260,7 @@ function Header() {
                       >
                         Đánh dấu đã đọc
                       </button>
+                      */}
                     </div>
 
                     <div className={cn("divide-y divide-white/5", showAllNotifications && "max-h-80 overflow-y-auto")}>
@@ -292,11 +300,13 @@ function Header() {
                               <p className="mt-1 text-xs text-slate-400">
                                 {formatRelativeTime(notification.createdAt)}
                               </p>
+                              {/*
                               {notification.link && (
                                 <p className="mt-1 text-[11px] text-slate-500">
                                   Thông báo có đính kèm liên kết.
                                 </p>
                               )}
+                              */}
                             </div>
 
                             {!notification.isRead && (

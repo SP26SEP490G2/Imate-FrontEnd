@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   History,
-  ChevronRight,
   Loader2,
   CheckCircle2,
   XCircle,
@@ -12,6 +11,7 @@ import {
   Clock,
   FileText,
   Code2,
+  ArrowLeft,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -23,6 +23,9 @@ import {
   type PracticeTestQuestion,
   type GeneratePracticeTestParams,
 } from "@/services/geminiService";
+import { getPublicSystemConfigByKey } from "@/services/systemConfigService";
+import APIConfig from "@/config/apiConfig";
+import apiClient from "@/services/apiClient";
 import { MSG25 } from "@/constants/messages";
 import { getAllSkills } from "@/services/commonService";
 
@@ -50,16 +53,20 @@ const LEVELS = ["Intern", "Fresher", "Junior", "Middle", "Senior"];
 /* ------------------------------------------------------------------ */
 function ConfigScreen({
   onStart,
+  initialConfig,
 }: {
   onStart: (params: GeneratePracticeTestParams) => void;
+  initialConfig?: any;
 }) {
-  const [testType] = useState("Technical");
-  const [field, setField] = useState("Frontend Developer");
-  const [skill, setSkill] = useState("");
+  const [testType] = useState(initialConfig?.testType || "Technical");
+  const [field, setField] = useState(initialConfig?.field || "Frontend Developer");
+  const [skill, setSkill] = useState(initialConfig?.skill || "");
   const [skills, setSkills] = useState<{ id: number; name: string }[]>([]);
-  const [level, setLevel] = useState("Junior");
-
+  const [level, setLevel] = useState(initialConfig?.level || "Junior");
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  // Chi phí từ PRACTICE_QUESTION_COST_POINTS trong DB
+  const [costPerTest, setCostPerTest] = useState<number | null>(null);
 
   // Fetch skills từ DB
   useEffect(() => {
@@ -75,27 +82,75 @@ function ConfigScreen({
       }
     };
     fetchSkills();
+
+    // Lấy PRACTICE_QUESTION_COST_POINTS từ endpoint dành cho candidate
+    const fetchCost = async () => {
+      try {
+        const response = await apiClient.get<{ success: boolean; data: { cost: number } }>(
+          APIConfig.PracticeTest.GetCostConfig
+        );
+        const cost = response.data?.data?.cost;
+        if (cost !== undefined && !isNaN(cost)) setCostPerTest(cost);
+      } catch {
+        // Fallback: giữ null → skeleton
+      }
+    };
+    fetchCost();
   }, []);
 
-  const handleStart = async () => {
-    setLoading(true);
-    try {
-      await onStart({ testType, field, skill, level, useCV: false, numberOfQuestions: 10 });
-    } finally {
-      setLoading(false);
-    }
-  };
+    // Auto start if initialConfig.autoStart is true and we haven't started yet
+    // To ensure skills are loaded before auto-starting, we could use an effect
+    // But since the API allows generating even if skill might not exactly match the dropdown list (though it should),
+    // we can just wait for skills to load.
+    // We will handle auto-start in a useEffect.
+
+    const handleStart = async () => {
+      setLoading(true);
+      try {
+        await onStart({ testType, field, skill, level, useCV: false, numberOfQuestions: 10 });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    useEffect(() => {
+      if (initialConfig?.autoStart && skills.length > 0) {
+        // Clear the autoStart flag so it doesn't trigger again if the component re-renders
+        initialConfig.autoStart = false;
+        
+        // If skill wasn't provided in initialConfig, it gets set to the first skill in the list by the other useEffect.
+        // We need to pass the right skill to handleStart.
+        const skillToUse = initialConfig.skill || skills[0]?.name || skill;
+        if (!skill) {
+           setSkill(skillToUse);
+        }
+        
+        // We use a small timeout to let the state setter finish
+        setTimeout(() => {
+          onStart({ 
+            testType: initialConfig.testType || testType, 
+            field: initialConfig.field || field, 
+            skill: skillToUse, 
+            level: initialConfig.level || level, 
+            useCV: false, 
+            numberOfQuestions: 10 
+          }).catch(() => setLoading(false));
+          setLoading(true);
+        }, 100);
+      }
+    }, [initialConfig, skills, onStart, testType, field, level, skill]);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
-      {/* Breadcrumb */}
-      <nav className="mb-6 flex items-center gap-1.5 text-sm text-slate-500">
-        <span className="transition-colors hover:text-slate-300 cursor-pointer">Trang chủ</span>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span className="text-slate-400">Luyện tập AI</span>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span className="font-medium text-purple-400">Cấu hình bài test</span>
-      </nav>
+      <button
+          onClick={() => navigate("/practice-with-ai")}
+          className="mb-6 flex items-center gap-3 text-base text-slate-300 transition-colors hover:text-white"
+        >
+          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-600">
+            <ArrowLeft className="h-5 w-5" />
+          </span>
+          Quay lại danh sách
+        </button>
 
       {/* Title */}
       <div className="mb-8 text-center">
@@ -184,7 +239,13 @@ function ConfigScreen({
             </div>
             <div>
               <p className="text-sm font-medium text-purple-300">
-                Mỗi bài test tốn <strong className="text-white">1 AI Credit</strong>
+                Mỗi bài test tốn{" "}
+                {costPerTest === null ? (
+                  // Đang fetch — skeleton nhỏ
+                  <span className="inline-block h-4 w-8 animate-pulse rounded bg-slate-600/60 align-middle" />
+                ) : (
+                  <strong className="text-white">{costPerTest} AI Credit</strong>
+                )}
               </p>
               <p className="mt-0.5 text-xs text-slate-400">
                 AI sẽ tạo câu hỏi cá nhân hóa theo lĩnh vực, kỹ năng và cấp bậc của bạn
@@ -625,6 +686,9 @@ export default function PracticeTest() {
     }
   });
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const initialConfig = location.state;
 
   const handleStart = async (params: GeneratePracticeTestParams) => {
     setLoading(true);
@@ -636,8 +700,16 @@ export default function PracticeTest() {
       localStorage.setItem(LS_TEST_DATA, JSON.stringify(result));
       localStorage.removeItem(LS_TEST_ANSWERS); // reset câu trả lời cũ
     } catch (err: any) {
+      console.error("API Error Response:", err?.response?.status, err?.message);
       const msg = err?.response?.data?.message || err?.message || "Không thể tạo bài test. Vui lòng thử lại.";
-      toast.error(msg);
+      toast.error(msg); // Hiển thị thông báo đỏ
+      
+      const msgLower = msg.toLowerCase();
+      if (err?.response?.status === 403 || msgLower.includes("nâng cấp") || msgLower.includes("mua gói") || msgLower.includes("credit")) {
+        // Dùng navigate (soft-routing) thay vì window.location để không bị reload lại toàn trang,
+        // giúp giữ lại cái thông báo toast.error(msg) trên màn hình vài giây.
+        navigate("/view-subscription");
+      }
     } finally {
       setLoading(false);
     }
@@ -655,7 +727,7 @@ export default function PracticeTest() {
       {testData ? (
         <TestScreen testData={testData} onReset={handleReset} />
       ) : (
-        <ConfigScreen onStart={handleStart} />
+        <ConfigScreen onStart={handleStart} initialConfig={initialConfig} />
       )}
     </>
   );

@@ -15,6 +15,7 @@ import {
   getApplicationMentorDetails,
   getApplicationRatingDetails,
   getApplicationReportCommentDetails,
+  getApplicationOtherDetails,
   approveApplicationStaff,
   rejectApplicationStaff,
 } from "@/services/applicationService";
@@ -208,6 +209,8 @@ export function ViewApplicationDetailDialog({
         data = await getApplicationRatingDetails(applicationId);
       else if (applicationType === ApplicationType.ReportComment)
         data = await getApplicationReportCommentDetails(applicationId);
+      else if (applicationType === ApplicationType.Other)
+        data = await getApplicationOtherDetails(applicationId);
       else data = null;
       setDetail(data);
     } catch {
