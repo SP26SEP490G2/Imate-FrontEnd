@@ -97,6 +97,11 @@ export default function UserManagement() {
     setPage(1);
   };
 
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setPage(1);
+  };
+
   const handleStatusToggle = (user: AccountResponse, checked: boolean) => {
     setConfirmDialog({ open: true, user, newChecked: checked });
   };
@@ -226,7 +231,7 @@ export default function UserManagement() {
               <Input
                 placeholder="Tìm kiếm người dùng..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 className="pl-10 pr-4 py-2 w-full bg-slate-800 border-slate-700 text-slate-100 placeholder:text-slate-500"
               />
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
