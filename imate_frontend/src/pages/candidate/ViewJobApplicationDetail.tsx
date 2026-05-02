@@ -11,7 +11,6 @@ import {
     Phone,
     MapPinned,
     ExternalLink,
-    CheckCircle2,
     Users,
     Loader2
 } from "lucide-react";
@@ -27,6 +26,7 @@ const ViewJobApplicationDetail: React.FC = () => {
     const [isApplyDialogOpen, setIsApplyDialogOpen] = useState(false);
     const [job, setJob] = useState<CandidateJobItem | null>(null);
     const [loading, setLoading] = useState(true);
+
 
     useEffect(() => {
         const fetchJobDetail = async () => {
@@ -48,6 +48,7 @@ const ViewJobApplicationDetail: React.FC = () => {
         fetchJobDetail();
     }, [id]);
 
+
     if (loading) {
         return (
             <div className="min-h-screen bg-[#050816] flex flex-col items-center justify-center text-white">
@@ -58,6 +59,7 @@ const ViewJobApplicationDetail: React.FC = () => {
     }
 
     if (!job) {
+
         return (
             <div className="min-h-screen bg-[#050816] flex flex-col items-center justify-center text-white p-6">
                 <h2 className="text-2xl font-bold mb-4">Không tìm thấy công việc</h2>
@@ -66,7 +68,28 @@ const ViewJobApplicationDetail: React.FC = () => {
         );
     }
 
+    const generateInterviewPrefill = () => {
+        const parts = [job.jobDescription];
+
+        if (job.jobSkills && job.jobSkills.length > 0) {
+            parts.push(
+                "=== KỸ NĂNG YÊU CẦU ===\n" +
+                job.jobSkills.map(skill => `- ${skill.skillName}`).join('\n')
+            );
+        }
+
+        if (job.jobPositions && job.jobPositions.length > 0) {
+            parts.push(
+                "=== VỊ TRÍ TƯƠNG ỨNG ===\n" +
+                job.jobPositions.map(pos => `- ${pos.positionName}`).join('\n')
+            );
+        }
+
+        return parts.join('\n\n');
+    };
+
     return (
+
         <div className="min-h-screen bg-[#050816] text-white p-6 md:p-10 relative overflow-hidden">
             {/* Background Glows */}
             <div className="absolute top-[-10%] left-[-5%] w-[600px] h-[600px] bg-purple-600/5 blur-[120px] rounded-full" />
@@ -106,16 +129,28 @@ const ViewJobApplicationDetail: React.FC = () => {
                                         </div>
                                         <div className="flex items-center gap-2 bg-[#0F1333] px-3 py-1.5 rounded-lg border border-white/5 text-emerald-400 font-semibold">
                                             <DollarSign size={16} />
-                                            <span>${job.minSalary} - ${job.maxSalary} / tháng</span>
+                                            <span>${job.minSalary.toLocaleString('en-US')} VNĐ - ${job.maxSalary.toLocaleString('en-US')} VNĐ / tháng</span>
                                         </div>
                                     </div>
                                 </div>
-                                <Button
-                                    onClick={() => setIsApplyDialogOpen(true)}
-                                    className="w-full md:w-auto px-8 h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 font-bold shadow-lg shadow-indigo-600/20 text-base cursor-pointer"
-                                >
-                                    Ứng tuyển ngay
-                                </Button>
+                                <div className="flex flex-col gap-3 w-full md:w-auto shrink-0">
+                                    <Button
+                                        onClick={() => setIsApplyDialogOpen(true)}
+                                        variant="primary"
+                                    >
+                                        Ứng tuyển ngay
+                                    </Button>
+                                    <Button
+                                        onClick={() =>
+                                            navigate("/interview-setup", {
+                                                state: { prefillJd: generateInterviewPrefill() },
+                                            })
+                                        }
+                                        variant="secondary"
+                                    >
+                                        Tập phỏng vấn cùng AI
+                                    </Button>
+                                </div>
                             </div>
                         </div>
 
@@ -133,17 +168,12 @@ const ViewJobApplicationDetail: React.FC = () => {
                                     const content = lines.slice(1).join('\n');
                                     return (
                                         <div key={idx} className="mb-8">
-                                            <h3 className="text-xl font-bold text-purple-400 mb-4">{title}</h3>
+                                            {idx > 0 && <h3 className="text-xl font-bold text-purple-400 mb-4">{title}</h3>}
                                             <div className="space-y-3">
-                                                {content.split('-').map((line, lIdx) => {
+                                                {idx === 0 && <p>{title}</p>}
+                                                {content.split('\n').map((line, lIdx) => {
                                                     if (!line.trim()) return null;
-                                                    if (idx === 0) return <p key={lIdx}>{line}</p>;
-                                                    return (
-                                                        <div key={lIdx} className="flex gap-3 items-start">
-                                                            <CheckCircle2 size={18} className="text-emerald-500 mt-1 shrink-0" />
-                                                            <span>{line.trim()}</span>
-                                                        </div>
-                                                    );
+                                                    return <p key={lIdx}>{line.trim()}</p>;
                                                 })}
                                             </div>
                                         </div>
@@ -193,17 +223,21 @@ const ViewJobApplicationDetail: React.FC = () => {
                                 <h2 className="text-xl font-bold text-white mb-1 group-hover:text-purple-400 transition-colors">
                                     {job.companyRecruiter.companyName}
                                 </h2>
-                                <a
-                                    href={
-                                        job.companyRecruiter.website?.startsWith("http")
-                                            ? job.companyRecruiter.website
-                                            : `https://${job.companyRecruiter.website}`
-                                    }
-                                    target="_blank"
-                                    className="text-purple-400 text-sm hover:underline inline-flex items-center gap-1"
-                                >
-                                    {job.companyRecruiter.website.replace('https://', '').replace('http://', '')} <ExternalLink size={12} />
-                                </a>
+                                {job.companyRecruiter.website ? (
+                                    <a
+                                        href={
+                                            job.companyRecruiter.website.startsWith("http")
+                                                ? job.companyRecruiter.website
+                                                : `https://${job.companyRecruiter.website}`
+                                        }
+                                        target="_blank"
+                                        className="text-purple-400 text-sm hover:underline inline-flex items-center gap-1"
+                                    >
+                                        {job.companyRecruiter.website.replace('https://', '').replace('http://', '')} <ExternalLink size={12} />
+                                    </a>
+                                ) : (
+                                    <span className="text-slate-500 text-sm italic">website: N/A</span>
+                                )}
                             </div>
 
                             <div className="space-y-4 pt-6 border-t border-white/5">
@@ -213,7 +247,9 @@ const ViewJobApplicationDetail: React.FC = () => {
                                     </div>
                                     <div>
                                         <p className="text-xs text-slate-500 uppercase font-bold">Quy mô</p>
-                                        <p className="text-sm text-slate-200">{job.companyRecruiter.companySize} nhân viên</p>
+                                        <p className="text-sm text-slate-200">
+                                            {job.companyRecruiter.companySize ? `${job.companyRecruiter.companySize} nhân viên` : "Đang cập nhật"}
+                                        </p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-4">
@@ -251,13 +287,15 @@ const ViewJobApplicationDetail: React.FC = () => {
                                 "{job.companyRecruiter.industry}"
                             </p>
 
-                            <Button
-                                variant="outline"
-                                className="w-full mt-8 border-white/10 hover:bg-white/5 text-slate-300 gap-2 h-11 cursor-pointer"
-                                onClick={() => window.open(job.companyRecruiter.website, '_blank')}
-                            >
-                                <Globe size={16} /> Xem trang công ty
-                            </Button>
+                            {job.companyRecruiter.website && (
+                                <Button
+                                    variant="outline"
+                                    className="w-full mt-8 border-white/10 hover:bg-white/5 text-slate-300 gap-2 h-11 cursor-pointer"
+                                    onClick={() => window.open(job.companyRecruiter.website, '_blank')}
+                                >
+                                    <Globe size={16} /> Xem trang công ty
+                                </Button>
+                            )}
                         </div>
                     </div>
                 </div>

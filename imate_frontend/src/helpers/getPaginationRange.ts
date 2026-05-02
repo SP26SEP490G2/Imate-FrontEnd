@@ -11,7 +11,7 @@ import type { GetPaginationRangeProps } from "../types/common/pagination";
 
 export function getPaginationRange({ currentPage, totalPage, siblingCount = 1 }: GetPaginationRangeProps): PaginationRange {
   const totalNumbers = siblingCount * 2 + 5; // prev, next, current, sibling, first, last
-  const totalBlocks = totalNumbers + 2; // adding 2 for potential dots
+  // ...existing code...
 
   if (totalPage <= totalNumbers) {
     return Array.from({ length: totalPage }, (_, i) => i + 1);

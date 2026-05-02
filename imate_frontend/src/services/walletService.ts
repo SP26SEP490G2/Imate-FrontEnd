@@ -14,6 +14,11 @@ export interface TransactionPagedResponse {
   hasNextPage: boolean;
 }
 
+export interface TransactionConfigResponse {
+  depositTimeoutMinutes: number;
+  withdrawalAutoRefundHours: number;
+}
+
 // 1. API GET /api/wallet/summary
 export const getWalletSummary = () => {
   return apiClient.get<WalletSummaryResponse>("/balance");
@@ -191,4 +196,18 @@ export const getRevenueTransactions = (params: RevenueTransactionQueryParameters
   console.log("Sending params to API:", cleanParams); // Debug log
   
   return apiClient.get<PagedResponse<Transaction>>("/admin/transactions/revenue-transactions", { params: cleanParams });
+};
+
+export const getMaxDepositAmount = async (): Promise<number> => {
+  try {
+    const response = await apiClient.get("/max-amount");
+    return response.data;
+  } catch (error) {
+    console.error("error fetch max deposit amount:", error);
+    throw error;
+  }
+};
+
+export const getTransactionConfig = () => {
+  return apiClient.get<TransactionConfigResponse>("/transaction-config");
 };

@@ -12,26 +12,33 @@ import {
   MessageSquareText,
   Loader2,
   Star,
-  Clock
+  Clock,
+  Flag
 } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { getCandidateSessionDetail, rateMentor } from "@/services/bookingCandidateService";
 import type { BookingDetailResponse } from "@/types/response/booking.response";
 import ImateLoading from "@/components/custom/imateLoading";
 import { toast } from "react-toastify";
+import { CreateApplicationDialog } from "@/pages/dialog/main/reportApplication/CreateApplicationDialog";
+import { ApplicationType } from "@/constants/enum";
 
-const MOCK_AVATAR = "https://i.pravatar.cc/150?img=11";
 
 const CandidateInterviewHistoryDetailPage = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
   const [session, setSession] = useState<BookingDetailResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedVideoIndex, setSelectedVideoIndex] = useState(0);
 
   // Rating Modal States
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
   const [ratingScore, setRatingScore] = useState<number>(5);
   const [reviewText, setReviewText] = useState("");
   const [isSubmittingRating, setIsSubmittingRating] = useState(false);
+
+  // Report Modal States
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -42,7 +49,7 @@ const CandidateInterviewHistoryDetailPage = () => {
       } catch (error: any) {
         console.error("Error fetching session detail:", error);
         toast.error("Không thể tải thông tin chi tiết buổi học.");
-        navigate("/candidate/interview-history");
+        navigate("/test-history?tab=mentor");
       } finally {
         setIsLoading(false);
       }
@@ -97,7 +104,7 @@ const CandidateInterviewHistoryDetailPage = () => {
     <div className="text-white p-6 max-w-5xl mx-auto h-[calc(100vh-80px)] overflow-y-auto custom-scrollbar">
       {/* Back Button */}
       <button 
-        onClick={() => navigate("/candidate/interview-history")}
+        onClick={() => navigate("/test-history?tab=mentor")}
         className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group"
       >
         <div className="p-2 rounded-lg bg-white/5 group-hover:bg-indigo-600 transition-all">
@@ -116,29 +123,51 @@ const CandidateInterviewHistoryDetailPage = () => {
                 <Video size={20} className="text-indigo-400" />
                 <h3 className="text-xl font-bold">Video ghi lại buổi học</h3>
               </div>
-              {session.audioRecordKey && (
+              {session.recordingUrls && session.recordingUrls.length > 0 && (
                 <a 
-                  href={session.audioRecordKey} 
+                  href={session.recordingUrls[selectedVideoIndex]} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors"
                 >
                   <ExternalLink size={14} />
-                  Mở trong tab mới
+                  Mở {session.recordingUrls.length > 1 ? `Phần ${selectedVideoIndex + 1}` : "video"} trong tab mới
                 </a>
               )}
             </div>
             
-            <div className="aspect-video bg-[#0B0F19] relative flex items-center justify-center">
-              {session.audioRecordKey ? (
-                <video 
-                  controls 
-                  className="w-full h-full object-contain"
-                  poster={MOCK_AVATAR}
-                >
-                  <source src={session.audioRecordKey} type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
+            <div className="aspect-video bg-[#0B0F19] relative flex flex-col items-center justify-center">
+              {session.recordingUrls && session.recordingUrls.length > 0 ? (
+                <>
+                  <video 
+                    key={session.recordingUrls[selectedVideoIndex]}
+                    controls 
+                    className="w-full h-full object-contain"
+                  >
+                    <source src={session.recordingUrls[selectedVideoIndex]} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                  
+                  {session.recordingUrls.length > 1 && (
+                    <div className="absolute bottom-12 left-0 right-0 p-4 flex justify-center gap-2 pointer-events-none">
+                      <div className="flex gap-2 p-2 bg-black/60 backdrop-blur-md rounded-2xl pointer-events-auto border border-white/10">
+                        {session.recordingUrls.map((_, index) => (
+                          <button
+                            key={index}
+                            onClick={() => setSelectedVideoIndex(index)}
+                            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                              selectedVideoIndex === index 
+                                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20" 
+                                : "text-gray-400 hover:text-white hover:bg-white/5"
+                            }`}
+                          >
+                            Phần {index + 1}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="text-center px-6">
                   <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -199,14 +228,35 @@ const CandidateInterviewHistoryDetailPage = () => {
                       <Info size={24} />
                       <p>Bạn chưa gửi đánh giá cho buổi học này.</p>
                     </div>
-                    <button 
-                      onClick={() => setIsRatingModalOpen(true)}
-                      className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all shadow-lg flex-shrink-0 flex items-center gap-2"
-                    >
-                      <MessageSquareText size={18} />
-                      Đánh giá Mentor
-                    </button>
+                    <div className="flex flex-wrap gap-2">
+                      <button 
+                        onClick={() => setIsRatingModalOpen(true)}
+                        className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all shadow-lg flex-shrink-0 flex items-center gap-2"
+                      >
+                       <MessageSquareText size={18} />
+                       Đánh giá Mentor
+                      </button>
+                      <button 
+                        onClick={() => setIsReportModalOpen(true)}
+                        className="px-6 py-2.5 bg-rose-600/10 hover:bg-rose-600/20 text-rose-500 border border-rose-500/20 font-bold rounded-xl transition-all flex-shrink-0 flex items-center gap-2"
+                      >
+                       <Flag size={18} />
+                       Báo cáo Mentor
+                      </button>
+                    </div>
                   </div>
+                )}
+                {/* Always show small report button if already rated but user still wants to report */}
+                {session.status === 2 && session.ratingScore && (
+                   <div className="mt-4 flex justify-end">
+                      <button 
+                        onClick={() => setIsReportModalOpen(true)}
+                        className="text-gray-500 hover:text-rose-400 text-xs font-bold flex items-center gap-1 transition-colors"
+                      >
+                        <Flag size={12} />
+                        Bạn gặp vấn đề? Báo cáo Mentor
+                      </button>
+                   </div>
                 )}
               </div>
             </div>
@@ -221,11 +271,18 @@ const CandidateInterviewHistoryDetailPage = () => {
             
             <div className="relative z-10 mt-4">
               <div className="relative inline-block mb-4">
-                <img 
-                  src={session.profileAvatarUrl || MOCK_AVATAR} 
-                  alt={session.profileName}
-                  className="w-24 h-24 rounded-3xl object-cover border-4 border-[#1A1A2E] shadow-2xl mx-auto"
-                />
+                <Avatar className="w-24 h-24 border-4 border-[#1A1A2E] shadow-2xl mx-auto rounded-3xl">
+                  <AvatarImage 
+                    src={(session.profileAvatarUrl && session.profileAvatarUrl.trim() !== "") 
+                      ? session.profileAvatarUrl 
+                      : ((session as any).mentorAvatarUrl && (session as any).mentorAvatarUrl.trim() !== "") 
+                        ? (session as any).mentorAvatarUrl 
+                        : `https://ui-avatars.com/api/?name=${encodeURIComponent(session.profileName || "User")}&background=random&color=fff&size=512`} 
+                    alt={session.profileName} 
+                    className="object-cover" 
+                  />
+                  <AvatarFallback name={session.profileName || "Mentor"} className="rounded-3xl text-2xl" />
+                </Avatar>
                 <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-4 border-[#1A1A2E] ${session.status === 2 ? 'bg-emerald-500' : 'bg-rose-500'}`}></div>
               </div>
               <h3 className="text-2xl font-black text-white px-4 truncate">{session.profileName}</h3>
@@ -381,6 +438,14 @@ const CandidateInterviewHistoryDetailPage = () => {
           </div>
         </div>
       )}
+
+      {/* Report Modal */}
+      <CreateApplicationDialog 
+        open={isReportModalOpen} 
+        onOpenChange={setIsReportModalOpen}
+        defaultType={ApplicationType.ReportMentor}
+        defaultBookingId={session.bookingId}
+      />
     </div>
   );
 };

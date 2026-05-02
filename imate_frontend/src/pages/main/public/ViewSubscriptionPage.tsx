@@ -1,17 +1,19 @@
 import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import Footer from "@/components/common/Footer";
 import { useSubscriptionPackages } from "@/hooks/useSubscriptionPackages";
 import { useAuth } from "@/store/AuthContext";
 import {
-  cancelSubscription,
   createUserSubscription,
-  getCancelPreview,
   getCurrentPackage,
+  getCurrentSubscriptionDetail,
   getUpgradePreview,
 } from "@/services/userSubscriptionService";
-import { PreviewPackageDialog } from "@/dialog/main/payment/PreviewPackageDialog";
+import { PreviewPackageDialog } from "@/pages/dialog/main/payment/PreviewPackageDialog";
+import type {
+  CurrentPackage,
+  CurrentSubscriptionDetail,
+} from "@/types/response/userSubscription.response";
 
 const formatPrice = (price: number) => {
   if (price === 0) return "Miễn phí";
@@ -21,84 +23,61 @@ const formatPrice = (price: number) => {
 const ViewSubscriptionPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const from = searchParams.get("from");
+  const [viewOnly, setViewOnly] = React.useState(false);
+  const { data: packages = [], isLoading, error, refetch } = useSubscriptionPackages();
 
-  const { data: packages = [], isLoading, error, refetch } =
-    useSubscriptionPackages();
-
-  const [currentPackage, setCurrentPackage] = React.useState<any>(null);
+  const [currentPackage, setCurrentPackage] = React.useState<CurrentPackage | null>(null);
+  const [currentDetail, setCurrentDetail] = React.useState<CurrentSubscriptionDetail | null>(null);
   const [dialogOpen, setDialogOpen] = React.useState(false);
-  const [dialogType, setDialogType] = React.useState<"upgrade" | "cancel">(
-    "upgrade"
-  );
   const [upgradePreview, setUpgradePreview] = React.useState<any>(null);
-  const [cancelPreview, setCancelPreview] = React.useState<any>(null);
-  const [selectedPackageId, setSelectedPackageId] = React.useState<number | null>(
-    null
-  );
+  const [selectedPackageId, setSelectedPackageId] = React.useState<number | null>(null);
 
-  // ================= FETCH CURRENT PACKAGE =================
-  const fetchCurrentPackage = async () => {
+  // ===== FETCH =====
+  const fetchSubscriptionInfo = async () => {
     if (!user) return;
-
     try {
-      const pkg = await getCurrentPackage();
+      const [pkg, detail] = await Promise.all([
+        getCurrentPackage(),
+        getCurrentSubscriptionDetail(),
+      ]);
       setCurrentPackage(pkg);
+      setCurrentDetail(detail);
     } catch (err) {
-      console.log("Cannot get current package", err);
+      console.log("Cannot get subscription info", err);
     }
   };
 
   useEffect(() => {
-    fetchCurrentPackage();
+    fetchSubscriptionInfo();
   }, [user]);
 
-  // ================= HANDLE BUTTON CLICK =================
-  const handleCtaClick = async (pkg: any) => {
+  // ===== HANDLE CLICK =====
+  const handleUpgradeClick = async (pkg: any) => {
     if (!user) {
       navigate("/sign-in");
-      return;
-    }
-
-    if (!currentPackage) {
-      toast.error("Không lấy được gói hiện tại");
       return;
     }
     setSelectedPackageId(pkg.id);
 
     try {
-      setUpgradePreview(null);
-      setCancelPreview(null);
-
-      if (pkg.rank === currentPackage.rank) {
-        const preview = await getCancelPreview();
-        setCancelPreview(preview);
-        setDialogType("cancel");
-      } else {
-        const preview = await getUpgradePreview(pkg.id);
-        setUpgradePreview(preview);
-        setDialogType("upgrade");
-      }
-
+      const preview = await getUpgradePreview(pkg.id);
+      setUpgradePreview(preview);
       setDialogOpen(true);
     } catch (err: any) {
       toast.error(err.message);
     }
   };
 
-  // ================= CONFIRM UPGRADE / CANCEL =================
+  // ===== CONFIRM =====
   const handleConfirm = async () => {
+    if (!selectedPackageId) return;
     try {
-      if (dialogType === "upgrade") {
-        if (!selectedPackageId) return;
-        await createUserSubscription(selectedPackageId);
-        toast.success("Nâng cấp gói thành công!");
-      } else {
-        await cancelSubscription();
-        toast.success("Hủy gói thành công!");
-      }
-
+      await createUserSubscription(selectedPackageId);
+      toast.success("Nâng cấp gói thành công!");
       setDialogOpen(false);
-      await fetchCurrentPackage();
+      await fetchSubscriptionInfo();
       refetch();
     } catch (err: any) {
       toast.error(err.message);
@@ -106,20 +85,19 @@ const ViewSubscriptionPage: React.FC = () => {
   };
 
   return (
-    <div className="font-sans bg-[#020617] min-h-screen">
-      <main className="px-6 pb-20 pt-16">
+    <div className="font-sans bg-[#020617]">
+      <main className="px-6 pb-6 pt-16">
         <div className="max-w-7xl mx-auto">
           {/* HEADER */}
           <div className="text-center mb-14">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-bold mb-5">
-              BẢNG GIÁ IMATE
-            </div>
-            <h1 className="text-4xl md:text-5xl font-extrabold mb-4 bg-gradient-to-r from-white via-indigo-200 to-purple-300 bg-clip-text text-transparent">
-              Chọn gói dịch vụ phù hợp với bạn
-            </h1>
+            <h2 className="text-2xl md:text-5xl font-extrabold mb-4 bg-gradient-to-r from-white via-indigo-200 to-purple-300 bg-clip-text text-transparent">
+              {from === "premium"
+                ? "Bạn cần nâng cấp gói để sử dụng tính năng này"
+                : "Chọn gói dịch vụ phù hợp với bạn"}
+            </h2>
             <p className="text-slate-400 max-w-2xl mx-auto">
-              Mở khóa nhiều quyền lợi hơn để tăng tốc hành trình luyện phỏng vấn IT
-              cùng Imate.
+              Mở khóa nhiều quyền lợi hơn để tăng tốc hành trình luyện phỏng
+              vấn IT cùng Imate.
             </p>
           </div>
 
@@ -165,45 +143,37 @@ const ViewSubscriptionPage: React.FC = () => {
               {packages.slice(0, 3).map((subscriptionPackage) => {
                 const isCurrent =
                   currentPackage?.packageId === subscriptionPackage.id;
-
-                let buttonText = "Mua ngay";
-
-                if (currentPackage) {
-                  if (subscriptionPackage.id === currentPackage.packageId)
-                    buttonText = "Hủy gói";
-                  else if (subscriptionPackage.rank > currentPackage.rank)
-                    buttonText = "Nâng cấp gói";
-                  else buttonText = "Hạ cấp gói";
-                }
+                const isUpgradable =
+                  currentPackage &&
+                  subscriptionPackage.rank > currentPackage.rank;
+                const isLowerRank =
+                  currentPackage &&
+                  subscriptionPackage.rank < currentPackage.rank;
 
                 let cardStyle = "bg-[#1e293b]/45 border-white/10";
                 const highlightStyle =
                   "bg-gradient-to-b from-indigo-500/20 to-purple-500/10 border-indigo-400/50 shadow-xl shadow-indigo-900/30 scale-105";
-                if (!user && subscriptionPackage.isRecommended) {
+
+                if (!user && subscriptionPackage.isRecommended)
                   cardStyle = highlightStyle;
-                }
-                if (user && isCurrent) {
-                  cardStyle = highlightStyle;
-                }
+                if (user && isCurrent) cardStyle = highlightStyle;
 
                 return (
                   <article
                     key={subscriptionPackage.id}
                     className={`relative rounded-3xl border p-8 backdrop-blur-sm transition-all ${cardStyle}`}
                   >
-                    {/* GÓI HIỆN TẠI (ưu tiên hiển thị) */}
-                      {user && isCurrent && (
-                        <span className="absolute top-5 right-5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 px-3 py-1 text-[11px] font-bold text-white">
-                          GÓI CỦA BẠN
-                        </span>
-                      )}
-
-                      {/* CHỈ hiện KHUYÊN DÙNG khi CHƯA login */}
-                      {!user && subscriptionPackage.isRecommended && (
-                        <span className="absolute top-5 right-5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 px-3 py-1 text-[11px] font-bold text-white">
-                          KHUYÊN DÙNG
-                        </span>
-                      )}
+                    {/* Badge */}
+                    {user && isCurrent && (
+                      <span className="absolute top-5 right-5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 px-3 py-1 text-[11px] font-bold text-white">
+                        GÓI CỦA BẠN
+                      </span>
+                    )}
+                    {!user && subscriptionPackage.isRecommended && (
+                      <span className="absolute top-5 right-5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 px-3 py-1 text-[11px] font-bold text-white">
+                        KHUYÊN DÙNG
+                      </span>
+                    )}
 
                     <h2 className="text-white text-2xl font-bold mb-2">
                       {subscriptionPackage.name}
@@ -211,9 +181,17 @@ const ViewSubscriptionPage: React.FC = () => {
                     <p className="text-3xl font-extrabold text-white mb-1">
                       {formatPrice(subscriptionPackage.price)}
                     </p>
-                    <p className="text-sm text-slate-400 mb-6">
+                    <p className="text-sm text-slate-400 mb-2">
                       {subscriptionPackage.duration}
                     </p>
+                    {subscriptionPackage.totalInterviewLimit != null && subscriptionPackage.totalInterviewLimit > 0 && (
+                      <p className="text-sm text-indigo-400 font-semibold mb-6">
+                        Được nhận {subscriptionPackage.totalInterviewLimit.toLocaleString("vi-VN")} AI Credits
+                      </p>
+                    )}
+                    {(subscriptionPackage.totalInterviewLimit == null || subscriptionPackage.totalInterviewLimit <= 0) && (
+                      <div className="mb-6" />
+                    )}
 
                     <ul className="space-y-3 mb-8 min-h-[120px]">
                       {subscriptionPackage.benefits.map(
@@ -229,18 +207,49 @@ const ViewSubscriptionPage: React.FC = () => {
                       )}
                     </ul>
 
-                    <button
-                      onClick={() => handleCtaClick(subscriptionPackage)}
-                      className={`w-full py-3 rounded-xl font-bold transition-all ${
-                        isCurrent
-                          ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white"
-                          : subscriptionPackage.isRecommended && !user
-                          ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:opacity-90"
-                          : "bg-white text-[#0f172a] hover:bg-slate-100"
-                      }`}
-                    >
-                      {buttonText}
-                    </button>
+                    {/* Buttons */}
+                    <div className="flex flex-col gap-2">
+
+                      {isCurrent && subscriptionPackage.price > 0 && (
+                        <button
+                          onClick={() => {
+                            setViewOnly(true);
+                            setUpgradePreview(null);
+                            setDialogOpen(true);
+                          }}
+                          className="w-full py-3 rounded-xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:opacity-90"
+                        >
+                          Thông tin gói
+                        </button>
+                      )}
+
+                      {/* Gói cao hơn → Nâng cấp */}
+                      {isUpgradable && (
+                        <button
+                          onClick={() => handleUpgradeClick(subscriptionPackage)}
+                          className="w-full py-3 rounded-xl font-bold bg-white text-[#0f172a] hover:bg-slate-100 transition-all"
+                        >
+                          Nâng cấp gói
+                        </button>
+                      )}
+
+                      {/* Chưa đăng nhập, gói có phí → Mua ngay */}
+                      {!user && subscriptionPackage.price > 0 && (
+                        <button
+                          onClick={() => navigate("/sign-in")}
+                          className={`w-full py-3 rounded-xl font-bold transition-all ${
+                            subscriptionPackage.isRecommended
+                              ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:opacity-90"
+                              : "bg-white text-[#0f172a] hover:bg-slate-100"
+                          }`}
+                        >
+                          Mua ngay
+                        </button>
+                      )}
+
+                      {/* Gói thấp hơn hiện tại → ẩn button */}
+                      {isLowerRank && !isCurrent && null}
+                    </div>
                   </article>
                 );
               })}
@@ -249,17 +258,17 @@ const ViewSubscriptionPage: React.FC = () => {
         </div>
       </main>
 
-      {/* DIALOG */}
       <PreviewPackageDialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        type={dialogType}
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) setViewOnly(false);
+        }}
         upgradePreview={upgradePreview}
-        cancelPreview={cancelPreview}
+        currentSubscription={currentDetail}
         onConfirm={handleConfirm}
+        viewOnly={viewOnly}
       />
-
-      <Footer />
     </div>
   );
 };
