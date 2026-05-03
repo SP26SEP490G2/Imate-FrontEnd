@@ -63,6 +63,8 @@ const APIConfig = {
     AddPosition: "/positions",
     UpdatePosition: "/positions/{positionId}",
     GetAffectedQuestions: "/positions/{positionId}/affected-questions",
+    GetPositionSkills: "/positions/{positionId}/skills",
+    UpdatePositionSkills: "/positions/{positionId}/skills",
   },
 
   // Skills endpoints

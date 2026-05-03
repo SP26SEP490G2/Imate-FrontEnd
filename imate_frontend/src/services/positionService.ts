@@ -80,3 +80,42 @@ export const getAffectedQuestions = async (positionId: number, willBeActive: boo
     return [];
   }
 };
+
+/**
+ * Lấy danh sách Skill đã map vào Position.
+ * @param positionId ID của Position.
+ * @returns Promise chứa danh sách Skill đã map.
+ */
+export const getPositionSkills = async (positionId: number) => {
+  try {
+    const res = await apiClient.get(`/positions/${positionId}/skills`);
+    const data = res.data;
+    if (Array.isArray(data)) {
+      return data.map((x: any) => ({
+        id: x.id ?? x.Id ?? 0,
+        name: (x.name ?? x.Name ?? "") as string,
+        isActive: x.isActive ?? x.IsActive ?? true,
+      }));
+    }
+    return [];
+  } catch (error) {
+    console.log("error fetch position skills: ", error);
+    return [];
+  }
+};
+
+/**
+ * Cập nhật danh sách Skill cho Position (thay thế toàn bộ).
+ * @param positionId ID của Position.
+ * @param skillIds Danh sách Skill ID cần map.
+ * @returns Promise chứa phản hồi từ API.
+ */
+export const updatePositionSkills = async (positionId: number, skillIds: number[]) => {
+  try {
+    const res = await apiClient.put(`/positions/${positionId}/skills`, { skillIds });
+    return res;
+  } catch (error: any) {
+    throw error;
+  }
+};
+

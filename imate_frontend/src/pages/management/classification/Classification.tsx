@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Pencil, ChevronDown, Search } from "lucide-react";
+import { Plus, Pencil, ChevronDown, Search, Link2 } from "lucide-react";
 
 import { AppTabs } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,7 @@ import { CreateSkillDialog } from "../../dialog/management/classification/Create
 import { UpdateSkillDialog } from "../../dialog/management/classification/UpdateSkillDialog";
 import { CreatePositionDialog } from "../../dialog/management/classification/CreatePositionDialog";
 import { UpdatePositionDialog } from "../../dialog/management/classification/UpdatePositionDialog";
+import { ManagePositionSkillsDialog } from "../../dialog/management/classification/ManagePositionSkillsDialog";
 import { CreateCompanyDialog } from "@/pages/dialog/management/classification/CreateCompanyDialog";
 import { UpdateCompanyDialog } from "@/pages/dialog/management/classification/UpdateCompanyDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -107,6 +108,7 @@ export default function Classification() {
 
   const [openCreatePosDialog, setOpenCreatePosDialog] = useState(false);
   const [openUpdatePosDialog, setOpenUpdatePosDialog] = useState(false);
+  const [openManagePosSkillsDialog, setOpenManagePosSkillsDialog] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<PositionResponse | null>(null);
 
   // --- KĨ NĂNG ---
@@ -278,6 +280,11 @@ export default function Classification() {
   const handleEditPosition = (pos: PositionResponse) => {
     setSelectedPosition(pos);
     setOpenUpdatePosDialog(true);
+  };
+
+  const handleManagePositionSkills = (pos: PositionResponse) => {
+    setSelectedPosition(pos);
+    setOpenManagePosSkillsDialog(true);
   };
 
   const handleEditSkill = (skill: Skill) => {
@@ -581,6 +588,17 @@ export default function Classification() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex gap-2 justify-end">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              icon={<Link2 size={14} />}
+                              onClick={() => handleManagePositionSkills(pos)}
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent>Quản lý kĩ năng</TooltipContent>
+                        </Tooltip>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
@@ -898,6 +916,15 @@ export default function Classification() {
           }}
         />
       )}
+
+      <ManagePositionSkillsDialog
+        open={openManagePosSkillsDialog}
+        onOpenChange={setOpenManagePosSkillsDialog}
+        position={selectedPosition}
+        onSuccess={() => {
+          setSelectedPosition(null);
+        }}
+      />
 
       <CreateSkillDialog
         open={openCreateSkillDialog}
