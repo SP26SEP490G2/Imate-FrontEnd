@@ -173,11 +173,19 @@ const BookMentorDialog: React.FC<BookMentorDialogProps> = ({
     const day = String(date.getDate()).padStart(2, "0");
     const dateStr = `${year}-${month}-${day}`;
 
+    const [tH, tM] = time.split(":").map(Number);
+
     return bookedSlots.some(s => {
-      // API might return ISO string or YYYY-MM-DD
-      const bookedDate = s.bookDate.split("T")[0];
-      // Time check (Peppo logic matches displayTime/startTime)
-      return bookedDate === dateStr && s.startTime.startsWith(time);
+      // s.bookDate is "YYYY-MM-DDT00:00:00" or similar
+      const bookedDateStr = s.bookDate.split("T")[0];
+      if (bookedDateStr !== dateStr) return false;
+
+      // Use Date object to handle timezone correctly (API returns UTC, we need local for comparison)
+      const bookedDateObj = new Date(s.startTime);
+      const sH = bookedDateObj.getHours();
+      const sM = bookedDateObj.getMinutes();
+
+      return sH === tH && sM === tM;
     });
   }, [bookedSlots]);
 
@@ -496,8 +504,7 @@ const SlotGroup: React.FC<SlotGroupProps> = ({ label, slots, selectedSlotId, onS
               onClick={() => onSelect(slot.id, slot.time)}
               disabled={isDisabled}
               className={`min-w-[76px] h-10 px-4 rounded-full text-sm font-medium transition-all border ${isActive ? "border-indigo-500 bg-indigo-500/15 text-indigo-400" :
-                slot.status === "booked" ? "border-white/10 bg-white/5 text-slate-600 cursor-not-allowed line-through" :
-                  isDisabled ? "opacity-30 cursor-not-allowed" :
+                isDisabled ? "opacity-30 cursor-not-allowed border-white/10 bg-white/5 text-slate-600" :
                     "border-white/10 bg-white/5 text-slate-300 hover:border-white/20 hover:text-white"
                 }`}
             >
