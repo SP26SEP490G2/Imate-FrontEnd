@@ -29,30 +29,40 @@ class AgoraService {
   }
 
   setupEventListeners(
+    onUserJoined: (user: IAgoraRTCRemoteUser) => void,
     onUserPublished: (user: IAgoraRTCRemoteUser, mediaType: "audio" | "video") => void,
-    onUserUnpublished: (user: IAgoraRTCRemoteUser, mediaType?: "audio" | "video" | "datachannel") => void
+    onUserUnpublished: (user: IAgoraRTCRemoteUser, mediaType?: "audio" | "video" | "datachannel") => void,
+    onUserLeft: (user: IAgoraRTCRemoteUser) => void
   ): void {
     if (!this.client) throw new Error("Client not initialized");
+
+    this.client.on("user-joined", (user) => {
+      console.log(`ðŸ”µ Agora: user-joined: uid=${user.uid}`);
+      onUserJoined(user);
+    });
 
     this.client.on("user-published", async (user, mediaType) => {
       console.log(`ðŸ”µ Agora: user-published: uid=${user.uid}, mediaType=${mediaType}`);
       if (mediaType === "audio" || mediaType === "video") {
         try {
+          // Explicitly subscribe to the user's tracks
           await this.client!.subscribe(user, mediaType);
           console.log(`ðŸ”µ Agora: subscribed to ${mediaType} from user ${user.uid}`);
           onUserPublished(user, mediaType);
         } catch (err) {
-          console.error(`âŒ Agora: Failed to subscribe to ${user.uid}:`, err);
+          console.error(`â Œ Agora: Failed to subscribe to ${user.uid}:`, err);
         }
       }
     });
 
     this.client.on("user-unpublished", (user, mediaType) => {
+      console.log(`ðŸ”µ Agora: user-unpublished: uid=${user.uid}, mediaType=${mediaType}`);
       onUserUnpublished(user, mediaType);
     });
 
     this.client.on("user-left", (user) => {
-      onUserUnpublished(user);
+      console.log(`ðŸ”µ Agora: user-left: uid=${user.uid}`);
+      onUserLeft(user);
     });
   }
 

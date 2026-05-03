@@ -70,13 +70,16 @@ const VideoCall: React.FC<VideoCallProps> = ({
 }) => {
   const [joined, setJoined] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [audioMuted, setAudioMuted] = useState(false);
   const [videoMuted, setVideoMuted] = useState(false);
   const [remoteUsers, setRemoteUsers] = useState<Map<string | number, IAgoraRTCRemoteUser>>(new Map());
   const [isSharing, setIsSharing] = useState(false);
   const [shareMenuOpen, setShareMenuOpen] = useState(false);
   const [screenOwnerUid, setScreenOwnerUid] = useState<string | number | null>(null);
+  const screenOwnerUidRef = useRef<string | number | null>(null);
   const [isAgoraRecording, setIsAgoraRecording] = useState(false);
+  const isStartingRecording = useRef(false);
   const [countdown, setCountdown] = useState(TOTAL_MINUTES * 60);
   const [tokenTimeRemaining, setTokenTimeRemaining] = useState<number | null>(null);
   const tokenWarningShownRef = useRef({ fiveMinutes: false, oneMinute: false });
@@ -137,7 +140,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
     }
     let startTime = localStorage.getItem(getMeetingStartKey(channel));
     const now = Date.now();
-    
+
     // Fix: If startTime existed from more than 2 hours ago, reset it (stale data bug)
     if (startTime) {
       const oldTime = parseInt(startTime, 10);
@@ -195,53 +198,53 @@ const VideoCall: React.FC<VideoCallProps> = ({
   useEffect(() => {
     try {
       agoraService.initializeClient();
-      agoraService.removeAllListeners(); // Clean up old listeners before setting up new ones
-      agoraService.setupEventListeners(
-        (user, mediaType) => {
-          console.log(`ðŸ”µ Remote user ${user.uid} published ${mediaType}`);
-          setRemoteUsers(prev => new Map(prev).set(user.uid, user));
-          setTimeout(() => {
-            if (mediaType === "video") {
-              const list: any[] = (user as any).videoTrackList || (user.videoTrack ? [user.videoTrack] : []);
-              const getLabel = (t: any) => t?.getMediaStreamTrack?.().label?.toLowerCase?.() || "";
-              const screenTrack = list.find(t => { const l = getLabel(t); return l.includes("screen") || l.includes("display") || l.includes("monitor"); });
-              const cameraTrack = list.find(t => { const l = getLabel(t); return l && !l.includes("screen") && !l.includes("display") && !l.includes("monitor"); }) || (user as any).videoTrack;
+      agoraService.removeAllListeners();
 
-              if (screenTrack && screenContainerRef.current) {
-                setScreenOwnerUid(user.uid);
-                try { screenTrack.play(screenContainerRef.current); } catch {}
-              }
-              const camContainer = remoteVideosRef.current.get(user.uid);
-              if (camContainer && cameraTrack) {
-                try { cameraTrack.play(camContainer); } catch {}
-              }
-            } else if (mediaType === "audio") {
-              agoraService.playRemoteAudio(user);
-            }
-          }, 100);
+      agoraService.setupEventListeners(
+        (user) => {
+          console.log(`ðŸ”µ Agora: Remote user joined: ${user.uid}`);
+          setRemoteUsers(prev => new Map(prev).set(user.uid, user));
         },
         (user, mediaType) => {
-          if (mediaType === "video" || mediaType === undefined) {
-            if (screenOwnerUid === user.uid) setScreenOwnerUid(null);
-            setRemoteUsers(prev => {
-              const next = new Map(prev);
-              if (mediaType === undefined) next.delete(user.uid);
-              return next;
-            });
+          console.log(`ðŸ”µ Agora: Remote user published ${mediaType}: ${user.uid}`);
+          setRemoteUsers(prev => new Map(prev).set(user.uid, user));
+
+          if (mediaType === "audio") {
+            agoraService.playRemoteAudio(user);
           }
+        },
+        (user, mediaType) => {
+          console.log(`ðŸ”µ Agora: Remote user unpublished ${mediaType}: ${user.uid}`);
+          if (mediaType === "video" && screenOwnerUidRef.current === user.uid) {
+            screenOwnerUidRef.current = null;
+            setScreenOwnerUid(null);
+          }
+          setRemoteUsers(prev => new Map(prev).set(user.uid, user));
+        },
+        (user) => {
+          console.log(`ðŸ”µ Agora: Remote user left: ${user.uid}`);
+          if (screenOwnerUidRef.current === user.uid) {
+            screenOwnerUidRef.current = null;
+            setScreenOwnerUid(null);
+          }
+          setRemoteUsers(prev => {
+            const next = new Map(prev);
+            next.delete(user.uid);
+            return next;
+          });
         }
       );
     } catch (err) {
       console.error("â Œ Agora: Error in setupEventListeners:", err);
     }
     return () => { if (agoraService.getIsJoined()) agoraService.leaveChannel(); };
-  }, []);
+  }, []); // Empty dependency array - listeners stay active for the whole component lifecycle
 
   useEffect(() => {
     if (joined && localVideoRef.current) {
-      try { 
+      try {
         console.log("ðŸ”µ Agora: Playing local video");
-        agoraService.playLocalVideo(localVideoRef.current); 
+        agoraService.playLocalVideo(localVideoRef.current);
       } catch (err) {
         console.error("â Œ Agora: Failed to play local video:", err);
       }
@@ -250,10 +253,10 @@ const VideoCall: React.FC<VideoCallProps> = ({
 
   useEffect(() => {
     if (isSharing && screenContainerRef.current) {
-      try { 
+      try {
         console.log("ðŸ”µ Agora: Playing screen share");
-        agoraService.playLocalScreenVideo(screenContainerRef.current); 
-        setScreenOwnerUid("local"); 
+        agoraService.playLocalScreenVideo(screenContainerRef.current);
+        setScreenOwnerUid("local");
       } catch (err) {
         console.error("â Œ Agora: Failed to play screen share:", err);
       }
@@ -261,24 +264,56 @@ const VideoCall: React.FC<VideoCallProps> = ({
       setScreenOwnerUid(null);
       setTimeout(() => {
         if (localVideoRef.current && !videoMuted) {
-          try { agoraService.playLocalVideo(localVideoRef.current); } catch {}
+          try { agoraService.playLocalVideo(localVideoRef.current); } catch { }
         }
       }, 100);
     }
-  }, [isSharing, videoMuted]);
+  }, [isSharing, videoMuted, screenOwnerUid]);
+
+  // ── Remote Track Playback Sync ──
+  useEffect(() => {
+    if (!joined) return;
+
+    remoteUsers.forEach((user) => {
+      // 1. Handle Camera/Video
+      const camContainer = remoteVideosRef.current.get(user.uid);
+      if (camContainer && user.videoTrack && !user.videoTrack.isPlaying) {
+        console.log(`ðŸ”µ Agora: Auto-playing video for ${user.uid}`);
+        try { user.videoTrack.play(camContainer); } catch (err) { console.warn("Fallback play failed", err); }
+      }
+
+      // 2. Handle Screen Share
+      if (user.uid === screenOwnerUid && screenContainerRef.current) {
+        // If the user has multiple video tracks (cam + screen), Agora might put one in a list
+        const videoTracks = (user as any)._videoTracks || (user.videoTrack ? [user.videoTrack] : []);
+        const screenTrack = videoTracks.find((t: any) => {
+          const l = t?.getMediaStreamTrack?.().label?.toLowerCase() || "";
+          return l.includes("screen") || l.includes("display") || l.includes("monitor");
+        });
+
+        if (screenTrack && !screenTrack.isPlaying) {
+          console.log(`ðŸ”µ Agora: Auto-playing screen share for ${user.uid}`);
+          try { screenTrack.play(screenContainerRef.current); } catch { }
+        }
+      }
+    });
+  }, [remoteUsers, joined, screenOwnerUid]);
 
   // ── Recording ──
   const handleStartRecording = useCallback(async () => {
-    if (!bookingId) return;
+    if (!bookingId || isStartingRecording.current || isAgoraRecording) return;
+    isStartingRecording.current = true;
     try {
       console.log("ðŸ”µ Agora: Calling StartRecordingForBooking...");
       await startRecordingForBooking(bookingId);
       setIsAgoraRecording(true);
       console.log("âœ… Agora: Recording started successfully");
-    } catch (err) { 
+    } catch (err) {
       console.error("â Œ Agora: Failed to start recording:", err);
+    } finally {
+      isStartingRecording.current = false;
     }
-  }, [bookingId]);
+  }, [bookingId, isAgoraRecording]);
 
   const handleStopRecording = useCallback(async () => {
     if (!bookingId) return;
@@ -308,22 +343,19 @@ const VideoCall: React.FC<VideoCallProps> = ({
   const handleJoin = async () => {
     if (loading || joined) return;
     setLoading(true);
+    setError(null);
     try {
       const config: AgoraConfig = { appId, channel, token, uid: uid.toString() };
       await agoraService.joinChannel(config);
       try {
         await agoraService.createLocalTracks();
         await agoraService.publishLocalTracks();
-      } catch (err: any) {
-        await agoraService.leaveChannel().catch(() => {});
-        if (err?.name === "NotAllowedError") toast.error("Vui lòng cấp quyền truy cập microphone và camera.", { autoClose: 7000 });
-        else if (err?.name === "NotFoundError") toast.error("Không tìm thấy thiết bị camera/microphone.", { autoClose: 7000 });
-        else toast.error(`Lỗi thiết bị: ${err?.message || "Không xác định"}`, { autoClose: 7000 });
-        throw err;
+      } catch (trackErr: any) {
+        console.error("â Œ Agora: Failed to create/publish tracks:", trackErr);
+        // If it's a permission error, we show it but don't strictly blockjoining if they just want to watch
       }
       setJoined(true);
-      
-      // Manual Sync: Check for any users already in the channel
+
       const existingRemoteUsers = agoraService.getRemoteUsers();
       if (existingRemoteUsers.length > 0) {
         console.log(`ðŸ”µ Agora: Syncing ${existingRemoteUsers.length} existing remote users`);
@@ -331,22 +363,19 @@ const VideoCall: React.FC<VideoCallProps> = ({
           const next = new Map(prev);
           existingRemoteUsers.forEach(user => {
             next.set(user.uid, user);
-            // If they already have tracks, we might need to play them if events were missed
-            if (user.hasVideo || user.hasAudio) {
-               console.log(`ðŸ”µ Agora: User ${user.uid} already has tracks, triggering playback fallback`);
-               // In some cases we might already be subscribed, so we can trigger the "onUserPublished" logic
-               // However, setupEventListeners should handle this for net-new joins. 
-               // For pre-existing, we just ensure they are in the state.
-            }
           });
           return next;
         });
       }
     } catch (err: any) {
-      if (err?.code === "INVALID_APP_ID") toast.error("App ID không hợp lệ.", { autoClose: 7000 });
-      else if (err?.code === "INVALID_TOKEN") toast.error("Token không hợp lệ hoặc đã hết hạn.", { autoClose: 7000 });
-      else if (!err?.name?.includes("NotAllowed") && !err?.name?.includes("NotFound"))
-        toast.error(`Không thể tham gia cuộc gọi: ${err?.message || "Lỗi không xác định"}`, { autoClose: 7000 });
+      console.error("â Œ Agora: Join failed:", err);
+      let msg = "Không thể tham gia cuộc gọi.";
+      if (err?.code === "INVALID_APP_ID") msg = "App ID không hợp lệ.";
+      else if (err?.code === "INVALID_TOKEN") msg = "Token không hợp lệ hoặc đã hết hạn.";
+      else if (err?.name === "NotAllowedError") msg = "Vui lòng cấp quyền truy cập microphone và camera.";
+
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -354,7 +383,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
 
   const handleLeave = async () => {
     try {
-      if (isSharing) await agoraService.stopScreenShare().catch(() => {}); 
+      if (isSharing) await agoraService.stopScreenShare().catch(() => { });
       setIsSharing(false);
       await agoraService.leaveChannel();
       setJoined(false);
@@ -376,7 +405,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
       try {
         await agoraService.startScreenShare(false, () => {
           setIsSharing(false); setShareMenuOpen(false);
-          setTimeout(() => { if (localVideoRef.current && !videoMuted) { try { agoraService.playLocalVideo(localVideoRef.current); } catch {} } }, 100);
+          setTimeout(() => { if (localVideoRef.current && !videoMuted) { try { agoraService.playLocalVideo(localVideoRef.current); } catch { } } }, 100);
         });
         setIsSharing(true); setShareMenuOpen(false);
       } catch (err: any) {
@@ -432,9 +461,9 @@ const VideoCall: React.FC<VideoCallProps> = ({
                 </div>
                 <div>
                   <p className="text-white font-medium text-sm">{remoteUserName}</p>
-                  <p className="text-gray-400 text-xs flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse inline-block" />
-                    Đang chờ...
+                  <p className={`${remoteUsers.size > 0 ? "text-green-400" : "text-gray-400"} text-xs flex items-center gap-1`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${remoteUsers.size > 0 ? "bg-green-400" : "bg-yellow-400 animate-pulse"} inline-block`} />
+                    {remoteUsers.size > 0 ? "Đã trong phòng" : "Đang chờ..."}
                   </p>
                 </div>
               </div>
@@ -467,9 +496,32 @@ const VideoCall: React.FC<VideoCallProps> = ({
     );
   }
 
-  // ──────────────────────────────────────────────
-  // RENDER: IN-CALL
-  // ──────────────────────────────────────────────
+  // ── RENDER ──
+  if (!agoraService.getIsJoined() || loading || error) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0B0F19]">
+        {error ? (
+          <div className="bg-[#1A1A2E] border border-red-900/30 p-8 rounded-2xl text-center max-w-sm">
+            <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h3 className="text-white font-bold text-xl mb-2">Lỗi kết nối</h3>
+            <p className="text-gray-400 mb-6">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-xl transition-colors"
+            >
+              Thử lại
+            </button>
+          </div>
+        ) : (
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-white font-medium">Đang chuẩn bị phòng họp...</p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 h-screen w-screen overflow-hidden bg-[#0B0F19]">
       <div className="absolute inset-0">
@@ -494,13 +546,16 @@ const VideoCall: React.FC<VideoCallProps> = ({
               <div
                 className="relative flex-1 overflow-hidden rounded-2xl border border-indigo-900/30 bg-[#1A1A2E] shadow-xl"
                 ref={(el) => {
-                  const camUser = remoteUsersArray[0];
-                  if (el && camUser) {
-                    remoteVideosRef.current.set(camUser.uid, el);
-                    const list: any[] = (camUser as any).videoTrackList || (camUser.videoTrack ? [camUser.videoTrack] : []);
-                    const getLabel = (t: any) => t?.getMediaStreamTrack?.().label?.toLowerCase?.() || "";
-                    const track = list.find(t => { const l = getLabel(t); return l && !l.includes("screen") && !l.includes("display"); }) || (camUser as any).videoTrack;
-                    if (track) { try { track.play(el); } catch {} }
+                  if (el && remoteUsersArray[0]) {
+                    const user = remoteUsersArray[0];
+                    remoteVideosRef.current.set(user.uid, el);
+                    if (user.videoTrack && !user.videoTrack.isPlaying) {
+                      try {
+                        (user.videoTrack.play(el) as any)?.catch?.((err: any) => console.warn("Play failed", err));
+                      } catch (e) {
+                        console.warn("Immediate play error", e);
+                      }
+                    }
                   }
                 }}
               >
@@ -535,7 +590,19 @@ const VideoCall: React.FC<VideoCallProps> = ({
             {/* ── NORMAL MODE: Remote fullscreen ── */}
             <div
               className="absolute inset-0 h-full w-full bg-[#060810] object-cover"
-              ref={(el) => { if (el && remoteUsersArray[0]) remoteVideosRef.current.set(remoteUsersArray[0].uid, el); }}
+              ref={(el) => {
+                if (el && remoteUsersArray[0]) {
+                  const user = remoteUsersArray[0];
+                  remoteVideosRef.current.set(user.uid, el);
+                  if (user.videoTrack && !user.videoTrack.isPlaying) {
+                    try {
+                      (user.videoTrack.play(el) as any)?.catch?.((err: any) => console.warn("Play failed", err));
+                    } catch (e) {
+                      console.warn("Immediate play error", e);
+                    }
+                  }
+                }
+              }}
             />
 
             {/* Waiting / Remote placeholder */}
@@ -609,11 +676,10 @@ const VideoCall: React.FC<VideoCallProps> = ({
 
           {/* Token warning */}
           {tokenTimeRemaining !== null && tokenTimeRemaining <= 300 && (
-            <div className={`flex items-center gap-2 backdrop-blur-sm px-4 py-2 rounded-xl border text-white ${
-              tokenTimeRemaining <= 60
-                ? "bg-red-500/90 border-red-400/30"
-                : "bg-orange-500/90 border-orange-400/30"
-            }`}>
+            <div className={`flex items-center gap-2 backdrop-blur-sm px-4 py-2 rounded-xl border text-white ${tokenTimeRemaining <= 60
+              ? "bg-red-500/90 border-red-400/30"
+              : "bg-orange-500/90 border-orange-400/30"
+              }`}>
               <AlertTriangle className="w-4 h-4" />
               <span className="text-xs font-medium">
                 {tokenTimeRemaining <= 60
@@ -651,7 +717,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
                   <button onClick={() => setShareMenuOpen(false)} className="w-full text-left px-3 py-2 text-sm text-white rounded-lg hover:bg-indigo-900/30 transition-colors">
                     Tiếp tục chia sẻ
                   </button>
-                  <button onClick={async () => { await agoraService.stopScreenShare(); setIsSharing(false); setShareMenuOpen(false); setTimeout(() => { if (localVideoRef.current && !videoMuted) { try { agoraService.playLocalVideo(localVideoRef.current); } catch {} } }, 100); }} className="w-full text-left px-3 py-2 text-sm text-red-400 rounded-lg hover:bg-red-500/10 transition-colors mt-0.5">
+                  <button onClick={async () => { await agoraService.stopScreenShare(); setIsSharing(false); setShareMenuOpen(false); setTimeout(() => { if (localVideoRef.current && !videoMuted) { try { agoraService.playLocalVideo(localVideoRef.current); } catch { } } }, 100); }} className="w-full text-left px-3 py-2 text-sm text-red-400 rounded-lg hover:bg-red-500/10 transition-colors mt-0.5">
                     Dừng chia sẻ
                   </button>
                 </div>
@@ -698,13 +764,12 @@ const ControlBtn: React.FC<ControlBtnProps> = ({ onClick, active, sharing, title
   <button
     onClick={onClick}
     title={title}
-    className={`w-12 h-12 flex items-center justify-center rounded-full shadow-lg transition-all hover:scale-105 active:scale-95 ${
-      active
-        ? "bg-red-500 hover:bg-red-600 shadow-red-900/30"
-        : sharing
+    className={`w-12 h-12 flex items-center justify-center rounded-full shadow-lg transition-all hover:scale-105 active:scale-95 ${active
+      ? "bg-red-500 hover:bg-red-600 shadow-red-900/30"
+      : sharing
         ? "bg-indigo-500 hover:bg-indigo-600 shadow-indigo-900/30"
         : "bg-[#1A1A2E] hover:bg-indigo-900/50 border border-indigo-900/30"
-    }`}
+      }`}
   >
     {children}
   </button>
