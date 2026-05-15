@@ -16,7 +16,6 @@ export interface User {
   bio?: string;
   phone?: string;
   birthDate?: string;
-  // Thông tin Mentor
   yoe?: number;
   cvUrl?: string;
   certificateUrl?: string;
@@ -32,7 +31,7 @@ export interface User {
   positions?: string[];
   companies?: string[];
 
-//Thông tin Recruiter
+  //Thông tin Recruiter
   companyName?: string;
   companyLogo?: string;
   website?: string;
