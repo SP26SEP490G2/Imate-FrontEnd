@@ -185,6 +185,8 @@ export interface GenerateQuestionResponse {
   terminationMessage?: string;
   audioBase64?: string | null;
   mimeType?: string | null;
+  chunkIndex?: number;       // Giai đoạn 1-5
+  chunkLabel?: string;       // Tên giai đoạn hiển thị
   metrics?: {
     bloomTaxonomy?: { level: number; levelName: string; description: string };
     irt?: { difficultyScore: number; estimatedAbility: number; interpretation: string };

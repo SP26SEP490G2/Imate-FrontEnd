@@ -3,14 +3,13 @@ import { getAuth, type Auth } from "firebase/auth";
 // ...existing code...
 
 const firebaseConfig = {
-    // Thông tin cấu hình bạn đã cung cấp
-  apiKey: "AIzaSyA6CoZ-u2ucQXknbS5ToQ-X0O6-Tn8-_2Y",
-  authDomain: "imate-80f8e.firebaseapp.com",
-  projectId: "imate-80f8e",
-  storageBucket: "imate-80f8e.firebasestorage.app",
-  messagingSenderId: "1034424827677",
-  appId: "1:1034424827677:web:907b83d4ad52fd12e3ebf4",
-  measurementId: "G-FJZ5D060HF"
+  apiKey: "AIzaSyB8qjFC1VO-ylKHIZdq783VBh7sxjLCUoI",
+  authDomain: "imate-abdf4.firebaseapp.com",
+  projectId: "imate-abdf4",
+  storageBucket: "imate-abdf4.firebasestorage.app",
+  messagingSenderId: "488073319006",
+  appId: "1:488073319006:web:c74975702ac89beb71dacf",
+  measurementId: "G-5GLMZQ3KFJ"
 };
 
 const firebaseApp: FirebaseApp = initializeApp(firebaseConfig);

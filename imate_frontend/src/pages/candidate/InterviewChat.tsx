@@ -74,6 +74,9 @@ export default function InterviewChat() {
   const mockQuestionIndex = useRef(0);
   const initCalledRef = useRef(false);
 
+  // Interview phase label
+  const [currentPhase, setCurrentPhase] = useState<string>("");
+
   // Loading states
   const [initializing, setInitializing] = useState(true);
   const [sending, setSending] = useState(false);
@@ -387,6 +390,7 @@ export default function InterviewChat() {
 
       setQuestionCount((c) => c + 1);
       setCurrentResponseId(q.interviewResponseId);
+      if (q.chunkLabel) setCurrentPhase(q.chunkLabel);
       addMessage("ai", q.questionText, q.interviewResponseId, q.audioBase64, q.mimeType);
     } catch {
       toast.error(MSG28);
@@ -607,9 +611,17 @@ export default function InterviewChat() {
     <div className="flex h-screen flex-col bg-[#0a0b1a]">
       {/* ===== HEADER ===== */}
       <header className="flex items-center justify-between border-b border-slate-800/60 bg-[#0d0e21] px-6 py-3">
-        <div className="flex items-center gap-2 rounded-full border border-slate-700/50 bg-slate-800/60 px-4 py-1.5">
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Câu hỏi</span>
-          <span className="text-sm font-bold text-purple-400">{questionCount}/{totalQuestions}</span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 rounded-full border border-slate-700/50 bg-slate-800/60 px-4 py-1.5">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Câu hỏi</span>
+            <span className="text-sm font-bold text-purple-400">{questionCount}/{totalQuestions}</span>
+          </div>
+          {currentPhase && (
+            <div className="flex items-center gap-1.5 rounded-full border border-purple-500/30 bg-purple-500/10 px-3 py-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-purple-400 animate-pulse" />
+              <span className="text-xs font-medium text-purple-300">{currentPhase}</span>
+            </div>
+          )}
         </div>
 
         <div className="text-center">

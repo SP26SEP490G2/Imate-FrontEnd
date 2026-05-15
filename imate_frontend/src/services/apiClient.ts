@@ -3,7 +3,7 @@ import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 const SKIP_AUTH_REDIRECT_FOR_TEST = true;
 
 // 1. Định nghĩa API_BASE_URL ở đây
- const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 //const API_BASE_URL = "http://localhost:5067"; // Thay thế bằng URL thực tế của backend
 
 // 2. Tạo một instance của axios với cấu hình mặc định
